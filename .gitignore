@@ -19,3 +19,6 @@ Thumbs.db
 /cmake_install.cmake
 /config.h
 /Debug
+/build-*
+/SAMdisk4-*.zip
+
