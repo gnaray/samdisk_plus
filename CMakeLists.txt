@@ -54,9 +54,76 @@ check_function_exists(_snprintf HAVE__SNPRINTF)
 check_function_exists(sysconf HAVE_SYSCONF)
 check_function_exists(getopt_long HAVE_GETOPTLONG)
 
-file(GLOB CXXSRC src/*.cpp src/types/*.cpp src/filesystems/*.cpp)
-file(GLOB CSRC src/*.c)
-file(GLOB CXXH include/*.h include/types/*.h include/filesystems/*.h)
+set(CXXSRC
+    src/BitBuffer.cpp src/BitstreamDecoder.cpp src/BitstreamEncoder.cpp
+    src/BitstreamTrackBuilder.cpp src/BlockDevice.cpp src/cmd_copy.cpp
+    src/cmd_create.cpp src/cmd_dir.cpp src/cmd_format.cpp src/cmd_info.cpp
+    src/cmd_list.cpp src/cmd_rpm.cpp src/cmd_scan.cpp src/cmd_verify.cpp
+    src/cmd_view.cpp src/CrashDump.cpp src/CRC16.cpp src/DemandDisk.cpp
+    src/Disk.cpp src/DiskUtil.cpp src/Driver.cpp src/FdrawcmdSys.cpp
+    src/FileSystem.cpp
+    src/FluxDecoder.cpp src/FluxTrackBuilder.cpp src/Format.cpp src/HDD.cpp
+    src/HDFHDD.cpp src/Header.cpp src/IBMPC.cpp src/IBMPCBase.cpp src/Image.cpp
+    src/JupiterAce.cpp src/KF_libusb.cpp src/KF_WinUsb.cpp src/KryoFlux.cpp
+    src/MemFile.cpp src/MultiScanResult.cpp src/OrphanDataCapableTrack.cpp
+    src/PhysicalTrackMFM.cpp src/precompile.cpp src/Range.cpp
+    src/RepairSummaryDisk.cpp src/RetryPolicy.cpp src/SAMCoupe.cpp
+    src/SAMdisk.cpp src/SCP_FTD2XX.cpp src/SCP_FTDI.cpp src/SCP_USB.cpp
+    src/SCP_Win32.cpp src/Sector.cpp src/SpecialFormat.cpp
+    src/SpectrumPlus3.cpp src/SuperCardPro.cpp
+    src/TimedAndPhysicalDualTrack.cpp src/Track.cpp
+    src/TrackBuilder.cpp src/TrackData.cpp src/TrackDataParser.cpp
+    src/TrackSectorIds.cpp
+    src/Trinity.cpp src/types.cpp src/Util.cpp src/utils.cpp src/VfdrawcmdSys.cpp
+    src/win32_error.cpp
+    src/types/1dd.cpp src/types/2d.cpp src/types/a2r.cpp src/types/adf.cpp
+    src/types/blk_dev.cpp src/types/bpb.cpp src/types/builtin.cpp
+    src/types/cfi.cpp src/types/cpm.cpp src/types/cqm.cpp src/types/cwtool.cpp
+    src/types/d2m.cpp src/types/d4m.cpp src/types/d80.cpp src/types/d81.cpp
+    src/types/d88.cpp src/types/dfi.cpp src/types/dmk.cpp src/types/do.cpp
+    src/types/ds2.cpp src/types/dsc.cpp src/types/dsk.cpp src/types/dti.cpp
+    src/types/fd.cpp src/types/fdi.cpp src/types/fdrawsys_ab_dev.cpp
+    src/types/fdrawsys_dev.cpp src/types/hfe.cpp src/types/imd.cpp
+    src/types/ipf.cpp src/types/kf_dev.cpp src/types/kf_stream.cpp
+    src/types/lif.cpp src/types/mbd.cpp src/types/mfi.cpp src/types/mgt.cpp
+    src/types/msa.cpp src/types/opd.cpp src/types/pdi.cpp src/types/qdos.cpp
+    src/types/raw.cpp src/types/rdsk.cpp
+    src/types/record.cpp src/types/s24.cpp src/types/sad.cpp
+    src/types/sap.cpp src/types/sbt.cpp src/types/scl.cpp src/types/scp.cpp
+    src/types/scp_dev.cpp src/types/sdf.cpp src/types/st.cpp src/types/td0.cpp
+    src/types/trd.cpp src/types/trinload.cpp src/types/udi.cpp
+    src/types/unsupp.cpp src/types/vfdphysicaltracks_dev.cpp src/types/woz.cpp
+    src/filesystems/Fat12FileSystem.cpp src/filesystems/StFat12FileSystem.cpp)
+
+set(CXXH
+    include/AddressMark.h include/BitBuffer.h
+    include/BitPositionableByteVector.h include/BitstreamDecoder.h
+    include/BitstreamEncoder.h include/BitstreamTrackBuilder.h
+    include/BlockDevice.h include/ByteBitPosition.h include/CRC16.h
+    include/Cpp_helpers.h include/CrashDump.h include/DemandDisk.h
+    include/DeviceReadingPolicy.h include/Disk.h include/DiskConstants.h
+    include/DiskUtil.h include/FdrawcmdSys.h include/FileIO.h
+    include/FileSystem.h include/FluxDecoder.h include/FluxTrackBuilder.h
+    include/Format.h include/HDD.h include/HDFHDD.h include/Header.h
+    include/IBMPC.h include/IBMPCBase.h include/Image.h include/Interval.h
+    include/JupiterAce.h include/KF_WinUsb.h include/KF_libusb.h include/KryoFlux.h
+    include/MemFile.h include/MultiScanResult.h include/Options.h
+    include/OrphanDataCapableTrack.h include/PhysicalTrackMFM.h
+    include/Platform.h include/PlatformConfig.h include/Range.h
+    include/RepairSummaryDisk.h include/RetryPolicy.h include/RingedInt.h
+    include/SAMCoupe.h include/SAMdisk.h include/SCP_FTD2XX.h
+    include/SCP_FTDI.h include/SCP_USB.h include/SCP_Win32.h include/Sector.h
+    include/SpecialFormat.h include/SpectrumPlus3.h include/SuperCardPro.h
+    include/ThreadPool.h include/TimedAndPhysicalDualTrack.h include/Track.h
+    include/TrackBuilder.h include/TrackData.h include/TrackDataParser.h
+    include/TrackSectorIds.h include/Trinity.h include/Util.h include/VectorX.h
+    include/VfdrawcmdSys.h include/fdrawcmd.h include/opd.h include/qdos.h
+    include/resource.h include/trd.h include/types.h include/utils.h
+    include/win32_error.h include/winusb_defs.h
+    include/types/bpb.h include/types/dsk.h include/types/fdrawsys_dev.h
+    include/types/raw.h include/types/record.h
+    include/types/sdf.h include/types/vfdphysicaltracks_dev.h
+    include/filesystems/Fat12FileSystem.h include/filesystems/StFat12FileSystem.h)
 
 add_executable(${PROJECT_NAME} ${CXXSRC} ${CSRC} ${CXXH})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
@@ -118,7 +185,7 @@ if (ZLIB_FOUND)
       target_link_libraries(${PROJECT_NAME} ${MINIZIP_LIBRARIES})
       set(HAVE_MINIZIP 1)
     else()
-      file(GLOB MINIZIPSRC minizip/*.c)
+      set(MINIZIPSRC minizip/ioapi.c minizip/unzip.c)
       target_sources(${PROJECT_NAME} PRIVATE ${MINIZIPSRC})
       target_include_directories(${PROJECT_NAME} PRIVATE minizip)
     endif()
@@ -126,7 +193,7 @@ if (ZLIB_FOUND)
 endif()
 
 if (NOT HAVE_GETOPTLONG)
-    file(GLOB GETOPTSRC getopt/*.c)
+    set(GETOPTSRC getopt/getopt.c)
     target_sources(${PROJECT_NAME} PRIVATE ${GETOPTSRC})
     target_include_directories(${PROJECT_NAME} PRIVATE getopt)
 endif()
