@@ -110,6 +110,28 @@ bool WriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
             // Track the lowest sector number
             if (s.header.sector < fmt.base)
                 fmt.base = s.header.sector;
+        }
+    });
+
+    if (fmt.datarate == DataRate::Unknown)
+        throw util::exception("source disk is blank");
+
+    // Allow user overrides for flexibility
+    fmt.Override(true);
+    bool sectorsOverriden = opt.sectors != -1;
+
+    disk->each([&](const CylHead& cylhead, const Track& track) {
+        // Skip empty tracks
+        if (track.empty())
+            return;
+
+        for (auto& s : track.sectors())
+        {
+            if (s.header.sector < fmt.base) // Possible only if base is overriden with higher value.
+                return;
+            // If sectors is overriden then ignore too big, possible non-sequential sector numbers.
+            if (sectorsOverriden && s.header.sector >= fmt.base + fmt.sectors)
+                return;
 
             // Track the highest sector number
             if (s.header.sector > max_id)
@@ -122,15 +144,12 @@ bool WriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
             else if (s.header.size != fmt.size)
                 throw util::exception("mixed sector sizes are unsuitable for raw output");
         }
-        });
+    });
 
-    if (fmt.datarate == DataRate::Unknown)
-        throw util::exception("source disk is blank");
-    else if (max_id < fmt.base || max_id >= fmt.base + fmt.sectors)
+    if (max_id < fmt.base)
+        throw util::exception("not found selected sectors");
+    if (max_id >= fmt.base + fmt.sectors)
         throw util::exception("non-sequential sector numbers are unsuitable for raw output");
-
-    // Allow user overrides for flexibility
-    fmt.Override(true);
 
     // Write the image, as read using the supplied format
     WriteRegularDisk(f_, *disk, fmt);
