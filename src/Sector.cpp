@@ -236,7 +236,7 @@ Sector::Merge Sector::merge(Sector&& sector)
     {
         // Move the data into place, passing on the existing data CRC status and DAM
         auto add_ret = add(std::move(data), sector.has_baddatacrc(), sector.dam);
-        if (add_ret == Merge::Improved || (ret == Merge::Unchanged))
+        if (add_ret == Merge::Improved || add_ret == Merge::NewData)
             ret = add_ret;
     }
     sector.m_data.clear();
