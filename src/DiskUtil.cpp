@@ -628,7 +628,7 @@ bool RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track)
                 continue;
 
             // Merge the two sectors to give the best version.
-            if (it->merge(std::move(src_sector)) == Sector::Merge::Improved)
+            if (it->merge(std::move(src_sector_copy)) != Sector::Merge::Unchanged)
             {
                 if (it->has_good_data())
                     Message(msgFix, "repaired %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
