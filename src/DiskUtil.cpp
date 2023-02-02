@@ -650,6 +650,13 @@ bool RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track)
 
                 // Attempt to find the same sector on the target track.
                 it = track.find(s.header, s.datarate, s.encoding);
+                // If not found then try with different interchangable datarate.
+                if (it == track.end() && s.datarate != src_sector_copy.datarate &&
+                    (s.datarate == DataRate::_250K || s.datarate == DataRate::_300K) &&
+                    (src_sector_copy.datarate == DataRate::_250K || src_sector_copy.datarate == DataRate::_300K)) {
+                    it = track.find(s.header, src_sector_copy.datarate, s.encoding);
+                }
+
                 if (it != track.end())
                 {
                     // The missing sector must appear before the match we just found.
