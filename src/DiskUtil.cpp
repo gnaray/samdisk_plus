@@ -603,23 +603,24 @@ bool RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track)
     bool changed = false;
 
     // Loop over all source sectors available.
-    for (auto src_sector : src_track)
+    for (auto& src_sector : src_track)
     {
         // Skip repeated source sectors, as the data source is ambiguous.
         if (src_track.is_repeated(src_sector))
             continue;
 
+        auto src_sector_copy = src_sector;
         // In real-world use 250Kbps/300Kbps are interchangable due to 300rpm/360rpm.
         if (!track.empty() &&
             (track[0].datarate == DataRate::_250K || track[0].datarate == DataRate::_300K) &&
-            (src_sector.datarate == DataRate::_250K || src_sector.datarate == DataRate::_300K))
+            (src_sector_copy.datarate == DataRate::_250K || src_sector_copy.datarate == DataRate::_300K))
         {
             // Convert source to target data rate.
-            src_sector.datarate = track[0].datarate;
+            src_sector_copy.datarate = track[0].datarate;
         }
 
         // Find a target sector with the same CHRN, datarate, and encoding.
-        auto it = track.find(src_sector.header, src_sector.datarate, src_sector.encoding);
+        auto it = track.find(src_sector_copy.header, src_sector_copy.datarate, src_sector_copy.encoding);
         if (it != track.end())
         {
             // Skip repeated target sectors, as the repair target is ambiguous.
@@ -642,7 +643,7 @@ bool RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track)
             auto insert_idx = track.size();
 
             // Loop over sectors appearing after the current sector on the source track.
-            auto idx_src = src_track.index_of(src_sector);
+            auto idx_src = src_track.index_of(src_sector); // Searching for pointer of original src_sector instead of copy.
             for (int i = idx_src + 1; i < src_track.size(); ++i)
             {
                 auto& s = src_track[i];
@@ -657,8 +658,8 @@ bool RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track)
                 }
             }
 
-            Message(msgFix, "added missing %s", CHR(cylhead.cyl, cylhead.head, src_sector.header.sector));
-            track.insert(insert_idx, std::move(src_sector));
+            Message(msgFix, "added missing %s", CHR(cylhead.cyl, cylhead.head, src_sector_copy.header.sector));
+            track.insert(insert_idx, std::move(src_sector_copy));
             changed = true;
         }
     }
