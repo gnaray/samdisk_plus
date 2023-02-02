@@ -196,8 +196,12 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc, uint8_t new_dam)
     }
 
     // Insert the new data copy.
+    int copies = m_data.size();
     m_data.emplace_back(std::move(new_data));
     limit_copies(opt.maxcopies);
+    // If copies amount is the same then the added new data is dismissed so return unchanged.
+    if (copies == m_data.size())
+        return Merge::Unchanged;
 
     // Update the data CRC state and DAM
     m_bad_data_crc = bad_crc;
