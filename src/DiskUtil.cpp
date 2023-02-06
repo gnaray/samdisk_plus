@@ -478,7 +478,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
                 continue;
 
             auto& data = s.data_copy();
-            if (std::memcmp(data.data(), "\0LANCE", 6))
+            if (data.size() < 6 || std::memcmp(data.data(), "\0LANCE", 6))
                 continue;
 
             // LD A,(IX+0); CP (HL); JR NZ,e
