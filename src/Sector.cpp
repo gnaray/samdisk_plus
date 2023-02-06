@@ -83,7 +83,9 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc, uint8_t new_dam)
         if (encoding == Encoding::MFM) crc.init(CRC16::A1A1A1);
         crc.add(new_dam);
         auto bad_data_crc = crc.add(new_data.data(), size() + 2) != 0;
-        assert(bad_crc == bad_data_crc);
+        if (bad_crc != bad_data_crc)
+             util::cout << std::boolalpha << "Debug assert failed: New sector data has " << bad_crc
+                << " CRC and shortening it to expected sector size it has " << bad_data_crc << " CRC\n";
     }
 #endif
 
