@@ -142,7 +142,10 @@ bool WriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
             else if (s.encoding != fmt.encoding)
                 throw util::exception("mixed data encodings are unsuitable for raw output");
             else if (s.header.size != fmt.size)
-                throw util::exception("mixed sector sizes are unsuitable for raw output");
+                throw util::exception("mixed sector sizes are unsuitable for raw output at "
+                    , cylhead, " sector id ", s.header.sector, ", header.size.id=", s.header.size,
+                    " (size=", s.header.sector_size(), ") <> track.format.id=", fmt.size,
+                    " (size=", fmt.sector_size(), ")");
         }
     });
 
