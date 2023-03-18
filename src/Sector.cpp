@@ -126,50 +126,42 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc, uint8_t new_dam)
     auto complete_size = is_8k_sector() ? 0x1800 : new_data.size();
 
     // Compare existing data with the new data, to avoid storing redundant copies.
-    for (auto it = m_data.begin(); it != m_data.end(); )
+    // The goal is keeping only 1 optimal sized data amongst those having matching content.
+    // Optimal sized: complete size else smallest above complete size else biggest below complete size.
+    const auto i_sup = static_cast<int>(m_data.size());
+    for (auto i = 0; i < i_sup; i++)
     {
-        auto& data = *it;
-
-        if (data.size() >= complete_size && new_data.size() >= complete_size)
+        const auto& data = m_data[i];
+        const auto common_size = std::min({ data.size(), new_data.size(), complete_size });
+        if (std::equal(data.begin(), data.begin() + common_size, new_data.begin()))
         {
-            // If the complete area of the data matches, ignore the new copy.
-            if (!std::memcmp(data.data(), new_data.data(), complete_size))
+            if (data.size() == new_data.size())
+            {
                 return Merge::Unchanged;
-        }
-
-        // Existing data is the same size or larger?
-        if (data.size() >= new_data.size())
-        {
-            // Compare the prefix of each.
-            if (std::equal(new_data.begin(), new_data.end(), data.begin()))
-            {
-                // If identical, or new is shorter than complete size, ignore it.
-                if (data.size() == new_data.size() || new_data.size() < complete_size)
-                    return Merge::Unchanged;
-
-                // The new shorter copy replaces the existing data.
-                it = m_data.erase(it);
-                ret = Merge::Improved;
-                continue;
             }
-        }
-        else // existing is shorter
-        {
-            // Compare the prefix of each.
-            if (std::equal(data.begin(), data.end(), new_data.begin()))
+            if (new_data.size() < data.size())
             {
-                // If the existing data is at least complete size, ignore the new data.
+                if (new_data.size() < complete_size)
+                {
+                    return Merge::Unchanged;
+                }
+                // The new shorter complete copy replaces the existing data.
+                erase_data(i--);
+                ret = Merge::Improved;
+                break; // Not continuing. See the goal above.
+            }
+            else
+            {
                 if (data.size() >= complete_size)
+                {
                     return Merge::Unchanged;
-
-                // The new longer copy replaces the existing data.
-                it = m_data.erase(it);
+                }
+                // The new longer complete copy replaces the existing data.
+                erase_data(i--);
                 ret = Merge::Improved;
-                continue;
+                break; // Not continuing. See the goal above.
             }
         }
-
-        ++it;
     }
 
     // Will we now have multiple copies?
@@ -332,6 +324,16 @@ void Sector::set_baddatacrc(bool bad)
             }
         }
     }
+}
+
+void Sector::erase_data(int instance)
+{
+    m_data.erase(m_data.begin() + instance);
+}
+
+void Sector::resize_data(int count)
+{
+    m_data.resize(count);
 }
 
 void Sector::remove_data()
