@@ -20,7 +20,7 @@ public:
     virtual bool preload(const Range& range, int cyl_step);
     virtual void clear();
 
-    virtual const TrackData& read(const CylHead& cylhead, bool uncached = false);
+    virtual const TrackData& read(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1, const Headers& headers_of_stable_sectors = Headers());
     const Track& read_track(const CylHead& cylhead, bool uncached = false);
     const BitBuffer& read_bitstream(const CylHead& cylhead, bool uncached = false);
     const FluxData& read_flux(const CylHead& cylhead, bool uncached = false);

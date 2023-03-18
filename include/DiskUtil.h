@@ -29,11 +29,12 @@ struct ScanContext
 
 const int DUMP_OFFSETS = 1;
 const int DUMP_DIFF = 2;
+const int DUMP_READSTATS = 4;
 
-void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags = 0);
+void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags = 0, const Headers& headers_of_ignored_sectors = Headers());
 bool NormaliseTrack(const CylHead& cylhead, Track& track);
 bool NormaliseBitstream(BitBuffer& bitbuf);
-bool RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track);
+int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Headers& headers_of_ignored_sectors = Headers());
 
 std::vector<std::pair<char, size_t>> DiffSectorCopies(const Sector& sector);
 

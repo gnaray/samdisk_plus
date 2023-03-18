@@ -302,6 +302,17 @@ bool Sector::is_8k_sector() const
         header.size == 6 && has_data();
 }
 
+bool Sector::is_checksummable_8k_sector() const
+{
+    if (is_8k_sector() && has_data())
+    {
+        const Data& data = data_copy();
+        if (!ChecksumMethods(data.data(), data.size()).empty())
+            return true;
+    }
+    return false;
+}
+
 void Sector::set_badidcrc(bool bad)
 {
     m_bad_id_crc = bad;
@@ -383,4 +394,20 @@ int Sector::SizeCodeToLength(int size)
 {
     // 2 ^ (7 + size)
     return 128 << SizeCodeToRealSizeCode(size);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+bool Sectors::has_id_sequence(const int first_id, const int up_to_id) const
+{
+    return this->headers().has_id_sequence(first_id, up_to_id);
+}
+
+Headers Sectors::headers() const
+{
+    Headers headers;
+    for_each(begin(), end(), [&](const Sector& sector) {
+        headers.push_back(sector.header);
+    });
+    return headers;
 }

@@ -158,7 +158,7 @@ void ListDrive(const std::string& path, const HDD& hdd, int verbose);
 
 // scan
 bool ScanImage(const std::string& path, Range range);
-void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context);
+void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context, const Headers& headers_of_ignored_sectors = Headers());
 
 // format, verify
 bool FormatHdd(const std::string& path);
@@ -182,3 +182,4 @@ bool ViewBoot(const std::string& path, Range range);
 // fdrawcmd.sys driver functions
 bool CheckDriver();
 bool ReportDriverVersion();
+

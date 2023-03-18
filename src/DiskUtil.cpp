@@ -41,7 +41,7 @@ static void item_separator(int items)
         util::cout << ',';
 }
 
-void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags)
+void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const Headers& headers_of_ignored_sectors)
 {
     if (opt_hex != 1)
         util::cout << util::fmt(" %2u.%u  ", cylhead.cyl, cylhead.head);
@@ -54,6 +54,10 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
     {
         for (auto& sector : track.sectors())
         {
+            // Skip ignored sectors.
+            if (headers_of_ignored_sectors.contains(sector.header))
+                continue;
+
             util::cout << RecordStr(sector.header.sector);
 
             // Use 'd' suffix for deleted sectors, or 'a' for alt-DAM
@@ -171,21 +175,26 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
 
             for (const auto& sector : track.sectors())
             {
+                bool ignored_sector = headers_of_ignored_sectors.contains(sector.header);
                 auto offset = sector.offset;
 
                 // Invalid or missing offset?
                 if (offset < prevoffset)
                 {
-                    // Show a red question mark instead of the offset
-                    util::cout << colour::RED << '?' << colour::none;
+                    if (!ignored_sector) {
+                        // Show a red question mark instead of the offset
+                        util::cout << colour::RED << '?' << colour::none;
+                    }
                 }
                 else
                 {
-                    // Show offset from previous sector
-                    if (offset >= prevoffset)
-                        util::cout << util::fmt("%s ", WordStr((offset - prevoffset) >> shift));
-                    else
-                        util::cout << util::fmt("-%s ", WordStr((prevoffset - offset) >> shift));
+                    if (!ignored_sector) {
+                        // Show offset from previous sector
+                        if (offset >= prevoffset)
+                            util::cout << util::fmt("%s ", WordStr((offset - prevoffset) >> shift));
+                        else
+                            util::cout << util::fmt("-%s ", WordStr((prevoffset - offset) >> shift));
+                    }
 
                     if (!opt_absoffsets)
                         prevoffset = offset;
@@ -622,13 +631,17 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
 }
 
 // Attempt to repair a track, given another copy of the same track.
-bool RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track)
+int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Headers& headers_of_ignored_sectors)
 {
     bool changed = false;
 
     // Loop over all source sectors available.
     for (auto& src_sector : src_track)
     {
+        // Skip source sector if specified as ignored sector.
+        if (headers_of_ignored_sectors.contains(src_sector.header))
+            continue;
+
         // Skip repeated source sectors, as the data source is ambiguous.
         if (src_track.is_repeated(src_sector))
             continue;

@@ -23,12 +23,12 @@ bool DemandDisk::supports_retries() const
     return false;
 }
 
-const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached)
+const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int with_head_seek_to, const Headers& headers_of_good_sectors)
 {
     if (uncached || !m_loaded[cylhead])
     {
-        // Quick first read, plus sector-based conversion
-        auto trackdata = load(cylhead, true);
+        // Quick first read, plus sector-based conversion.
+        auto trackdata = load(cylhead, true, with_head_seek_to, headers_of_good_sectors);
         auto& track = trackdata.track();
 
         // If the disk supports sector-level retries we won't duplicate them.
@@ -39,14 +39,15 @@ const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached)
         while (rescans > 0 || retries > 0)
         {
             // If no more rescans are required, stop when there's nothing to fix.
-            if (rescans <= 0 && track.has_good_data())
+            if (rescans <= 0 && track.has_good_data(headers_of_good_sectors))
                 break;
-
-            auto rescan_trackdata = load(cylhead);
+            // Do not seek to 0th cyl at second, third, etc. loading.
+            auto rescan_trackdata = load(cylhead, false, false, headers_of_good_sectors);
             auto& rescan_track = rescan_trackdata.track();
 
             // If the rescan found more sectors, use the new track data.
-            if (rescan_track.size() > track.size())
+            // If the rescan found more good sectors, also use the new track data.
+            if (rescan_track.size() > track.size() || rescan_track.good_sectors().size() > track.good_sectors().size())
                 std::swap(trackdata, rescan_trackdata);
 
             // Flux reads include 5 revolutions, others just 1

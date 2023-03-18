@@ -25,9 +25,11 @@ public:
     bool is_mixed_encoding() const;
     bool is_8k_sector() const;
     bool is_repeated(const Sector& sector) const;
-    bool has_good_data() const;
+    bool has_good_data(const Headers& headers_of_good_sectors = Headers()) const;
     bool has_any_good_data() const;
 
+    const Sectors good_sectors() const;
+    const Sectors stable_sectors() const;
     void clear();
     void add(Track&& track);
     AddResult add(Sector&& sector);

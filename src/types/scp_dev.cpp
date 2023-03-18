@@ -37,7 +37,8 @@ public:
     }
 
 protected:
-    TrackData load(const CylHead& cylhead, bool first_read) override
+    TrackData load(const CylHead& cylhead, bool first_read,
+        int /*with_head_seek_to*/, const Headers& /*headers_of_stable_sectors*/) override
     {
         FluxData flux_revs;
         auto rev_limit = std::min(REMAIN_READ_REVS, SuperCardPro::MAX_FLUX_REVS);

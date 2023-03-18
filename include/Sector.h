@@ -33,6 +33,7 @@ public:
     bool is_altdam() const;
     bool is_rx02dam() const;
     bool is_8k_sector() const;
+    bool is_checksummable_8k_sector() const;
 
     void set_badidcrc(bool bad = true);
     void set_baddatacrc(bool bad = true);
@@ -69,4 +70,12 @@ private:
     bool m_bad_data_crc = false;
     std::vector<Data> m_data{};         // copies of sector data
 };
-#pragma once
+
+class Sectors : public std::vector<Sector>
+{
+public:
+    Sectors() = default;
+
+    bool has_id_sequence(const int first_id, const int up_to_id) const;
+    Headers Sectors::headers() const;
+};

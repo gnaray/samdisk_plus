@@ -92,3 +92,14 @@ public:
 
     int cyl = 0, head = 0, sector = 0, size = 0;
 };
+
+class Headers : public std::vector<Header>
+{
+public:
+    Headers() = default;
+
+    bool contains(const Header& header) const;
+    std::string Headers::to_string() const;
+    std::string Headers::sector_ids_to_string() const;
+    bool has_id_sequence(const int first_id, const int up_to_id) const;
+};

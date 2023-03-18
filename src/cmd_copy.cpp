@@ -57,13 +57,33 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     if (opt_minimal)
         TrackUsedInit(*src_disk);
 
+    const bool skip_stable_sectors = opt.skip_stable_sectors ? true : false;
+
     // Copy the range of tracks to the target image
     opt_range.each([&](const CylHead& cylhead) {
         // In minimal reading mode, skip unused tracks
         if (opt_minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
             return;
 
+        Track dst_track;
         Message(msgStatus, "Reading %s", CH(cylhead.cyl, cylhead.head));
+        if (opt_repair)
+        {
+            dst_track = dst_disk->read_track(cylhead);
+            NormaliseTrack(cylhead, dst_track);
+        }
+
+        Headers headers_of_stable_sectors;
+        // If repair mode and user specified skip_stable_sectors then skip checking those.
+        if (opt_repair && skip_stable_sectors) // Repair mode => dst track can be checked.
+        {
+            headers_of_stable_sectors = dst_track.stable_sectors().headers();
+        }
+        if (opt_verbose && opt_repair && !headers_of_stable_sectors.empty()) {
+            Message(msgInfo, "Ignoring already good sectors on %s: %s",
+                CH(cylhead.cyl, cylhead.head), headers_of_stable_sectors.sector_ids_to_string().c_str());
+        }
+
         auto src_data = src_disk->read(cylhead * opt_step);
         auto src_track = src_data.track();
 
@@ -85,9 +105,6 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         // Repair or copy?
         if (opt_repair)
         {
-            auto dst_track = dst_disk->read_track(cylhead);
-            NormaliseTrack(cylhead, dst_track);
-
             // Repair the target track using the source track.
             RepairTrack(cylhead, dst_track, src_track);
 

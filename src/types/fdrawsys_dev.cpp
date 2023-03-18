@@ -52,20 +52,34 @@ protected:
         return true;
     }
 
-    TrackData load(const CylHead& cylhead, bool /*first_read*/) override
+    TrackData load(const CylHead& cylhead, bool /*first_read*/,
+        int with_head_seek_to, const Headers& headers_of_stable_sectors) override
     {
+        if (with_head_seek_to >= 0)
+            m_fdrawcmd->Seek(with_head_seek_to, cylhead.head);
         m_fdrawcmd->Seek(cylhead.cyl, cylhead.head);
 
         auto firstSectorSeen{ 0 };
         auto track = BlindReadHeaders(cylhead, firstSectorSeen);
 
+        bool read_first_gap_requested = opt_gaps >= GAPS_CLEAN;
+        // Read sector if either
+        // 1) its index is 0 and read first gap is requested, its data is used there for sanity checking.
+        // 2) its id is not in specfied headers of good sectors, else it is wasting time.
+        // If sector has bad id or has good data, then ReadSector will skip reading it.
         int i;
-        for (i = 0; i < track.size(); i += 2)
-            ReadSector(cylhead, track, i, firstSectorSeen);
-        for (i = 1; i < track.size(); i += 2)
-            ReadSector(cylhead, track, i, firstSectorSeen);
+        for (i = 0; i < track.size(); i += 2) {
+            auto& sector = track[i];
+            if ((i == 0 && read_first_gap_requested) || !headers_of_stable_sectors.contains(sector.header))
+                ReadSector(cylhead, track, i, firstSectorSeen);
+        }
+        for (i = 1; i < track.size(); i += 2) {
+            auto& sector = track[i];
+            if ((i == 0 && read_first_gap_requested) || !headers_of_stable_sectors.contains(sector.header))
+                ReadSector(cylhead, track, i, firstSectorSeen);
+        }
 
-        if (opt_gaps >= GAPS_CLEAN)
+        if (read_first_gap_requested)
             ReadFirstGap(cylhead, track);
 
         return TrackData(cylhead, std::move(track));

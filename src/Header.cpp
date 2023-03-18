@@ -143,3 +143,44 @@ int Header::sector_size() const
 {
     return Sector::SizeCodeToLength(size);
 }
+
+//////////////////////////////////////////////////////////////////////////////
+
+bool Headers::contains(const Header& header) const
+{
+    return std::find(begin(), end(), header) != end();
+}
+
+std::string Headers::to_string() const
+{
+    std::stringstream s;
+    std::copy(begin(), end(), std::ostream_iterator<Header>(s, " "));
+    return s.str();
+}
+
+std::string Headers::sector_ids_to_string() const
+{
+    std::ostringstream ss;
+    std::for_each(begin(), end(), [&](const Header& header) {
+        if (&header != &*begin())
+            ss << " ";
+        ss << header.sector;
+    });
+    return ss.str();
+}
+
+bool Headers::has_id_sequence(const int first_id, const int length) const
+{
+    if (static_cast<int>(size()) < length) // No chance for long enough sequence.
+        return false;
+    std::vector<bool> sequence(first_id + length);
+    // Check the sequence of first_id, first_id+1, ..., up_to_id
+    for_each(begin(), end(), [&](const Header& header) {
+        if (header.sector >= first_id + length || header.sector < first_id)
+            return;
+        sequence[header.sector] = true; // Multiple ids also mean id is found.
+    });
+    return std::all_of(sequence.begin() + first_id, sequence.end(), [](bool marked) {return marked; });
+}
+
+Headers Headers::map(const std::map<int, int>& sector_id_map) const

@@ -348,7 +348,8 @@ extern "C" {
 enum {
     OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
     OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
-    OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG
+    OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
+    OPT_SKIP_STABLE_SECTORS
 };
 
 static struct option long_options[] =
@@ -454,7 +455,9 @@ static struct option long_options[] =
     { "pll-adjust", required_argument, nullptr, OPT_PLLADJUST },
     { "pll-phase",  required_argument, nullptr, OPT_PLLPHASE },
 
-    { nullptr, 0, nullptr, 0 }
+    { "skip-stable-sectors",no_argument, nullptr, OPT_SKIP_STABLE_SECTORS },      // undocumented. in repair mode skip those sectors which are already rescued in destination.
+
+    { 0, 0, 0, 0 }
 };
 
 static char short_options[] = "?nmdvfLxb:c:h:s:H:r:R:g:i:k:z:0:1:D:";
@@ -659,6 +662,10 @@ bool ParseCommandLine(int argc_, char* argv_[])
         case OPT_VERSION:
             LongVersion();
             return false;
+
+        case OPT_SKIP_STABLE_SECTORS:
+            opt.skip_stable_sectors = true;
+            break;
 
         case ':':
         case '?':   // error

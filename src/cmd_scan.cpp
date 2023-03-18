@@ -11,7 +11,7 @@ static auto& opt_offsets = getOpt<int>("offsets");
 static auto& opt_step = getOpt<int>("step");
 static auto& opt_verbose = getOpt<int>("verbose");
 
-void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context)
+void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context, const Headers& headers_of_ignored_sectors)
 {
     // Reset the context if the cylinder is before the last (such as at a head change)
     if (cylhead.cyl < context.last_cylhead.cyl)
@@ -84,7 +84,7 @@ void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context)
     auto flags = 0;
     if (opt_offsets == 1) flags |= DUMP_OFFSETS;
     if (!opt_nodiff) flags |= DUMP_DIFF;
-    DumpTrack(cylhead, track, context, flags);
+    DumpTrack(cylhead, track, context, flags, headers_of_ignored_sectors);
 }
 
 bool ScanImage(const std::string& path, Range range)
