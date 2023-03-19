@@ -59,6 +59,10 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
     const bool skip_stable_sectors = opt.skip_stable_sectors && !src_disk->is_constant_disk() ? true : false;
 
+    // tmp dst path in case of merge or repair mode.
+    const std::string tmp_dst_path = util::prepend_extension(dst_path, "tmp.");
+    bool result = false;
+
     // If repair mode and normal disk then determine normal track size by calculating the average track size.
     int normal_track_size = 0;
     int normal_first_sector_id = 1;
@@ -163,7 +167,15 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         dst_disk->metadata.emplace(m);
 
     // Write the new/merged target image
-    return WriteImage(dst_path, dst_disk);
+    // When merge or repair mode is requested, a new tmp file is written and then renamed as final file.
+    if (opt.merge || opt.repair) {
+        if (result = WriteImage(tmp_dst_path, dst_disk))
+            if (result = !std::remove(dst_path.c_str()))
+                result = !std::rename(tmp_dst_path.c_str(), dst_path.c_str());
+    }
+    else
+        result = WriteImage(dst_path, dst_disk);
+    return result;
 }
 
 bool Image2Trinity(const std::string& path, const std::string&/*trinity_path*/) // ToDo: use trinity_path for record

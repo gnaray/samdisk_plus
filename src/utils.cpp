@@ -54,6 +54,29 @@ std::string trim(const std::string& str)
     return s;
 }
 
+std::string replace_extension(const std::string& s, const std::string& new_ext)
+{
+    std::string new_s = s;
+    std::string::size_type i = new_s.rfind('.', new_s.length());
+
+    if (i != std::string::npos) {
+        new_s.replace(i + 1, new_s.length() - i - 1, new_ext);
+    }
+    return new_s;
+}
+
+std::string prepend_extension(const std::string& s, const std::string& prepender)
+{
+    std::string new_s = s;
+    std::string::size_type i = new_s.rfind('.', new_s.length());
+
+    if (i != std::string::npos) {
+        const std::string replacer = prepender + new_s.substr(i + 1);
+        new_s.replace(i + 1, new_s.length() - i - 1, replacer);
+    }
+    return new_s;
+}
+
 void bit_reverse(uint8_t* pb, int len)
 {
     while (len-- > 0)
