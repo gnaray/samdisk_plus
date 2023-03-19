@@ -44,7 +44,7 @@ void ViewTrack(const CylHead& cylhead, const Track& track)
         else
         {
             // Determine the data copy and number of bytes to show
-            auto copy = std::min(sector.copies(), opt_datacopy);
+            auto copy = std::min(sector.copies() - 1, opt_datacopy);
             const Data& data = sector.data_copy(copy);
             auto data_size = data.size();
 
