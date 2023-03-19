@@ -117,6 +117,8 @@ public:
         const int numDatas = dataReadCount.size();
         if (numDatas != sector.copies())
         {
+            if (!opt.paranoia && sector.has_good_data())
+                throw util::exception("readstats info does not match track info, specifying paranoia parameter should work");
             throw util::exception("readstats info does not match track info at ", cylhead, " sector ", sector.header.sector);
         }
         sector.resize_data(numDatas);
@@ -397,9 +399,10 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                 {
                     // Multiple error copies extension?
                     // Also accept 48K as 3x16K copies, as found in early public test images.
+                    // Multiple good copies extension (paranoia) means that crc error is unconcerned.
                     // Note: in theory e.g. a 512 bytes sector can have 96 copies which provides 49152 length not meaning 48K sector!
                     // Note: checking data size if equals to 49152 is unnecessary because 49152 % any native size equals to 0.
-                    if (data_crc_error && ((data_size % native_size) == 0 || data_size == 49152))
+                    if ((data_crc_error || opt.paranoia) && ((data_size % native_size) == 0 || data_size == 49152))
                     {
                         // Accept 48K as 3x16K, regardless of native size
                         if (data_size == 49152)
@@ -632,6 +635,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
 
     // Saving readstats if requested and writing RDSK image file.
     bool opt_add_readstats_block = opt.readstats && edsk_version >= 2;
+    bool opt_paranoia_local = opt.paranoia && opt_add_readstats_block;
     bool opt_legacy_local = opt.legacy != 0 && edsk_version < 2;
     std::vector<EdskReadstatsElement> readstats_vector;
     readstats_vector.reserve((peh->bTracks + 1) * peh->bSides * disk->read_track(CylHead(0, 0)).size());
@@ -754,7 +758,6 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
 
                         data_size = real_size;
                     }
-
                     // Drop extra copies on sectors larger than the track, unless it's
                     // an 8K sector with an error during the first 6K of data.
                     else if (data_size > track_capacity && !track.is_8k_sector())
@@ -783,11 +786,12 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                         if (data_size > real_size) data_size = real_size;
                     }
 
+                    int copy;
                     // Copy the sector data into place
                     for (copy = 0; copy < num_copies; ++copy)
                     {
-                        // Sector having good CRC and multiple copies is not allowed.
-                        if (copy > 0 && !sector.has_baddatacrc())
+                        // Sector having good CRC and multiple copies is allowed only in paranoia mode.
+                        if (copy > 0 && !sector.has_baddatacrc() && !opt_paranoia_local)
                             break;
 
                         const Data& data = sector.data_copy(copy);

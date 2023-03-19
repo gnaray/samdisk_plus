@@ -7,6 +7,8 @@
 #include "BlockDevice.h"
 #include "FluxDecoder.h"
 
+constexpr int STABILITY_LEVEL_DEFAULT = 3;
+
 enum { cmdCopy, cmdScan, cmdFormat, cmdList, cmdView, cmdInfo, cmdDir, cmdRpm, cmdVerify, cmdUnformat, cmdVersion, cmdCreate, cmdEnd };
 
 static const char* aszCommands[] =
@@ -349,7 +351,8 @@ enum {
     OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
     OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
-    OPT_NORMAL_DISK, OPT_READSTATS, OPT_SKIP_STABLE_SECTORS
+    OPT_NORMAL_DISK,
+    OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL
 };
 
 static struct option long_options[] =
@@ -457,6 +460,8 @@ static struct option long_options[] =
 
     { "normal-disk",      no_argument, nullptr, OPT_NORMAL_DISK },   // undocumented. Expects disk as normal: all units (sectors, tracks, sides) have same size, sector ids form a sequence starting by 1.
     { "readstats",        no_argument, nullptr, OPT_READSTATS },     // undocumented. Looking for good data by the reading statistics. Requires RDSK format image.
+    { "paranoia",         no_argument, nullptr, OPT_PARANOIA },      // undocumented. (Multi good data). Rescues floppy image assuming that a good CRC does not necessarily mean good data. It implies readstats thus requires using RDSK format image. It also sets stability_level as 5 if not specified.
+    { "stability-level",     required_argument, nullptr, OPT_STABILITY_LEVEL },  // undocumented.  // The count of samely read data of a sector which is considered stable. < 1 means only good data is stable (backward compatibility).
     { "skip-stable-sectors",no_argument, nullptr, OPT_SKIP_STABLE_SECTORS },      // undocumented. in repair mode skip those sectors which are already rescued in destination.
 
     { 0, 0, 0, 0 }
@@ -677,6 +682,10 @@ bool ParseCommandLine(int argc_, char* argv_[])
             opt.readstats = true;
             break;
 
+        case OPT_PARANOIA:
+            opt.paranoia = true;
+            break;
+
         case OPT_SKIP_STABLE_SECTORS:
             opt.skip_stable_sectors = true;
             break;
@@ -727,6 +736,19 @@ bool ParseCommandLine(int argc_, char* argv_[])
     }
 
     if (opt.absoffsets) opt.offsets = 1;
+
+    if (opt.stability_level > 0 && (!opt.readstats || !opt.paranoia))
+        throw util::exception("invalid usage of stability_level: it also requires readstats and paranoia parameters");
+    if (opt.paranoia)
+    {
+        if (!opt.readstats)
+            throw util::exception("invalid usage of paranoia: it also requires readstats parameter");
+        if (opt.stability_level <= 0)
+        {
+            opt.stability_level = STABILITY_LEVEL_DEFAULT;
+            util::cout << "The stability-level is not specified, using " << opt.stability_level << " by default\n";
+        }
+    }
 
     return true;
 }

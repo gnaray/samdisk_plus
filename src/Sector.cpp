@@ -105,7 +105,11 @@ bool Sector::has_stable_data() const
     if (best_data_index < 0)
         return false;
     const auto bad_crc = (!opt.normal_disk && is_checksummable_8k_sector()) ? false : has_baddatacrc();
-    return !bad_crc;
+    // Backward compatibility: if no paranoia then stable data means good data.
+    if (!opt.paranoia)
+        return !bad_crc;
+    const auto read_count = data_copy_read_stats(best_data_index).ReadCount();
+    return read_count >= opt.stability_level;
 }
 
 int Sector::read_attempts() const
@@ -274,7 +278,9 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
 
         // Multiple good copies mean a difference in the gap data after
         // a good sector, perhaps due to a splice. We just ignore it.
-        if (!has_baddatacrc())
+        // IMHO originally the goal was to avoid multiple good copies assuming a good CRC means good data.
+        // However in paranoia mode a good CRC does not necessarily mean good data.
+        if (!has_baddatacrc() && !opt.paranoia)
             return Merge::Unchanged;
 
         // Keep multiple copies the same size, whichever is shortest

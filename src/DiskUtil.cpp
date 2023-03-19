@@ -684,6 +684,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
             if (track.is_repeated(*it))
                 continue;
 
+            const auto had_good_data = it->has_good_data();
             // Merge the two sectors to give the best version.
             const auto merge_status = it->merge(std::move(src_sector_copy));
             if (merge_status != Sector::Merge::Unchanged)
@@ -692,7 +693,12 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
                 if (merge_status != Sector::Merge::Matched)
                 {
                     if (it->has_good_data())
-                        Message(msgFix, "repaired bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                    {
+                        if (had_good_data && opt.paranoia)
+                            Message(msgFix, "improved good %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                        else
+                            Message(msgFix, "repaired bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                    }
                     else
                         Message(msgFix, "improved bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
                 }
