@@ -273,7 +273,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 
     firstSectorSeen = scan_result->firstseen;
 
-    if (scan_result->count > 0)
+    if (scan_result->count > 0 && m_lastDataRate != DataRate::Unknown)
     {
         auto bit_us = GetDataTime(m_lastDataRate, m_lastEncoding) / 16;
         track.tracktime = scan_result->tracktime;
