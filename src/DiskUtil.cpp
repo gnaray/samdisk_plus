@@ -633,7 +633,7 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
 // Attempt to repair a track, given another copy of the same track.
 int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Headers& headers_of_ignored_sectors)
 {
-    bool changed = false;
+    int changed_amount = 0;
 
     // Loop over all source sectors available.
     for (auto& src_sector : src_track)
@@ -665,13 +665,14 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
                 continue;
 
             // Merge the two sectors to give the best version.
-            if (it->merge(std::move(src_sector_copy)) != Sector::Merge::Unchanged)
+            const auto merge_status = it->merge(std::move(src_sector_copy));
+            if (merge_status != Sector::Merge::Unchanged)
             {
+                changed_amount++;
                 if (it->has_good_data())
-                    Message(msgFix, "repaired %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                    Message(msgFix, "repaired bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
                 else
-                    Message(msgFix, "improved %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
-                changed = true;
+                    Message(msgFix, "improved bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
             }
         }
         else
@@ -702,13 +703,20 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
                 }
             }
 
-            Message(msgFix, "added missing %s", CHR(cylhead.cyl, cylhead.head, src_sector_copy.header.sector));
+            std::string details = "(";
+            if (src_sector_copy.has_data())
+                details += std::string((src_sector_copy.has_baddatacrc() ? "bad" : "good")) + " CRC";
+            else
+                details += "no data";
+            details += ")";
+            Message(msgFix, "added missing %s %s", CHR(cylhead.cyl, cylhead.head, src_sector_copy.header.sector), details.c_str());
             track.insert(insert_idx, std::move(src_sector_copy));
-            changed = true;
+            changed_amount++;
         }
     }
 
-    return changed;
+    return changed_amount;
+}
 }
 
 
