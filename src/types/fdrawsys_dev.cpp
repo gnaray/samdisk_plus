@@ -55,6 +55,10 @@ protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
         int with_head_seek_to, const Headers& headers_of_stable_sectors) override
     {
+        // Limiting sector reading as specified in case of normal disk request.
+        auto normal_sector_id_begin = opt.base > 0 ? opt.base : 1;
+        auto normal_sector_id_end = opt.sectors > 0 ? (normal_sector_id_begin + opt.sectors) : 256;
+
         if (with_head_seek_to >= 0)
             m_fdrawcmd->Seek(with_head_seek_to, cylhead.head);
         m_fdrawcmd->Seek(cylhead.cyl, cylhead.head);
@@ -70,12 +74,14 @@ protected:
         int i;
         for (i = 0; i < track.size(); i += 2) {
             auto& sector = track[i];
-            if ((i == 0 && read_first_gap_requested) || !headers_of_stable_sectors.contains(sector.header))
+            if ((i == 0 && read_first_gap_requested) || (!headers_of_stable_sectors.contains(sector.header)
+                && (!opt.normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
                 ReadSector(cylhead, track, i, firstSectorSeen);
         }
         for (i = 1; i < track.size(); i += 2) {
             auto& sector = track[i];
-            if ((i == 0 && read_first_gap_requested) || !headers_of_stable_sectors.contains(sector.header))
+            if ((i == 0 && read_first_gap_requested) || (!headers_of_stable_sectors.contains(sector.header)
+                && (!opt.normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
                 ReadSector(cylhead, track, i, firstSectorSeen);
         }
 
@@ -239,9 +245,27 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             throw win32_error(GetLastError(), "scan");
     }
 
-    // If the track time is slower than 200rpm, an index-halving cable must be present
+    if (opt.normal_disk)
+    {
+        const auto rpm_time_tolerance = 0.01;
+        int rpm_time = RPM_TIME_300; // Default value, see SAMdisk OPT_RPM.
+        if (opt.rpm == 200)
+            rpm_time = RPM_TIME_200;
+        else if (opt.rpm == 300)
+            rpm_time = RPM_TIME_300;
+        else if (opt.rpm == 360)
+            rpm_time = RPM_TIME_360;
+        auto tolerated_max_rpm_time = static_cast<DWORD>((1 + rpm_time_tolerance) * rpm_time);
+        // If the track time is slower than the specified rpm time, something is wrong.
+        if (scan_result->tracktime > tolerated_max_rpm_time)
+        {
+            Message(msgWarning, "track read of %s is too slow (%u > %u)",
+                CH(cylhead.cyl, cylhead.head), scan_result->tracktime, rpm_time);
+            throw util::diskslow_exception("track time is too big thus disk is too slow");
+        }
+    }
     if (scan_result->tracktime > RPM_TIME_200)
-        throw util::exception("index-halving cables are no longer supported");
+        throw util::diskslow_exception("index-halving cables are no longer supported");
 
     firstSectorSeen = scan_result->firstseen;
 
@@ -254,6 +278,12 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
         for (int i = 0; i < scan_result->count; ++i)
         {
             const auto& scan_header = scan_result->Header[i];
+            if (opt.normal_disk && (scan_header.cyl != cylhead.cyl || scan_header.head != cylhead.head))
+            {
+                Message(msgWarning, "ReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
+                    CH(cylhead.cyl, cylhead.head), CHR(scan_header.cyl, scan_header.head, scan_header.sector));
+                continue;
+            }
             Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
             Sector sector(m_lastDataRate, m_lastEncoding, header);
 
@@ -318,6 +348,16 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
                 Message(msgWarning, "FDC seems unable to read 128-byte sectors correctly");
                 m_warnedMFM128 = true;
             }
+            continue;
+        }
+
+        // Unsure what result.sector is exactly. Sometimes header.sector but usually header.sector+1.
+        if (opt.normal_disk && (header.cyl != cylhead.cyl || header.head != cylhead.head
+            || result.cyl != header.cyl || result.head != header.head
+            || (result.sector != header.sector && result.sector != header.sector + 1)))
+        {
+            Message(msgWarning, "ReadSector: track's %s does not match sector's %s, ignoring this sector.",
+                CH(cylhead.cyl, cylhead.head), CHR(header.cyl, header.head, header.sector));
             continue;
         }
 

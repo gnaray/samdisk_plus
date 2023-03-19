@@ -27,6 +27,7 @@ public:
     bool has_good_data() const;
     bool has_gapdata() const;
     bool has_shortdata() const;
+    bool has_normaldata() const;
     bool has_badidcrc() const;
     bool has_baddatacrc() const;
     bool is_deleted() const;
@@ -41,6 +42,7 @@ public:
     void resize_data(int count);
     void remove_data();
     void remove_gapdata(bool keep_crc = false);
+    bool has_stable_data() const;
     void limit_copies(int max_copies);
 
     int size() const;
@@ -50,6 +52,7 @@ public:
     DataList& datas();
     const Data& data_copy(int copy = 0) const;
     Data& data_copy(int copy = 0);
+    int get_best_data_index() const;
 
     Merge add(Data&& data, bool bad_crc = false, uint8_t dam = 0xfb);
     int copies() const;

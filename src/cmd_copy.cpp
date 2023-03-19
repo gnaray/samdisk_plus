@@ -59,6 +59,35 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
     const bool skip_stable_sectors = opt.skip_stable_sectors ? true : false;
 
+    // If repair mode and normal disk then determine normal track size by calculating the average track size.
+    int normal_track_size = 0;
+    int normal_first_sector_id = 1;
+    if (opt.repair && opt.normal_disk) {
+        // If sectors is specified then it is the normal track size.
+        if (opt.sectors > 0)
+        {
+            normal_track_size = opt.sectors;
+        }
+        else
+        {
+            int dst_track_amount = 0;
+            int sum_dst_track_size = 0;
+            opt.range.each([&](const CylHead& cylhead) {
+                Track dst_track = dst_disk->read_track(cylhead);
+                NormaliseTrack(cylhead, dst_track);
+                auto track_normal_probable_size = dst_track.normal_probable_size();
+                if (track_normal_probable_size > 0) {
+                    sum_dst_track_size += track_normal_probable_size;
+                    dst_track_amount++;
+                }
+            });
+            if (dst_track_amount > 0)
+                normal_track_size = static_cast<int>(std::round(static_cast<double>(sum_dst_track_size) / dst_track_amount));
+        }
+        if (opt.base > 0)
+            normal_first_sector_id = opt.base;
+    }
+
     // Copy the range of tracks to the target image
     opt_range.each([&](const CylHead& cylhead) {
         // In minimal reading mode, skip unused tracks
@@ -67,7 +96,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
         Track dst_track;
         Message(msgStatus, "Reading %s", CH(cylhead.cyl, cylhead.head));
-        if (opt_repair)
+        if (opt_repair) // Read dst track early so we can check if it has bad sectors.
         {
             dst_track = dst_disk->read_track(cylhead);
             NormaliseTrack(cylhead, dst_track);
@@ -78,6 +107,11 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         if (opt_repair && skip_stable_sectors) // Repair mode => dst track can be checked.
         {
             headers_of_stable_sectors = dst_track.stable_sectors().headers();
+            // If repair mode and user specified normal-disk then do not repair tracks
+            // which has track size amount of id sequence at least.
+            if (opt.normal_disk && normal_track_size > 0
+                && headers_of_stable_sectors.has_id_sequence(normal_first_sector_id, normal_track_size))
+                return;
         }
         if (opt_verbose && opt_repair && !headers_of_stable_sectors.empty()) {
             Message(msgInfo, "Ignoring already good sectors on %s: %s",

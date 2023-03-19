@@ -47,6 +47,17 @@ std::vector<Sector>& Track::sectors()
     return m_sectors;
 }
 
+const std::vector<Sector>& Track::sectors_view_ordered_by_id() const
+{
+    m_sectors_view_ordered_by_id = m_sectors;
+    std::sort(m_sectors_view_ordered_by_id.begin(), m_sectors_view_ordered_by_id.end(),
+        [](const Sector& s1, const Sector& s2) {
+            return s1.header.sector < s2.header.sector;
+        }
+    );
+    return m_sectors_view_ordered_by_id;
+}
+
 const Sector& Track::operator [] (int index) const
 {
     assert(index < static_cast<int>(m_sectors.size()));
@@ -172,12 +183,66 @@ const Sectors Track::good_sectors() const {
     std::copy_if(begin(), end(), std::back_inserter(good_sectors), [&](const Sector& sector) {
         if (sector.has_badidcrc() || !sector.has_data())
             return false;
-        if (sector.is_checksummable_8k_sector())
+        if (!opt.normal_disk && sector.is_checksummable_8k_sector())
             return true;
+        if (opt.normal_disk && !sector.has_normaldata())
+            return false;
         return sector.has_good_data();
     });
 
     return good_sectors;
+}
+
+const Sectors Track::stable_sectors() const {
+    Sectors stable_sectors;
+    std::copy_if(begin(), end(), std::back_inserter(stable_sectors), [&](const Sector& sector) {
+        if (sector.has_badidcrc() || !sector.has_data())
+            return false;
+        // Checksummable 8k sector is considered in has_stable_data method.
+        if (opt.normal_disk && !sector.has_normaldata())
+            return false;
+        return sector.has_stable_data();
+    });
+
+    return stable_sectors;
+}
+
+bool Track::has_stable_data(const Headers& headers_of_stable_sectors) const
+{
+    auto it = std::find_if(begin(), end(), [&](const Sector& sector) {
+        // Sector in headers of stable sectors is considered stable sector.
+        if (!sector.has_badidcrc() && headers_of_stable_sectors.contains(sector.header))
+            return false;
+        if (!sector.has_data())
+            return true;
+        // Checksummable 8k sector is considered in has_stable_data method.
+        if (opt.normal_disk && !sector.has_normaldata())
+            return true;
+        return !sector.has_stable_data();
+    });
+
+    return it == end();
+}
+
+int Track::normal_probable_size() const {
+    int amount_of_sector_id = 0;
+    const auto sector_id_summer = [&](auto a, auto b) {
+        if (b.has_badidcrc())
+            return a;
+        amount_of_sector_id++;
+        return a + b.header.sector - 1; // Using sector indexing from 0 thus the -1.
+    };
+    const auto sum_of_sector_id = std::accumulate(begin(), end(), 0, sector_id_summer);
+    if (amount_of_sector_id == 0)
+        return 0;
+    const auto average_sector_id = static_cast<double>(sum_of_sector_id) / amount_of_sector_id;
+    const auto max_sector_id = static_cast<int>(std::round(average_sector_id * 2 + 1)); // Back to sector indexing from 1 thus the +1.
+    const auto sector_id_counter = [&](auto a, auto b) {
+        if (b.has_badidcrc())
+            return a;
+        return a + ((b.header.sector >=1 && b.header.sector <= max_sector_id) ? 1 : 0);
+    };
+    return std::accumulate(begin(), end(), 0, sector_id_counter);
 }
 
 void Track::clear()

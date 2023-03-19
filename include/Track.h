@@ -15,6 +15,7 @@ public:
     int size() const;
     const std::vector<Sector>& sectors() const;
     std::vector<Sector>& sectors();
+    const std::vector<Sector>& sectors_view_ordered_by_id() const;
     const Sector& operator [] (int index) const;
     Sector& operator [] (int index);
     int index_of(const Sector& sector) const;
@@ -30,6 +31,9 @@ public:
 
     const Sectors good_sectors() const;
     const Sectors stable_sectors() const;
+    bool has_stable_data(const Headers& headers_of_stable_sectors) const;
+    int normal_probable_size() const;
+
     void clear();
     void add(Track&& track);
     AddResult add(Sector&& sector);
@@ -59,6 +63,7 @@ public:
 
 private:
     std::vector<Sector> m_sectors{};
+    mutable std::vector<Sector> m_sectors_view_ordered_by_id{};
 
     // Max bitstream position difference for sectors to be considerd the same.
     // Used to match sectors between revolutions, and needs to cope with the

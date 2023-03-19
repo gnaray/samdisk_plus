@@ -68,6 +68,23 @@ Data& Sector::data_copy(int copy/*=0*/)
     return m_data[copy];
 }
 
+int Sector::get_best_data_index() const
+{
+    if (copies() == 0)
+        return -1;
+    return 0;
+}
+
+bool Sector::has_stable_data() const
+{
+    const auto best_data_index = get_best_data_index();
+    if (best_data_index < 0)
+        return false;
+    const auto bad_crc = (!opt.normal_disk && is_checksummable_8k_sector()) ? false : has_baddatacrc();
+    return !bad_crc;
+}
+
+int Sector::read_attempts() const
 int Sector::copies() const
 {
     return static_cast<int>(m_data.size());
@@ -268,6 +285,11 @@ bool Sector::has_gapdata() const
 bool Sector::has_shortdata() const
 {
     return data_size() < size();
+}
+
+bool Sector::has_normaldata() const
+{
+    return has_data() && data_size() == size();
 }
 
 bool Sector::has_badidcrc() const

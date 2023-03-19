@@ -31,7 +31,8 @@ void ViewTrack(const CylHead& cylhead, const Track& track)
     if (opt_verbose)
         return;
 
-    for (const auto& sector : track.sectors())
+    const std::vector<Sector>& sectors = opt.normal_disk ? track.sectors_view_ordered_by_id() : track.sectors();
+    for (const auto& sector : sectors)
     {
         // If a specific sector/size is required, skip non-matching ones
         if ((opt_sectors != -1 && (sector.header.sector != opt_sectors)) ||
@@ -254,7 +255,7 @@ bool ViewImage(const std::string& path, Range range)
                     throw util::exception("unsupported track view encoding");
                 }
             }
-            }, true);
+            }, !opt.normal_disk);
     }
 
     return true;

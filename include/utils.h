@@ -182,6 +182,14 @@ public:
         : std::runtime_error(make_string(std::forward<Args>(args)...)) {}
 };
 
+class diskslow_exception : public exception
+{
+public:
+    template <typename ... Args>
+    explicit diskslow_exception(Args&& ... args)
+        : exception(make_string(std::forward<Args>(args)...)) {}
+};
+
 std::string fmt(const char* fmt, ...);
 std::vector<std::string> split(const std::string& str, char delim = ' ', bool skip_empty = false);
 std::string trim(const std::string& str);
