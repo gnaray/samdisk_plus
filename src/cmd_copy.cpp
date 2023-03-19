@@ -25,9 +25,25 @@ static auto& opt_resize = getOpt<int>("resize");
 static auto& opt_step = getOpt<int>("step");
 static auto& opt_verbose = getOpt<int>("verbose");
 
+bool OpenReadImage(const std::string& path, std::shared_ptr<Disk>& disk)
+{
+    disk.reset();
+    disk = std::make_shared<Disk>();
+    // Read the source image
+    if (!ReadImage(path, disk))
+        return false;
+
+    // Limit to our maximum geometry, and default to copy everything present in the source
+    ValidateRange(opt.range, MAX_TRACKS, MAX_SIDES, opt.step, disk->cyls(), disk->heads());
+
+    if (opt.minimal)
+        TrackUsedInit(*disk);
+    return true;
+}
+
 bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 {
-    auto src_disk = std::make_shared<Disk>();
+    std::shared_ptr<Disk> src_disk;
     auto dst_disk = std::make_shared<Disk>();
     ScanContext context;
 
@@ -39,15 +55,8 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         Message(msgInfo, "assuming --encoding=Ace due to .dti output image");
     }
 
-    // Read the source image
-    if (!ReadImage(src_path, src_disk))
+    if (!OpenReadImage(src_path, src_disk))
         return false;
-
-    // Limit to our maximum geometry, and default to copy everything present in the source
-    ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, opt_step, src_disk->cyls(), src_disk->heads());
-
-    if (opt_minimal)
-        TrackUsedInit(*src_disk);
 
     const bool skip_stable_sectors = opt.skip_stable_sectors && !src_disk->is_constant_disk() ? true : false;
 
@@ -147,10 +156,32 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                 }
 
                 TrackData src_data;
-                // https://docs.rs-online.com/41b6/0900766b8001b0a3.pdf, 7.2 Read error
-                // Seeking head forward then backward then forward etc. when track is retried.
-                const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk->cyls() - 1)) : -1;
-                src_data = src_disk->read(cylhead * opt.step, !src_disk->is_constant_disk(), with_head_seek_to, headers_of_stable_sectors);
+                auto is_disk_slow = true;
+                for (auto i = 5; is_disk_slow && i > 0; i--) // Try 5 times, it could be commandline argument.
+                {
+                    try
+                    {
+                        // https://docs.rs-online.com/41b6/0900766b8001b0a3.pdf, 7.2 Read error
+                        // Seeking head forward then backward then forward etc. when track is retried.
+                        const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk->cyls() - 1)) : -1;
+                        src_data = src_disk->read(cylhead * opt.step, !src_disk->is_constant_disk(), with_head_seek_to, headers_of_stable_sectors);
+                        is_disk_slow = false;
+                    }
+                    catch (util::diskslow_exception & e)
+                    {
+                        if (opt.normal_disk)
+                        {
+                            util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
+                            Message(msgInfo, "If it happens too often, specifying lower rpm might help.");
+                            if (!OpenReadImage(src_path, src_disk))
+                                throw util::exception("Reopening ", src_path, " failed");
+                        }
+                        else
+                            throw;
+                    }
+                }
+                if (is_disk_slow)
+                    continue;
                 auto src_track = src_data.track();
 
                 if (src_data.has_bitstream())
