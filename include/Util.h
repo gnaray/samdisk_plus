@@ -61,6 +61,11 @@ char(&ArraySizeHelper(T(&array)[N]))[N];
    __DATE__[10]-'0' \
 )
 
+#define YEAR_LAST_2_DIGITS ( \
+  (__DATE__[9]-'0') * 10 + \
+   __DATE__[10]-'0' \
+)
+
 
 #define USECS_PER_MINUTE    60000000
 
