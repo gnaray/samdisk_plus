@@ -106,6 +106,13 @@ bool FdrawcmdSys::GetFdcInfo(FD_FDC_INFO& info)
         &info, sizeof(info));
 }
 
+bool FdrawcmdSys::CmdPartId(uint8_t& part_id)
+{
+    return Ioctl(IOCTL_FDCMD_PART_ID,
+        nullptr, 0,
+        &part_id, sizeof(part_id));
+}
+
 bool FdrawcmdSys::Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk)
 {
     FD_CONFIGURE_PARAMS cp{};

@@ -26,6 +26,7 @@ public:
     bool SetMotorOff();
     bool SetDiskCheck(bool enable);
     bool GetFdcInfo(FD_FDC_INFO& info);
+    bool CmdPartId(uint8_t& part_id);
     bool Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk);
     bool Specify(int step_rate, int head_unload_time, int head_load_time);
     bool Recalibrate();
