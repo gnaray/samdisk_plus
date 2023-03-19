@@ -138,10 +138,10 @@ Format CheckBeforeWriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
         for (auto& s : track.sectors())
         {
             if (s.header.sector < fmt.base) // Possible only if base is overriden with higher value.
-                return;
+                continue;
             // If sectors is overriden then ignore too big, possible non-sequential sector numbers.
             if (sectorsOverriden && s.header.sector >= fmt.base + fmt.sectors)
-                return;
+                continue;
 
             // Track the highest sector number
             if (s.header.sector > max_id)
