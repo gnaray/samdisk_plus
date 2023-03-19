@@ -27,7 +27,7 @@ static auto& opt_legacy = getOpt<int>("legacy");
 // Must be same long as EDSK_SIGNATURE and first letter must differ from other first letter of other signatures.
 #define RDSK_SIGNATURE          "REPAIRER CPC DSK File\r\nDisk-Info\r\n"
 #define EDSK_TRACK_SIG          "Track-Info\r\n"
-#define ESDK_MAX_TRACK_SIZE     0xff00
+#define EDSK_MAX_TRACK_SIZE     0xff00
 #define RDSK_MAX_TRACK_SIZE     0x4000000 // Basically 4 GB would be the limit, but 8192 * 21 * 20 * 10 should be enough (max sector size * max sectors per track * max copies * floppy drive amount).
 #define EDSK_OFFSETS_SIG        "Offset-Info\r\n"
 #define RDSK_READSTATS_SIG      "ReadStats-Info\r\n"
@@ -244,7 +244,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
 
     disk->metadata["creator"] = util::trim(std::string(peh->szCreator, sizeof(peh->szCreator)));
 
-    MEMORY mem(edsk_version >= 2 ? RDSK_MAX_TRACK_SIZE : ESDK_MAX_TRACK_SIZE);
+    MEMORY mem(edsk_version >= 2 ? RDSK_MAX_TRACK_SIZE : EDSK_MAX_TRACK_SIZE);
     bool fWarned6K = false;
 
     for (uint8_t cyl = 0; cyl < cyls; ++cyl)
@@ -603,7 +603,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk)
 
 bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
 {
-    MEMORY mem(edsk_version >= 2 ? RDSK_MAX_TRACK_SIZE : ESDK_MAX_TRACK_SIZE);
+    MEMORY mem(edsk_version >= 2 ? RDSK_MAX_TRACK_SIZE : EDSK_MAX_TRACK_SIZE);
     auto pbTrack = mem.pb;
 
     // For RDSK (edsk version >= 2) the size of abHeader must have been increased in order
@@ -852,7 +852,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                 if (!fFitLegacy) { fFitLegacy = true; continue; }
 
                 // If we run out of methods, fail
-                throw util::exception(cylhead, " size (", track_size, ") exceeds EDSK track limit (", ESDK_MAX_TRACK_SIZE, ")");
+                throw util::exception(cylhead, " size (", track_size, ") exceeds EDSK track limit (", EDSK_MAX_TRACK_SIZE, ")");
             }
 
             // Round the size up to the next 256-byte boundary, and store the MSB in the index
