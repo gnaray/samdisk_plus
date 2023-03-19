@@ -351,7 +351,7 @@ enum {
     OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
     OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
-    OPT_NORMAL_DISK,
+    OPT_TRACK_RETRIES, OPT_DISK_RETRIES, OPT_NORMAL_DISK,
     OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL
 };
 
@@ -463,6 +463,8 @@ static struct option long_options[] =
     { "paranoia",         no_argument, nullptr, OPT_PARANOIA },      // undocumented. (Multi good data). Rescues floppy image assuming that a good CRC does not necessarily mean good data. It implies readstats thus requires using RDSK format image. It also sets stability_level as 5 if not specified.
     { "stability-level",     required_argument, nullptr, OPT_STABILITY_LEVEL },  // undocumented.  // The count of samely read data of a sector which is considered stable. < 1 means only good data is stable (backward compatibility).
     { "skip-stable-sectors",no_argument, nullptr, OPT_SKIP_STABLE_SECTORS },      // undocumented. in repair mode skip those sectors which are already rescued in destination.
+    { "track-retries",    required_argument, nullptr, OPT_TRACK_RETRIES }, // undocumented. Amount od track retries. Each retry move the floppy drive head a bit.
+    { "disk-retries",     required_argument, nullptr, OPT_DISK_RETRIES },  // undocumented. Amount of disk retries. If auto then do it while data improved.
 
     { 0, 0, 0, 0 }
 };
@@ -673,6 +675,26 @@ bool ParseCommandLine(int argc_, char* argv_[])
         case OPT_VERSION:
             LongVersion();
             return false;
+
+        case OPT_TRACK_RETRIES:
+        {
+            auto str = util::lowercase(optarg);
+            if (str == std::string("auto").substr(0, str.length()))
+                opt.track_retries = DISK_RETRY_AUTO;
+            else
+                opt.track_retries = util::str_value<int>(optarg);
+            break;
+        }
+
+        case OPT_DISK_RETRIES:
+        {
+            auto str = util::lowercase(optarg);
+            if (str == std::string("auto").substr(0, str.length()))
+                opt.disk_retries = DISK_RETRY_AUTO;
+            else
+                opt.disk_retries = util::str_value<int>(optarg);
+            break;
+        }
 
         case OPT_NORMAL_DISK:
             opt.normal_disk = true;
