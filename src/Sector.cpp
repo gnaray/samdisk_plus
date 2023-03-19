@@ -57,6 +57,7 @@ DataList& Sector::datas()
 
 const Data& Sector::data_copy(int copy/*=0*/) const
 {
+    assert(m_data.size() != 0);
     copy = std::max(std::min(copy, static_cast<int>(m_data.size()) - 1), 0);
     return m_data[copy];
 }
