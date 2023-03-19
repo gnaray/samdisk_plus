@@ -23,6 +23,10 @@ bool DemandDisk::supports_retries() const
     return false;
 }
 
+void DemandDisk::disk_is_read()
+{ // Do nothing because this is demand disk and as such is not read completly when this trigger is fired.
+} // The goal of calling this method is to fix readstats which is done per track in read method in case of demand disk.
+
 const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int with_head_seek_to, const Headers& headers_of_good_sectors)
 {
     if (uncached || !m_loaded[cylhead])
@@ -56,6 +60,7 @@ const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int wit
             retries -= revs;
         }
 
+        trackdata.fix_track_readstats();
         std::lock_guard<std::mutex> lock(m_trackdata_mutex);
         m_trackdata[cylhead] = std::move(trackdata);
         m_loaded[cylhead] = true;

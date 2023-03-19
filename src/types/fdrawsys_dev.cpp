@@ -342,7 +342,10 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
 
         // Try again if header or data field are missing.
         if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_NO_DATA))
+        {
+            sector.add_read_attempts(1);
             continue;
+        }
 
         // Header match not found for a sector we scanned earlier?
         if (result.st1 & STREG1_END_OF_CYLINDER)
@@ -353,6 +356,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
                 Message(msgWarning, "FDC seems unable to read 128-byte sectors correctly");
                 m_warnedMFM128 = true;
             }
+            sector.add_read_attempts(1);
             continue;
         }
 
@@ -363,6 +367,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         {
             Message(msgWarning, "ReadSector: track's %s does not match sector's %s, ignoring this sector.",
                 CH(cylhead.cyl, cylhead.head), CHR(header.cyl, header.head, header.sector));
+            sector.add_read_attempts(1);
             continue;
         }
 
@@ -370,7 +375,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? 0xf8 : 0xfb;
 
         Data data(mem.pb, mem.pb + mem.size);
-        sector.add(std::move(data), data_crc_error, dam);
+        sector.add_with_readstats(std::move(data), data_crc_error, dam);
 
         // If the read command was successful we're all done.
         if ((result.st0 & STREG0_INTERRUPT_CODE) == 0)

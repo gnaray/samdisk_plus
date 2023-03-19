@@ -349,7 +349,7 @@ enum {
     OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
     OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
-    OPT_NORMAL_DISK, OPT_SKIP_STABLE_SECTORS
+    OPT_NORMAL_DISK, OPT_READSTATS, OPT_SKIP_STABLE_SECTORS
 };
 
 static struct option long_options[] =
@@ -456,6 +456,7 @@ static struct option long_options[] =
     { "pll-phase",  required_argument, nullptr, OPT_PLLPHASE },
 
     { "normal-disk",      no_argument, nullptr, OPT_NORMAL_DISK },   // undocumented. Expects disk as normal: all units (sectors, tracks, sides) have same size, sector ids form a sequence starting by 1.
+    { "readstats",        no_argument, nullptr, OPT_READSTATS },     // undocumented. Looking for good data by the reading statistics. Requires RDSK format image.
     { "skip-stable-sectors",no_argument, nullptr, OPT_SKIP_STABLE_SECTORS },      // undocumented. in repair mode skip those sectors which are already rescued in destination.
 
     { 0, 0, 0, 0 }
@@ -670,6 +671,10 @@ bool ParseCommandLine(int argc_, char* argv_[])
 
         case OPT_NORMAL_DISK:
             opt.normal_disk = true;
+            break;
+
+        case OPT_READSTATS:
+            opt.readstats = true;
             break;
 
         case OPT_SKIP_STABLE_SECTORS:

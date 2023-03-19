@@ -235,6 +235,26 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
             }
         }
     }
+
+    if (flags & DUMP_READSTATS)
+    {
+        for (const auto& sector : track.sectors())
+        {
+            if (sector.read_attempts() > 0) // Print readstats only if there are read attempts (and read counts too).
+            {
+                util::cout << "        readstats (" << RecordStr(sector.header.sector) << "): tries=" << sector.read_attempts() << ", reads={";
+
+                const auto instance_sup = sector.copies();
+                for (auto instance = 0; instance < instance_sup; instance++)
+                {
+                    if (instance > 0)
+                        util::cout << ' ';
+                    util::cout << sector.data_copy_read_stats(instance).ReadCount();
+                }
+                util::cout << "}\n";
+            }
+        }
+    }
 }
 
 
@@ -669,10 +689,13 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
             if (merge_status != Sector::Merge::Unchanged)
             {
                 changed_amount++;
-                if (it->has_good_data())
-                    Message(msgFix, "repaired bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
-                else
-                    Message(msgFix, "improved bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                if (merge_status != Sector::Merge::Matched)
+                {
+                    if (it->has_good_data())
+                        Message(msgFix, "repaired bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                    else
+                        Message(msgFix, "improved bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                }
             }
         }
         else

@@ -21,6 +21,9 @@ public:
     bool has_flux() const;
     bool has_normalised_flux() const;
 
+private:
+    Track& trackNC(); // NC signs that result is not const.
+public:
     const Track& track();
     /*const*/ BitBuffer& bitstream();
     const FluxData& flux();
@@ -32,6 +35,8 @@ public:
     void add(FluxData&& flux, bool normalised = false);
 
     CylHead cylhead{};
+
+    void fix_track_readstats();
 
 private:
     TrackDataType m_type{ TrackDataType::None };

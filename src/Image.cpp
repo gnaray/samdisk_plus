@@ -65,6 +65,8 @@ bool ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normal
     if (!f)
         throw util::exception("unrecognised disk image format");
 
+    disk->disk_is_read();
+
     if (normalise)
     {
         // ToDo: Make resize and flip optional?  replace fNormalise) and fLoadFilter_?

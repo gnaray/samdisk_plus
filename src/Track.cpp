@@ -309,7 +309,7 @@ Track::AddResult Track::add(Sector&& sector)
         {
             // Merge details with the existing sector
             auto ret = it->merge(std::move(sector));
-            if (ret == Sector::Merge::Unchanged)
+            if (ret == Sector::Merge::Unchanged || ret == Sector::Merge::Matched) // Matched for backward compatibility.
                 return AddResult::Unchanged;
 
             // Limit the number of data copies kept for each sector.

@@ -50,7 +50,7 @@ bool TrackData::has_normalised_flux() const
 }
 
 
-const Track& TrackData::track()
+Track& TrackData::trackNC()
 {
     if (!has_track())
     {
@@ -65,6 +65,11 @@ const Track& TrackData::track()
     }
 
     return m_track;
+}
+
+const Track& TrackData::track()
+{
+    return trackNC();
 }
 
 /*const*/ BitBuffer& TrackData::bitstream()
@@ -168,4 +173,10 @@ void TrackData::add(FluxData&& flux, bool normalised)
     m_normalised_flux = normalised;
     m_flux = std::move(flux);
     m_flags |= TD_FLUX;
+}
+
+void TrackData::fix_track_readstats()
+{
+    for (auto& sector : trackNC().sectors())
+        sector.fix_readstats();
 }

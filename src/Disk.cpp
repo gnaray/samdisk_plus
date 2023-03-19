@@ -72,6 +72,15 @@ bool Disk::is_constant_disk() const
     return true;
 }
 
+void Disk::disk_is_read()
+{
+    range().each([&](const CylHead& cylhead) {
+        read_track(cylhead); // Ignoring returned track because it is const.
+        m_trackdata[cylhead].fix_track_readstats();
+    });
+}
+
+
 const TrackData& Disk::read(const CylHead& cylhead, bool /*uncached*/, int /*with_head_seek_to*/, const Headers& /*headers_of_stable_sectors*/)
 {
     // Safe look-up requires mutex ownership, in case of call from preload()

@@ -13,6 +13,7 @@ public:
     const TrackData& read(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1, const Headers& headers_of_stable_sectors = Headers()) override;
     const TrackData& write(TrackData&& trackdata) override;
     void clear() override;
+    void disk_is_read() override;
 
     void extend(const CylHead& cylhead);
 

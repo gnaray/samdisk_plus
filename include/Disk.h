@@ -21,6 +21,8 @@ public:
     virtual void clear();
 
     virtual bool is_constant_disk() const;
+    virtual void disk_is_read();
+
     virtual const TrackData& read(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1, const Headers& headers_of_stable_sectors = Headers());
     const Track& read_track(const CylHead& cylhead, bool uncached = false);
     const BitBuffer& read_bitstream(const CylHead& cylhead, bool uncached = false);

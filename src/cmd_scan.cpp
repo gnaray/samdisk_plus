@@ -84,6 +84,7 @@ void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context,
     auto flags = 0;
     if (opt_offsets == 1) flags |= DUMP_OFFSETS;
     if (!opt_nodiff) flags |= DUMP_DIFF;
+    if (opt_readstats) flags |= DUMP_READSTATS;
     DumpTrack(cylhead, track, context, flags, headers_of_ignored_sectors);
 }
 

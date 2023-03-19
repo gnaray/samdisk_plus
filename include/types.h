@@ -62,6 +62,7 @@ IMAGE_ENTRY aImageTypes[] = {
 
     // Types with a header signature
     ADD_IMAGE_RW(DSK)
+    ADD_IMAGE_RW(RDSK)
     ADD_IMAGE_RO(TD0)
     ADD_IMAGE_RW(SAD)
     ADD_IMAGE_RO(SCL)
