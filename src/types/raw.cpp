@@ -78,7 +78,7 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
     return true;
 }
 
-bool WriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
+Format CheckBeforeWriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
 {
     int max_id = -1;
 
@@ -163,7 +163,12 @@ bool WriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
         throw util::exception("not found selected sectors");
     if (max_id >= fmt.base + fmt.sectors)
         throw util::exception("non-sequential sector numbers are unsuitable for raw output");
+    return fmt;
+}
 
+bool WriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
+{
+    auto fmt = CheckBeforeWriteRAW(f_, disk);
     // Write the image, as read using the supplied format
     WriteRegularDisk(f_, *disk, fmt);
 
