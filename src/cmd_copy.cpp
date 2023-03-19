@@ -57,7 +57,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     if (opt_minimal)
         TrackUsedInit(*src_disk);
 
-    const bool skip_stable_sectors = opt.skip_stable_sectors ? true : false;
+    const bool skip_stable_sectors = opt.skip_stable_sectors && !src_disk->is_constant_disk() ? true : false;
 
     // If repair mode and normal disk then determine normal track size by calculating the average track size.
     int normal_track_size = 0;

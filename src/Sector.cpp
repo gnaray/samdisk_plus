@@ -85,6 +85,16 @@ bool Sector::has_stable_data() const
 }
 
 int Sector::read_attempts() const
+bool Sector::is_constant_disk() const
+{
+    return m_constant_disk;
+}
+
+void Sector::set_constant_disk(bool constant_disk)
+{
+    m_constant_disk = constant_disk;
+}
+
 int Sector::copies() const
 {
     return static_cast<int>(m_data.size());

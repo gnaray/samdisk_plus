@@ -55,6 +55,8 @@ public:
     int get_best_data_index() const;
 
     Merge add(Data&& data, bool bad_crc = false, uint8_t dam = 0xfb);
+    bool is_constant_disk() const;
+    void set_constant_disk(bool constant_disk);
     int copies() const;
 
     static int SizeCodeToRealSizeCode(int size);
@@ -72,6 +74,7 @@ private:
     bool m_bad_id_crc = false;
     bool m_bad_data_crc = false;
     std::vector<Data> m_data{};         // copies of sector data
+    bool m_constant_disk = true; // If this sector is part of disk image then true, else it comes from physical device so false.
 };
 
 class Sectors : public std::vector<Sector>

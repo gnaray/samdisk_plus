@@ -96,6 +96,10 @@ protected:
         return false;
     }
 
+    bool is_constant_disk() const override
+    {
+        return false;
+    }
 
 private:
     void SetMetadata(const std::string& path);
@@ -288,6 +292,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             Sector sector(m_lastDataRate, m_lastEncoding, header);
 
             sector.offset = scan_header.reltime / bit_us;
+            sector.set_constant_disk(false);
             track.add(std::move(sector));
         }
     }

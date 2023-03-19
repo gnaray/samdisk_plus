@@ -67,6 +67,11 @@ void Disk::clear()
 }
 
 
+bool Disk::is_constant_disk() const
+{
+    return true;
+}
+
 const TrackData& Disk::read(const CylHead& cylhead, bool /*uncached*/, int /*with_head_seek_to*/, const Headers& /*headers_of_stable_sectors*/)
 {
     // Safe look-up requires mutex ownership, in case of call from preload()
