@@ -1,9 +1,12 @@
 // SAM Coupe helper functions
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "SAMCoupe.h"
 
 #include <cstring>
+
+static auto& opt_fix = getOpt<int>("fix");
+static auto& opt_nosig = getOpt<int>("nosig");
 
 MGT_DISK_INFO* GetDiskInfo(const uint8_t* p, MGT_DISK_INFO& di)
 {
@@ -90,7 +93,7 @@ bool SetDiskInfo(uint8_t pb_, MGT_DISK_INFO& di)
 
     case SamDosType::SAMDOS:
         // Leave as SAMDOS format if there's no label, or we're not allowed to write a BDOS signature
-        if (di.disk_label.empty() || opt.fix == 0 || opt.nosig)
+        if (di.disk_label.empty() || opt_fix == 0 || opt_nosig)
             break;
 
         // Convert to BDOS format

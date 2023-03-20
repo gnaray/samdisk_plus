@@ -4,8 +4,8 @@
 //
 // Dave Dunfield notes: http://www.classiccmp.org/dunfield/img54306/td0notes.txt
 
-#include "SAMdisk.h"
 #include "IBMPC.h"
+#include "Options.h"
 #include "Disk.h"
 #include "MemFile.h"
 #include "Util.h"
@@ -16,6 +16,8 @@
 
 #define TD0_SIGNATURE_RLE       "TD"    // Normal compression (RLE)
 #define TD0_SIGNATURE_HUFF      "td"    // Huffman compression also used for everything after TD0_HEADER
+
+static auto& opt_fix = getOpt<int>("fix");
 
 // Overall file header, always uncompressed
 struct TD0_HEADER
@@ -290,7 +292,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
             }
 
             // If the first sector on the track shows as no-id, ignore it due to suspected Teledisk bug
-            if (opt.fix != 0 && i == 0 && no_id)
+            if (opt_fix != 0 && i == 0 && no_id)
             {
                 no_id_sectors++;
                 continue;
@@ -309,7 +311,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
             data_sum += s.data_size();
 
         // Oversized track?
-        if (opt.fix != 0 && data_sum > track_capacity)
+        if (opt_fix != 0 && data_sum > track_capacity)
         {
             auto dups_removed = 0;
 

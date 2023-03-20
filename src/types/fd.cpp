@@ -1,6 +1,6 @@
 // FD - Thomson (TO8/TO8D/TO9/TO9+) sector dump
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Disk.h"
 #include "DiskUtil.h"
 #include "MemFile.h"
@@ -8,6 +8,7 @@
 
 #include <memory>
 
+static auto& opt_encoding = getOpt<Encoding>("encoding");
 
 #define THOMSON_SECTORS_PER_TRACK   16
 
@@ -36,7 +37,7 @@ bool ReadFD(MemFile& file, std::shared_ptr<Disk>& disk)
         break;
 
     case 163840:
-        if (opt.encoding == Encoding::FM)
+        if (opt_encoding == Encoding::FM)
             fmt = RegularFormat::TO_160K_FM;
         else
             fmt = RegularFormat::TO_160K_MFM;

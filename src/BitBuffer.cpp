@@ -1,9 +1,12 @@
 // Bit buffer to hold decoded flux data for scanning
 
-#include "SAMdisk.h"
 #include "BitBuffer.h"
+#include "Options.h"
 
 #include <cstring>
+
+static auto& opt_a1sync = getOpt<int>("a1sync");
+static auto& opt_debug = getOpt<int>("debug");
 
 BitBuffer::BitBuffer(DataRate datarate_, Encoding encoding_, int revs)
     : datarate(datarate_), encoding(encoding_)
@@ -37,7 +40,7 @@ BitBuffer::BitBuffer(DataRate datarate_, FluxDecoder& decoder)
 
         if (decoder.sync_lost())
         {
-            if (opt.debug) util::cout << "sync lost at offset " << tell() << " (" << track_offset(tell()) << ")\n";
+            if (opt_debug) util::cout << "sync lost at offset " << tell() << " (" << track_offset(tell()) << ")\n";
             sync_lost();
         }
 
@@ -139,7 +142,7 @@ void BitBuffer::add(uint8_t bit)
     {
         assert(m_data.size() != 0);
         m_data.resize(m_data.size() * 2);
-        if (opt.debug) util::cout << "BitBuffer size grown to " << m_data.size() << "\n";
+        if (opt_debug) util::cout << "BitBuffer size grown to " << m_data.size() << "\n";
     }
 
     if (bit)
@@ -310,7 +313,7 @@ bool BitBuffer::align()
 {
     bool modified = false;
     auto bits_per_byte = (encoding == Encoding::FM) ? 32 : 16;
-    uint16_t sync_mask = opt.a1sync ? 0xffdf : 0xffff;
+    uint16_t sync_mask = opt_a1sync ? 0xffdf : 0xffff;
     uint32_t dword = 0;
     int i;
 

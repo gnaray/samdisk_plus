@@ -1,13 +1,14 @@
 // Interchangeable Preservation Format from the Software Preservation Society:
 //  http://www.softpres.org/
 
-#include "SAMdisk.h"
+#include "Options.h"
 //#include "BitstreamDecoder.h"
 #include "Disk.h"
 #include "MemFile.h"
 
 #include <memory>
 
+static auto& opt_fix = getOpt<int>("fix");
 
 // ToDo:
 // - wrap CAPSImg library in class wrapper for thrown exceptions
@@ -255,7 +256,7 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
     }
 
     // Shrink to just head 0 if all tracks on head 1 are unformatted
-    if (opt.fix != 0 && unformatted1 == (cii.maxcylinder - cii.mincylinder + 1))
+    if (opt_fix != 0 && unformatted1 == (cii.maxcylinder - cii.mincylinder + 1))
         disk->resize(disk->cyls(), 1);
 
     switch (image_type)

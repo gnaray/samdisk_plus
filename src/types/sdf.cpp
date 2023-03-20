@@ -1,6 +1,6 @@
 // Temporary SAM Disk File format, replaced by EDSK for custom format SAM disks
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Disk.h"
 #include "MemFile.h"
 #include "Util.h"
@@ -18,6 +18,8 @@ const int SDF_NORMAL_SIZE = SDF_SIDES * SDF_TRACK_SIZE * 80;
 const int SDF_SIZE_81_TRACKS = SDF_SIDES * SDF_TRACK_SIZE * 81;
 const int SDF_SIZE_82_TRACKS = SDF_SIDES * SDF_TRACK_SIZE * 82;
 const int SDF_SIZE_83_TRACKS = SDF_SIDES * SDF_TRACK_SIZE * 83;
+
+static auto& opt_fix = getOpt<int>("fix");
 
 struct SDF_TRACK
 {
@@ -145,7 +147,7 @@ bool UnwrapSDF(std::shared_ptr<Disk>&/*src_disk*/, std::shared_ptr<Disk>&/*disk*
     throw std::logic_error("SDF unwrapping not implemented");
 #if 0
     // Unpacking nested files is effectively a fix
-    if (opt.fix == 0)
+    if (opt_fix == 0)
         return false;
 
     // Check for SPECIAL file in the first directory slot, with filename ending in _DATA

@@ -1,11 +1,15 @@
 // Scan command
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Image.h"
 #include "IBMPC.h"
 #include "DiskUtil.h"
 #include "Util.h"
 
+static auto& opt_nodiff = getOpt<int>("nodiff");
+static auto& opt_offsets = getOpt<int>("offsets");
+static auto& opt_step = getOpt<int>("step");
+static auto& opt_verbose = getOpt<int>("verbose");
 
 void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context)
 {
@@ -78,8 +82,8 @@ void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context)
     }
 
     auto flags = 0;
-    if (opt.offsets == 1) flags |= DUMP_OFFSETS;
-    if (!opt.nodiff) flags |= DUMP_DIFF;
+    if (opt_offsets == 1) flags |= DUMP_OFFSETS;
+    if (!opt_nodiff) flags |= DUMP_DIFF;
     DumpTrack(cylhead, track, context, flags);
 }
 
@@ -94,7 +98,7 @@ bool ScanImage(const std::string& path, Range range)
         Format& fmt = disk->fmt;
 
         // Regular format and no range specified?
-        if (!opt.verbose && range.empty() && fmt.sectors > 0)
+        if (!opt_verbose && range.empty() && fmt.sectors > 0)
         {
             util::cout << util::fmt("%s %s, %2u cyls, %u heads, %2u sectors, %4u bytes/sector\n",
                 to_string(fmt.datarate).c_str(), to_string(fmt.encoding).c_str(),
@@ -115,17 +119,17 @@ bool ScanImage(const std::string& path, Range range)
         }
         else
         {
-            ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt.step, disk->cyls(), disk->heads());
+            ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
             util::cout << range << ":\n";
 
-            disk->preload(range, opt.step);
+            disk->preload(range, opt_step);
 
             ScanContext context;
             range.each([&](const CylHead cylhead) {
                 if (cylhead.cyl == range.cyl_begin)
                     context = ScanContext();
 
-                auto track = disk->read_track(cylhead * opt.step);
+                auto track = disk->read_track(cylhead * opt_step);
 
                 NormaliseTrack(cylhead, track);
                 ScanTrack(cylhead, track, context);

@@ -2,10 +2,15 @@
 
 #include "Disk.h"
 #include "Image.h"
-#include "SAMdisk.h"
+#include "Options.h"
+
 #include <iomanip>
 #include <memory>
 
+static auto& opt_force = getOpt<int>("force");
+static auto& opt_range = getOpt<Range>("range");
+static auto& opt_rescans = getOpt<int>("rescans");
+static auto& opt_retries = getOpt<int>("retries");
 
 bool DiskRpm(const std::string& path)
 {
@@ -14,11 +19,11 @@ bool DiskRpm(const std::string& path)
         return false;
 
     // Default to using cyl 0 head 0, but allow the user to override it
-    CylHead cylhead(opt.range.empty() ? 0 :
-        opt.range.cyl_end + 1, opt.range.head_end);
+    CylHead cylhead(opt_range.empty() ? 0 :
+        opt_range.cyl_end + 1, opt_range.head_end);
 
-    auto forever = opt.force && util::is_stdout_a_tty();
-    opt.retries = opt.rescans = 0;
+    auto forever = opt_force && util::is_stdout_a_tty();
+    opt_retries = opt_rescans = 0;
 
     // Display 5 revolutions, or run forever if forced
     for (auto i = 0; forever || i < 5; ++i)

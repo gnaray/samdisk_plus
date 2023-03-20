@@ -1,7 +1,10 @@
 // Calculations related to IBM PC format MFM/FM disks (System/34 compatible)
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "IBMPC.h"
+
+static auto& opt_debug = getOpt<int>("debug");
+static auto& opt_verbose = getOpt<int>("verbose");
 
 struct FORMATGAP
 {
@@ -212,7 +215,7 @@ bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int track_time_ms
             if (details.gap3)
             {
                 // In debug, show the unit count wasn't obvious (unless forced)
-                if (opt.debug && (details.total_units != track.size() || opt.verbose))
+                if (opt_debug && (details.total_units != track.size() || opt_verbose))
                     util::cout << "FitTrack: " << cylhead << " fits with " << details.total_units <<
                     " units of size=" << details.size_code << " gap3=" << details.gap3 << "\n";
 
@@ -242,7 +245,7 @@ bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int track_time_ms
                     GetFormatLength(encoding, details.total_units, details.size_code, details.gap3);
                 if (total_size < track_space)
                 {
-                    if (opt.debug)
+                    if (opt_debug)
                         util::cout << "FitTrack: " << cylhead << " fits with " <<
                         details.total_units << " clipped units of size=" << details.size_code <<
                         " gap3=" << details.gap3 << "\n";
@@ -255,7 +258,7 @@ bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int track_time_ms
             break;
     }
 
-    if (opt.debug)
+    if (opt_debug)
         util::cout << colour::RED << "FitTrack: unable to fit " << cylhead << colour::none << "\n";
 
     return false;

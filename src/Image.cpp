@@ -1,11 +1,19 @@
 // High-level disk image/device reading and writing
 
-#include "SAMdisk.h"
+#include "Options.h"
 //#include "record.h"
 #include "SpectrumPlus3.h"
 #include "Util.h"
 #include "types.h"
 //#include "BlockDevice.h"
+
+static auto& opt_cpm = getOpt<int>("cpm");
+static auto& opt_fix = getOpt<int>("fix");
+static auto& opt_flip = getOpt<int>("flip");
+static auto& opt_head0 = getOpt<int>("head0");
+static auto& opt_head1 = getOpt<int>("head1");
+static auto& opt_nozip = getOpt<int>("nozip");
+static auto& opt_range = getOpt<Range>("range");
 
 bool UnwrapSDF(std::shared_ptr<Disk>& src_disk, std::shared_ptr<Disk>& disk);
 
@@ -29,7 +37,7 @@ bool ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normal
     // Next try regular files (and archives)
     if (!f)
     {
-        if (!file.open(path, !opt.nozip))
+        if (!file.open(path, !opt_nozip))
             return false;
 
         // Present the image to all types with read support
@@ -61,14 +69,14 @@ bool ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normal
     {
         // ToDo: Make resize and flip optional?  replace fNormalise) and fLoadFilter_?
 #if 0 // breaks with sub-ranges
-        if (!opt.range.empty())
-            disk->resize(opt.range.cyls(), opt.range.heads());
+        if (!opt_range.empty())
+            disk->resize(opt_range.cyls(), opt_range.heads());
 #endif
         // Forcibly correct +3 boot loader problems?
-        if (opt.fix == 1)
+        if (opt_fix == 1)
             FixPlus3BootLoader(disk);
 
-        if (opt.flip)
+        if (opt_flip)
             disk->flip_sides();
     }
 
@@ -77,7 +85,7 @@ bool ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normal
     for (uint8_t head = 0; head < heads; ++head)
     {
         // Determine any forced head value for sectors on this track (-1 for none)
-        int nHeadVal = head ? opt.head1 : opt.head0;
+        int nHeadVal = head ? opt_head1 : opt_head0;
 
         // If nothing forced and we're using a regular format, use its head values
         if (nHeadVal == -1 && olddisk->format.sectors)
@@ -112,7 +120,7 @@ bool WriteImage(const std::string& path, std::shared_ptr<Disk>& disk)
 #if 0
     // TODO: Wrap a CP/M image in a BDOS record container
     auto cpm_disk = std::make_shared<Disk>();
-    if (opt.cpm)
+    if (opt_cpm)
         f = WrapCPM(disk, cpm_disk);
 #endif
 

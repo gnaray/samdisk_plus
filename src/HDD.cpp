@@ -1,7 +1,6 @@
 // Base class for HDD devices and image files
 
-#include "SAMdisk.h"
-
+#include "Options.h"
 #include "BlockDevice.h"
 #include "HDFHDD.h"
 #include "Util.h"
@@ -10,6 +9,9 @@
 
 #define SECTOR_BLOCK    2048    // access CF/HDD devices in 1MB chunks
 
+static auto& opt_byteswap = getOpt<int>("byteswap");
+static auto& opt_nocfa = getOpt<int>("nocfa");
+static auto& opt_noidentify = getOpt<int>("noidentify");
 
 /*static*/ bool HDD::IsRecognised(const std::string& path)
 {
@@ -128,7 +130,7 @@ void HDD::SetIdentifyData(const IDENTIFYDEVICE* pIdentify_)
         sectors = sIdentify.word[6];
 
         // Invalidate the identify length if we're told to ignore it
-        if (opt.noidentify)
+        if (opt_noidentify)
             sIdentify.len = 0;
     }
     else
@@ -186,7 +188,7 @@ void HDD::SetIdentifyData(const IDENTIFYDEVICE* pIdentify_)
         sIdentify.word[103] = 0;
 
         // If CFA ((CompactFlash Association) support isn't explicitly disabled, enable it
-        if (!opt.nocfa)
+        if (!opt_nocfa)
         {
             sIdentify.word[0] = 0x848a;     // special value used to indicate CFA feature set support
 
@@ -250,7 +252,7 @@ bool HDD::Copy(HDD* phSrc_, int64_t uSectors_, int64_t uSrcOffset_/*=0*/, int64_
         }
 
         // Forced byte-swapping?
-        if (opt.byteswap)
+        if (opt_byteswap)
             ByteSwap(mem, uRead * sector_size);
 
         // Write to target disk

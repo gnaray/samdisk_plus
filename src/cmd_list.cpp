@@ -1,12 +1,13 @@
 // List command
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "BlockDevice.h"
 #include "SAMCoupe.h"
 #include "utils.h"
 
 #include <cstring>
 
+static auto& opt_debug = getOpt<int>("debug");
 
 static const char* aszPartTypes[256] =
 {
@@ -191,7 +192,7 @@ void ListDrive(const std::string& path, const HDD& hdd, int verbose)
             util::cout << util::fmt(" Geometry:  %u Cyls, %u Heads, %u Sectors\n", hdd.cyls, hdd.heads, hdd.sectors);
 
             // In debug mode check the geometry against the calculated method
-            if (opt.debug)
+            if (opt_debug)
             {
                 int uC, uH, uS;
                 CalculateGeometry(hdd.total_sectors, uC, uH, uS);

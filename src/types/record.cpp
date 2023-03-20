@@ -1,13 +1,18 @@
 // BDOS record for Atom/Atom Lite HDD interface for SAM Coupe:
 //   http://www.samcoupe-pro-dos.co.uk/edwin/software/bdos/bdos.htm
 
-#include "SAMdisk.h"
 #include "types.h"
+#include "Options.h"
 #include "record.h"
 #include "SAMCoupe.h"
 
 #include <cstring>
 
+static auto& opt_cpm = getOpt<int>("cpm");
+static auto& opt_fix = getOpt<int>("fix");
+static auto& opt_minimal = getOpt<int>("minimal");
+static auto& opt_nosig = getOpt<int>("nosig");
+static auto& opt_szSource = getOpt<charArrayMAX_PATH>("szSource");
 
 bool ReadBDOS(const std::string& path, std::shared_ptr<Disk>& disk)
 {
@@ -57,7 +62,7 @@ bool ReadRecord(HDD& hdd, int record, std::shared_ptr<Disk>& disk)
 
     if (hdd.Read(mem, uSectors, bdc.need_byteswap) != uSectors)
         throw posix_error(errno, "read");
-    else if (memcmp(pdir->abBDOS, "BDOS", sizeof(pdir->abBDOS)) && !opt.nosig)
+    else if (memcmp(pdir->abBDOS, "BDOS", sizeof(pdir->abBDOS)) && !opt_nosig)
         throw util::exception("record ", record, " is not formatted");
 
     Data data(mem.size);
@@ -142,7 +147,7 @@ bool WriteRecord(HDD&/*hdd*/, int /*record*/, std::shared_ptr<Disk>&/*disk*/, bo
         if (label.empty() && !format)
         {
             char szPath[MAX_PATH], * p;
-            char* psz = strncpy(szPath, opt.szSource, MAX_PATH);
+            char* psz = strncpy(szPath, opt_szSource, MAX_PATH);
             szPath[MAX_PATH - 1] = '\0';
 
             // Strip the path and file extension to leave basename
@@ -165,7 +170,7 @@ bool WriteRecord(HDD&/*hdd*/, int /*record*/, std::shared_ptr<Disk>&/*disk*/, bo
         else
         {
             // Unless asked not to, set the signature needed for BDOS to recognise the record
-            if (!opt.nosig && opt.fix != 0)
+            if (!opt_nosig && opt_fix != 0)
                 memcpy(mem + 232, "BDOS", 4);
 
             // Write the record to disk
@@ -194,7 +199,7 @@ bool WriteRecord(HDD&/*hdd*/, int /*record*/, std::shared_ptr<Disk>&/*disk*/, bo
         hdd.Unlock();
     }
 
-    if (f && missing && !opt.minimal)
+    if (f && missing && !opt_minimal)
         Message(msgWarning, "source missing %d/%d sectors", missing, MGT_TRACKS * MGT_SIDES * fmtMGT.sectors);
 
     return f ? retOK : retReported;
@@ -205,7 +210,7 @@ bool WriteRecord(HDD&/*hdd*/, int /*record*/, std::shared_ptr<Disk>&/*disk*/, bo
 bool UnwrapCPM(std::shared_ptr<Disk>&/*olddisk*/, std::shared_ptr<Disk>&/*newdisk*/)
 {
     // Unwrapping must be requested
-    if (!opt.cpm)
+    if (!opt_cpm)
         return false;
 
     throw std::logic_error("CPM unwrapping not implemented");
@@ -229,7 +234,7 @@ bool UnwrapCPM(std::shared_ptr<Disk>&/*olddisk*/, std::shared_ptr<Disk>&/*newdis
     }
 
     // CP/M option used
-    opt.cpm--;
+    opt_cpm--;
 
     MEMORY mem(DOS_DISK_SIZE);
     PBYTE pb = mem;
@@ -275,7 +280,7 @@ bool WrapCPM(std::shared_ptr<Disk>&/*disk*/, std::shared_ptr<Disk>&/*cpm_disk*/)
         for (BYTE head = 0; head < NORMAL_SIDES; head++, pb += DOS_TRACK_SIZE)
             missing += olddisk.ReadRegularTrack(cyl, head, &fmtCPM, pb);
 
-    if (missing && !opt.minimal)
+    if (missing && !opt_minimal)
         Message(msgWarning, "source missing %d sectors", missing);
 
     // Wipe the source disk ready for the new format

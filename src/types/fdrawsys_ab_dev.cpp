@@ -17,7 +17,7 @@
 // known in order to know when the track is complete. Multiple attempts are often
 // required to see all the expected sectors.
 
-#include "SAMdisk.h"
+#include "Options.h"
 //#include "BitstreamTrackBuilder.h"
 #include "DemandDisk.h"
 //#include "IBMPC.h"
@@ -35,21 +35,26 @@
 #define RAW_READ_ATTEMPTS           10      // Default reads per track
 #define RAW_READ_SIZE_CODE          7       // 16K
 
+static auto& opt_newdrive = getOpt<int>("newdrive");
+static auto& opt_retries = getOpt<int>("retries");
+static auto& opt_sectors = getOpt<long>("sectors");
+static auto& opt_steprate = getOpt<int>("steprate");
+
 class FdrawSysDevABDisk final : public DemandDisk
 {
 public:
     FdrawSysDevABDisk(std::unique_ptr<FdrawcmdSys> fdrawcmd)
         : m_fdrawcmd(std::move(fdrawcmd))
     {
-        auto srt = (opt.steprate >= 0) ? opt.steprate : (opt.newdrive ? 0xd : 0x8);
+        auto srt = (opt_steprate >= 0) ? opt_steprate : (opt_newdrive ? 0xd : 0x8);
         auto hut = 0x0f;
-        auto hlt = opt.newdrive ? 0x0f : 0x7f;
+        auto hlt = opt_newdrive ? 0x0f : 0x7f;
         m_fdrawcmd->Specify(srt, hut, hlt);
 
         m_fdrawcmd->SetMotorTimeout(0);
         m_fdrawcmd->Recalibrate();
 
-        if (!opt.newdrive)
+        if (!opt_newdrive)
             m_fdrawcmd->SetDiskCheck(false);
     }
 
@@ -60,7 +65,7 @@ protected:
         m_fdrawcmd->SetEncRate(Encoding::MFM, DataRate::_500K);
         Track track;
 
-        auto total_scans = 1 + opt.retries;
+        auto total_scans = 1 + opt_retries;
         if (total_scans <= 0)
             total_scans = RAW_READ_ATTEMPTS;
 
@@ -94,7 +99,7 @@ protected:
             }
 
             // Respect a user-defined sector count too.
-            if (opt.sectors > 0 && track.size() >= opt.sectors)
+            if (opt_sectors > 0 && track.size() >= opt_sectors)
                 break;
 
             // If no new sectors were found count an attempt.

@@ -1,7 +1,7 @@
 // A2R - Apple II file format:
 //  https://applesaucefdc.com/a2r/
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "DemandDisk.h"
 #include "Disk.h"
 #include "MemFile.h"
@@ -9,6 +9,7 @@
 
 #include <memory>
 
+static auto& opt_debug = getOpt<int>("debug");
 
 #define A2R_SIGNATURE   "A2R2"
 
@@ -156,7 +157,7 @@ bool ReadA2R(MemFile& file, std::shared_ptr<Disk>& disk)
             {
                 memcpy(&sc, &strm[pos], sizeof(sc));
                 auto data_length = util::le_value(sc.data_length);
-                if (opt.debug) util::cout << util::fmt("pos %u: loc %d, type %d, len %u, loop %u\n",
+                if (opt_debug) util::cout << util::fmt("pos %u: loc %d, type %d, len %u, loop %u\n",
                     pos, sc.location, sc.capture_type, data_length, util::le_value(sc.loop_point));
 
                 if ((sc.location & 3) == 0 && sc.capture_type != 2)

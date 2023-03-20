@@ -1,13 +1,14 @@
 // Didaktik D80:
 //  http://web.archive.org/web/20041020185446/http://zoom.czweb.org/files/mdos.htm
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Disk.h"
 #include "MemFile.h"
 #include "Util.h"
 
 #include <memory>
 
+static auto& opt_fix = getOpt<int>("fix");
 
 #define D80_SIGNATURE   "SDOS"
 
@@ -33,7 +34,7 @@ bool ReadD80(MemFile& file, std::shared_ptr<Disk>& disk)
     fmt.Validate();
 
     // Allow cylinder count correction if the image size is a multiple of the track size
-    if (opt.fix != 0 && file.size() != fmt.disk_size() && !(file.size() % (heads * fmt.track_size())))
+    if (opt_fix != 0 && file.size() != fmt.disk_size() && !(file.size() % (heads * fmt.track_size())))
     {
         fmt.cyls = static_cast<uint8_t>(file.size() / (heads * fmt.track_size()));
         Message(msgWarning, "corrected cylinder count to match disk size");

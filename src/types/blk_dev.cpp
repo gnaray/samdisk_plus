@@ -1,10 +1,11 @@
 // Simple block floppy device (USB and SCSI)
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "DemandDisk.h"
 #include "BlockDevice.h"
 #include "Util.h"
 
+static auto& opt_sectors = getOpt<long>("sectors");
 
 class BlockFloppyDisk final : public DemandDisk
 {
@@ -80,10 +81,10 @@ bool ReadBlockDevice(const std::string& path, std::shared_ptr<Disk>& disk)
         throw util::exception("not a floppy device");
 
     // Allow subsets of the track format
-    if (opt.sectors > fmt.sectors)
+    if (opt_sectors > fmt.sectors)
         throw util::exception("sector count must be <= ", fmt.sectors);
-    else if (opt.sectors > 0)
-        fmt.sectors = opt.sectors;
+    else if (opt_sectors > 0)
+        fmt.sectors = opt_sectors;
 
     auto blk_dev_disk = std::make_shared<BlockFloppyDisk>(std::move(blockdev));
     blk_dev_disk->extend(CylHead(fmt.cyls - 1, fmt.heads - 1));

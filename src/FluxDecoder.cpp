@@ -2,10 +2,12 @@
 //
 // PLL code from Keir Frasier's Disk-Utilities/libdisk
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "FluxDecoder.h"
 
 #include <cassert>
+
+static auto& opt_pllphase = getOpt<int>("pllphase");
 
 FluxDecoder::FluxDecoder(const FluxData& flux_revs, int bitcell_ns, int flux_scale_percent, int pll_adjust)
     : m_flux_revs(flux_revs), m_clock(bitcell_ns), m_clock_centre(bitcell_ns),
@@ -96,7 +98,7 @@ int FluxDecoder::next_bit()
     m_clock = std::min(std::max(m_clock_min, m_clock), m_clock_max);
 
     // Authentic PLL: Do not snap the timing window to each flux transition
-    new_flux = m_flux * (100 - opt.pllphase) / 100;
+    new_flux = m_flux * (100 - opt_pllphase) / 100;
     m_flux = new_flux;
 
     ++m_goodbits;

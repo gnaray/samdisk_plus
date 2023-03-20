@@ -134,8 +134,6 @@
 #include "Util.h"
 #include "SAMCoupe.h"
 
-enum { GAPS_AUTO = -1, GAPS_NONE, GAPS_CLEAN, GAPS_ALL };
-
 // copy
 bool ImageToImage(const std::string& src_path, const std::string& dst_path);
 bool Image2Trinity(const std::string& path, const std::string& trinity_path);
@@ -184,40 +182,3 @@ bool ViewBoot(const std::string& path, Range range);
 // fdrawcmd.sys driver functions
 bool CheckDriver();
 bool ReportDriverVersion();
-
-enum class PreferredData { Unknown, Track, Bitstream, Flux };
-
-struct OPTIONS
-{
-    Range range{};
-    int step = 1;
-
-    int base = -1, size = -1, gap3 = -1, interleave = -1, skew = -1, fill = -1;
-    int gaps = -1, gap2 = -1, gap4b = -1, idcrc = -1, gapmask = -1, maxsplice = -1;
-    int cylsfirst = -1, head0 = -1, head1 = -1, steprate = -1, check8k = -1;
-    int offsets = -1, fix = -1, mt = -1, plladjust = -1, hardsectors = -1;
-
-    int command = 0, hex = 0, debug = 0, verbose = 0, log = 0, force = 0, quick = 0;
-    int merge = 0, repair = 0, trim = 0, calibrate = 0, newdrive = 0, byteswap = 0;
-    int noweak = 0, nosig = 0, nodata = 0, nocfa = 0, noidentify = 0, nospecial = 0;
-    int nozip = 0, nodiff = 0, noformat = 0, nodups = 0, nowobble = 0, nottb = 0;
-    int bdos = 0, atom = 0, hdf = 0, resize = 0, cpm = 0, minimal = 0, legacy = 0;
-    int absoffsets = 0, datacopy = 0, align = 0, keepoverlap = 0, fmoverlap = 0;
-    int rescans = 0, flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
-    int a1sync = 0;
-
-    int retries = 5, maxcopies = 3;
-    int scale = 100, pllphase = DEFAULT_PLL_PHASE;
-    int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
-
-    Encoding encoding{ Encoding::Unknown };
-    DataRate datarate{ DataRate::Unknown };
-    PreferredData prefer = PreferredData::Unknown;
-    long sectors = -1;
-    std::string label{}, boot{};
-
-    char szSource[MAX_PATH], szTarget[MAX_PATH];
-
-};
-
-extern OPTIONS opt;

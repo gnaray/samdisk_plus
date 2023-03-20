@@ -2,13 +2,15 @@
 //  http://www.cbmstuff.com/downloads/scp/scp_sdk.pdf
 
 #include "DiskUtil.h"
-#include "SAMdisk.h"
+#include "Options.h"
 #include "DemandDisk.h"
 //#include "BitstreamDecoder.h"
 #include "SuperCardPro.h"
 #include "Util.h"
 #include <numeric>
 
+static auto& opt_newdrive = getOpt<int>("newdrive");
+static auto& opt_range = getOpt<Range>("range");
 
 class SCPDevDisk final : public DemandDisk
 {
@@ -21,7 +23,7 @@ public:
 
         // Default to a slower step rate to be compatible with older drive,
         // unless the user says otherwise.
-        auto step_delay = opt.newdrive ? 5000 : 16'000;
+        auto step_delay = opt_newdrive ? 5000 : 16'000;
         m_supercardpro->SetParameters(1000, step_delay, 1000, 50, 10'000);
 
         m_supercardpro->StepTo(1);
@@ -158,9 +160,9 @@ bool WriteSuperCardPro(const std::string& path, std::shared_ptr<Disk>& disk)
         throw util::exception("failed to open SuperCard Pro device");
 
     auto scp_dev_disk = std::make_shared<SCPDevDisk>(std::move(supercardpro));
-    ValidateRange(opt.range, MAX_TRACKS, MAX_SIDES, 1, scp_dev_disk->cyls(), scp_dev_disk->heads());
+    ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, 1, scp_dev_disk->cyls(), scp_dev_disk->heads());
 
-    opt.range.each([&](const CylHead& cylhead)
+    opt_range.each([&](const CylHead& cylhead)
         {
             auto trackdata = disk->read(cylhead);
             Message(msgStatus, "Writing %s", CH(cylhead.cyl, cylhead.head));

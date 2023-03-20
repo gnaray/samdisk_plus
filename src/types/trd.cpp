@@ -2,7 +2,7 @@
 //
 // Later extended to support up to 1MB images (128 cyls)
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "trd.h"
 #include "Disk.h"
 #include "MemFile.h"
@@ -10,6 +10,7 @@
 
 #include <memory>
 
+static auto& opt_range = getOpt<Range>("range");
 
 bool ReadTRD(MemFile& file, std::shared_ptr<Disk>& disk)
 {
@@ -160,11 +161,11 @@ bool WriteTRD(FILE* /*f_*/, std::shared_ptr<Disk>&/*disk*/)
                     int trdcyls = SizeToCylsTRD(nDiskSize);
 
                     // If no custom cyl range was supplied, extend to the required size.
-                    if (!opt.range.customcyls)
+                    if (!opt_range.customcyls)
                         cyls = trdcyls;
                     // Otherwise cap at the user range
                     else
-                        cyls = std::min(trdcyls, opt.range.cylto + 1);
+                        cyls = std::min(trdcyls, opt_range.cylto + 1);
                 }
             }
 
@@ -174,7 +175,7 @@ bool WriteTRD(FILE* /*f_*/, std::shared_ptr<Disk>&/*disk*/)
                 long lPos = (((cyl * heads + head) * pf_->sectors) + sector) * TRD_SECTOR_SIZE;
 
                 // Skip writing we're beyond the used portion of the disk
-                if (opt.trim && lPos >= disk_end_pos)
+                if (opt_trim && lPos >= disk_end_pos)
                     continue;
 
                 // Seek to the sector offset and write it

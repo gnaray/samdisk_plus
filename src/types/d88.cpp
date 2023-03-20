@@ -1,7 +1,7 @@
 // Toshiba Pasopia 7:
 //  http://www1.plala.or.jp/aoto/tech.htm
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Disk.h"
 #include "DiskUtil.h"
 #include "MemFile.h"
@@ -9,6 +9,7 @@
 
 #include <memory>
 
+static auto& opt_szTarget = getOpt<charArrayMAX_PATH>("szTarget");
 
 enum : uint8_t
 {
@@ -212,7 +213,7 @@ bool WriteD88(FILE* f_, std::shared_ptr<Disk>& disk)
 
     auto cyls = disk->cyls();
     auto heads = disk->heads();
-    auto _1dd = IsFileExt(opt.szTarget, "1dd");
+    auto _1dd = IsFileExt(opt_szTarget, "1dd");
 
     if (_1dd && heads == 2)
         throw util::exception("can't write double-sided image to 1DD container");

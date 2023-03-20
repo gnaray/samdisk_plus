@@ -1,11 +1,13 @@
 // Core disk class
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Disk.h"
 //#include "IBMPC.h"
 #include "ThreadPool.h"
 
 #include <algorithm>
+
+static auto& opt_mt = getOpt<int>("mt");
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +43,7 @@ int Disk::heads() const
 bool Disk::preload(const Range& range_, int cyl_step)
 {
     // No pre-loading if multi-threading disabled, or only a single core
-    if (!opt.mt || ThreadPool::get_thread_count() <= 1)
+    if (!opt_mt || ThreadPool::get_thread_count() <= 1)
         return false;
 
     ThreadPool pool;

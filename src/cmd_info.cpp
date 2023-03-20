@@ -1,5 +1,6 @@
 // Info command
 
+#include "Options.h"
 #include "SAMdisk.h"
 #include "Image.h"
 #include "HDD.h"
@@ -9,6 +10,7 @@
 #include <iomanip>
 #include <memory>
 
+static auto& opt_szSource = getOpt<charArrayMAX_PATH>("szSource");
 
 bool ImageInfo(const std::string& path)
 {
@@ -16,7 +18,7 @@ bool ImageInfo(const std::string& path)
     util::cout.screen->flush();
 
     auto disk = std::make_shared<Disk>();
-    if (ReadImage(opt.szSource, disk))
+    if (ReadImage(opt_szSource, disk))
     {
         const Format& fmt = disk->fmt;
         auto cyls = disk->cyls();

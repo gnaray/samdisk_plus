@@ -1,6 +1,7 @@
 // Main entry point and command-line handler
 
 #include "SAMdisk.h"
+#include "Options.h"
 #include "types.h"
 //#include "Disk.h"
 #include "BlockDevice.h"
@@ -11,8 +12,217 @@ enum { cmdCopy, cmdScan, cmdFormat, cmdList, cmdView, cmdInfo, cmdDir, cmdRpm, c
 static const char* aszCommands[] =
 { "copy",  "scan",  "format",  "list",  "view",  "info",  "dir",  "rpm",  "verify",  "unformat",  "version",  "create",  nullptr };
 
+// The options and its publishers. [BEGIN]
 
-OPTIONS opt;
+struct OPTIONS
+{
+    Range range{};
+    int step = 1;
+
+    int base = -1, size = -1, gap3 = -1, interleave = -1, skew = -1, fill = -1;
+    int gaps = -1, gap2 = -1, gap4b = -1, idcrc = -1, gapmask = -1, maxsplice = -1;
+    int cylsfirst = -1, head0 = -1, head1 = -1, steprate = -1, check8k = -1;
+    int offsets = -1, fix = -1, mt = -1, plladjust = -1, hardsectors = -1;
+
+    int command = 0, hex = 0, debug = 0, verbose = 0, log = 0, force = 0, quick = 0;
+    int merge = 0, repair = 0, trim = 0, calibrate = 0, newdrive = 0, byteswap = 0;
+    int noweak = 0, nosig = 0, nodata = 0, nocfa = 0, noidentify = 0, nospecial = 0;
+    int nozip = 0, nodiff = 0, noformat = 0, nodups = 0, nowobble = 0, nottb = 0;
+    int bdos = 0, atom = 0, hdf = 0, resize = 0, cpm = 0, minimal = 0, legacy = 0;
+    int absoffsets = 0, datacopy = 0, align = 0, keepoverlap = 0, fmoverlap = 0;
+    int rescans = 0, flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
+    int a1sync = 0;
+
+    int retries = 5, maxcopies = 3;
+    int scale = 100, pllphase = DEFAULT_PLL_PHASE;
+    int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
+
+    bool dummy = false;
+
+    Encoding encoding{ Encoding::Unknown };
+    DataRate datarate{ DataRate::Unknown };
+    PreferredData prefer = PreferredData::Unknown;
+    long sectors = -1;
+    std::string label{}, boot{};
+
+    char szSource[MAX_PATH], szTarget[MAX_PATH];
+
+};
+
+static OPTIONS opt;
+
+template<>
+int& getOpt(const std::string& key)
+{
+    static const std::map<std::string, int&> s_mapStringToIntegerVariables =
+    {
+        {"a1sync", opt.a1sync},
+        {"absoffsets", opt.absoffsets},
+        {"align", opt.align},
+        {"atom", opt.atom},
+        {"base", opt.base},
+        {"bdos", opt.bdos},
+        {"bytes_begin", opt.bytes_begin},
+        {"bytes_end", opt.bytes_end},
+        {"byteswap", opt.byteswap},
+        {"calibrate", opt.calibrate},
+        {"check8k", opt.check8k},
+        {"command", opt.command},
+        {"cpm", opt.cpm},
+        {"cylsfirst", opt.cylsfirst},
+        {"datacopy", opt.datacopy},
+        {"debug", opt.debug},
+        {"fill", opt.fill},
+        {"fix", opt.fix},
+        {"flip", opt.flip},
+        {"fmoverlap", opt.fmoverlap},
+        {"force", opt.force},
+        {"gap2", opt.gap2},
+        {"gap3", opt.gap3},
+        {"gap4b", opt.gap4b},
+        {"gapmask", opt.gapmask},
+        {"gaps", opt.gaps},
+        {"hardsectors", opt.hardsectors},
+        {"hdf", opt.hdf},
+        {"head0", opt.head0},
+        {"head1", opt.head1},
+        {"hex", opt.hex},
+        {"idcrc", opt.idcrc},
+        {"interleave", opt.interleave},
+        {"keepoverlap", opt.keepoverlap},
+        {"legacy", opt.legacy},
+        {"log", opt.log},
+        {"maxcopies", opt.maxcopies},
+        {"maxsplice", opt.maxsplice},
+        {"merge", opt.merge},
+        {"minimal", opt.minimal},
+        {"mt", opt.mt},
+        {"multiformat", opt.multiformat},
+        {"newdrive", opt.newdrive},
+        {"nocfa", opt.nocfa},
+        {"nodata", opt.nodata},
+        {"nodiff", opt.nodiff},
+        {"nodups", opt.nodups},
+        {"noformat", opt.noformat},
+        {"noidentify", opt.noidentify},
+        {"nosig", opt.nosig},
+        {"nospecial", opt.nospecial},
+        {"nottb", opt.nottb},
+        {"noweak", opt.noweak},
+        {"nowobble", opt.nowobble},
+        {"nozip", opt.nozip},
+        {"offsets", opt.offsets},
+        {"plladjust", opt.plladjust},
+        {"pllphase", opt.pllphase},
+        {"quick", opt.quick},
+        {"repair", opt.repair},
+        {"rescans", opt.rescans},
+        {"resize", opt.resize},
+        {"retries", opt.retries},
+        {"rpm", opt.rpm},
+        {"scale", opt.scale},
+        {"size", opt.size},
+        {"skew", opt.skew},
+        {"step", opt.step},
+        {"steprate", opt.steprate},
+        {"time", opt.time},
+        {"trim", opt.trim},
+        {"tty", opt.tty},
+        {"verbose", opt.verbose},
+    };
+    return s_mapStringToIntegerVariables.at(key);
+}
+
+template<>
+bool& getOpt(const std::string& key)
+{
+    static const std::map<std::string, bool&> s_mapStringToBoolVariables =
+    {
+        {"debug", opt.dummy}
+    };
+    return s_mapStringToBoolVariables.at(key);
+}
+
+template<>
+long& getOpt(const std::string& key)
+{
+    static const std::map<std::string, long&> s_mapStringToLongVariables =
+    {
+        {"sectors", opt.sectors}
+    };
+
+    return s_mapStringToLongVariables.at(key);
+}
+
+template<>
+Range& getOpt(const std::string& key)
+{
+    static const std::map<std::string, Range&> s_mapStringToRangeVariables =
+    {
+        {"range", opt.range}
+    };
+
+    return s_mapStringToRangeVariables.at(key);
+}
+
+template<>
+Encoding& getOpt(const std::string& key)
+{
+    static const std::map<std::string, Encoding&> s_mapStringToEncodingVariables =
+    {
+        {"encoding", opt.encoding}
+    };
+
+    return s_mapStringToEncodingVariables.at(key);
+}
+
+template<>
+DataRate& getOpt(const std::string& key)
+{
+    static const std::map<std::string, DataRate&> s_mapStringToDataRateVariables =
+    {
+        {"datarate", opt.datarate}
+    };
+
+    return s_mapStringToDataRateVariables.at(key);
+}
+
+template<>
+PreferredData& getOpt(const std::string& key)
+{
+    static const std::map<std::string, PreferredData&> s_mapStringToPreferredDataVariables =
+    {
+        {"prefer", opt.prefer}
+    };
+
+    return s_mapStringToPreferredDataVariables.at(key);
+}
+
+template<>
+std::string& getOpt(const std::string& key)
+{
+    static const std::map<std::string, std::string&> s_mapStringToStringVariables =
+    {
+        {"label", opt.label},
+        {"boot", opt.boot}
+    };
+
+    return s_mapStringToStringVariables.at(key);
+}
+
+template<>
+charArrayMAX_PATH& getOpt(const std::string& key)
+{
+    static const std::map<std::string, char(&)[MAX_PATH]> s_mapStringToCharArrayVariables =
+    {
+        {"szSource", opt.szSource},
+        {"szTarget", opt.szTarget}
+    };
+
+    return s_mapStringToCharArrayVariables.at(key);
+}
+
+// The options and its publishers. [END]
 
 void Version()
 {

@@ -1,9 +1,12 @@
-#include "SAMdisk.h"
+#include "Options.h"
 #include "CRC16.h"
 #include "DiskUtil.h"
 #include "Sector.h"
 
 #include <cstring>
+
+static auto& opt_fill = getOpt<int>("fill");
+static auto& opt_maxcopies = getOpt<int>("maxcopies");
 
 Sector::Sector(DataRate datarate_, Encoding encoding_, const Header& header_, int gap3_)
     : header(header_), datarate(datarate_), encoding(encoding_), gap3(gap3_)
@@ -313,7 +316,7 @@ void Sector::set_baddatacrc(bool bad)
 
     if (!bad)
     {
-        auto fill_byte = static_cast<uint8_t>((opt.fill >= 0) ? opt.fill : 0);
+        auto fill_byte = static_cast<uint8_t>((opt_fill >= 0) ? opt_fill : 0);
 
         if (!has_data())
             m_data.push_back(Data(size(), fill_byte));

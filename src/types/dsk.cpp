@@ -7,7 +7,7 @@
 // John Elliot's rate+encoding extension:
 //  http://groups.google.com/group/comp.sys.sinclair/msg/80e4c2d1403ea65c
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "DiskUtil.h"
 #include "IBMPC.h"
 #include "Disk.h"
@@ -17,6 +17,9 @@
 #include <memory>
 
 // ToDo: separate EDSK and DSK support, as EDSK alone is complicated enough!
+
+static auto& opt_fix = getOpt<int>("fix");
+static auto& opt_legacy = getOpt<int>("legacy");
 
 #define DSK_SIGNATURE           "MV - CPC"
 #define EDSK_SIGNATURE          "EXTENDED CPC DSK File\r\nDisk-Info\r\n"
@@ -292,7 +295,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk)
 
                     // CPDRead sometimes stores too much data. If we find a data size that is an exact multiple on an
                     // error free sector, trim it down to the natural size.
-                    if (opt.fix != 0 && disk->metadata["creator"].substr(0, 3) == "CPD" &&
+                    if (opt_fix != 0 && disk->metadata["creator"].substr(0, 3) == "CPD" &&
                         data_size > native_size && !data_crc_error && !(data_size % native_size))
                     {
                         // Example: Discology +3.dsk (SDP)
@@ -511,7 +514,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk)
             auto track_size = 0;
 
             // Space saving flags, to squeeze the track into the limited EDSK space
-            bool fFitLegacy = !!opt.legacy;
+            bool fFitLegacy = !!opt_legacy;
             bool fFitErrorCopies = false, fFitErrorSize = false;
             auto uFitSize = Sector::SizeCodeToLength(GetUnformatSizeCode(datarate));
 
@@ -677,7 +680,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk)
     }
 
     // Add offsets if available, unless they're disabled
-    if (!opt.legacy && add_offsets_block)
+    if (!opt_legacy && add_offsets_block)
     {
         EDSK_OFFSETS eo = { EDSK_OFFSETS_SIG, 0 };
         fwrite(&eo, sizeof(eo), 1, f_);

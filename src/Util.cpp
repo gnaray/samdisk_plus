@@ -1,6 +1,6 @@
 // Legacy utility functions
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Image.h"
 #include "SAMCoupe.h"
 #include "Util.h"
@@ -10,6 +10,7 @@
 #include <string>
 #include <sys/stat.h>
 
+static auto& opt_hex = getOpt<int>("hex");
 
 std::set<std::string> seen_messages;
 
@@ -24,7 +25,7 @@ const char* ValStr(int val, const char* pcszDec_, const char* pcszHex_, bool fFo
     idx = (idx + 1) % arraysize(strs);
 
     // Format in the current base using the supplied format string
-    snprintf(strs[idx], sizeof(strs[idx]), (opt.hex == 0 || fForceDecimal_) ? pcszDec_ : pcszHex_, val);
+    snprintf(strs[idx], sizeof(strs[idx]), (opt_hex == 0 || fForceDecimal_) ? pcszDec_ : pcszHex_, val);
 
     return strs[idx];
 }
@@ -35,8 +36,8 @@ const char* NumStr(int n) { return ValStr(n, "%d", "%" HEXCASE); }
 const char* ByteStr(int b) { return ValStr(b, "%u", "%02" HEXCASE); }
 const char* WordStr(int w) { return ValStr(w, "%u", "%04" HEXCASE); }
 
-const char* CylStr(int cyl) { return ValStr(cyl, "%d", "%02" HEXCASE, opt.hex == 2); }
-const char* HeadStr(int head) { return ValStr(head, "%d", "%" HEXCASE, opt.hex == 2); }
+const char* CylStr(int cyl) { return ValStr(cyl, "%d", "%02" HEXCASE, opt_hex == 2); }
+const char* HeadStr(int head) { return ValStr(head, "%d", "%" HEXCASE, opt_hex == 2); }
 const char* RecordStr(int record) { return ValStr(record, "%d", "%02" HEXCASE); }
 const char* SizeStr(int size) { return ValStr(size, "%d", "%" HEXCASE); }
 

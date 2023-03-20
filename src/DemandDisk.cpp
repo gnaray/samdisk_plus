@@ -1,11 +1,14 @@
 // Demand-loaded disk tracks, for slow media
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "DemandDisk.h"
 
 // Storage for class statics.
 constexpr int DemandDisk::FIRST_READ_REVS;
 constexpr int DemandDisk::REMAIN_READ_REVS;
+
+static auto& opt_rescans = getOpt<int>("rescans");
+static auto& opt_retries = getOpt<int>("retries");
 
 
 void DemandDisk::extend(const CylHead& cylhead)
@@ -29,8 +32,8 @@ const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached)
         auto& track = trackdata.track();
 
         // If the disk supports sector-level retries we won't duplicate them.
-        auto retries = supports_retries() ? 0 : opt.retries;
-        auto rescans = opt.rescans;
+        auto retries = supports_retries() ? 0 : opt_retries;
+        auto rescans = opt_rescans;
 
         // Consider rescans and error retries.
         while (rescans > 0 || retries > 0)

@@ -1,6 +1,6 @@
 // HDF HDD disk image files
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "FileIO.h"
 #include "HDFHDD.h"
 #include "Util.h"
@@ -8,6 +8,8 @@
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+static auto& opt_hdf = getOpt<int>("hdf");
 
 /*static*/ bool HDFHDD::IsRecognised(const std::string& path)
 {
@@ -100,7 +102,7 @@ bool HDFHDD::Create(const std::string& path, uint64_t total_bytes_, const IDENTI
     if (IsFileExt(path, "hdf"))
     {
         // Are we forced to use HDF v1.0?
-        if (opt.hdf == 10)
+        if (opt_hdf == 10)
         {
             // v1.0 has a 128-byte limit for the header+identify data
             sIdentify.len = 128 - sizeof(RS_IDE);

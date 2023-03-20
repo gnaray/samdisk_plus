@@ -1,6 +1,6 @@
 // Disk class utilities
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "CRC16.h"
 #include "DiskUtil.h"
 #include "SpecialFormat.h"
@@ -14,6 +14,24 @@
 static constexpr int MIN_DIFF_BLOCK = 16;
 static constexpr int DEFAULT_MAX_SPLICE = 72;   // limit of bits treated as splice noise between recognised gap patterns
 
+static auto& opt_absoffsets = getOpt<int>("absoffsets");
+static auto& opt_align = getOpt<int>("align");
+static auto& opt_check8k = getOpt<int>("check8k");
+static auto& opt_datarate = getOpt<DataRate>("datarate");
+static auto& opt_debug = getOpt<int>("debug");
+static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_fix = getOpt<int>("fix");
+static auto& opt_gap3 = getOpt<int>("gap3");
+static auto& opt_gap4b = getOpt<int>("gap4b");
+static auto& opt_gapmask = getOpt<int>("gapmask");
+static auto& opt_gaps = getOpt<int>("gaps");
+static auto& opt_hex = getOpt<int>("hex");
+static auto& opt_maxsplice = getOpt<int>("maxsplice");
+static auto& opt_minimal = getOpt<int>("minimal");
+static auto& opt_nodata = getOpt<int>("nodata");
+static auto& opt_nodups = getOpt<int>("nodups");
+static auto& opt_offsets = getOpt<int>("offsets");
+static auto& opt_verbose = getOpt<int>("verbose");
 
 static void item_separator(int items)
 {
@@ -25,7 +43,7 @@ static void item_separator(int items)
 
 void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags)
 {
-    if (opt.hex != 1)
+    if (opt_hex != 1)
         util::cout << util::fmt(" %2u.%u  ", cylhead.cyl, cylhead.head);
     else
         util::cout << util::fmt(" %s.%u  ", CylStr(cylhead.cyl), cylhead.head);
@@ -125,7 +143,7 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
                 util::cout << colour::CYAN << "+" << (sector.data_size() - sector.size()) << colour::none;  // More data than sector size (crc, gaps, ...)
             }
 
-            if (opt.verbose > 1 && track.is_8k_sector())
+            if (opt_verbose > 1 && track.is_8k_sector())
             {
                 auto& data = track[0].data_copy();
                 auto str_checksum = ChecksumNameShort(ChecksumMethods(data.data(), data.size()));
@@ -169,7 +187,7 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
                     else
                         util::cout << util::fmt("-%s ", WordStr((prevoffset - offset) >> shift));
 
-                    if (!opt.absoffsets)
+                    if (!opt_absoffsets)
                         prevoffset = offset;
                 }
             }
@@ -218,7 +236,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
     int i;
 
     // Clear the track length if offsets are disabled (cosmetic: no changed flag).
-    if (opt.offsets == 0)
+    if (opt_offsets == 0)
         track.tracklen = 0;
 
     // Pass 1
@@ -227,7 +245,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
         auto& sector = track[i];
 
         // Remove sectors with duplicate CHRN?
-        if (opt.nodups)
+        if (opt_nodups)
         {
             // Remove duplicates found later on the track.
             for (int j = i + 1; j < track.size(); ++j)
@@ -242,7 +260,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
         }
 
         // Clear all data, for privacy during diagnostics?
-        if (opt.nodata && sector.has_data())
+        if (opt_nodata && sector.has_data())
         {
             sector.remove_data();
             sector.add(Data());     // empty data rather than no data
@@ -250,7 +268,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
         }
 
         // Track offsets disabled? (cosmetic: no changed flag)
-        if (opt.offsets == 0)
+        if (opt_offsets == 0)
             sector.offset = 0;
 #if 0
         // ToDo: move this to fdrawcmd disk type
@@ -267,13 +285,13 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
         if (sector.has_gapdata())
         {
             // Remove gap data if disabled, or the gap mask doesn't allow it
-            if (opt.gaps == GAPS_NONE || !(opt.gapmask & (1 << i)))
+            if (opt_gaps == GAPS_NONE || !(opt_gapmask & (1 << i)))
             {
                 sector.remove_gapdata();
                 changed = true;
             }
             // Remove normal gaps unless we're asked to keep them.
-            else if (opt.gaps == GAPS_CLEAN && sector.encoding == Encoding::MFM)
+            else if (opt_gaps == GAPS_CLEAN && sector.encoding == Encoding::MFM)
             {
                 int gap3 = 0;
                 if (test_remove_gap3(sector.data_copy(), sector.size(), gap3))
@@ -306,29 +324,29 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
         Sector& sector = track[i];
 
         // Remove only the final gap if --no-gap4b was used
-        if (i == (track.size() - 1) && opt.gap4b == 0 && sector.has_gapdata())
+        if (i == (track.size() - 1) && opt_gap4b == 0 && sector.has_gapdata())
         {
             sector.remove_gapdata(true);
             changed = true;
         }
 
         // Allow override for sector datarate.
-        if (opt.datarate != DataRate::Unknown)
+        if (opt_datarate != DataRate::Unknown)
         {
-            sector.datarate = opt.datarate;
+            sector.datarate = opt_datarate;
             changed = true;
         }
 
         // Allow override for sector encoding.
-        if (opt.encoding != Encoding::Unknown)
+        if (opt_encoding != Encoding::Unknown)
         {
-            sector.encoding = opt.encoding;
+            sector.encoding = opt_encoding;
             changed = true;
         }
 
         // Allow overrides for track gap3 (cosmetic: no changed flag)
-        if (opt.gap3 != -1)
-            sector.gap3 = static_cast<uint8_t>(opt.gap3);
+        if (opt_gap3 != -1)
+            sector.gap3 = static_cast<uint8_t>(opt_gap3);
 #if 0
         // ToDo: move this to fdrawcmd disk type
         // Check for the ASRock FDC problem that corrupts sector data with format headers (unless comparison block is all one byte)
@@ -345,13 +363,13 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
     int weak_offset, weak_size;
 
     // Check for Speedlock weak sector (either +3 or CPC)
-    if (opt.fix != 0 && cylhead.cyl == 0 && track.size() == 9)
+    if (opt_fix != 0 && cylhead.cyl == 0 && track.size() == 9)
     {
         auto& sector1 = track[1];
         if (sector1.copies() == 1 && IsSpectrumSpeedlockTrack(track, weak_offset, weak_size))
         {
             // Are we to add the missing weak sector?
-            if (opt.fix == 1)
+            if (opt_fix == 1)
             {
                 // Add a copy with differences matching the typical weak sector
                 auto data = sector1.data_copy();
@@ -370,7 +388,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
         if (sector7.copies() == 1 && IsCpcSpeedlockTrack(track, weak_offset, weak_size))
         {
             // Are we to add the missing weak sector?
-            if (opt.fix == 1)
+            if (opt_fix == 1)
             {
                 // Add a second data copy with differences matching the typical weak sector
                 auto data = sector7.data_copy();
@@ -387,13 +405,13 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
     }
 
     // Check for Rainbow Arts weak sector missing copies
-    if (opt.fix != 0 && cylhead.cyl == 40 && track.size() == 9)
+    if (opt_fix != 0 && cylhead.cyl == 40 && track.size() == 9)
     {
         auto& sector1 = track[1];
         if (sector1.copies() == 1 && IsRainbowArtsTrack(track, weak_offset, weak_size))
         {
             // Are we to add the missing weak sector?
-            if (opt.fix == 1)
+            if (opt_fix == 1)
             {
                 // Ensure the weak sector has a data CRC error, to fix broken CPCDiskXP images
                 if (!sector1.has_baddatacrc())
@@ -401,7 +419,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
                     auto data = sector1.data_copy();
                     sector1.remove_data();
                     sector1.add(std::move(data), true);
-                    if (opt.debug) util::cout << "added missing data CRC error to Rainbow Arts track\n";
+                    if (opt_debug) util::cout << "added missing data CRC error to Rainbow Arts track\n";
                 }
 
                 // Add a second data copy with differences matching the typical weak sector
@@ -419,13 +437,13 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
     }
 
     // Check for missing OperaSoft 32K sector (CPDRead dumps).
-    if (opt.fix != 0 && cylhead.cyl == 40 && track.size() == 9)
+    if (opt_fix != 0 && cylhead.cyl == 40 && track.size() == 9)
     {
         auto& sector7 = track[7];
         auto& sector8 = track[8];
         if (sector7.has_data() && sector8.data_size() == 0 && IsOperaSoftTrack(track))
         {
-            if (opt.fix == 1)
+            if (opt_fix == 1)
             {
                 const auto& data7 = sector7.data_copy();
 
@@ -454,11 +472,11 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
     }
 
     // Check for Prehistorik track followed by unused KBI-19 sectors (mastering error?).
-    if (opt.fix != 0 && track.size() == 13)
+    if (opt_fix != 0 && track.size() == 13)
     {
         if (track[6].header.sector == 12 && IsPrehistorikTrack(track))
         {
-            if (opt.fix == 1)
+            if (opt_fix == 1)
             {
                 // Trim the unwanted sectors.
                 while (track.size() > 7)
@@ -476,7 +494,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
     }
 
     // Check for the problematic Reussir protection (CPC).
-    if (opt.fix != 0 && track.size() == 10)
+    if (opt_fix != 0 && track.size() == 10)
     {
         for (auto& s : track)
         {
@@ -495,7 +513,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
                 if (data[i] == 0xdd && !memcmp(data.data() + i, prot_check, sizeof(prot_check)))
                 {
                     // Are we to fix (disable) the protection?
-                    if (opt.fix == 1)
+                    if (opt_fix == 1)
                     {
                         data[i + 3] = 0xaf; // XOR A
                         Message(msgFix, "disabled problematic Reussir protection");
@@ -509,7 +527,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
     }
 
     // Single copy of an 8K sector?
-    if (opt.check8k != 0 && track.is_8k_sector() && track[0].copies() == 1 && track[0].data_size() >= 0x1801)
+    if (opt_check8k != 0 && track.is_8k_sector() && track[0].copies() == 1 && track[0].data_size() >= 0x1801)
     {
         const auto& sector = track[0];
         const auto& data = sector.data_copy();
@@ -597,7 +615,7 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
     bool modified = false;
 
     // Align sync marks to byte boundaries?
-    if (opt.align)
+    if (opt_align)
         modified |= bitbuf.align();
 
     return modified;
@@ -871,7 +889,7 @@ bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
         }
         }, fmt.cyls_first);
 
-    if (missing && !opt.minimal)
+    if (missing && !opt_minimal)
         Message(msgWarning, "source missing %u sectors from %u/%u/%u/%u regular format", missing, fmt.cyls, fmt.heads, fmt.sectors, fmt.sector_size());
 
     return true;
@@ -907,7 +925,7 @@ bool WriteAppleDODisk(FILE* f_, Disk& disk, const Format& fmt)
         }
         }, fmt.cyls_first);
 
-    if (missing && !opt.minimal)
+    if (missing && !opt_minimal)
         Message(msgWarning, "source missing %u sectors from %u/%u/%u/%u regular format", missing, fmt.cyls, fmt.heads, fmt.sectors, fmt.sector_size());
 
     return true;
@@ -920,11 +938,11 @@ bool test_remove_gap2(const Data& data, int offset)
         return false;
 
     TrackDataParser parser(data.data() + offset, data.size() - offset);
-    auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
+    auto max_splice = (opt_maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt_maxsplice;
     auto splice = 0, len = 0;
     uint8_t fill;
 
-    if (opt.debug) util::cout << "----gap2----:\n";
+    if (opt_debug) util::cout << "----gap2----:\n";
 
     parser.GetGapRun(len, fill);
 
@@ -933,17 +951,17 @@ bool test_remove_gap2(const Data& data, int offset)
         splice = 1;
         for (; parser.GetGapRun(len, fill) && !len; ++splice);
 
-        if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+        if (opt_debug) util::cout << "found " << splice << " splice bits\n";
         if (splice > max_splice)
         {
-            if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+            if (opt_debug) util::cout << "stopping due to too many splice bits\n";
             return false;
         }
     }
 
     if (len > 0 && fill == 0x4e)
     {
-        if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+        if (opt_debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
         parser.GetGapRun(len, fill);
     }
 
@@ -952,17 +970,17 @@ bool test_remove_gap2(const Data& data, int offset)
         splice = 1;
         for (; parser.GetGapRun(len, fill) && !len; ++splice);
 
-        if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+        if (opt_debug) util::cout << "found " << splice << " splice bits\n";
         if (splice > max_splice)
         {
-            if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+            if (opt_debug) util::cout << "stopping due to too many splice bits\n";
             return false;
         }
     }
 
     if (len > 0 && fill == 0x00)
     {
-        if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+        if (opt_debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
         parser.GetGapRun(len, fill);
     }
 
@@ -970,7 +988,7 @@ bool test_remove_gap2(const Data& data, int offset)
     {
         splice = 1;
         for (; parser.GetGapRun(len, fill) && !len; ++splice);
-        if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+        if (opt_debug) util::cout << "found " << splice << " splice bits\n";
         if (splice > max_splice)
             return false;
     }
@@ -979,14 +997,14 @@ bool test_remove_gap2(const Data& data, int offset)
     {
         if (fill != 0x00)
         {
-            if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
+            if (opt_debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
             return false;
         }
 
-        if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+        if (opt_debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
     }
 
-    if (opt.debug) util::cout << "gap2 can be removed\n";
+    if (opt_debug) util::cout << "gap2 can be removed\n";
     return true;
 }
 
@@ -996,12 +1014,12 @@ bool test_remove_gap3(const Data& data, int offset, int& gap3)
         return false;
 
     TrackDataParser parser(data.data() + offset, data.size() - offset);
-    auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
+    auto max_splice = (opt_maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt_maxsplice;
     auto splice = 0, len = 0;
     uint8_t fill = 0x00;
     bool unshifted = true;
 
-    if (opt.debug) util::cout << "----gap3----:\n";
+    if (opt_debug) util::cout << "----gap3----:\n";
     while (!parser.IsWrapped())
     {
         parser.GetGapRun(len, fill, &unshifted);
@@ -1010,10 +1028,10 @@ bool test_remove_gap3(const Data& data, int offset, int& gap3)
         {
             splice = 1;
             for (; parser.GetGapRun(len, fill) && !len; ++splice);
-            if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+            if (opt_debug) util::cout << "found " << splice << " splice bits\n";
             if (splice > max_splice)
             {
-                if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+                if (opt_debug) util::cout << "stopping due to too many splice bits\n";
                 return false;
             }
         }
@@ -1021,24 +1039,24 @@ bool test_remove_gap3(const Data& data, int offset, int& gap3)
         if (len == 3 && fill == 0xa1)
         {
             auto am = parser.ReadByte();
-            if (opt.debug) util::cout << "found AM (" << am << ")\n";
+            if (opt_debug) util::cout << "found AM (" << am << ")\n";
             break;
         }
 
         if (len > 0 && fill != 0x00 && fill != 0x4e)
         {
-            if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
+            if (opt_debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
             return false;
         }
 
         if (len > 0 && fill == 0x4e && !gap3)
         {
             gap3 = static_cast<uint8_t>(len);
-            if (opt.debug) util::cout << "gap3 size is " << len << " bytes\n";
+            if (opt_debug) util::cout << "gap3 size is " << len << " bytes\n";
         }
         if (len > 0)
         {
-            if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+            if (opt_debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
         }
     }
 
@@ -1046,7 +1064,7 @@ bool test_remove_gap3(const Data& data, int offset, int& gap3)
     if (gap3 && !unshifted)
         gap3 = 0;
 
-    if (opt.debug) util::cout << "gap3 can be removed\n";
+    if (opt_debug) util::cout << "gap3 can be removed\n";
     return true;
 }
 
@@ -1059,7 +1077,7 @@ bool test_remove_gap4b(const Data& data, int offset)
     auto splice = 0, len = 0;
     uint8_t fill;
 
-    if (opt.debug) util::cout << "----gap4b----:\n";
+    if (opt_debug) util::cout << "----gap4b----:\n";
 
     parser.GetGapRun(len, fill);
 
@@ -1067,12 +1085,12 @@ bool test_remove_gap4b(const Data& data, int offset)
     {
         splice = 1;
         for (; parser.GetGapRun(len, fill) && !len; ++splice);
-        if (opt.debug) util::cout << "found " << splice << " splice bits\n";
+        if (opt_debug) util::cout << "found " << splice << " splice bits\n";
         /*
-        auto max_splice = (opt.maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt.maxsplice;
+        auto max_splice = (opt_maxsplice == -1) ? DEFAULT_MAX_SPLICE : opt_maxsplice;
         if (splice > max_splice)
         {
-        if (opt.debug) util::cout << "stopping due to too many splice bits\n";
+        if (opt_debug) util::cout << "stopping due to too many splice bits\n";
         return false;
         }
         */
@@ -1080,15 +1098,15 @@ bool test_remove_gap4b(const Data& data, int offset)
 
     if (len > 0 && (fill == 0x4e || fill == 0x00))
     {
-        if (opt.debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
+        if (opt_debug) util::cout << "found " << len << " bytes of " << fill << " filler\n";
     }
     else if (len > 0)
     {
-        if (opt.debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
+        if (opt_debug) util::cout << "stopping due to " << len << " bytes of " << fill << " filler\n";
         return false;
     }
 
-    if (opt.debug) util::cout << "gap4b can be removed\n";
+    if (opt_debug) util::cout << "gap4b can be removed\n";
     return true;
 }
 

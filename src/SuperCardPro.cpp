@@ -1,12 +1,13 @@
 // SuperCard Pro device base class
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "SuperCardPro.h"
 #include "Sector.h"
 
 #include <cstring>
 #include <unistd.h>
 
+static auto& opt_scale = getOpt<int>("scale");
 
 #ifdef HAVE_FTD2XX
 #include "SCP_FTD2XX.h"
@@ -299,7 +300,7 @@ bool SuperCardPro::WriteFlux(const std::vector<uint32_t>& flux_times)
     for (auto time_ns : flux_times)
     {
         auto time_ticks{ (time_ns + (NS_PER_TICK / 2)) / NS_PER_TICK };
-        time_ticks = time_ticks * opt.scale / 100;
+        time_ticks = time_ticks * opt_scale / 100;
         time_ticks |= 1;
 
         while (time_ticks >= 0x10000)

@@ -1,5 +1,6 @@
 // View command
 
+#include "Options.h"
 #include "SAMdisk.h"
 #include "DiskUtil.h"
 #include "Image.h"
@@ -8,6 +9,15 @@
 
 #include <memory>
 
+static auto& opt_a1sync = getOpt<int>("a1sync");
+static auto& opt_bytes_begin = getOpt<int>("bytes_begin");
+static auto& opt_bytes_end = getOpt<int>("bytes_end");
+static auto& opt_datacopy = getOpt<int>("datacopy");
+static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_sectors = getOpt<long>("sectors");
+static auto& opt_size = getOpt<int>("size");
+static auto& opt_step = getOpt<int>("step");
+static auto& opt_verbose = getOpt<int>("verbose");
 
 void ViewTrack(const CylHead& cylhead, const Track& track)
 {
@@ -18,14 +28,14 @@ void ViewTrack(const CylHead& cylhead, const Track& track)
     if (!track.empty())
         util::cout << "\n";
 
-    if (opt.verbose)
+    if (opt_verbose)
         return;
 
     for (const auto& sector : track.sectors())
     {
         // If a specific sector/size is required, skip non-matching ones
-        if ((opt.sectors != -1 && (sector.header.sector != opt.sectors)) ||
-            (opt.size >= 0 && (sector.header.size != opt.size)))
+        if ((opt_sectors != -1 && (sector.header.sector != opt_sectors)) ||
+            (opt_size >= 0 && (sector.header.size != opt_size)))
             continue;
 
         if (!sector.has_data())
@@ -33,13 +43,13 @@ void ViewTrack(const CylHead& cylhead, const Track& track)
         else
         {
             // Determine the data copy and number of bytes to show
-            auto copy = std::min(sector.copies(), opt.datacopy);
+            auto copy = std::min(sector.copies(), opt_datacopy);
             const Data& data = sector.data_copy(copy);
             auto data_size = data.size();
 
-            auto show_begin = std::max(opt.bytes_begin, 0);
-            auto show_end = (opt.bytes_end < 0) ? data_size :
-                std::min(opt.bytes_end, data_size);
+            auto show_begin = std::max(opt_bytes_begin, 0);
+            auto show_end = (opt_bytes_end < 0) ? data_size :
+                std::min(opt_bytes_end, data_size);
 
             if (data_size != sector.size())
                 util::cout << "Sector " << sector.header.sector << " (" << sector.size() << " bytes, " << data_size << " stored):\n";
@@ -82,8 +92,8 @@ void ViewTrack(const CylHead& cylhead, const Track& track)
     }
 
     // Single sector view but nothing matched?
-    if (opt.sectors >= 0 && !viewed)
-        util::cout << "Sector " << opt.sectors << " not found\n";
+    if (opt_sectors >= 0 && !viewed)
+        util::cout << "Sector " << opt_sectors << " not found\n";
 
     if (!track.empty())
         util::cout << "\n";
@@ -101,7 +111,7 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
     uint32_t dword = 0;
     int bits = 0, a1 = 0, am_dist = 0xffff, data_size = 0;
     uint8_t am = 0;
-    uint16_t sync_mask = opt.a1sync ? 0xffdf : 0xffff;
+    uint16_t sync_mask = opt_a1sync ? 0xffdf : 0xffff;
 
     bitbuf.seek(0);
     while (!bitbuf.wrapped())
@@ -195,9 +205,9 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
         }
     }
 
-    auto show_begin = std::max(opt.bytes_begin, 0);
-    auto show_end = (opt.bytes_end < 0) ? track_data.size() :
-        std::min(opt.bytes_end, track_data.size());
+    auto show_begin = std::max(opt_bytes_begin, 0);
+    auto show_end = (opt_bytes_end < 0) ? track_data.size() :
+        std::min(opt_bytes_end, track_data.size());
     if (show_end > show_begin)
     {
         util::cout << encoding << " Decode (" << bitbuf.track_bitsize() << " bits):\n";
@@ -213,20 +223,20 @@ bool ViewImage(const std::string& path, Range range)
     auto disk = std::make_shared<Disk>();
     if (ReadImage(path, disk))
     {
-        ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt.step, disk->cyls(), disk->heads());
+        ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
 
         range.each([&](const CylHead& cylhead) {
-            auto track = disk->read_track(cylhead * opt.step);
+            auto track = disk->read_track(cylhead * opt_step);
             NormaliseTrack(cylhead, track);
             ViewTrack(cylhead, track);
 
-            if (opt.verbose)
+            if (opt_verbose)
             {
-                auto trackdata = disk->read(cylhead * opt.step);
+                auto trackdata = disk->read(cylhead * opt_step);
                 auto bitbuf = trackdata.preferred().bitstream();
                 NormaliseBitstream(bitbuf);
-                auto encoding = (opt.encoding == Encoding::Unknown) ?
-                    bitbuf.encoding : opt.encoding;
+                auto encoding = (opt_encoding == Encoding::Unknown) ?
+                    bitbuf.encoding : opt_encoding;
 
                 switch (encoding)
                 {
@@ -263,7 +273,7 @@ bool ViewHdd(const std::string& path, Range range)
 
     auto cyl = range.cyl_begin;
     auto head = range.head_begin;
-    auto sector = (opt.sectors < 0) ? 0 : opt.sectors;
+    auto sector = (opt_sectors < 0) ? 0 : opt_sectors;
     auto lba_sector = sector;
 
     if (!range.empty())
@@ -290,9 +300,9 @@ bool ViewHdd(const std::string& path, Range range)
         else
             util::cout << util::fmt("LBA Sector %u (%u bytes):\n\n", lba_sector, mem.size);
 
-        auto show_begin = std::max(opt.bytes_begin, 0);
-        auto show_end = (opt.bytes_end < 0) ? mem.size :
-            std::min(opt.bytes_end, mem.size);
+        auto show_begin = std::max(opt_bytes_begin, 0);
+        auto show_end = (opt_bytes_end < 0) ? mem.size :
+            std::min(opt_bytes_end, mem.size);
         util::hex_dump(mem.pb, mem.pb + show_end, show_begin);
         return true;
     }
@@ -306,7 +316,7 @@ bool ViewBoot(const std::string& path, Range range)
     std::string device = path.substr(0, path.find_last_of(":"));
 
     // Force boot sector
-    opt.sectors = 0;
+    opt_sectors = 0;
 
     return ViewHdd(device, range);
 }

@@ -1,6 +1,6 @@
 // Sinclair betadisk archive for Spectrum clones
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Util.h"
 #include "trd.h"
 #include "Disk.h"
@@ -9,6 +9,8 @@
 #include <memory>
 
 #define SCL_SIGNATURE   "SINCLAIR"
+
+static auto& opt_force = getOpt<int>("force");
 
 struct SCL_HEADER
 {
@@ -73,7 +75,7 @@ bool ReadSCL(MemFile& file, std::shared_ptr<Disk>& disk)
 
     // Ensure the file size matches what we're expecting
     auto calc_size = static_cast<int>(sizeof(SCL_HEADER) + sh.bFiles * sizeof(SCL_FILE) + (uDataLba - 16) * 256 + 4);
-    if (!opt.force && file.size() != calc_size)
+    if (!opt_force && file.size() != calc_size)
         throw util::exception("file size (", file.size(), " doesn't match content size (", calc_size, ")");
 
     // Calculate the image size, and check against the maximum

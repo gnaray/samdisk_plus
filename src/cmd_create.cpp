@@ -1,6 +1,6 @@
 // Create command
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "Disk.h"
 #include "DiskUtil.h"
 #include "Image.h"
@@ -8,6 +8,9 @@
 
 #include <memory>
 
+static auto& opt_label = getOpt<std::string>("label");
+static auto& opt_noformat = getOpt<int>("noformat");
+static auto& opt_sectors = getOpt<long>("sectors");
 
 bool CreateImage(const std::string& path, Range range)
 {
@@ -23,11 +26,11 @@ bool CreateImage(const std::string& path, Range range)
     ValidateRange(range, MAX_TRACKS, MAX_SIDES);
 
     // Set the disk label, if supplied
-    if (!opt.label.empty())
-        disk->metadata["label"] = opt.label;
+    if (!opt_label.empty())
+        disk->metadata["label"] = opt_label;
 
     // Extend or format the disk
-    if (opt.noformat)
+    if (opt_noformat)
         disk->write(CylHead(range.cyl_end - 1, range.head_end - 1), Track());
     else
         disk->format(fmt);
@@ -41,7 +44,7 @@ bool CreateImage(const std::string& path, Range range)
         auto cyls = disk->cyls();
         auto heads = disk->heads();
 
-        if (opt.noformat)
+        if (opt_noformat)
             util::cout << util::fmt("Created %2u cyl%s, %u head%s, unformatted.\n", cyls, (cyls == 1) ? "" : "s", heads, (heads == 1) ? "" : "s");
         else
         {
@@ -59,9 +62,9 @@ bool CreateHddImage(const std::string& path, int nSizeMB_)
     bool f = false;
 
     // If no sector count is specified, use the size parameter
-    auto total_size = (opt.sectors == -1) ?
+    auto total_size = (opt_sectors == -1) ?
         static_cast<int64_t>(nSizeMB_) << 20 :
-        static_cast<int64_t>(opt.sectors) << 9;
+        static_cast<int64_t>(opt_sectors) << 9;
 
     if (total_size < 4 * 1024 * 1024)
         throw util::exception("needs image size in MB (>=4) or sector count with -s");

@@ -4,7 +4,7 @@
 // Output will be in bitstream or flux format (or both),
 // depending on the format requirements.
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "IBMPC.h"
 #include "BitstreamTrackBuilder.h"
 #include "FluxTrackBuilder.h"
@@ -13,6 +13,7 @@
 
 #include <cstring>
 
+static auto& opt_debug = getOpt<int>("debug");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +55,7 @@ bool IsKBI19Track(const Track& track)
             return false;
     }
 
-    if (opt.debug) util::cout << "detected KBI-19 track\n";
+    if (opt_debug) util::cout << "detected KBI-19 track\n";
     return true;
 }
 
@@ -142,7 +143,7 @@ bool IsSystem24Track(const Track& track)
             return false;
     }
 
-    if (opt.debug) util::cout << "detected System-24 track\n";
+    if (opt_debug) util::cout << "detected System-24 track\n";
     return true;
 }
 
@@ -201,7 +202,7 @@ bool IsSpectrumSpeedlockTrack(const Track& track, int& weak_offset, int& weak_si
         weak_size = 32;
     }
 
-    if (opt.debug) util::cout << "detected Spectrum Speedlock track\n";
+    if (opt_debug) util::cout << "detected Spectrum Speedlock track\n";
     return true;
 }
 
@@ -305,7 +306,7 @@ bool IsCpcSpeedlockTrack(const Track& track, int& weak_offset, int& weak_size)
         weak_size = 32;
     }
 
-    if (opt.debug) util::cout << "detected CPC Speedlock track\n";
+    if (opt_debug) util::cout << "detected CPC Speedlock track\n";
     return true;
 }
 
@@ -386,7 +387,7 @@ bool IsRainbowArtsTrack(const Track& track, int& weak_offset, int& weak_size)
     weak_offset = 100;  // =100 -258 +151 -3
     weak_size = 256;
 
-    if (opt.debug) util::cout << "detected Rainbow Arts weak sector track\n";
+    if (opt_debug) util::cout << "detected Rainbow Arts weak sector track\n";
     return true;
 }
 
@@ -494,7 +495,7 @@ bool IsKBIWeakSectorTrack(const Track& track, int& weak_offset, int& weak_size)
     weak_offset = 4;
     weak_size = 4;
 
-    if (opt.debug) util::cout << "detected KBI weak sector track\n";
+    if (opt_debug) util::cout << "detected KBI weak sector track\n";
     return true;
 }
 
@@ -589,7 +590,7 @@ bool IsLogoProfTrack(const Track& track)
             return false;
     }
 
-    if (opt.debug) util::cout << "detected Logo Professor track\n";
+    if (opt_debug) util::cout << "detected Logo Professor track\n";
     return true;
 }
 
@@ -637,7 +638,7 @@ bool IsOperaSoftTrack(const Track& track)
     if (sector_mask != ((1 << 9) - 1))
         return false;
 
-    if (opt.debug) util::cout << "detected OperaSoft track with 32K sector\n";
+    if (opt_debug) util::cout << "detected OperaSoft track with 32K sector\n";
     return true;
 }
 
@@ -682,7 +683,7 @@ bool Is8KSectorTrack(const Track& track)
         sector.size() != 8192 || !sector.has_data())
         return false;
 
-    if (opt.debug) util::cout << "detected 8K sector track\n";
+    if (opt_debug) util::cout << "detected 8K sector track\n";
     return true;
 }
 
@@ -738,7 +739,7 @@ bool IsPrehistorikTrack(const Track& track)
     if (!found_12)
         return false;
 
-    if (opt.debug) util::cout << "detected Prehistorik track\n";
+    if (opt_debug) util::cout << "detected Prehistorik track\n";
     return true;
 }
 
@@ -780,7 +781,7 @@ bool Is11SectorTrack(const Track& track)
         }
     }
 
-    if (opt.debug) util::cout << "detected 11-sector tight track\n";
+    if (opt_debug) util::cout << "detected 11-sector tight track\n";
     return true;
 }
 
@@ -836,7 +837,7 @@ bool IsReussirProtectedTrack(const Track& track)
         !sector2.has_data() || !sector2.has_baddatacrc())
         return false;
 
-    if (opt.debug) util::cout << "detected Reussir protected track\n";
+    if (opt_debug) util::cout << "detected Reussir protected track\n";
     return true;
 }
 

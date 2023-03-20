@@ -1,7 +1,7 @@
 // fdrawcmd.sys real device wrapper:
 //  http://simonowen.com/fdrawcmd/
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "DemandDisk.h"
 #include "IBMPC.h"
 #include "FdrawcmdSys.h"
@@ -9,6 +9,12 @@
 
 #include <memory>
 
+static auto& opt_datarate = getOpt<DataRate>("datarate");
+static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_gaps = getOpt<int>("gaps");
+static auto& opt_newdrive = getOpt<int>("newdrive");
+static auto& opt_retries = getOpt<int>("retries");
+static auto& opt_steprate = getOpt<int>("steprate");
 
 #ifdef HAVE_FDRAWCMD_H
 #include "fdrawcmd.h"
@@ -23,15 +29,15 @@ public:
         {
             SetMetadata(path);
 
-            auto srt = (opt.steprate >= 0) ? opt.steprate : (opt.newdrive ? 0xd : 0x8);
+            auto srt = (opt_steprate >= 0) ? opt_steprate : (opt_newdrive ? 0xd : 0x8);
             auto hut = 0x0f;
-            auto hlt = opt.newdrive ? 0x0f : 0x7f;
+            auto hlt = opt_newdrive ? 0x0f : 0x7f;
             m_fdrawcmd->Specify(srt, hut, hlt);
 
             m_fdrawcmd->SetMotorTimeout(0);
             m_fdrawcmd->Recalibrate();
 
-            if (!opt.newdrive)
+            if (!opt_newdrive)
                 m_fdrawcmd->SetDiskCheck(false);
         }
         catch (...)
@@ -59,7 +65,7 @@ protected:
         for (i = 1; i < track.size(); i += 2)
             ReadSector(cylhead, track, i, firstSectorSeen);
 
-        if (opt.gaps >= GAPS_CLEAN)
+        if (opt_gaps >= GAPS_CLEAN)
             ReadFirstGap(cylhead, track);
 
         return TrackData(cylhead, std::move(track));
@@ -146,11 +152,11 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
         for (auto datarate : { DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K })
         {
             // Skip FM if we're only looking for MFM, or the data rate is 1Mbps.
-            if (encoding == Encoding::FM && (opt.encoding == Encoding::MFM || datarate == DataRate::_1M))
+            if (encoding == Encoding::FM && (opt_encoding == Encoding::MFM || datarate == DataRate::_1M))
                 continue;
 
             // Skip rates not matching user selection.
-            if (opt.datarate != DataRate::Unknown && datarate != opt.datarate)
+            if (opt_datarate != DataRate::Unknown && datarate != opt_datarate)
                 continue;
 
             // Skip 1Mbps if the FDC doesn't report it's supported.
@@ -160,7 +166,7 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
                 if (!m_fdrawcmd->GetFdcInfo(fi) || !(fi.SpeedsAvailable & FDC_SPEED_1M))
                 {
                     // Fail if user selected the rate.
-                    if (opt.datarate == DataRate::_1M)
+                    if (opt_datarate == DataRate::_1M)
                         throw util::exception("FDC doesn't support 1Mbps data rate");
 
                     continue;
@@ -170,7 +176,7 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
             m_fdrawcmd->SetEncRate(encoding, datarate);
 
             // Retry in case of spurious header CRC errors.
-            for (auto i = 0; i <= opt.retries; ++i)
+            for (auto i = 0; i <= opt_retries; ++i)
             {
                 if (m_fdrawcmd->CmdReadId(head, result))
                 {
@@ -255,7 +261,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
     auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(sector.header.size));
     MEMORY mem(size);
 
-    for (int i = 0; i <= opt.retries; ++i)
+    for (int i = 0; i <= opt_retries; ++i)
     {
         // If the sector id occurs more than once on the track, synchronise to the correct one
         if (track.is_repeated(sector))
@@ -336,7 +342,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
     auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(size_code));
     MEMORY mem(size);
 
-    for (int i = 0; i <= opt.retries; ++i)
+    for (int i = 0; i <= opt_retries; ++i)
     {
         // Invalidate the content so misbehaving FDCs can be identififed.
         memset(mem.pb, 0xee, mem.size);

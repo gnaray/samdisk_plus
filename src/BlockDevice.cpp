@@ -1,6 +1,6 @@
 // Platform specific HDD device handling
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "BlockDevice.h"
 #include "Util.h"
 
@@ -35,6 +35,7 @@
 #include <scsi/sg.h>
 #endif
 
+static auto& opt_force = getOpt<int>("force");
 
 // ToDo: split conditional code into separate classes
 
@@ -265,7 +266,7 @@ bool BlockDevice::SafetyCheck()
 {
 #ifdef _WIN32
     // Safety check can be skipped with the force option
-    if (opt.force)
+    if (opt_force)
         return true;
 
     std::vector<std::string> lVolumes = GetVolumeList();

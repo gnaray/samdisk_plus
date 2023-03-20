@@ -1,7 +1,7 @@
 // HFE format for HxC floppy emulator:
 //  http://hxc2001.com/download/floppy_drive_emulator/SDCard_HxC_Floppy_Emulator_HFE_file_format.pdf
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "DiskUtil.h"
 #include "Disk.h"
 #include "MemFile.h"
@@ -14,6 +14,9 @@
 // Note: currently only format revision 00 is supported.
 
 #define HFE_SIGNATURE   "HXCPICFE"
+
+static auto& opt_datarate = getOpt<DataRate>("datarate");
+static auto& opt_encoding = getOpt<Encoding>("encoding");
 
 struct HFE_HEADER
 {
@@ -184,7 +187,7 @@ bool ReadHFE(MemFile& file, std::shared_ptr<Disk>& disk)
 
 static uint8_t HfeTrackEncoding(const Track& track)
 {
-    auto encoding = (opt.encoding != Encoding::Unknown) ? opt.encoding :
+    auto encoding = (opt_encoding != Encoding::Unknown) ? opt_encoding :
         !track.empty() ? track[0].encoding : Encoding::Unknown;
 
     switch (encoding)
@@ -209,7 +212,7 @@ static uint8_t HfeTrackEncoding(const Track& track)
 
 static uint16_t HfeDataRate(const Track& track)
 {
-    auto datarate = (opt.datarate != DataRate::Unknown) ? opt.datarate :
+    auto datarate = (opt_datarate != DataRate::Unknown) ? opt_datarate :
         !track.empty() ? track[0].datarate : DataRate::Unknown;
 
     if (datarate != DataRate::Unknown)

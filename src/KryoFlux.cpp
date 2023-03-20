@@ -1,12 +1,14 @@
 // KryoFlux device base class
 
 #include "config.h"
-#include "SAMdisk.h"
+#include "Options.h"
 #include "KryoFlux.h"
 
 #include <cstring>
 #include <thread>
 #include <fstream>
+
+static auto& opt_hardsectors = getOpt<int>("hardsectors");
 
 #ifdef HAVE_LIBUSB1
 #include "KF_libusb.h"
@@ -280,7 +282,7 @@ void KryoFlux::ReadFlux(int revs, FluxData& flux_revs, std::vector<std::string>&
 
                 // Soft-sectored disks have a single start-of-track index.
                 // Hard-sectors are combined to achieve the same result.
-                if (opt.hardsectors <= 1 || !(++hard_indexes % opt.hardsectors))
+                if (opt_hardsectors <= 1 || !(++hard_indexes % opt_hardsectors))
                 {
                     auto pdw = reinterpret_cast<const uint32_t*>(&*it);
                     index_offsets.push_back(util::letoh(pdw[0]));

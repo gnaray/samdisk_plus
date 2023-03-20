@@ -1,4 +1,4 @@
-#include "SAMdisk.h"
+#include "Options.h"
 #include "DiskUtil.h"
 #include "Format.h"
 #include "Sector.h"
@@ -6,6 +6,21 @@
 // Storage for class statics.
 constexpr int Format::DefaultTracks;
 constexpr int Format::DefaultSides;
+
+static auto& opt_base = getOpt<int>("base");
+static auto& opt_cylsfirst = getOpt<int>("cylsfirst");
+static auto& opt_datarate = getOpt<DataRate>("datarate");
+static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_fill = getOpt<int>("fill");
+static auto& opt_gap3 = getOpt<int>("gap3");
+static auto& opt_head0 = getOpt<int>("head0");
+static auto& opt_head1 = getOpt<int>("head1");
+static auto& opt_interleave = getOpt<int>("interleave");
+static auto& opt_range = getOpt<Range>("range");
+static auto& opt_sectors = getOpt<long>("sectors");
+static auto& opt_size = getOpt<int>("size");
+static auto& opt_skew = getOpt<int>("skew");
+static auto& opt_step = getOpt<int>("step");
 
 
 Format::Format(RegularFormat reg_fmt)
@@ -536,24 +551,24 @@ void Format::Override(bool full_control/*=false*/)
 {
     if (full_control)
     {
-        if (opt.range.cyls()) cyls = opt.range.cyls();
-        if (opt.range.heads()) heads = opt.range.heads();
-        if (opt.sectors != -1) sectors = opt.sectors;
-        if (opt.size >= 0 && opt.size <= 7) size = opt.size;
+        if (opt_range.cyls()) cyls = opt_range.cyls();
+        if (opt_range.heads()) heads = opt_range.heads();
+        if (opt_sectors != -1) sectors = opt_sectors;
+        if (opt_size >= 0 && opt_size <= 7) size = opt_size;
 
         if (datarate == DataRate::Unknown) datarate = DataRate::_250K;
         if (encoding == Encoding::Unknown) encoding = Encoding::MFM;
     }
 
     // Merge any overrides from the command-line
-    if (opt.fill >= 0) fill = static_cast<uint8_t>(opt.fill);
-    if (opt.gap3 >= 0) gap3 = opt.gap3;
-    if (opt.base != -1) base = opt.base;
-    if (opt.interleave >= 0) interleave = opt.interleave;
-    if (opt.skew >= 0) skew = opt.skew;
-    if (opt.head0 != -1) head0 = opt.head0;
-    if (opt.head1 != -1) head1 = opt.head1;
-    if (opt.cylsfirst != -1) cyls_first = (opt.cylsfirst != 0);
-    if (opt.datarate != DataRate::Unknown) datarate = opt.datarate;
-    if (opt.encoding != Encoding::Unknown) encoding = opt.encoding;
+    if (opt_fill >= 0) fill = static_cast<uint8_t>(opt_fill);
+    if (opt_gap3 >= 0) gap3 = opt_gap3;
+    if (opt_base != -1) base = opt_base;
+    if (opt_interleave >= 0) interleave = opt_interleave;
+    if (opt_skew >= 0) skew = opt_skew;
+    if (opt_head0 != -1) head0 = opt_head0;
+    if (opt_head1 != -1) head1 = opt_head1;
+    if (opt_cylsfirst != -1) cyls_first = (opt_cylsfirst != 0);
+    if (opt_datarate != DataRate::Unknown) datarate = opt_datarate;
+    if (opt_encoding != Encoding::Unknown) encoding = opt_encoding;
 }

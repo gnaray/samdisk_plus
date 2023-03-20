@@ -1,10 +1,15 @@
 // Encode tracks to a bitstream representation
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "BitstreamEncoder.h"
 #include "BitstreamTrackBuilder.h"
 #include "SpecialFormat.h"
 #include "IBMPC.h"
+
+static auto& opt_gap3 = getOpt<int>("gap3");
+static auto& opt_force = getOpt<int>("force");
+static auto& opt_nottb = getOpt<int>("nottb");
+static auto& opt_nospecial = getOpt<int>("nospecial");
 
 bool generate_special(TrackData& trackdata)
 {
@@ -57,7 +62,7 @@ bool generate_simple(TrackData& trackdata)
         // create large sectors from multiple smaller sectors. We don't have that
         // limitation with bitstream encoding, so just join all sectors together
         // with a smaller gap3 (currently 10 bytes) to make it fit.
-        int gap3 = (opt.gap3 > 0) ? opt.gap3 :
+        int gap3 = (opt_gap3 > 0) ? opt_gap3 :
             fits_ibmpc ?
             ((fit_details.total_units == track.size()) ? fit_details.gap3 : 10) :
             s.gap3 ? s.gap3 :
@@ -104,7 +109,7 @@ bool generate_simple(TrackData& trackdata)
     auto track_time_ms = track_time_ns / 1'000'000;
 
     // ToDo: caller should supply size limit
-    if (track_time_ms > 205 && !opt.force)
+    if (track_time_ms > 205 && !opt_force)
         throw util::exception("generated bitstream is too big for ", trackdata.cylhead);
 
     trackdata.add(std::move(bitbuf.buffer()));
@@ -116,14 +121,14 @@ void generate_bitstream(TrackData& trackdata)
     assert(trackdata.has_track());
 
     // Special formats have special conversions (unless disabled)
-    if (!opt.nospecial && generate_special(trackdata))
+    if (!opt_nospecial && generate_special(trackdata))
     {
         // Fail if we've encountered a flux-only special format, as converting
         // it to bitstream is unlikely to give a working track.
         if (!trackdata.has_bitstream())
             throw util::exception("no suitable bitstream representation for ", trackdata.cylhead);
     }
-    else if (opt.nottb)
+    else if (opt_nottb)
         throw util::exception("track to bitstream conversion not permitted for ", trackdata.cylhead);
     else if (!generate_simple(trackdata))
         throw util::exception("bitstream conversion not yet implemented for ", trackdata.cylhead);

@@ -1,7 +1,7 @@
 // SAP - Systeme D'archivage Pukall (Thomson TO8/TO8D/TO9/TO9+)
 //
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "BitstreamTrackBuilder.h"
 #include "Disk.h"
 #include "MemFile.h"
@@ -12,6 +12,8 @@
 #define SAP_SIGNATURE   "SYSTEME D'ARCHIVAGE PUKALL S.A.P. (c) Alexandre PUKALL Avril 1998"
 #define SAP_SECTORS_PER_TRACK   16
 #define SAP_CRYPT_BYTE          0xb3    // data fields are XORed with this
+
+static auto& opt_verbose = getOpt<int>("verbose");
 
 struct SAP_HEADER
 {
@@ -83,7 +85,7 @@ bool ReadSAP(MemFile& file, std::shared_ptr<Disk>& disk)
     if (sh.version & 0x7c)
         throw util::exception("unsupported SAP version (", std::hex, sh.version, std::dec, ")");
 
-    bool is_regular = !opt.verbose;
+    bool is_regular = !opt_verbose;
     Format fmt = RegularFormat::TO_640K_MFM;
     fmt.cyls = (sh.version & 0x02) ? 40 : 80;
     fmt.heads = (sh.version & 0x80) ? 2 : 1;

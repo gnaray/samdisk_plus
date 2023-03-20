@@ -1,6 +1,6 @@
 // Raw image files matched by file size alone
 
-#include "SAMdisk.h"
+#include "DiskUtil.h"
 #include "Options.h"
 #include "Disk.h"
 #include "MemFile.h"
@@ -8,6 +8,9 @@
 
 #include <memory>
 
+static auto& opt_range = getOpt<Range>("range");
+static auto& opt_sectors = getOpt<long>("sectors");
+static auto& opt_size = getOpt<int>("size");
 
 bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
 {
@@ -19,7 +22,7 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
         throw util::exception("image file is zero bytes");
 
     // Has the user customised any geometry parameters?
-    bool customised = opt.range.cyls() || opt.range.heads() || opt.sectors > 0 || opt.size >= 0;
+    bool customised = opt_range.cyls() || opt_range.heads() || opt_sectors > 0 || opt_size >= 0;
 
     // Attempt to match raw file size against a likely format.
     if (!Format::FromSize(file.size(), fmt) && !customised)
@@ -33,15 +36,15 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
     fmt.Validate();
 
     // If only cyls or heads is given, adjust the other one to match.
-    if (fmt.cyls != orig_fmt.cyls && !opt.range.heads())
-        fmt.heads = file.size() / (opt.range.cyls() * fmt.track_size());
-    else if (fmt.heads != orig_fmt.heads && !opt.range.cyls())
-        fmt.cyls = file.size() / (opt.range.heads() * fmt.track_size());
+    if (fmt.cyls != orig_fmt.cyls && !opt_range.heads())
+        fmt.heads = file.size() / (opt_range.cyls() * fmt.track_size());
+    else if (fmt.heads != orig_fmt.heads && !opt_range.cyls())
+        fmt.cyls = file.size() / (opt_range.heads() * fmt.track_size());
 
     // If only sector count or size are specified, adjust the other one to match.
-    if (fmt.size != orig_fmt.size && opt.sectors < 0)
+    if (fmt.size != orig_fmt.size && opt_sectors < 0)
         fmt.sectors = file.size() / (fmt.cyls * fmt.heads * fmt.sector_size());
-    else if (fmt.sectors != orig_fmt.sectors && opt.size < 0)
+    else if (fmt.sectors != orig_fmt.sectors && opt_size < 0)
     {
         auto sector_size = file.size() / (fmt.cyls * fmt.heads * fmt.sectors);
         for (fmt.size = 0; sector_size > 128; sector_size /= 2)
@@ -79,7 +82,7 @@ bool WriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
 {
     int max_id = -1;
 
-    auto range = opt.range;
+    auto range = opt_range;
     ValidateRange(range, disk->cyls(), disk->heads());
 
     Format fmt;

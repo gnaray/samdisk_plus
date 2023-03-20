@@ -1,7 +1,7 @@
 // David Keil's TRS-80 on-disk format:
 //  http://www.classiccmp.org/cpmarchives/trs80/mirrors/trs-80.com/early/www.trs-80.com/trs80-dm.htm
 
-#include "SAMdisk.h"
+#include "Options.h"
 #include "IBMPC.h"
 #include "BitstreamTrackBuilder.h"
 #include "Disk.h"
@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <memory>
 
+static auto& opt_debug = getOpt<int>("debug");
 
 const int DMK_MAX_TRACK_LENGTH = 0x3fff;    // most images use 0x2940, a few have 0x29a0
 const int DMK_TRACK_INDEX_SIZE = 0x80;
@@ -94,7 +95,7 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
             bool found_dam = false;
 
             BitstreamTrackBuilder bitbuf(DataRate::_250K, current_idam_encoding);
-            if (opt.debug)
+            if (opt_debug)
                 util::cout << "DMK: " << CylHead(cyl, head) << "\n";
 
             while (pos < tracklen)
@@ -108,7 +109,7 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
                     pos = next_idam_pos;
                     b = data[pos];
 
-                    if (opt.debug)
+                    if (opt_debug)
                     {
                         util::cout << next_idam_encoding << " IDAM (" <<
                             data[pos + 3 * ((next_idam_encoding == Encoding::MFM) ? 1 : fm_step)] <<
@@ -120,7 +121,7 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
                 }
                 else if (!found_iam && b == IBM_IAM && current_idam_pos == 0)
                 {
-                    if (opt.debug)
+                    if (opt_debug)
                         util::cout << next_idam_encoding << " IAM at offset " << pos << "\n";
 
                     is_am = found_iam = true;
@@ -133,7 +134,7 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
 
                     if (idam_distance >= min_distance && idam_distance <= max_distance)
                     {
-                        if (opt.debug)
+                        if (opt_debug)
                             util::cout << current_idam_encoding << " DAM (" << b << ") at offset " << pos << "\n";
 
                         is_am = found_dam = true;

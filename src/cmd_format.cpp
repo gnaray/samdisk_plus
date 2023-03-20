@@ -1,6 +1,6 @@
 // Format and unformat commands
 
-#include "SAMdisk.h"
+#include "Options.h"
 //#include "record.h"
 #include "Image.h"
 #include "DiskUtil.h"
@@ -9,6 +9,12 @@
 
 #include <cstring>
 
+static auto& opt_boot = getOpt<std::string>("boot");
+static auto& opt_byteswap = getOpt<int>("byteswap");
+static auto& opt_cpm = getOpt<int>("cpm");
+static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_quick = getOpt<int>("quick");
+static auto& opt_nosig = getOpt<int>("nosig");
 
 /*
 uint8_t abAtomLiteBoot[] =
@@ -57,11 +63,11 @@ bool FormatImage(const std::string& path, Range range)
     ValidateRange(range, MAX_TRACKS, MAX_SIDES, 1, disk->cyls(), disk->heads());
 
     // Start with MGT or ProDos format, but with automatic gap3.
-    Format fmt{ !opt.cpm ? RegularFormat::MGT : RegularFormat::ProDos };
+    Format fmt{ !opt_cpm ? RegularFormat::MGT : RegularFormat::ProDos };
     fmt.gap3 = 0;
 
     // Halve the default sector count in FM to ensure it fits.
-    if (opt.encoding == Encoding::FM)
+    if (opt_encoding == Encoding::FM)
         fmt.sectors /= 2;
 
     // Allow everything to be overridden, but check it's sensible.
@@ -108,17 +114,17 @@ bool FormatHdd(const std::string& path)
         MEMORY mem(SECTOR_SIZE);
 
         // Disk to be made BDOS-bootable?
-        if (opt.boot)
+        if (opt_boot)
         {
             // Provide a default boot sector
             memcpy(mem, abAtomLiteBoot, sizeof(abAtomLiteBoot));
 
             // Boot sector file supplied?
-            if (*opt.boot)
+            if (*opt_boot)
             {
                 MFILE file;
 
-                if (!file.Open(opt.boot))
+                if (!file.Open(opt_boot))
                     return Error("boot");
                 else if (msize(&file) != SECTOR_SIZE)
                 {
@@ -137,16 +143,16 @@ bool FormatHdd(const std::string& path)
     {
         BDOS_CAPS bdc;
         GetBDOSCaps(hdd->total_sectors, bdc);
-        bdc.need_byteswap = !!opt.byteswap;
+        bdc.need_byteswap = !!opt_byteswap;
 
         // A quick format stops after the MGT boot sector in record 1
-        int64_t total_sectors = opt.quick ? bdc.base_sectors + MGT_DIR_TRACKS * MGT_SECTORS + 1 : hdd->total_sectors;
+        int64_t total_sectors = opt_quick ? bdc.base_sectors + MGT_DIR_TRACKS * MGT_SECTORS + 1 : hdd->total_sectors;
 
         // Format the boot sector and record list
         f = hdd->Copy(nullptr, bdc.base_sectors, 0, 0, total_sectors, "Formatting");
 
         MEMORY mem(MGT_DISK_SIZE);
-        if (!opt.nosig) memcpy(mem + 232, "BDOS", 4);
+        if (!opt_nosig) memcpy(mem + 232, "BDOS", 4);
 
         // Format the record data area
         for (int64_t uPos = bdc.base_sectors; ; uPos += MGT_DISK_SECTORS)
@@ -164,7 +170,7 @@ bool FormatHdd(const std::string& path)
             if (!hdd->Seek(uPos) || !hdd->Write(mem, block_size, bdc.need_byteswap))
             {
                 // If this is a raw format, report the sector offset
-                if (opt.nosig)
+                if (opt_nosig)
                     Message(msgStatus, "Write error at sector %u: %s", uPos, LastError());
                 else
                 {
@@ -180,7 +186,7 @@ bool FormatHdd(const std::string& path)
         }
 
         /*
-                if (opt.boot)
+                if (opt_boot)
                 {
                     UpdateBDOSBootSector(mem, &hdd);
 
@@ -233,7 +239,7 @@ bool FormatRecord(const std::string& path)
         return Error("open");
 
     // The disk signature is part of record 1, so unformatting is dangerous
-    if (record == 1 && opt.nosig == 1)
+    if (record == 1 && opt_nosig == 1)
         throw util::exception("unformatting record 1 would destroy BDOS signature!");
 
     auto olddisk = std::make_shared<DISK>();

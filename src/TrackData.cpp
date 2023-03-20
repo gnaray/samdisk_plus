@@ -1,8 +1,9 @@
-#include "SAMdisk.h"
+#include "Options.h"
 #include "TrackData.h"
-
 #include "BitstreamDecoder.h"
 #include "BitstreamEncoder.h"
+
+static auto& opt_prefer = getOpt<PreferredData>("prefer");
 
 TrackData::TrackData(const CylHead& cylhead_)
     : cylhead(cylhead_)
@@ -105,7 +106,7 @@ const FluxData& TrackData::flux()
 
 TrackData TrackData::preferred()
 {
-    switch (opt.prefer)
+    switch (opt_prefer)
     {
     case PreferredData::Track:
         return { cylhead, Track(track()) };

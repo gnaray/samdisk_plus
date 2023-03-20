@@ -1,5 +1,6 @@
 // Copy command
 
+#include "Options.h"
 #include "DiskUtil.h"
 #include "Image.h"
 #include "MemFile.h"
@@ -12,6 +13,17 @@
 #include <cstring>
 #include <strings.h>
 
+static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_fix = getOpt<int>("fix");
+static auto& opt_merge = getOpt<int>("merge");
+static auto& opt_minimal = getOpt<int>("minimal");
+static auto& opt_nozip = getOpt<int>("nozip");
+static auto& opt_quick = getOpt<int>("quick");
+static auto& opt_range = getOpt<Range>("range");
+static auto& opt_repair = getOpt<int>("repair");
+static auto& opt_resize = getOpt<int>("resize");
+static auto& opt_step = getOpt<int>("step");
+static auto& opt_verbose = getOpt<int>("verbose");
 
 bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 {
@@ -21,9 +33,9 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
     // Force Jupiter Ace reading mode if the output file extension is .dti
     // ToDo: add mechanism for target to hint how source should be read?
-    if (opt.encoding != Encoding::Ace && IsFileExt(dst_path, "dti"))
+    if (opt_encoding != Encoding::Ace && IsFileExt(dst_path, "dti"))
     {
-        opt.encoding = Encoding::Ace;
+        opt_encoding = Encoding::Ace;
         Message(msgInfo, "assuming --encoding=Ace due to .dti output image");
     }
 
@@ -32,7 +44,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         return false;
 
     // For merge or repair, read any existing target image
-    if (opt.merge || opt.repair)
+    if (opt_merge || opt_repair)
     {
         // Read the image, ignore merge or repair if that fails
         if (!ReadImage(dst_path, dst_disk, false))
@@ -40,19 +52,19 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     }
 
     // Limit to our maximum geometry, and default to copy everything present in the source
-    ValidateRange(opt.range, MAX_TRACKS, MAX_SIDES, opt.step, src_disk->cyls(), src_disk->heads());
+    ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, opt_step, src_disk->cyls(), src_disk->heads());
 
-    if (opt.minimal)
+    if (opt_minimal)
         TrackUsedInit(*src_disk);
 
     // Copy the range of tracks to the target image
-    opt.range.each([&](const CylHead& cylhead) {
+    opt_range.each([&](const CylHead& cylhead) {
         // In minimal reading mode, skip unused tracks
-        if (opt.minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
+        if (opt_minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
             return;
 
         Message(msgStatus, "Reading %s", CH(cylhead.cyl, cylhead.head));
-        auto src_data = src_disk->read(cylhead * opt.step);
+        auto src_data = src_disk->read(cylhead * opt_step);
         auto src_track = src_data.track();
 
         if (src_data.has_bitstream())
@@ -67,11 +79,11 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
         bool changed = NormaliseTrack(cylhead, src_track);
 
-        if (opt.verbose)
+        if (opt_verbose)
             ScanTrack(cylhead, src_track, context);
 
         // Repair or copy?
-        if (opt.repair)
+        if (opt_repair)
         {
             auto dst_track = dst_disk->read_track(cylhead);
             NormaliseTrack(cylhead, dst_track);
@@ -93,7 +105,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                 dst_disk->write(std::move(src_data));
             }
         }
-        }, opt.verbose != 0);
+        }, opt_verbose != 0);
 
     // Copy any metadata not already present in the target (emplace doesn't replace)
     for (const auto& m : src_disk->metadata)
@@ -210,7 +222,7 @@ bool Hdd2Hdd(const std::string& src_path, const std::string& dst_path)
 
     if (!dst_hdd)
         Error("create");
-    else if (src_hdd->total_sectors != dst_hdd->total_sectors && !opt.resize)
+    else if (src_hdd->total_sectors != dst_hdd->total_sectors && !opt_resize)
         throw util::exception("Source size (", src_hdd->total_sectors, " sectors) does not match target (", dst_hdd->total_sectors, " sectors)");
     else if (src_hdd->sector_size != dst_hdd->sector_size)
         throw util::exception("Source sector size (", src_hdd->sector_size, " bytes) does not match target (", dst_hdd->sector_size, " bytes)");
@@ -218,13 +230,13 @@ bool Hdd2Hdd(const std::string& src_path, const std::string& dst_path)
     {
         BDOS_CAPS bdcSrc, bdcDst;
 
-        if (opt.resize && IsBDOSDisk(*src_hdd, bdcSrc))
+        if (opt_resize && IsBDOSDisk(*src_hdd, bdcSrc))
         {
             GetBDOSCaps(dst_hdd->total_sectors, bdcDst);
 
             auto uBase = std::min(bdcSrc.base_sectors, bdcDst.base_sectors);
             auto uData = std::min(src_hdd->total_sectors - bdcSrc.base_sectors, dst_hdd->total_sectors - bdcDst.base_sectors);
-            auto uEnd = opt.quick ? uBase + uData : dst_hdd->total_sectors;
+            auto uEnd = opt_quick ? uBase + uData : dst_hdd->total_sectors;
 
             // Copy base sectors, clear unused base sector area, copy record data sectors
             f = dst_hdd->Copy(src_hdd.get(), uBase, 0, 0, uEnd);
@@ -247,11 +259,11 @@ bool Hdd2Hdd(const std::string& src_path, const std::string& dst_path)
             }
 
             // If this isn't a quick copy, clear the remaining destination space
-            if (!opt.quick)
+            if (!opt_quick)
                 f &= dst_hdd->Copy(nullptr, dst_hdd->total_sectors - (bdcDst.base_sectors + uData), 0x00, bdcDst.base_sectors + uData, uEnd);
 
             // If the source disk is bootable, consider updating the BDOS variables
-            if (opt.fix != 0 && bdcSrc.bootable && dst_hdd->Seek(0) && dst_hdd->Read(mem, 1))
+            if (opt_fix != 0 && bdcSrc.bootable && dst_hdd->Seek(0) && dst_hdd->Read(mem, 1))
             {
                 // Check for compatible DOS version
                 if (UpdateBDOSBootSector(mem, *dst_hdd))
@@ -311,7 +323,7 @@ bool Boot2Hdd(const std::string& boot_path, const std::string& hdd_path)
 
     if (!hdd || !hdd->Seek(0))
         Error("open");
-    else if (!file.open(boot_path, !opt.nozip))
+    else if (!file.open(boot_path, !opt_nozip))
         /* already reported */;
     else if (file.size() != hdd->sector_size)
         throw util::exception("boot sector must match sector size (", hdd->sector_size, " bytes)");
@@ -324,7 +336,7 @@ bool Boot2Hdd(const std::string& boot_path, const std::string& hdd_path)
         else if (hdd->SafetyCheck() && hdd->Lock())
         {
             // If we're writing a compatible AL+ boot sector, consider updating the BDOS variables
-            if (opt.fix != 0)
+            if (opt_fix != 0)
                 UpdateBDOSBootSector(mem, *hdd);
 
             if (!hdd->Write(mem, 1))
@@ -364,7 +376,7 @@ bool Boot2Boot(const std::string& src_path, const std::string& dst_path)
             else if (hdd2->SafetyCheck() && hdd2->Lock())
             {
                 // If we're writing a compatible AL+ boot sector, consider updating the BDOS variables
-                if (opt.fix != 0)
+                if (opt_fix != 0)
                     UpdateBDOSBootSector(mem, *hdd2);
 
                 if (!hdd2->Seek(0) || !hdd2->Write(mem, 1))
