@@ -1,7 +1,11 @@
 // Sega System 24 arcade system floppy:
 //  http://segaretro.org/Sega_System_24
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 const int S24_TRACKS = 80;
 const int S24_SIDES = 2;

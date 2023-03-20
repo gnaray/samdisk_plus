@@ -1,5 +1,10 @@
 #pragma once
 
+#include "FluxDecoder.h"
+
+#include <cstdint>
+#include <memory>
+
 class SuperCardPro
 {
 public:

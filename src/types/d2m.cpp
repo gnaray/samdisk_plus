@@ -1,7 +1,10 @@
 // CMD FD-2000 (HD):
 //  http://www.unusedino.de/ec64/technical/formats/d2m-dnp.html
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
 
 const int D2M_TRACKS = 81;
 const int D2M_SIDES = 2;

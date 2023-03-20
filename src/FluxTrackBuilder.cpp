@@ -1,6 +1,5 @@
 // Buffer for assembling flux-level data (incomplete)
 
-#include "SAMdisk.h"
 #include "FluxTrackBuilder.h"
 
 FluxTrackBuilder::FluxTrackBuilder(const CylHead& cylhead, DataRate datarate, Encoding encoding)

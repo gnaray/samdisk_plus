@@ -1,7 +1,14 @@
 // Format and unformat commands
 
 #include "SAMdisk.h"
-#include "record.h"
+//#include "record.h"
+#include "Image.h"
+#include "DiskUtil.h"
+#include "SAMCoupe.h"
+#include "Util.h"
+
+#include <cstring>
+
 
 /*
 uint8_t abAtomLiteBoot[] =

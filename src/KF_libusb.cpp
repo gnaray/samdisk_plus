@@ -1,7 +1,9 @@
 // libusb backend for KryoFlux device
 
-#include "SAMdisk.h"
 #include "KF_libusb.h"
+#include "KryoFlux.h"
+
+#include <cstring>
 
 #ifdef HAVE_LIBUSB1
 

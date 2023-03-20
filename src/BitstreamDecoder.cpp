@@ -1,13 +1,19 @@
 // Decode flux reversals and bitstreams to something recognisable
 
 #include "SAMdisk.h"
+#include "CRC16.h"
+#include "DiskUtil.h"
 #include "BitstreamDecoder.h"
 #include "FluxDecoder.h"
 #include "BitBuffer.h"
-#include "TrackDataParser.h"
+//#include "TrackDataParser.h"
 #include "IBMPC.h"
 #include "JupiterAce.h"
-#include "SpecialFormat.h"
+//#include "SpecialFormat.h"
+#include "Util.h"
+
+#include <algorithm>
+#include <numeric>
 
 static const int JITTER_PERCENT = 2;
 

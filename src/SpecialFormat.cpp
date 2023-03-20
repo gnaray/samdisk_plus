@@ -8,6 +8,11 @@
 #include "IBMPC.h"
 #include "BitstreamTrackBuilder.h"
 #include "FluxTrackBuilder.h"
+#include "TrackData.h"
+#include "Util.h"
+
+#include <cstring>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

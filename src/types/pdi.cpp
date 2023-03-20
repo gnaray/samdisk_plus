@@ -1,7 +1,9 @@
 // PDI - RLE compressed DOS disk images.
 
-#include "SAMdisk.h"
-#include "types.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
 
 struct PDI_HEADER
 {

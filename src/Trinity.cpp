@@ -1,7 +1,10 @@
 // Quazar Trinity (ethernet adapter) helper functions
 
-#include "SAMdisk.h"
 #include "Trinity.h"
+#include "HDD.h"
+#include "Sector.h"
+#include "utils.h"
+#include "Format.h"
 
 std::unique_ptr<Trinity> Trinity::Open()
 {

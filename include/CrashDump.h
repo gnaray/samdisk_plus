@@ -1,7 +1,5 @@
 #pragma once
 
-#include "SAMdisk.h"
-
 #ifdef _WIN32
 
 #pragma warning(push)

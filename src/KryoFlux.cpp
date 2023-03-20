@@ -1,7 +1,12 @@
 // KryoFlux device base class
 
+#include "config.h"
 #include "SAMdisk.h"
 #include "KryoFlux.h"
+
+#include <cstring>
+#include <thread>
+#include <fstream>
 
 #ifdef HAVE_LIBUSB1
 #include "KF_libusb.h"

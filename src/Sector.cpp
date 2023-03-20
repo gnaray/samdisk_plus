@@ -1,5 +1,9 @@
 #include "SAMdisk.h"
+#include "CRC16.h"
+#include "DiskUtil.h"
 #include "Sector.h"
+
+#include <cstring>
 
 Sector::Sector(DataRate datarate_, Encoding encoding_, const Header& header_, int gap3_)
     : header(header_), datarate(datarate_), encoding(encoding_), gap3(gap3_)

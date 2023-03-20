@@ -1,7 +1,14 @@
 // FDI = Full Disk Image for Spectrum:
 //  http://www.worldofspectrum.org/faq/reference/formats.htm#FDI
 
-#include "SAMdisk.h"
+#include "CRC16.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+#include <cstdint>
 
 #define FDI_SIGNATURE           "FDI"
 

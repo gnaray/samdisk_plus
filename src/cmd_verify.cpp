@@ -1,5 +1,5 @@
 // Verify command
 
-#include "SAMdisk.h"
+//#include "SAMdisk.h"
 
 // ToDo!

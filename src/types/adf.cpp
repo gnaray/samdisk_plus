@@ -2,7 +2,12 @@
 //
 //  http://lclevy.free.fr/adflib/adf_info.html
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 #define ADF_SECTOR_SIZE         512
 #define ADF_BOOTBLOCK_SIZE      (ADF_SECTOR_SIZE * 2)   // bootblock is 2 sectors

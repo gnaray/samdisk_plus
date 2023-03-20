@@ -1,6 +1,5 @@
 // CRC-16-CCITT implementation
 
-#include "SAMdisk.h"
 #include "CRC16.h"
 
 std::array<uint16_t, 256> CRC16::s_crc_lookup;

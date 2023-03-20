@@ -1,5 +1,11 @@
 #pragma once
 
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
+#include <unistd.h>
+
 class MEMORY;
 
 const int SECTOR_SIZE = 512;

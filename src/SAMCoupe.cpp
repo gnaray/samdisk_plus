@@ -3,6 +3,8 @@
 #include "SAMdisk.h"
 #include "SAMCoupe.h"
 
+#include <cstring>
+
 MGT_DISK_INFO* GetDiskInfo(const uint8_t* p, MGT_DISK_INFO& di)
 {
     auto dir = reinterpret_cast<const MGT_DIR*>(p);

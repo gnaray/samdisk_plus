@@ -1,8 +1,17 @@
 // Copy command
 
+#include "DiskUtil.h"
+#include "Image.h"
+#include "MemFile.h"
 #include "SAMdisk.h"
+#include "SAMCoupe.h"
 #include "Trinity.h"
-#include "SpectrumPlus3.h"
+//#include "SpectrumPlus3.h"
+#include "Util.h"
+
+#include <cstring>
+#include <strings.h>
+
 
 bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 {

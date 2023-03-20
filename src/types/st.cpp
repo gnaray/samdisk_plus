@@ -1,7 +1,13 @@
 // Atari ST
 
-#include "SAMdisk.h"
+#include "HDD.h"
+#include "Util.h"
+#include "Disk.h"
+#include "MemFile.h"
 #include "bpb.h"
+
+#include <memory>
+#include <numeric>
 
 constexpr uint16_t ST_BOOT_CHECKSUM = 0x1234;
 

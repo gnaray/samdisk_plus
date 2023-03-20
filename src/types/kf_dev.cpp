@@ -1,9 +1,9 @@
 // KryoFlux real device wrapper
 
-#include "SAMdisk.h"
 #include "DemandDisk.h"
-#include "BitstreamDecoder.h"
+//#include "BitstreamDecoder.h"
 #include "KryoFlux.h"
+#include "Util.h"
 
 class KFDevDisk final : public DemandDisk
 {

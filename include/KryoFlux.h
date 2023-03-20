@@ -1,5 +1,12 @@
 #pragma once
 
+#include "FluxDecoder.h"
+#include "Sector.h"
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 class KryoFlux
 {
 public:

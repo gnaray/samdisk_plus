@@ -2,8 +2,13 @@
 //
 // http://www.qdosmsq.dunbar-it.co.uk/doku.php?id=qdosmsq:fs:dsdd
 
-#include "SAMdisk.h"
 #include "qdos.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 bool ReadQDOS(MemFile& file, std::shared_ptr<Disk>& disk)
 {

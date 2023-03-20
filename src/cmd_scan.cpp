@@ -1,8 +1,11 @@
 // Scan command
 
 #include "SAMdisk.h"
+#include "Image.h"
 #include "IBMPC.h"
 #include "DiskUtil.h"
+#include "Util.h"
+
 
 void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context)
 {

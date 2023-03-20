@@ -1,7 +1,12 @@
 // Magic Shadow Archiver for Atari ST
 //  http://www.atari-wiki.com/?title=Magic_Shadow_Archiver
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+
+#include <cstdint>
+#include <memory>
 
 #define MSA_SIGNATURE   "\x0e\x0f"
 #define MSA_RLESTART    0xe5

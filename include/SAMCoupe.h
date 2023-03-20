@@ -1,5 +1,8 @@
 #pragma once
 
+#include "HDD.h"
+#include "Util.h"
+
 const int MGT_TRACKS = 80;
 const int MGT_SIDES = 2;
 const int MGT_SECTORS = 10;

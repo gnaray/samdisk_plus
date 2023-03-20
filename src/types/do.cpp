@@ -1,6 +1,11 @@
 // Apple ][ DOS 3.3-ordered disk image
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 // not used
 bool ReadDO(MemFile& file, std::shared_ptr<Disk>& disk)

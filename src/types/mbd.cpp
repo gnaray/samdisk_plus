@@ -2,7 +2,12 @@
 //  http://busy.host.sk/tvorba/mb02form.htm
 //  http://z00m.speccy.cz/docs/bsdos308-techman-en.txt (English)
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+
+#include <cstdint>
+#include <memory>
 
 struct MBD_BOOTSECTOR
 {

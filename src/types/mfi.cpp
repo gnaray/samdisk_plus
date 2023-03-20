@@ -2,9 +2,12 @@
 //
 // https://github.com/mamedev/mame/blob/master/src/lib/formats/mfi_dsk.cpp
 
-#include "SAMdisk.h"
 #include "DemandDisk.h"
-#include "BitstreamDecoder.h"
+//#include "BitstreamDecoder.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
 
 #ifdef HAVE_ZLIB
 #include "zlib.h"

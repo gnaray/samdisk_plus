@@ -1,5 +1,10 @@
 #pragma once
 
+#include "Sector.h"
+
+#include <cstring>
+#include <string>
+
 enum class Compress { None, Zip, Gzip, Bzip2, Xz };
 std::string to_string(const Compress& compress);
 

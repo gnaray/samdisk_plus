@@ -1,7 +1,14 @@
 // Dave Dunfield's ImageDisk format:
 //  http://www.classiccmp.org/dunfield/img/index.htm
 
-#include "SAMdisk.h"
+
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <cstdint>
+#include <memory>
 
 struct IMD_TRACK
 {

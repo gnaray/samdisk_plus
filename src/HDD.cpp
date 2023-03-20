@@ -4,6 +4,9 @@
 
 #include "BlockDevice.h"
 #include "HDFHDD.h"
+#include "Util.h"
+
+#include <cstring>
 
 #define SECTOR_BLOCK    2048    // access CF/HDD devices in 1MB chunks
 

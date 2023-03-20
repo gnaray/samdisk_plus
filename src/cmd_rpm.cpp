@@ -1,6 +1,11 @@
 // RPM command
 
+#include "Disk.h"
+#include "Image.h"
 #include "SAMdisk.h"
+#include <iomanip>
+#include <memory>
+
 
 bool DiskRpm(const std::string& path)
 {

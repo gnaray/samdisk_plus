@@ -2,6 +2,12 @@
 //  http://web.archive.org/web/20041020185446/http://zoom.czweb.org/files/mdos.htm
 
 #include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+
 
 #define D80_SIGNATURE   "SDOS"
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Track.h"
+#include "TrackData.h"
+
 bool IsEmptyTrack (const Track &track);
 bool IsKBI19Track (const Track &track);
 bool IsSystem24Track (const Track &track);

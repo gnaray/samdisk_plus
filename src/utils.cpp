@@ -1,7 +1,12 @@
 // Utility functions
 
-#include "SAMdisk.h"
 #include "utils.h"
+
+#include <algorithm>
+#include <cstdarg>
+#include <fstream>
+#include <iostream>
+#include <unistd.h>
 
 namespace util
 {

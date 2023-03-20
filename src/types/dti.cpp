@@ -3,8 +3,12 @@
 //
 //  http://www.jupiter-ace.co.uk/hardware_DeepThought.html
 
-#include "SAMdisk.h"
 #include "JupiterAce.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 #define DTI_SIGNATURE   "H2G2"
 const int DTI_BLOCK_SIZE = 9 * 256; // 2304

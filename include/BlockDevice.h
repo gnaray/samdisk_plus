@@ -1,5 +1,11 @@
 #pragma once
 
+#include "HDD.h"
+#include "FileIO.h"
+
+#include <string>
+
+
 class BlockDevice final : public HDD
 {
 public:

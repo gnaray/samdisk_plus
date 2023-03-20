@@ -1,6 +1,12 @@
 // Aley Keprt's SAM Coupe Disk format
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "HDD.h"
+#include "MemFile.h"
+#include "SAMCoupe.h"
+
+#include <memory>
 
 #define SAD_SIGNATURE       "Aley's disk backup"
 

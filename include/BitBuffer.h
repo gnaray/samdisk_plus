@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FluxDecoder.h"
+#include "Header.h"
 
 class BitBuffer
 {

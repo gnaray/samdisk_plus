@@ -1,6 +1,7 @@
 // Jupiter Ace helper functions for the Deep Thought floppy disk interface
 
-#include "SAMdisk.h"
+#include "Sector.h"
+#include "Util.h"
 
 int GetDeepThoughtDataOffset(const Data& data)
 {

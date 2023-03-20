@@ -1,7 +1,11 @@
 // Basic support for SAM Coupe Pro-DOS images
 
-#include "SAMdisk.h"
-#include "types.h"
+#include "DiskUtil.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 bool ReadCPM(MemFile& file, std::shared_ptr<Disk>& disk)
 {

@@ -1,7 +1,11 @@
 // Velesoft's split-side transfer format for the SAM Coupe:
 //  http://velesoft.speccy.cz/atom_hdd-cz.htm
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 bool ReadDS2(MemFile& file, std::shared_ptr<Disk>& disk)
 {

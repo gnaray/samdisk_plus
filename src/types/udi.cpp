@@ -1,8 +1,12 @@
 // UDI = Ultra Disk Image for Spectrum, by Alex Makeev:
 //  http://scratchpad.wikia.com/wiki/Spectrum_emulator_file_format:_udi
 
-#include "SAMdisk.h"
 #include "BitstreamTrackBuilder.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 #define UDI_SIGNATURE               "UDI!"
 #define UDI_SIGNATURE_COMPRESSED    "udi!"

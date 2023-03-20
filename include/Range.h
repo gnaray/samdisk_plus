@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Header.h"
+
+#include <functional>
+
 class Range
 {
 public:

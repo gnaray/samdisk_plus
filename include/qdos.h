@@ -6,6 +6,8 @@
 //
 // Note: all values are BIG ENDIAN!
 
+#include <cstdint>
+
 struct QDOS_HEADER
 {
     char signature[4];

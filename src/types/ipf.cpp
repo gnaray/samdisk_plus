@@ -2,7 +2,12 @@
 //  http://www.softpres.org/
 
 #include "SAMdisk.h"
-#include "BitstreamDecoder.h"
+//#include "BitstreamDecoder.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
+
 
 // ToDo:
 // - wrap CAPSImg library in class wrapper for thrown exceptions

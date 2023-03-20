@@ -1,6 +1,13 @@
 // Sinclair Spectrum +3 helper functions
 
-#include "SAMdisk.h"
+#include "CRC16.h"
+#include "Disk.h"
+#include "Sector.h"
+#include "Util.h"
+
+#include <cstdint>
+#include <cstring>
+#include <memory>
 
 static bool MatchBlock(const uint8_t* pbInput_, const uint8_t* pbMatch_, const char* psczRules_)
 {

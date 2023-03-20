@@ -1,6 +1,10 @@
 // Andrew Collier's Sam BooTable image for the SAM Coupe
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "SAMCoupe.h"
+
+#include <memory>
 
 bool ReadSBT(MemFile& file, std::shared_ptr<Disk>& disk)
 {

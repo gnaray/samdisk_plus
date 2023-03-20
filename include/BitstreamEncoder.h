@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BitBuffer.h"
+#include "TrackData.h"
 
 bool generate_special(TrackData& trackdata);
 void generate_bitstream(TrackData& trackdata);

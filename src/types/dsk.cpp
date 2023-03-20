@@ -8,7 +8,13 @@
 //  http://groups.google.com/group/comp.sys.sinclair/msg/80e4c2d1403ea65c
 
 #include "SAMdisk.h"
+#include "DiskUtil.h"
 #include "IBMPC.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 // ToDo: separate EDSK and DSK support, as EDSK alone is complicated enough!
 

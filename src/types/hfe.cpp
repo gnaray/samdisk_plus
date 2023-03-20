@@ -2,6 +2,14 @@
 //  http://hxc2001.com/download/floppy_drive_emulator/SDCard_HxC_Floppy_Emulator_HFE_file_format.pdf
 
 #include "SAMdisk.h"
+#include "DiskUtil.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+#include <cstdint>
+#include <string>
 
 // Note: currently only format revision 00 is supported.
 

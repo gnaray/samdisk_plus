@@ -1,5 +1,9 @@
 #pragma once
 
+#include "HDD.h"
+
+#include <string>
+
 class HDFHDD final : public HDD
 {
 public:

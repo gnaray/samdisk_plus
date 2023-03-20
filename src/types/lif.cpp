@@ -1,7 +1,12 @@
 // HP9114 LIF disk image:
 //  http://www.hpmuseum.org/cgi-sys/cgiwrap/hpmuseum/articles.cgi?read=260
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 bool ReadLIF(MemFile& file, std::shared_ptr<Disk>& disk)
 {

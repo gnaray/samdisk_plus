@@ -1,6 +1,13 @@
 // FD - Thomson (TO8/TO8D/TO9/TO9+) sector dump
 
 #include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+
 
 #define THOMSON_SECTORS_PER_TRACK   16
 

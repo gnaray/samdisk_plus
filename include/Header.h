@@ -1,5 +1,11 @@
 #pragma once
 
+#include "DiskConstants.h"
+#include "utils.h"
+
+#include <cassert>
+#include <string>
+
 enum class DataRate : int { Unknown = 0, _250K = 250'000, _300K = 300'000, _500K = 500'000, _1M = 1'000'000 };
 enum class Encoding { Unknown, MFM, FM, RX02, Amiga, GCR, Ace, MX, Agat, Apple, Victor, Vista };
 

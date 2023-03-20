@@ -1,6 +1,10 @@
 // Catch recognised unsupported image types by file signatures.
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "HDD.h"
+#include "MemFile.h"
+
+#include <memory>
 
 bool ReadUnsupported(MemFile& file, std::shared_ptr<Disk>&/*disk*/)
 {

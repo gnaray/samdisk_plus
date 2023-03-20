@@ -1,8 +1,13 @@
 // KryoFlux STREAM format:
 //  http://www.softpres.org/kryoflux:stream
 
-#include "SAMdisk.h"
+#include "DiskUtil.h"
 #include "KryoFlux.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 
 bool ReadSTREAM(MemFile& file, std::shared_ptr<Disk>& disk)

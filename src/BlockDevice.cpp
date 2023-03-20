@@ -2,6 +2,11 @@
 
 #include "SAMdisk.h"
 #include "BlockDevice.h"
+#include "Util.h"
+
+#include <algorithm>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #ifdef HAVE_SYS_DISK_H
 #include <sys/disk.h>

@@ -1,12 +1,18 @@
 // Disk class utilities
 
 #include "SAMdisk.h"
+#include "CRC16.h"
 #include "DiskUtil.h"
 #include "SpecialFormat.h"
 #include "TrackDataParser.h"
+#include "Util.h"
 
-static const int MIN_DIFF_BLOCK = 16;
-static const int DEFAULT_MAX_SPLICE = 72;   // limit of bits treated as splice noise between recognised gap patterns
+#include <algorithm>
+#include <cstring>
+#include <numeric>
+
+static constexpr int MIN_DIFF_BLOCK = 16;
+static constexpr int DEFAULT_MAX_SPLICE = 72;   // limit of bits treated as splice noise between recognised gap patterns
 
 
 static void item_separator(int items)

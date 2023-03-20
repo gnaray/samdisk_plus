@@ -5,6 +5,8 @@
 #include "SAMdisk.h"
 #include "FluxDecoder.h"
 
+#include <cassert>
+
 FluxDecoder::FluxDecoder(const FluxData& flux_revs, int bitcell_ns, int flux_scale_percent, int pll_adjust)
     : m_flux_revs(flux_revs), m_clock(bitcell_ns), m_clock_centre(bitcell_ns),
     m_clock_min(bitcell_ns* (100 - pll_adjust) / 100),

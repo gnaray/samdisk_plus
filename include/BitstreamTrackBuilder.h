@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BitBuffer.h"
 #include "TrackBuilder.h"
 
 class BitstreamTrackBuilder final : public TrackBuilder

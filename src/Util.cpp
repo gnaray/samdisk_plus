@@ -1,6 +1,15 @@
 // Legacy utility functions
 
 #include "SAMdisk.h"
+#include "Image.h"
+#include "SAMCoupe.h"
+#include "Util.h"
+
+#include <cstring>
+#include <set>
+#include <string>
+#include <sys/stat.h>
+
 
 std::set<std::string> seen_messages;
 

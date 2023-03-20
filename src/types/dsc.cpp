@@ -1,7 +1,12 @@
 // Richard Wilson's Amstrad CPC disk format:
 //  https://web.archive.org/web/20060215102422/http://andercheran.aiind.upv.es/~amstrad/docs/dsc.html
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <cstdint>
+#include <memory>
 
 struct DSC_TRACK
 {

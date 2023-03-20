@@ -2,6 +2,11 @@
 
 #include "SAMdisk.h"
 #include "BlockDevice.h"
+#include "SAMCoupe.h"
+#include "utils.h"
+
+#include <cstring>
+
 
 static const char* aszPartTypes[256] =
 {

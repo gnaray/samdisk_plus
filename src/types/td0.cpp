@@ -6,6 +6,13 @@
 
 #include "SAMdisk.h"
 #include "IBMPC.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 
 #define TD0_SIGNATURE_RLE       "TD"    // Normal compression (RLE)
 #define TD0_SIGNATURE_HUFF      "td"    // Huffman compression also used for everything after TD0_HEADER

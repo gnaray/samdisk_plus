@@ -1,6 +1,12 @@
 // Temporary SAM Disk File format, replaced by EDSK for custom format SAM disks
 
 #include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+#include <cstdint>
 
 const uint8_t SDF_CRC_ERROR = 0x08;
 const uint8_t SDF_RECORD_NOT_FOUND = 0x10;

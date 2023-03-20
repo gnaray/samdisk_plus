@@ -1,9 +1,12 @@
 // DiscFerret:
 //  http://www.discferret.com/wiki/DFI_image_format
 
-#include "SAMdisk.h"
 #include "DemandDisk.h"
-#include "BitstreamDecoder.h"
+//#include "BitstreamDecoder.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
 
 struct DFI_FILE_HEADER
 {

@@ -1,5 +1,32 @@
 #pragma once
 
+#include "config.h"
+
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>   // include before windows.h to avoid winsock.h
+#include <ws2tcpip.h>   // for socklen_t
+#endif
+
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#ifndef _WIN32
+#define SOCKET int
+#define closesocket close
+#endif
+#endif
+
+#ifdef HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 class Trinity
 {
     static const uint16_t TRINLOAD_UDP_PORT = 0xedb0;

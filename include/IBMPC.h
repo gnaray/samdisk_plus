@@ -1,5 +1,10 @@
 #pragma once
 
+#include "Header.h"
+#include "Track.h"
+
+#include <cstdint>
+
 const uint8_t IBM_DAM_DELETED = 0xf8;
 const uint8_t IBM_DAM_DELETED_ALT = 0xf9;
 const uint8_t IBM_DAM_ALT = 0xfa;

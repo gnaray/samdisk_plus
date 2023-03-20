@@ -2,6 +2,13 @@
 //  http://www1.plala.or.jp/aoto/tech.htm
 
 #include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+
 
 enum : uint8_t
 {

@@ -1,10 +1,11 @@
 // High-level disk image/device reading and writing
 
 #include "SAMdisk.h"
-#include "record.h"
+//#include "record.h"
 #include "SpectrumPlus3.h"
+#include "Util.h"
 #include "types.h"
-#include "BlockDevice.h"
+//#include "BlockDevice.h"
 
 bool UnwrapSDF(std::shared_ptr<Disk>& src_disk, std::shared_ptr<Disk>& disk);
 

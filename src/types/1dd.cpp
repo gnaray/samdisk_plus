@@ -1,7 +1,10 @@
 // 1DD is a special type of D88 image with only 1 head in the track index
 
-#include "SAMdisk.h"
 #include "types.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
 
 bool Read1DD(MemFile& file, std::shared_ptr<Disk>& disk)
 {

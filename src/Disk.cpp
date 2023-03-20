@@ -2,8 +2,10 @@
 
 #include "SAMdisk.h"
 #include "Disk.h"
-#include "IBMPC.h"
+//#include "IBMPC.h"
 #include "ThreadPool.h"
+
+#include <algorithm>
 
 //////////////////////////////////////////////////////////////////////////////
 

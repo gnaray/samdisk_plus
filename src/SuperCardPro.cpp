@@ -2,6 +2,11 @@
 
 #include "SAMdisk.h"
 #include "SuperCardPro.h"
+#include "Sector.h"
+
+#include <cstring>
+#include <unistd.h>
+
 
 #ifdef HAVE_FTD2XX
 #include "SCP_FTD2XX.h"

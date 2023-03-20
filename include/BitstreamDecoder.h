@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BitBuffer.h"
+#include "TrackData.h"
 
 void scan_flux(TrackData& trackdata);
 void scan_flux_mfm_fm(TrackData& trackdata, DataRate last_datarate);

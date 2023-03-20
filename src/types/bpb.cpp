@@ -1,7 +1,11 @@
 // BIOS Parameter Block, for MS-DOS and compatible disks
 
-#include "SAMdisk.h"
 #include "bpb.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
 {

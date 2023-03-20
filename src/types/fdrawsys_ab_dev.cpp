@@ -18,10 +18,16 @@
 // required to see all the expected sectors.
 
 #include "SAMdisk.h"
-#include "BitstreamTrackBuilder.h"
+//#include "BitstreamTrackBuilder.h"
 #include "DemandDisk.h"
-#include "IBMPC.h"
+//#include "IBMPC.h"
 #include "FdrawcmdSys.h"
+
+#include "Disk.h"
+#include "Util.h"
+#include "win32_error.h"
+
+#include <memory>
 
 #ifdef HAVE_FDRAWCMD_H
 #include "fdrawcmd.h"

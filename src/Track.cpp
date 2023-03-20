@@ -1,8 +1,8 @@
-#include "SAMdisk.h"
 #include "Track.h"
-
+#include "DiskUtil.h"
 #include "IBMPC.h"
 
+#include <algorithm>
 
 Track::Track(int num_sectors/*=0*/)
 {

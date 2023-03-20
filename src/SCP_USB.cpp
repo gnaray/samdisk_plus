@@ -1,7 +1,11 @@
 // USB backend for SuperCard Pro device
 
-#include "SAMdisk.h"
 #include "SCP_USB.h"
+#include "FileIO.h"
+
+#include <fcntl.h>
+#include <string>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include "SCP_Win32.h"

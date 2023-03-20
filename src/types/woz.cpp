@@ -1,7 +1,15 @@
 // WOZ - Apple II file format:
 //  http://www.evolutioninteractive.com/applesauce/woz_reference.pdf
 
-#include "SAMdisk.h"
+
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 
 #define WOZ_SIGNATURE   "WOZ1"
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 struct OPD_BOOT
 {
     uint8_t jr_boot[2];         // jump to boot code

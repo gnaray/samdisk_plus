@@ -1,9 +1,14 @@
 #pragma once
 
+#include <cstdint>
+#include <vector>
+
 #define DEFAULT_PLL_ADJUST  4
 #define DEFAULT_PLL_PHASE   60
 #define MAX_PLL_ADJUST      50
 #define MAX_PLL_PHASE       90
+
+using FluxData = std::vector<std::vector<uint32_t>>;
 
 class FluxDecoder
 {

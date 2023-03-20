@@ -5,6 +5,10 @@
 #include "DemandDisk.h"
 #include "IBMPC.h"
 #include "FdrawcmdSys.h"
+#include "Disk.h"
+
+#include <memory>
+
 
 #ifdef HAVE_FDRAWCMD_H
 #include "fdrawcmd.h"

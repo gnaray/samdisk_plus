@@ -1,7 +1,10 @@
 // CBM 1581:
 //  http://unusedino.de/ec64/technical/formats/d81.html
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
 
 const int D81_TRACKS = 80;
 const int D81_SIDES = 2;

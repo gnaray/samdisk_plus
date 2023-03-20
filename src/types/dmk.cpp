@@ -4,6 +4,13 @@
 #include "SAMdisk.h"
 #include "IBMPC.h"
 #include "BitstreamTrackBuilder.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <algorithm>
+#include <memory>
+
 
 const int DMK_MAX_TRACK_LENGTH = 0x3fff;    // most images use 0x2940, a few have 0x29a0
 const int DMK_TRACK_INDEX_SIZE = 0x80;

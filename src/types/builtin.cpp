@@ -1,11 +1,15 @@
 ﻿// Built-in disk images used for testing
 
-#include "SAMdisk.h"
+#include "Disk.h"
 #include "IBMPC.h"
 #include "BitstreamTrackBuilder.h"
-#include "BitstreamDecoder.h"
+//#include "BitstreamDecoder.h"
 #include "FluxTrackBuilder.h"
 #include "SpecialFormat.h"
+#include "Util.h"
+
+#include <memory>
+#include <numeric>
 
 static Track& complete(Track& track)
 {

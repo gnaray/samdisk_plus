@@ -4,6 +4,12 @@
 
 #include "SAMdisk.h"
 #include "trd.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+
 
 bool ReadTRD(MemFile& file, std::shared_ptr<Disk>& disk)
 {

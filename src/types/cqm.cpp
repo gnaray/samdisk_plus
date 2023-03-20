@@ -3,7 +3,15 @@
 // Implemented using reverse-engineered notes from:
 //  http://rio.early8bitz.de/cqm/cqm-format.pdf
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+#include <cstdint>
+#include <iomanip>
+#include <numeric>
+#include <string>
 
 #define CQM_SIGNATURE   "CQ\x14"
 

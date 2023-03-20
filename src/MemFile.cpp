@@ -1,6 +1,8 @@
 // Memory-backed files used for disk images
 
-#include "SAMdisk.h"
+#include "Util.h"
+#include "config.h"
+#include "FileIO.h"
 #include "MemFile.h"
 
 #ifdef HAVE_ZLIB

@@ -1,5 +1,13 @@
 #pragma once
 
+#include "BitBuffer.h"
+#include "Disk.h"
+#include "Header.h"
+#include "Sector.h"
+#include "Track.h"
+
+#include <set>
+
 const int MAX_SIDES = 2;
 const int MAX_TRACKS = 128;         // Internal format maximum, needed for 1MB TRD
 const int MAX_SECTORS = 144;

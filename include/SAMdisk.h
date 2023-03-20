@@ -10,33 +10,7 @@
 #endif
 
 
-#ifdef _WIN32
-#define PATH_SEPARATOR_CHR  '\\'
-#else
-#define PATH_SEPARATOR_CHR  '/'
-#endif
-
-#ifndef _WIN32
-
-// ToDo: fix BlockDevice so it doesn't need these
-typedef void* HANDLE;
-#define INVALID_HANDLE_VALUE reinterpret_cast<void *>(-1)
-
-#define MAX_PATH    512
-
-#define O_SEQUENTIAL    0
-#define O_BINARY        0
-
-#define DeviceIoControl(a,b,c,d,e,f,g,h)    (*g = 0)
-
-#define CTL_CODE(a,b,c,d)   (b)
-#define FILE_READ_DATA      0
-#define FILE_WRITE_DATA     0
-#define METHOD_BUFFERED     0
-#define METHOD_OUT_DIRECT   0
-#define METHOD_IN_DIRECT    0
-
-#endif // WIN32
+// Handle, O_*, etc. moved to FileIO.h
 
 
 #ifdef _MSC_VER
@@ -83,14 +57,6 @@ typedef void* HANDLE;
 #include <system_error>
 
 
-#ifndef HAVE_O_BINARY
-#define O_BINARY    0
-#endif
-
-#ifndef O_DIRECT
-#define O_DIRECT    0
-#endif
-
 #if !defined(HAVE_STRCASECMP) && defined(HAVE__STRCMPI)
 #define strcasecmp  _stricmp
 #define HAVE_STRCASECMP
@@ -128,26 +94,9 @@ typedef void* HANDLE;
 #else
 #endif // WIN32
 
-#ifdef HAVE_WINSOCK2_H
-#include <winsock2.h>   // include before windows.h to avoid winsock.h
-#include <ws2tcpip.h>   // for socklen_t
-#endif
 
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#ifndef _WIN32
-#define SOCKET int
-#define closesocket close
-#endif
-#endif
+// Networking moved to Trinity.h
 
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
 
 #ifdef HAVE_SYS_TIMEB_H
 #include <sys/timeb.h>
@@ -184,8 +133,6 @@ typedef void* HANDLE;
 #include "HDD.h"
 #include "Util.h"
 #include "SAMCoupe.h"
-
-static const int MAX_IMAGE_SIZE = 256 * 1024 * 1024;    // 256MiB
 
 enum { GAPS_AUTO = -1, GAPS_NONE, GAPS_CLEAN, GAPS_ALL };
 

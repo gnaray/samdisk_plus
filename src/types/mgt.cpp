@@ -3,8 +3,12 @@
 //
 // Also accepts IMG variant with different track order.
 
-#include "SAMdisk.h"
+#include "DiskUtil.h"
 #include "SAMCoupe.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
 
 bool ReadMGT(MemFile& file, std::shared_ptr<Disk>& disk)
 {

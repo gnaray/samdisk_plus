@@ -2,6 +2,12 @@
 
 // BIOS Parameter Block, for MS-DOS and compatible disks
 
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <cstdint>
+#include <memory>
+
 struct BIOS_PARAMETER_BLOCK
 {
     uint8_t abJump[3];              // usually x86 jump (0xeb or 0xe9)

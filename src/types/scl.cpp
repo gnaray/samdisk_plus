@@ -1,7 +1,12 @@
 // Sinclair betadisk archive for Spectrum clones
 
 #include "SAMdisk.h"
+#include "Util.h"
 #include "trd.h"
+#include "Disk.h"
+#include "MemFile.h"
+
+#include <memory>
 
 #define SCL_SIGNATURE   "SINCLAIR"
 

@@ -3,6 +3,8 @@
 #include "SAMdisk.h"
 #include "DemandDisk.h"
 #include "BlockDevice.h"
+#include "Util.h"
+
 
 class BlockFloppyDisk final : public DemandDisk
 {

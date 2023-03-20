@@ -4,6 +4,10 @@
 #include "SAMdisk.h"
 #include "types.h"
 #include "record.h"
+#include "SAMCoupe.h"
+
+#include <cstring>
+
 
 bool ReadBDOS(const std::string& path, std::shared_ptr<Disk>& disk)
 {

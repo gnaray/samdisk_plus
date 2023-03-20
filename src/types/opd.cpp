@@ -1,8 +1,13 @@
 // Opus Discovery for Spectrum:
 //  http://www.worldofspectrum.org/opus.html
 
-#include "SAMdisk.h"
 #include "opd.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 const uint8_t OP_JR = 0x18; // Z80 opcode for unconditional relative jump
 

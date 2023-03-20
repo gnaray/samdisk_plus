@@ -3,6 +3,8 @@
 #include "SAMdisk.h"
 #include "BitBuffer.h"
 
+#include <cstring>
+
 BitBuffer::BitBuffer(DataRate datarate_, Encoding encoding_, int revs)
     : datarate(datarate_), encoding(encoding_)
 {

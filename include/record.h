@@ -1,5 +1,10 @@
 #pragma once
 
+#include "Disk.h"
+#include "HDD.h"
+
+#include <memory>
+
 bool ReadRecord(const std::string& path, std::shared_ptr<Disk>& disk);
 bool WriteRecord(const std::string& path, std::shared_ptr<Disk>& disk);
 bool ReadRecord(HDD& hdd, int record, std::shared_ptr<Disk>& disk);

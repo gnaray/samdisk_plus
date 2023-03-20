@@ -1,9 +1,10 @@
 #pragma once
 
-const int MAX_DISK_CYLS = 128;
-const int MAX_DISK_HEADS = 2;
-
-using FluxData = std::vector<std::vector<uint32_t>>;
+#include <cstdint>
+#include <functional>
+#include <vector>
+#include <map>
+#include <mutex>
 
 #include "TrackData.h"
 #include "Format.h"

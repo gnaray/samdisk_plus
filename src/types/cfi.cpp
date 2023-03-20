@@ -1,7 +1,9 @@
 // Amstrad FDCOPY "compressed floppy image":
 //  https://web.archive.org/web/20100706002713/http://www.fdos.org/ripcord/rawrite/cfi.html
 
-#include "SAMdisk.h"
+#include "HDD.h"
+#include "MemFile.h"
+#include "Util.h"
 #include "types.h"
 
 bool ReadCFI(MemFile& file, std::shared_ptr<Disk>& disk)

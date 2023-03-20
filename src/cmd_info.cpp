@@ -1,6 +1,14 @@
 // Info command
 
 #include "SAMdisk.h"
+#include "Image.h"
+#include "HDD.h"
+#include "Disk.h"
+#include "Util.h"
+
+#include <iomanip>
+#include <memory>
+
 
 bool ImageInfo(const std::string& path)
 {

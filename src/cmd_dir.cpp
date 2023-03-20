@@ -1,9 +1,15 @@
 // Dir command
 
-#include "SAMdisk.h"
+#include "DiskUtil.h"
+#include "Image.h"
 #include "JupiterAce.h"
+#include "SAMCoupe.h"
 #include "opd.h"
 #include "trd.h"
+
+#include <algorithm>
+#include <cstring>
+#include <fstream>
 
 #define MGT_DATE_COLUMN     48
 

@@ -1,5 +1,9 @@
 #pragma once
 
+#include "config.h"
+
+#include <mutex>
+
 #ifdef HAVE_LIBUSB1
 
 #ifdef __GNUC__

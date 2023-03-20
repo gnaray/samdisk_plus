@@ -1,8 +1,14 @@
 // SuperCard Pro flux file format:
 //  http://www.cbmstuff.com/downloads/scp/scp_image_specs.txt
 
-#include "SAMdisk.h"
 #include "DemandDisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <iomanip>
+#include <memory>
+#include <numeric>
 
 constexpr auto DEFAULT_TDH_ENTRIES = 166;
 constexpr auto MAX_TDH_ENTRIES = 168;

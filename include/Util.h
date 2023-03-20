@@ -1,5 +1,13 @@
 #pragma once
 
+#include "Disk.h"
+#include "HDD.h"
+#include "utils.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <set>
+
 #ifndef HIWORD
 #define HIWORD(l)   static_cast<uint16_t>(static_cast<uint32_t>(l) >> 16)
 #define LOWORD(l)   static_cast<uint16_t>(static_cast<uint32_t>(l))

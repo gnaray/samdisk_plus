@@ -4,9 +4,9 @@
 // Also TrinLoad network loader for the SAM Coupe:
 //  http://simonowen.com/blog/2015/03/05/trinload-10/
 
-#include "SAMdisk.h"
 #include "Trinity.h"
 #include "DemandDisk.h"
+#include "Util.h"
 
 class TrinLoadDisk final : public DemandDisk
 {

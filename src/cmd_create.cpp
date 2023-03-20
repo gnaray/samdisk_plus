@@ -1,6 +1,13 @@
 // Create command
 
 #include "SAMdisk.h"
+#include "Disk.h"
+#include "DiskUtil.h"
+#include "Image.h"
+#include "Util.h"
+
+#include <memory>
+
 
 bool CreateImage(const std::string& path, Range range)
 {

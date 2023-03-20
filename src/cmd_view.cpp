@@ -1,6 +1,13 @@
 // View command
 
 #include "SAMdisk.h"
+#include "DiskUtil.h"
+#include "Image.h"
+#include "Track.h"
+#include "Util.h"
+
+#include <memory>
+
 
 void ViewTrack(const CylHead& cylhead, const Track& track)
 {

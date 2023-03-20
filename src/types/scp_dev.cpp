@@ -1,10 +1,14 @@
 // SuperCard Pro real device wrapper
 //  http://www.cbmstuff.com/downloads/scp/scp_sdk.pdf
 
+#include "DiskUtil.h"
 #include "SAMdisk.h"
 #include "DemandDisk.h"
-#include "BitstreamDecoder.h"
+//#include "BitstreamDecoder.h"
 #include "SuperCardPro.h"
+#include "Util.h"
+#include <numeric>
+
 
 class SCPDevDisk final : public DemandDisk
 {

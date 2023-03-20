@@ -3,6 +3,11 @@
 
 #include "SAMdisk.h"
 #include "BitstreamTrackBuilder.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 #define SAP_SIGNATURE   "SYSTEME D'ARCHIVAGE PUKALL S.A.P. (c) Alexandre PUKALL Avril 1998"
 #define SAP_SECTORS_PER_TRACK   16

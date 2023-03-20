@@ -3,6 +3,12 @@
 
 #include "SAMdisk.h"
 #include "DemandDisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+
 
 #define A2R_SIGNATURE   "A2R2"
 

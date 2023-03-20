@@ -1,6 +1,10 @@
 // 2D is a raw format used by PC-88 systems
 
-#include "SAMdisk.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
 
 bool Read2D(MemFile& file, std::shared_ptr<Disk>& disk)
 {

@@ -1,5 +1,11 @@
 #pragma once
 
+#include <cassert>
+#include <cstdint>
+#include <ostream>
+#include <sstream>
+#include <vector>
+
 inline std::ostream& operator<<(std::ostream& os, uint8_t val)
 {
     return os << static_cast<int>(val);

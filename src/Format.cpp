@@ -1,5 +1,7 @@
 #include "SAMdisk.h"
+#include "DiskUtil.h"
 #include "Format.h"
+#include "Sector.h"
 
 // Storage for class statics.
 constexpr int Format::DefaultTracks;

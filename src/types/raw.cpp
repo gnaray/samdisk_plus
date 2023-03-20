@@ -1,6 +1,13 @@
 // Raw image files matched by file size alone
 
 #include "SAMdisk.h"
+#include "Options.h"
+#include "Disk.h"
+#include "MemFile.h"
+#include "Util.h"
+
+#include <memory>
+
 
 bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
 {

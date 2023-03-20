@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CRC16.h"
+#include "Header.h"
+#include "Sector.h"
 
 class TrackBuilder
 {

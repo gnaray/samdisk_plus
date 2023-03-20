@@ -2,6 +2,8 @@
 
 #include "Disk.h"
 
+#include <bitset>
+
 class DemandDisk : public Disk
 {
 public:

@@ -1,7 +1,13 @@
 // HDF HDD disk image files
 
 #include "SAMdisk.h"
+#include "FileIO.h"
 #include "HDFHDD.h"
+#include "Util.h"
+
+#include <cstring>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 /*static*/ bool HDFHDD::IsRecognised(const std::string& path)
 {
