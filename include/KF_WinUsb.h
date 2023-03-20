@@ -25,9 +25,9 @@ private:
     void StartAsyncRead() override;
     void StopAsyncRead() override;
 
-    HANDLE m_hdev = NULL;
-    WINUSB_INTERFACE_HANDLE m_winusb = NULL;
-    WINUSB_INTERFACE_HANDLE m_interface1 = NULL;
+    HANDLE m_hdev = nullptr;
+    WINUSB_INTERFACE_HANDLE m_winusb = nullptr;
+    WINUSB_INTERFACE_HANDLE m_interface1 = nullptr;
 };
 
 #endif // HAVE_WINUSB

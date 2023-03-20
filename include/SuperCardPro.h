@@ -11,7 +11,7 @@ public:
     static const int MAX_FLUX_REVS = 5;         // firmware has this hard limit
     static const int NS_PER_TICK = 25;          // 25ns per tick in flux times
 
-    static const uint8_t pr_Unused = 0x00;      // not used (to disallow NULL responses)
+    static const uint8_t pr_Unused = 0x00;      // not used (to disallow nullptr responses)
     static const uint8_t pr_BadCommand = 0x01;  // bad command
     static const uint8_t pr_CommandErr = 0x02;  // command error (bad structure, etc.)
     static const uint8_t pr_Checksum = 0x03;    // packet checksum failed
@@ -121,7 +121,7 @@ private:
     static const uint8_t ff_RPM360 = 0x08;          // 0 = 300 RPM drive, 1 = 360 RPM drive
 
 //  bool SetError (uint8_t error);
-    bool SendCmd(uint8_t cmd, void* p = NULL, int len = 0, void* readbuf = NULL, int readlen = 0);
+    bool SendCmd(uint8_t cmd, void* p = nullptr, int len = 0, void* readbuf = nullptr, int readlen = 0);
     bool ReadExact(void* buf, int len);
     bool WriteExact(const void* buf, int len);
 
