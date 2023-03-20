@@ -21,6 +21,8 @@
 
 static auto& opt_fix = getOpt<int>("fix");
 static auto& opt_legacy = getOpt<int>("legacy");
+static auto& opt_paranoia = getOpt<bool>("paranoia");
+static auto& opt_readstats = getOpt<bool>("readstats");
 
 #define DSK_SIGNATURE           "MV - CPC"
 #define EDSK_SIGNATURE          "EXTENDED CPC DSK File\r\nDisk-Info\r\n"
@@ -84,7 +86,7 @@ public:
     EdskReadstatsElement() = default;
 
     uint16_t readAttempts = 0;
-    std::vector<uint16_t> dataReadCount;
+    std::vector<uint16_t> dataReadCount{};
 
     static int DataReadCountByteSize()
     {
@@ -117,7 +119,7 @@ public:
         const int numDatas = dataReadCount.size();
         if (numDatas != sector.copies())
         {
-            if (!opt.paranoia && sector.has_good_data())
+            if (!opt_paranoia && sector.has_good_data())
                 throw util::exception("readstats info does not match track info, specifying paranoia parameter should work");
             throw util::exception("readstats info does not match track info at ", cylhead, " sector ", sector.header.sector);
         }
@@ -163,7 +165,7 @@ public:
     void TransferFromSector(const CylHead& cylhead, const Sector& sector, int numCopies = -1)
     {
         readAttempts = util::htole(sector.read_attempts());
-        int numDatas = util::htole(numCopies < 0 ? sector.copies() : numCopies);
+        int numDatas = numCopies < 0 ? sector.copies() : numCopies;
         dataReadCount.resize(0);
         dataReadCount.reserve(numDatas);
         // Process each data instance.
@@ -263,8 +265,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
             auto uTrackSize = fEDSK ? (*pbIndex++ << 8) : ((peh->abTrackSize[1] << 8) | peh->abTrackSize[0]);
             if (edsk_version >= 2)
             {
-                uTrackSize = util::letoh(util::le_value(reinterpret_cast<const uint8_t(&)[4]>(*pbIndex32)));
-                pbIndex32++;
+                uTrackSize = util::letoh(*(pbIndex32++));
             }
 
             // EDSK doesn't store blank tracks, as indicated by zero size in the index
@@ -402,7 +403,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                     // Multiple good copies extension (paranoia) means that crc error is unconcerned.
                     // Note: in theory e.g. a 512 bytes sector can have 96 copies which provides 49152 length not meaning 48K sector!
                     // Note: checking data size if equals to 49152 is unnecessary because 49152 % any native size equals to 0.
-                    if ((data_crc_error || opt.paranoia) && ((data_size % native_size) == 0 || data_size == 49152))
+                    if ((data_crc_error || opt_paranoia) && ((data_size % native_size) == 0 || data_size == 49152))
                     {
                         // Accept 48K as 3x16K, regardless of native size
                         if (data_size == 49152)
@@ -542,7 +543,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
             {
                 if (file_has_readstats)
                     EdskReadstatsElement::TransferFromFileToSector(file, cylhead, sector);
-                else if (opt.readstats)
+                else if (opt_readstats)
                     sector.fix_readstats();
             }
 
@@ -634,9 +635,9 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
     offsets.reserve((peh->bTracks + 1) * peh->bSides);
 
     // Saving readstats if requested and writing RDSK image file.
-    bool opt_add_readstats_block = opt.readstats && edsk_version >= 2;
-    bool opt_paranoia_local = opt.paranoia && opt_add_readstats_block;
-    bool opt_legacy_local = opt.legacy != 0 && edsk_version < 2;
+    bool opt_add_readstats_block = opt_readstats && edsk_version >= 2;
+    bool opt_paranoia_local = opt_paranoia && opt_add_readstats_block;
+    bool opt_legacy_local = opt_legacy != 0 && edsk_version < 2;
     std::vector<EdskReadstatsElement> readstats_vector;
     readstats_vector.reserve((peh->bTracks + 1) * peh->bSides * disk->read_track(CylHead(0, 0)).size());
 
@@ -662,7 +663,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
 
             // The standard track header is 256 bytes, but to allow more than 29 sectors we'll
             // round up the required size to the next 256-byte boundary
-            int track_header_size = (sizeof(EDSK_TRACK) + track.size() * sizeof(EDSK_SECTOR) + 0xff) & ~0xff;
+            uint32_t track_header_size = (sizeof(EDSK_TRACK) + track.size() * sizeof(EDSK_SECTOR) + 0xff) & ~0xff;
 
             memset(mem, 0, track_header_size);
             memcpy(pt->signature, EDSK_TRACK_SIG, sizeof(pt->signature));
@@ -688,7 +689,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
             pt->encoding = (encoding == Encoding::FM) ? 1 : 0;
 
             // Assume 300rpm to determine approximate track capacity
-            auto track_size = 0;
+            uint32_t track_size = 0;
 
             // Space saving flags, to squeeze the track into the limited EDSK space
             bool fFitLegacy = opt_legacy_local != 0;
@@ -864,8 +865,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
 
             if (edsk_version >= 2)
             {
-                util::store_le_value(util::htole(track_size), reinterpret_cast<uint8_t(&)[4]>(*pbIndex32));
-                pbIndex32++;
+                *(pbIndex32++) = util::htole(track_size);
             }
             else
                 *pbIndex++ = static_cast<uint8_t>(track_size >> 8);

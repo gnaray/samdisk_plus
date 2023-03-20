@@ -2,6 +2,8 @@
 
 #include "Disk.h"
 #include "MemFile.h"
+
+#include <memory>
 #include <stdio.h>
 
 bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int version);

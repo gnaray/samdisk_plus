@@ -10,19 +10,26 @@
 //#include "SpectrumPlus3.h"
 #include "Util.h"
 
+#include <cmath>
 #include <cstring>
 #include <strings.h>
 
+static auto& opt_base = getOpt<int>("base");
 static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_disk_retries = getOpt<int>("disk_retries");
 static auto& opt_fix = getOpt<int>("fix");
 static auto& opt_merge = getOpt<int>("merge");
 static auto& opt_minimal = getOpt<int>("minimal");
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_nozip = getOpt<int>("nozip");
 static auto& opt_quick = getOpt<int>("quick");
 static auto& opt_range = getOpt<Range>("range");
 static auto& opt_repair = getOpt<int>("repair");
 static auto& opt_resize = getOpt<int>("resize");
+static auto& opt_sectors = getOpt<long>("sectors");
+static auto& opt_skip_stable_sectors = getOpt<bool>("skip_stable_sectors");
 static auto& opt_step = getOpt<int>("step");
+static auto& opt_track_retries = getOpt<int>("track_retries");
 static auto& opt_verbose = getOpt<int>("verbose");
 
 bool OpenReadImage(const std::string& path, std::shared_ptr<Disk>& disk)
@@ -34,9 +41,9 @@ bool OpenReadImage(const std::string& path, std::shared_ptr<Disk>& disk)
         return false;
 
     // Limit to our maximum geometry, and default to copy everything present in the source
-    ValidateRange(opt.range, MAX_TRACKS, MAX_SIDES, opt.step, disk->cyls(), disk->heads());
+    ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
 
-    if (opt.minimal)
+    if (opt_minimal)
         TrackUsedInit(*disk);
     return true;
 }
@@ -58,7 +65,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     if (!OpenReadImage(src_path, src_disk))
         return false;
 
-    const bool skip_stable_sectors = opt.skip_stable_sectors && !src_disk->is_constant_disk() ? true : false;
+    const bool skip_stable_sectors = opt_skip_stable_sectors && !src_disk->is_constant_disk() ? true : false;
 
     // tmp dst path in case of merge or repair mode.
     const std::string tmp_dst_path = util::prepend_extension(dst_path, "tmp.");
@@ -66,7 +73,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     // Do not retry disk when
     // 1) merging because it overwrites previous data, wasting of time.
     // 2) disk is constant because the constant disk image always provides the same data, wasting of time.
-    const int disk_retries = !opt.merge && !src_disk->is_constant_disk() && opt.disk_retries >= 0 ? opt.disk_retries : 0;
+    const int disk_retries = !opt_merge && !src_disk->is_constant_disk() && opt_disk_retries >= 0 ? opt_disk_retries : 0;
     bool is_dst_disk_read = false;
     for (auto disk_round = 0; disk_round <= disk_retries; disk_round++)
     {
@@ -83,17 +90,17 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         // If repair mode and normal disk then determine normal track size by calculating the average track size.
         int normal_track_size = 0;
         int normal_first_sector_id = 1;
-        if (opt.repair && opt.normal_disk) {
+        if (opt_repair && opt_normal_disk) {
             // If sectors is specified then it is the normal track size.
-            if (opt.sectors > 0)
+            if (opt_sectors > 0)
         {
-                normal_track_size = opt.sectors;
+                normal_track_size = opt_sectors;
             }
             else
             {
                 int dst_track_amount = 0;
                 int sum_dst_track_size = 0;
-                opt.range.each([&](const CylHead& cylhead) {
+                opt_range.each([&](const CylHead& cylhead) {
                     Track dst_track = dst_disk->read_track(cylhead);
                     NormaliseTrack(cylhead, dst_track);
                     auto track_normal_probable_size = dst_track.normal_probable_size();
@@ -105,35 +112,35 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                 if (dst_track_amount > 0)
                     normal_track_size = static_cast<int>(std::round(static_cast<double>(sum_dst_track_size) / dst_track_amount));
             }
-            if (opt.base > 0)
-                normal_first_sector_id = opt.base;
+            if (opt_base > 0)
+                normal_first_sector_id = opt_base;
         }
 
         int repair_track_changed_amount_per_disk = 0;
         bool is_disk_retry = disk_round > 0; // First reading is not retry.
-        if (opt.verbose)
+        if (opt_verbose)
             Message(msgInfo, "%seading disk in %uth round", (is_disk_retry ? "Rer" : "R"), disk_round);
 
         // Copy the range of tracks to the target image
-        opt.range.each([&](const CylHead& cylhead) {
+        opt_range.each([&](const CylHead& cylhead) {
             // In minimal reading mode, skip unused tracks
-            if (opt.minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
+            if (opt_minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
                 return;
 
             int repair_track_changed_amount_per_track = 0;
             // Do not retry track when
             // 1) not repairing because it overwrites previous data, wasting of time.
             // 2) disk is constant because the constant disk image always provides the same data, wasting of time.
-            const int track_retries = opt.repair && !src_disk->is_constant_disk() && opt.track_retries >= 0 ? opt.track_retries : 0;
+            const int track_retries = opt_repair && !src_disk->is_constant_disk() && opt_track_retries >= 0 ? opt_track_retries : 0;
             for (auto track_round = 0; track_round <= track_retries; track_round++)
             {
                 bool is_track_retried = track_round > 0; // First reading is not retry.
-                if (opt.verbose)
+                if (opt_verbose)
                     Message(msgInfo, "%seading track in %uth round", (is_track_retried ? "Rer" : "R"), disk_round);
 
                 Track dst_track;
                 Message(msgStatus, "Reading %s", CH(cylhead.cyl, cylhead.head));
-                if (opt.repair) // Read dst track early so we can check if it has bad sectors.
+                if (opt_repair) // Read dst track early so we can check if it has bad sectors.
                 {
                     dst_track = dst_disk->read_track(cylhead);
                     NormaliseTrack(cylhead, dst_track);
@@ -141,16 +148,16 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
                 Headers headers_of_stable_sectors;
                 // If repair mode and user specified skip_stable_sectors then skip checking those.
-                if (opt.repair && skip_stable_sectors) // Repair mode => dst track can be checked.
+                if (opt_repair && skip_stable_sectors) // Repair mode => dst track can be checked.
                 {
                     headers_of_stable_sectors = dst_track.stable_sectors().headers();
                     // If repair mode and user specified normal-disk then do not repair tracks
                     // which has track size amount of id sequence at least.
-                    if (opt.normal_disk && normal_track_size > 0
+                    if (opt_normal_disk && normal_track_size > 0
                         && headers_of_stable_sectors.has_id_sequence(normal_first_sector_id, normal_track_size))
                         return;
                 }
-                if (opt.verbose && opt.repair && !headers_of_stable_sectors.empty()) {
+                if (opt_verbose && opt_repair && !headers_of_stable_sectors.empty()) {
                     Message(msgInfo, "Ignoring already good sectors on %s: %s",
                         CH(cylhead.cyl, cylhead.head), headers_of_stable_sectors.sector_ids_to_string().c_str());
                 }
@@ -164,12 +171,12 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                         // https://docs.rs-online.com/41b6/0900766b8001b0a3.pdf, 7.2 Read error
                         // Seeking head forward then backward then forward etc. when track is retried.
                         const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk->cyls() - 1)) : -1;
-                        src_data = src_disk->read(cylhead * opt.step, !src_disk->is_constant_disk(), with_head_seek_to, headers_of_stable_sectors);
+                        src_data = src_disk->read(cylhead * opt_step, !src_disk->is_constant_disk(), with_head_seek_to, headers_of_stable_sectors);
                         is_disk_slow = false;
                     }
                     catch (util::diskslow_exception & e)
                     {
-                        if (opt.normal_disk)
+                        if (opt_normal_disk)
                         {
                             util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
                             Message(msgInfo, "If it happens too often, specifying lower rpm might help.");
@@ -196,16 +203,16 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
                 bool changed = NormaliseTrack(cylhead, src_track);
 
-                if (opt.verbose)
+                if (opt_verbose)
                     ScanTrack(cylhead, src_track, context, headers_of_stable_sectors);
 
                 // Repair or copy?
-                if (opt.repair)
+                if (opt_repair)
                 {
-            // Repair the target track using the source track.
+                    // Repair the target track using the source track.
                     auto repair_track_changed_amount = RepairTrack(cylhead, dst_track, src_track, headers_of_stable_sectors);
 
-            dst_disk->write(cylhead, std::move(dst_track));
+                    dst_disk->write(cylhead, std::move(dst_track));
                     // If track retry is automatic and repairing then stop when repair could not improve the dst disk.
                     if (track_retries == DISK_RETRY_AUTO && repair_track_changed_amount == 0)
                         break;
@@ -225,10 +232,10 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                 }
             }
             repair_track_changed_amount_per_disk += repair_track_changed_amount_per_track;
-            if (opt.verbose && repair_track_changed_amount_per_track > 0)
+            if (opt_verbose && repair_track_changed_amount_per_track > 0)
                 Message(msgInfo, "Destination disk's track %s was repaired %u times in %uth round",
                     CH(cylhead.cyl, cylhead.head), repair_track_changed_amount_per_track, disk_round);
-        }, !opt.normal_disk);
+        }, !opt_normal_disk);
 
         // Copy any metadata not already present in the target (emplace doesn't replace)
         for (const auto& m : src_disk->metadata)
@@ -236,23 +243,22 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
         // Write the new/merged target image
         // When merge or repair mode is requested, a new tmp file is written and then renamed as final file.
-        if (opt.merge || opt.repair) {
-            if (result = WriteImage(tmp_dst_path, dst_disk))
-                if (result = !std::remove(dst_path.c_str()))
-                    result = !std::rename(tmp_dst_path.c_str(), dst_path.c_str());
+        if (opt_merge || opt_repair) {
+            result = WriteImage(tmp_dst_path, dst_disk) && std::remove(dst_path.c_str()) == 0
+                    && std::rename(tmp_dst_path.c_str(), dst_path.c_str()) == 0;
         }
         else
             result = WriteImage(dst_path, dst_disk);
         if (!result)
             break;
-        if (opt.verbose && repair_track_changed_amount_per_disk > 0)
+        if (opt_verbose && repair_track_changed_amount_per_disk > 0)
             Message(msgInfo, "Destination disk's tracks were repaired %u times in %uth round", repair_track_changed_amount_per_disk, disk_round);
         // Switching to repair mode from normal mode so disk retry will repair instead of overwrite.
         // If disk retry is automatic and repairing then stop when repair could not improve the dst disk.
-        if (opt.repair && disk_retries == DISK_RETRY_AUTO && repair_track_changed_amount_per_disk == 0)
+        if (opt_repair && disk_retries == DISK_RETRY_AUTO && repair_track_changed_amount_per_disk == 0)
             break;
-        if (!opt.merge && !opt.repair)
-            opt.repair = 1;
+        if (!opt_merge && !opt_repair)
+            opt_repair = 1;
     }
     return result;
 }

@@ -1,6 +1,7 @@
 // Scan command
 
 #include "Options.h"
+#include "SAMdisk.h"
 #include "Image.h"
 #include "IBMPC.h"
 #include "DiskUtil.h"
@@ -8,10 +9,11 @@
 
 static auto& opt_nodiff = getOpt<int>("nodiff");
 static auto& opt_offsets = getOpt<int>("offsets");
+static auto& opt_readstats = getOpt<bool>("readstats");
 static auto& opt_step = getOpt<int>("step");
 static auto& opt_verbose = getOpt<int>("verbose");
 
-void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context, const Headers& headers_of_ignored_sectors)
+void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context, const Headers& headers_of_ignored_sectors/*=Headers()*/)
 {
     // Reset the context if the cylinder is before the last (such as at a head change)
     if (cylhead.cyl < context.last_cylhead.cyl)

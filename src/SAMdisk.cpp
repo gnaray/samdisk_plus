@@ -35,11 +35,14 @@ struct OPTIONS
     int rescans = 0, flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
     int a1sync = 0;
 
+    bool normal_disk = false;
+    bool readstats = false, paranoia = false, skip_stable_sectors = false;
+
     int retries = 5, maxcopies = 3;
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
     int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
-
-    bool dummy = false;
+    int track_retries = -1, disk_retries = -1;
+    int stability_level = -1;
 
     Encoding encoding{ Encoding::Unknown };
     DataRate datarate{ DataRate::Unknown };
@@ -74,6 +77,7 @@ int& getOpt(const std::string& key)
         {"cylsfirst", opt.cylsfirst},
         {"datacopy", opt.datacopy},
         {"debug", opt.debug},
+        {"disk_retries", opt.disk_retries},
         {"fill", opt.fill},
         {"fix", opt.fix},
         {"flip", opt.flip},
@@ -125,9 +129,11 @@ int& getOpt(const std::string& key)
         {"scale", opt.scale},
         {"size", opt.size},
         {"skew", opt.skew},
+        {"stability_level", opt.stability_level},
         {"step", opt.step},
         {"steprate", opt.steprate},
         {"time", opt.time},
+        {"track_retries", opt.track_retries},
         {"trim", opt.trim},
         {"tty", opt.tty},
         {"verbose", opt.verbose},
@@ -140,7 +146,10 @@ bool& getOpt(const std::string& key)
 {
     static const std::map<std::string, bool&> s_mapStringToBoolVariables =
     {
-        {"debug", opt.dummy}
+        {"normal_disk", opt.normal_disk},
+        {"paranoia", opt.paranoia},
+        {"readstats", opt.readstats},
+        {"skip_stable_sectors", opt.skip_stable_sectors}
     };
     return s_mapStringToBoolVariables.at(key);
 }

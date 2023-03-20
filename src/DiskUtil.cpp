@@ -31,6 +31,7 @@ static auto& opt_minimal = getOpt<int>("minimal");
 static auto& opt_nodata = getOpt<int>("nodata");
 static auto& opt_nodups = getOpt<int>("nodups");
 static auto& opt_offsets = getOpt<int>("offsets");
+static auto& opt_paranoia = getOpt<bool>("paranoia");
 static auto& opt_verbose = getOpt<int>("verbose");
 
 static void item_separator(int items)
@@ -41,7 +42,7 @@ static void item_separator(int items)
         util::cout << ',';
 }
 
-void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const Headers& headers_of_ignored_sectors)
+void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const Headers& headers_of_ignored_sectors/*=Headers()*/)
 {
     if (opt_hex != 1)
         util::cout << util::fmt(" %2u.%u  ", cylhead.cyl, cylhead.head);
@@ -651,7 +652,7 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
 }
 
 // Attempt to repair a track, given another copy of the same track.
-int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Headers& headers_of_ignored_sectors)
+int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Headers& headers_of_ignored_sectors/*=Headers()*/)
 {
     int changed_amount = 0;
 
@@ -694,7 +695,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
                 {
                     if (it->has_good_data())
                     {
-                        if (had_good_data && opt.paranoia)
+                        if (had_good_data && opt_paranoia)
                             Message(msgFix, "improved good %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
                         else
                             Message(msgFix, "repaired bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
@@ -746,8 +747,6 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
 
     return changed_amount;
 }
-}
-
 
 std::vector<std::pair<char, size_t>> DiffSectorCopies(const Sector& sector)
 {

@@ -14,6 +14,7 @@ static auto& opt_bytes_begin = getOpt<int>("bytes_begin");
 static auto& opt_bytes_end = getOpt<int>("bytes_end");
 static auto& opt_datacopy = getOpt<int>("datacopy");
 static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_size = getOpt<int>("size");
 static auto& opt_step = getOpt<int>("step");
@@ -31,7 +32,7 @@ void ViewTrack(const CylHead& cylhead, const Track& track)
     if (opt_verbose)
         return;
 
-    const std::vector<Sector>& sectors = opt.normal_disk ? track.sectors_view_ordered_by_id() : track.sectors();
+    const std::vector<Sector>& sectors = opt_normal_disk ? track.sectors_view_ordered_by_id() : track.sectors();
     for (const auto& sector : sectors)
     {
         // If a specific sector/size is required, skip non-matching ones
@@ -255,7 +256,7 @@ bool ViewImage(const std::string& path, Range range)
                     throw util::exception("unsupported track view encoding");
                 }
             }
-            }, !opt.normal_disk);
+            }, !opt_normal_disk);
     }
 
     return true;

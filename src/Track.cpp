@@ -1,8 +1,13 @@
+#include "Options.h"
 #include "Track.h"
-#include "DiskUtil.h"
+//#include "DiskUtil.h"
 #include "IBMPC.h"
 
 #include <algorithm>
+#include <cmath>
+#include <numeric>
+
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 Track::Track(int num_sectors/*=0*/)
 {
@@ -183,9 +188,9 @@ const Sectors Track::good_sectors() const {
     std::copy_if(begin(), end(), std::back_inserter(good_sectors), [&](const Sector& sector) {
         if (sector.has_badidcrc() || !sector.has_data())
             return false;
-        if (!opt.normal_disk && sector.is_checksummable_8k_sector())
+        if (!opt_normal_disk && sector.is_checksummable_8k_sector())
             return true;
-        if (opt.normal_disk && !sector.has_normaldata())
+        if (opt_normal_disk && !sector.has_normaldata())
             return false;
         return sector.has_good_data();
     });
@@ -199,7 +204,7 @@ const Sectors Track::stable_sectors() const {
         if (sector.has_badidcrc() || !sector.has_data())
             return false;
         // Checksummable 8k sector is considered in has_stable_data method.
-        if (opt.normal_disk && !sector.has_normaldata())
+        if (opt_normal_disk && !sector.has_normaldata())
             return false;
         return sector.has_stable_data();
     });
@@ -216,7 +221,7 @@ bool Track::has_stable_data(const Headers& headers_of_stable_sectors) const
         if (!sector.has_data())
             return true;
         // Checksummable 8k sector is considered in has_stable_data method.
-        if (opt.normal_disk && !sector.has_normaldata())
+        if (opt_normal_disk && !sector.has_normaldata())
             return true;
         return !sector.has_stable_data();
     });

@@ -1,6 +1,10 @@
 #include "Header.h"
 #include "Sector.h"
 
+#include <iterator>
+#include <algorithm>
+#include <map>
+
 std::string to_string(const DataRate& datarate)
 {
     switch (datarate)
@@ -182,5 +186,3 @@ bool Headers::has_id_sequence(const int first_id, const int length) const
     });
     return std::all_of(sequence.begin() + first_id, sequence.end(), [](bool marked) {return marked; });
 }
-
-Headers Headers::map(const std::map<int, int>& sector_id_map) const

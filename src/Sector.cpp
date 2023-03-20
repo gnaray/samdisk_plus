@@ -3,10 +3,16 @@
 #include "DiskUtil.h"
 #include "Sector.h"
 
+#include <algorithm>
 #include <cstring>
+#include <cmath>
 
 static auto& opt_fill = getOpt<int>("fill");
 static auto& opt_maxcopies = getOpt<int>("maxcopies");
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
+static auto& opt_paranoia = getOpt<bool>("paranoia");
+static auto& opt_readstats = getOpt<bool>("readstats");
+static auto& opt_stability_level = getOpt<int>("stability_level");
 
 Sector::Sector(DataRate datarate_, Encoding encoding_, const Header& header_, int gap3_)
     : header(header_), datarate(datarate_), encoding(encoding_), gap3(gap3_)
@@ -87,7 +93,7 @@ int Sector::get_best_data_index() const
 {
     if (copies() == 0)
         return -1;
-    if (!opt.readstats)
+    if (!opt_readstats)
         return 0;
     int max_index = 0;
     const auto i_sup = static_cast<int>(m_data.size());
@@ -104,12 +110,12 @@ bool Sector::has_stable_data() const
     const auto best_data_index = get_best_data_index();
     if (best_data_index < 0)
         return false;
-    const auto bad_crc = (!opt.normal_disk && is_checksummable_8k_sector()) ? false : has_baddatacrc();
+    const auto bad_crc = (!opt_normal_disk && is_checksummable_8k_sector()) ? false : has_baddatacrc();
     // Backward compatibility: if no paranoia then stable data means good data.
-    if (!opt.paranoia)
+    if (!opt_paranoia)
         return !bad_crc;
     const auto read_count = data_copy_read_stats(best_data_index).ReadCount();
-    return read_count >= opt.stability_level;
+    return read_count >= opt_stability_level;
 }
 
 int Sector::read_attempts() const
@@ -142,7 +148,7 @@ void Sector::fix_readstats()
     // Trying to upgrade sector to have data read stats as if the datas were read once in case readstats is requested
     // but sectors do not have read stats yet. This case is detectable by existing copies but no read stats.
     const auto data_copies = copies();
-    if (opt.readstats && data_copies > 0 && m_data_read_stats.size() == 0)
+    if (opt_readstats && data_copies > 0 && m_data_read_stats.size() == 0)
     {
         m_data_read_stats.resize(data_copies, DataReadStats(1));
         m_read_attempts = data_copies;
@@ -165,7 +171,7 @@ void Sector::set_read_stats(int instance, DataReadStats&& data_read_stats)
 }
 
 Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_dam/*=0xfb*/, int* affected_data_index/*=nullptr*/,
-    DataReadStats& improved_data_read_stats/*=DataReadStats()*/)
+    DataReadStats* improved_data_read_stats/*=nullptr*/)
 {
     Merge ret = Merge::NewData;
 
@@ -224,6 +230,9 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
     // DD 8K sectors are considered complete at 6K, everything else at natural size
     auto complete_size = is_8k_sector() ? 0x1800 : new_data.size();
 
+    DataReadStats dataReadStatsTmp;
+    if (improved_data_read_stats == nullptr)
+        improved_data_read_stats = &dataReadStatsTmp;
     // Compare existing data with the new data, to avoid storing redundant copies.
     // The goal is keeping only 1 optimal sized data amongst those having matching content.
     // Optimal sized: complete size else smallest above complete size else biggest below complete size.
@@ -245,7 +254,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
                     return Merge::Matched; // was Unchanged;
                 }
                 // The new shorter complete copy replaces the existing data.
-                improved_data_read_stats = m_data_read_stats[i];
+                *improved_data_read_stats = m_data_read_stats[i];
                 erase_data(i--);
                 ret = Merge::Improved;
                 break; // Not continuing. See the goal above.
@@ -257,7 +266,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
                     return Merge::Matched; // was Unchanged;
                 }
                 // The new longer complete copy replaces the existing data.
-                improved_data_read_stats = m_data_read_stats[i];
+                *improved_data_read_stats = m_data_read_stats[i];
                 erase_data(i--);
                 ret = Merge::Improved;
                 break; // Not continuing. See the goal above.
@@ -280,7 +289,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
         // a good sector, perhaps due to a splice. We just ignore it.
         // IMHO originally the goal was to avoid multiple good copies assuming a good CRC means good data.
         // However in paranoia mode a good CRC does not necessarily mean good data.
-        if (!has_baddatacrc() && !opt.paranoia)
+        if (!has_baddatacrc() && !opt_paranoia)
             return Merge::Unchanged;
 
         // Keep multiple copies the same size, whichever is shortest
@@ -293,9 +302,9 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
     }
 
     // If copies are full then discard the new data and copies above max and return unchanged.
-    if (are_copies_full(opt.maxcopies))
+    if (are_copies_full(opt_maxcopies))
     {
-        limit_copies(opt.maxcopies);
+        limit_copies(opt_maxcopies);
         ret = Merge::Unchanged;
     }
     else
@@ -319,8 +328,8 @@ Sector::Merge Sector::add_with_readstats(Data&& new_data, bool new_bad_crc/*=fal
 {
     auto affected_data_index = -1;
     DataReadStats improved_data_read_stats;
-    auto ret = add(std::move(new_data), new_bad_crc, new_dam, &affected_data_index, improved_data_read_stats);
-    if (opt.readstats)
+    auto ret = add(std::move(new_data), new_bad_crc, new_dam, &affected_data_index, &improved_data_read_stats);
+    if (opt_readstats)
     {
         process_merge_result(ret, new_read_attempts, new_data_read_stats, readstats_counter_mode,
             affected_data_index, improved_data_read_stats);
@@ -391,7 +400,7 @@ Sector::Merge Sector::merge(Sector&& sector)
     // We can't repair good data with bad
     if (!has_baddatacrc() && sector.has_baddatacrc())
     {
-        if (opt.readstats)
+        if (opt_readstats)
             m_read_attempts += sector.m_read_attempts;
         return ret;
     }
@@ -402,7 +411,7 @@ Sector::Merge Sector::merge(Sector&& sector)
     {
         Sector::Merge add_ret;
         // Move the data into place, passing on the existing data CRC status and DAM
-        if (opt.readstats)
+        if (opt_readstats)
             add_ret = add_with_readstats(std::move(sector.m_data[i]), sector.has_baddatacrc(), sector.dam,
                 sector.m_read_attempts, sector.m_data_read_stats[i], !sector.is_constant_disk(), false);
         else
@@ -413,7 +422,7 @@ Sector::Merge Sector::merge(Sector&& sector)
                 ret = add_ret;
         }
     }
-    if (opt.readstats)
+    if (opt_readstats)
         m_read_attempts += sector.m_read_attempts;
 
     sector.m_data.clear();

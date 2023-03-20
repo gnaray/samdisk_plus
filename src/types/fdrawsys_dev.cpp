@@ -9,11 +9,14 @@
 
 #include <memory>
 
+static auto& opt_base = getOpt<int>("base");
 static auto& opt_datarate = getOpt<DataRate>("datarate");
 static auto& opt_encoding = getOpt<Encoding>("encoding");
 static auto& opt_gaps = getOpt<int>("gaps");
 static auto& opt_newdrive = getOpt<int>("newdrive");
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_retries = getOpt<int>("retries");
+static auto& opt_rpm = getOpt<int>("rpm");
 static auto& opt_steprate = getOpt<int>("steprate");
 
 #ifdef HAVE_FDRAWCMD_H
@@ -56,8 +59,8 @@ protected:
         int with_head_seek_to, const Headers& headers_of_stable_sectors) override
     {
         // Limiting sector reading as specified in case of normal disk request.
-        auto normal_sector_id_begin = opt.base > 0 ? opt.base : 1;
-        auto normal_sector_id_end = opt.sectors > 0 ? (normal_sector_id_begin + opt.sectors) : 256;
+        auto normal_sector_id_begin = opt_base > 0 ? opt_base : 1;
+        auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
 
         if (with_head_seek_to >= 0)
             m_fdrawcmd->Seek(with_head_seek_to, cylhead.head);
@@ -75,13 +78,13 @@ protected:
         for (i = 0; i < track.size(); i += 2) {
             auto& sector = track[i];
             if ((i == 0 && read_first_gap_requested) || (!headers_of_stable_sectors.contains(sector.header)
-                && (!opt.normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
+                && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
                 ReadSector(cylhead, track, i, firstSectorSeen);
         }
         for (i = 1; i < track.size(); i += 2) {
             auto& sector = track[i];
             if ((i == 0 && read_first_gap_requested) || (!headers_of_stable_sectors.contains(sector.header)
-                && (!opt.normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
+                && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
                 ReadSector(cylhead, track, i, firstSectorSeen);
         }
 
@@ -249,15 +252,15 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             throw win32_error(GetLastError(), "scan");
     }
 
-    if (opt.normal_disk)
+    if (opt_normal_disk)
     {
         const auto rpm_time_tolerance = 0.01;
         int rpm_time = RPM_TIME_300; // Default value, see SAMdisk OPT_RPM.
-        if (opt.rpm == 200)
+        if (opt_rpm == 200)
             rpm_time = RPM_TIME_200;
-        else if (opt.rpm == 300)
+        else if (opt_rpm == 300)
             rpm_time = RPM_TIME_300;
-        else if (opt.rpm == 360)
+        else if (opt_rpm == 360)
             rpm_time = RPM_TIME_360;
         auto tolerated_max_rpm_time = static_cast<DWORD>((1 + rpm_time_tolerance) * rpm_time);
         // If the track time is slower than the specified rpm time, something is wrong.
@@ -282,7 +285,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
         for (int i = 0; i < scan_result->count; ++i)
         {
             const auto& scan_header = scan_result->Header[i];
-            if (opt.normal_disk && (scan_header.cyl != cylhead.cyl || scan_header.head != cylhead.head))
+            if (opt_normal_disk && (scan_header.cyl != cylhead.cyl || scan_header.head != cylhead.head))
             {
                 Message(msgWarning, "ReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
                     CH(cylhead.cyl, cylhead.head), CHR(scan_header.cyl, scan_header.head, scan_header.sector));
@@ -361,7 +364,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         }
 
         // Unsure what result.sector is exactly. Sometimes header.sector but usually header.sector+1.
-        if (opt.normal_disk && (header.cyl != cylhead.cyl || header.head != cylhead.head
+        if (opt_normal_disk && (header.cyl != cylhead.cyl || header.head != cylhead.head
             || result.cyl != header.cyl || result.head != header.head
             || (result.sector != header.sector && result.sector != header.sector + 1)))
         {

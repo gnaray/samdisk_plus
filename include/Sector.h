@@ -90,8 +90,8 @@ public:
     DataList& datas();
     const Data& data_copy(int copy = 0) const;
     Data& data_copy(int copy = 0);
-    const DataReadStats& Sector::data_copy_read_stats(int instance = 0) const;
-    DataReadStats& Sector::data_copy_read_stats(int instance = 0);
+    const DataReadStats& data_copy_read_stats(int instance = 0) const;
+    DataReadStats& data_copy_read_stats(int instance = 0);
     int get_best_data_index() const;
     int read_attempts() const;
     void set_read_attempts(int read_attempts);
@@ -100,7 +100,7 @@ public:
     void set_constant_disk(bool constant_disk);
     void fix_readstats();
 
-    Merge add(Data&& data, bool bad_crc = false, uint8_t dam = 0xfb, int* affected_data_index = nullptr, DataReadStats& improved_data_read_stats = DataReadStats());
+    Merge add(Data&& data, bool bad_crc = false, uint8_t dam = 0xfb, int* affected_data_index = nullptr, DataReadStats* improved_data_read_stats = nullptr);
     Merge add_with_readstats(Data&& new_data, bool new_bad_crc = false, uint8_t new_dam = 0xfb,
         int new_read_attempts = 1, const DataReadStats& new_data_read_stats = DataReadStats(1), bool readstats_counter_mode = true, bool update_this_read_attempts = true);
     int copies() const;
@@ -133,5 +133,5 @@ public:
     Sectors() = default;
 
     bool has_id_sequence(const int first_id, const int up_to_id) const;
-    Headers Sectors::headers() const;
+    Headers headers() const;
 };

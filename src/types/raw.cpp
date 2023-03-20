@@ -78,7 +78,7 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
     return true;
 }
 
-Format CheckBeforeWriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
+Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
 {
     int max_id = -1;
 
@@ -128,7 +128,7 @@ Format CheckBeforeWriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
 
     // Allow user overrides for flexibility
     fmt.Override(true);
-    bool sectorsOverriden = opt.sectors != -1;
+    bool sectorsOverriden = opt_sectors != -1;
 
     disk->each([&](const CylHead& cylhead, const Track& track) {
         // Skip empty tracks
@@ -168,7 +168,7 @@ Format CheckBeforeWriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
 
 bool WriteRAW(FILE* f_, std::shared_ptr<Disk>& disk)
 {
-    auto fmt = CheckBeforeWriteRAW(f_, disk);
+    auto fmt = CheckBeforeWriteRAW(disk);
     // Write the image, as read using the supplied format
     WriteRegularDisk(f_, *disk, fmt);
 
