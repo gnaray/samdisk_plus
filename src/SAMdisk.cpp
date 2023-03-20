@@ -351,7 +351,7 @@ enum {
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG
 };
 
-struct option long_options[] =
+static struct option long_options[] =
 {
     { "cyls",       required_argument, nullptr, 'c' },
     { "head",       required_argument, nullptr, 'h' },
@@ -454,7 +454,7 @@ struct option long_options[] =
     { "pll-adjust", required_argument, nullptr, OPT_PLLADJUST },
     { "pll-phase",  required_argument, nullptr, OPT_PLLPHASE },
 
-    { 0, 0, 0, 0 }
+    { nullptr, 0, nullptr, 0 }
 };
 
 static char short_options[] = "?nmdvfLxb:c:h:s:H:r:R:g:i:k:z:0:1:D:";

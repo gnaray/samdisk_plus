@@ -53,7 +53,7 @@ struct CylHead
     std::string to_string() const
     {
 #if 0   // ToDo
-        if (opt.hex == 1)
+        if (opt_hex == 1) // TODO: former opt.hex is now opt_hex and not available, because Options.h should be included which includes Header.h, cyclic dependency.
             return util::format("cyl %02X head %u", cyl, head);
 #endif
 

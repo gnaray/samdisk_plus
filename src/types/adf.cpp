@@ -49,7 +49,7 @@ bool ReadADF(MemFile& file, std::shared_ptr<Disk>& disk)
     }
 
     if (~checksum)
-        Message(msgWarning, "invalid AmigaDOS root block checksum");;
+        Message(msgWarning, "invalid AmigaDOS root block checksum");
 
     file.rewind();
     disk->format(file.size() == fmtDD.disk_size() ? fmtDD : fmtHD, file.data(), true);
