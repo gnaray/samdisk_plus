@@ -27,7 +27,7 @@ void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context)
             auto min_offset_bits = (Sector::SizeCodeToLength(1) + GetSectorOverhead(first_sector.encoding)) * 16;
 
             // Calculate the gap between the end of final sector and the start of the first sector
-            auto data_end_bits = last_sector.offset + (GetSectorOverhead(last_sector.encoding) + last_sector.size() * 16);
+            auto data_end_bits = last_sector.offset + (GetSectorOverhead(last_sector.encoding) + last_sector.size()) * 16;
             auto wrap_start_bits = track.tracklen + first_sector.offset;
 
             // If the gap before the first visible sector is suspiciously large, and the wrapping
