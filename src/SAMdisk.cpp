@@ -249,6 +249,12 @@ struct option long_options[] =
 
 static char short_options[] = "?nmdvfLxb:c:h:s:H:r:R:g:i:k:z:0:1:D:";
 
+// Macro by https://cfengine.com/blog/2021/optional-arguments-with-getopt-long/
+#define OPTIONAL_ARGUMENT_IS_PRESENT \
+    ((optarg == nullptr && optind < argc_ && argv_[optind][0] != '-') \
+     ? (optarg = argv_[optind++]) != nullptr \
+     : (optarg != nullptr))
+
 bool BadValue(const char* pcszName_)
 {
     util::cout << "Invalid " << pcszName_ << " value '" << optarg << "'\n";
@@ -432,7 +438,10 @@ bool ParseCommandLine(int argc_, char* argv_[])
             break;
 
         case OPT_DEBUG:
-            opt.debug = util::str_value<int>(optarg);
+            if (OPTIONAL_ARGUMENT_IS_PRESENT)
+                opt.debug = util::str_value<int>(optarg);
+            else
+                opt.debug = 1;
             if (opt.debug < 0)
                 throw util::exception("invalid debug level, expected >= 0");
             break;
