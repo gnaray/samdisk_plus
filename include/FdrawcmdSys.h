@@ -1,7 +1,13 @@
 #pragma once
 
+#include "config.h"
 #ifdef HAVE_FDRAWCMD_H
+
 #include "fdrawcmd.h"
+#include "Header.h"
+#include "Util.h"
+
+#include <memory>
 
 struct handle_closer
 {

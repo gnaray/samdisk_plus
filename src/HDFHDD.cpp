@@ -1,7 +1,7 @@
 // HDF HDD disk image files
 
 #include "Options.h"
-#include "FileIO.h"
+#include "WindowsStub.h"
 #include "HDFHDD.h"
 #include "Util.h"
 

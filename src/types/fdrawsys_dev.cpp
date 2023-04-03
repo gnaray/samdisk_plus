@@ -1,12 +1,21 @@
 // fdrawcmd.sys real device wrapper:
 //  http://simonowen.com/fdrawcmd/
 
+#include "config.h"
+
+#ifdef HAVE_FDRAWCMD_H
+#include "fdrawcmd.h"
+
+#include "DiskUtil.h"
 #include "Options.h"
 #include "DemandDisk.h"
 #include "IBMPC.h"
 #include "FdrawcmdSys.h"
 #include "Disk.h"
+#include "Util.h"
+#include "win32_error.h"
 
+#include <cstring>
 #include <memory>
 
 static auto& opt_base = getOpt<int>("base");
@@ -18,9 +27,6 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_retries = getOpt<int>("retries");
 static auto& opt_rpm = getOpt<int>("rpm");
 static auto& opt_steprate = getOpt<int>("steprate");
-
-#ifdef HAVE_FDRAWCMD_H
-#include "fdrawcmd.h"
 
 class FdrawSysDevDisk final : public DemandDisk
 {

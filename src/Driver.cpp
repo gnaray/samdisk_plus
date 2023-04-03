@@ -1,8 +1,11 @@
 // fdrawcmd.sys driver checking
 
-#include "SAMdisk.h"
+#include "config.h"
 
 #ifdef HAVE_FDRAWCMD_H
+
+#include "utils.h"
+
 #include <fdrawcmd.h>
 
 DWORD GetDriverVersion()

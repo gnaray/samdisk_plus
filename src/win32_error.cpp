@@ -2,7 +2,11 @@
 
 //#include "SAMdisk.h"
 
-#ifdef _WIN32
+#include "WindowsStub.h"
+
+#include <string>
+#include <sstream>
+#include <vector>
 
 std::string GetWin32ErrorStr(DWORD error_code, bool english)
 {
@@ -15,6 +19,7 @@ std::string GetWin32ErrorStr(DWORD error_code, bool english)
     LPWSTR pMessage = nullptr;
     DWORD length = 0;
 
+#ifdef _WIN32
     // Try for English first?
     if (english)
     {
@@ -29,8 +34,9 @@ std::string GetWin32ErrorStr(DWORD error_code, bool english)
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
             nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), reinterpret_cast<LPWSTR>(&pMessage), 0, nullptr);
     }
-
+#endif // _WIN32
     std::ostringstream ss;
+#ifdef _WIN32
 
     if (length)
     {
@@ -47,12 +53,12 @@ std::string GetWin32ErrorStr(DWORD error_code, bool english)
         ss << std::string(utf8_str.data(), utf8_str.size());
     }
     else
+#else
     {
         ss << "Unknown Win32 error";
     }
+#endif // _WIN32
 
     ss << " (" << error_code << ')';
     return ss.str();
 }
-
-#endif // _WIN32

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WindowsStub.h"
 #include "Header.h"
 #include "Track.h"
 
@@ -69,9 +70,7 @@ const uint8_t STREG2_SCAN_NOT_SATISFIED = 0x04;
 const uint8_t STREG2_BAD_CYLINDER = 0x02;
 const uint8_t STREG2_MISSING_ADDRESS_MARK_IN_DATA_FIELD = 0x01;
 
-#ifdef _WIN32
 std::string to_string(const MEDIA_TYPE& type);
-#endif
 
 int GetDataTime(DataRate datarate, Encoding encoding, int len_bytes = 1, bool add_drain_time = false);
 int GetTrackOverhead(Encoding encoding);

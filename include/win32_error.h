@@ -1,6 +1,9 @@
 #pragma once
 
-#ifdef _WIN32
+#include "WindowsStub.h"
+
+#include <string>
+#include <system_error>
 
 std::string GetWin32ErrorStr(DWORD error_code = 0, bool english = false);
 
@@ -24,5 +27,3 @@ public:
     win32_error(DWORD error_code, const char* message)
         : std::system_error(error_code, win32_category(), message) {}
 };
-
-#endif // _WIN32

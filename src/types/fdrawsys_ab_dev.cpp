@@ -17,6 +17,11 @@
 // known in order to know when the track is complete. Multiple attempts are often
 // required to see all the expected sectors.
 
+#include "config.h"
+
+#ifdef HAVE_FDRAWCMD_H
+#include "fdrawcmd.h"
+
 #include "Options.h"
 //#include "BitstreamTrackBuilder.h"
 #include "DemandDisk.h"
@@ -28,9 +33,6 @@
 #include "win32_error.h"
 
 #include <memory>
-
-#ifdef HAVE_FDRAWCMD_H
-#include "fdrawcmd.h"
 
 #define RAW_READ_ATTEMPTS           10      // Default reads per track
 #define RAW_READ_SIZE_CODE          7       // 16K

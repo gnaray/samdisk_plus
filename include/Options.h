@@ -3,10 +3,9 @@
 
 #include "Header.h"
 #include "Range.h"
+#include "FileIO.h"
 
 #include <string>
-
-#define MAX_PATH    512
 
 enum class PreferredData { Unknown, Track, Bitstream, Flux };
 

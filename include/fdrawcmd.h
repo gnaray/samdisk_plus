@@ -7,6 +7,10 @@
 #ifndef FDRAWCMD_H
 #define FDRAWCMD_H
 
+#ifndef _WIN32
+#include "WindowsStub.h"
+#endif
+
 #ifndef CTL_CODE
 #include <winioctl.h>
 #endif

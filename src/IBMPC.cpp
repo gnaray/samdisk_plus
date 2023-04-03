@@ -36,7 +36,6 @@ static const FORMATGAP standard_gaps[] =
 #endif
 };
 
-#ifdef _WIN32
 std::string to_string(const MEDIA_TYPE& type)
 {
     switch (type)
@@ -60,7 +59,6 @@ std::string to_string(const MEDIA_TYPE& type)
     default:            return "Unknown";
     }
 }
-#endif
 
 // Return the number of microseconds for 1 byte at the given rate
 int GetDataTime(DataRate datarate, Encoding encoding, int len_bytes/*=1*/, bool add_drain_time/*=false*/)

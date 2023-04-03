@@ -1,9 +1,14 @@
 // fdrawcmd.sys device
 
-#include "SAMdisk.h"
-#include "FdrawcmdSys.h"
+#include "config.h"
 
 #ifdef HAVE_FDRAWCMD_H
+
+#include "Header.h"
+#include "Util.h"
+#include "FdrawcmdSys.h"
+
+#include <memory>
 
 /*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device_index)
 {
