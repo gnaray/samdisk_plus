@@ -13,8 +13,9 @@ endif()
 
 file(GLOB CXXSRC src/*.cpp src/types/*.cpp)
 file(GLOB CSRC src/*.c)
+file(GLOB CXXH include/*.h include/types/*.h)
 
-add_executable(${PROJECT_NAME} ${CXXSRC} ${CSRC})
+add_executable(${PROJECT_NAME} ${CXXSRC} ${CSRC} ${CXXH})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 target_include_directories(${PROJECT_NAME} PRIVATE include src)
