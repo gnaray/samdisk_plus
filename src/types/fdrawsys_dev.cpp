@@ -44,7 +44,7 @@ protected:
 
     TrackData load(const CylHead& cylhead, bool /*first_read*/) override
     {
-        m_fdrawcmd->Seek(cylhead.cyl);
+        m_fdrawcmd->Seek(cylhead.cyl, cylhead.head);
 
         auto firstSectorSeen{ 0 };
         auto track = BlindReadHeaders(cylhead, firstSectorSeen);

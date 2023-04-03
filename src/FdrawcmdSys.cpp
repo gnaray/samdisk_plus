@@ -132,13 +132,14 @@ bool FdrawcmdSys::Recalibrate()
     return Ioctl(IOCTL_FDCMD_RECALIBRATE);
 }
 
-bool FdrawcmdSys::Seek(int cyl)
+bool FdrawcmdSys::Seek(int cyl, int head)
 {
     if (cyl == 0)
         return Recalibrate();
 
     FD_SEEK_PARAMS sp{};
     sp.cyl = static_cast<uint8_t>(cyl);
+    sp.head = static_cast<uint8_t>(head);
 
     return Ioctl(IOCTL_FDCMD_SEEK, &sp, sizeof(sp));
 }

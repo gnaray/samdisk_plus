@@ -50,7 +50,7 @@ public:
 protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/) override
     {
-        m_fdrawcmd->Seek(cylhead.cyl);
+        m_fdrawcmd->Seek(cylhead.cyl, cylhead.head);
         m_fdrawcmd->SetEncRate(Encoding::MFM, DataRate::_500K);
         Track track;
 
