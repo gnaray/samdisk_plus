@@ -101,5 +101,5 @@ public:
     bool contains(const Header& header) const;
     std::string to_string() const;
     std::string sector_ids_to_string() const;
-    bool has_id_sequence(const int first_id, const int up_to_id) const;
+    bool HasIdSequence(const int first_id, const int length) const;
 };

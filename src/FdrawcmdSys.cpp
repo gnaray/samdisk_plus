@@ -100,7 +100,7 @@ bool FdrawcmdSys::SetMotorOff()
 
 bool FdrawcmdSys::SetDiskCheck(bool enable)
 {
-    uint8_t check{ enable ? 1U : 0 };
+    uint8_t check{ static_cast<uint8_t>(enable ? 1 : 0) };
     return Ioctl(IOCTL_FD_SET_DISK_CHECK, &check, sizeof(check));
 }
 
@@ -134,8 +134,8 @@ bool FdrawcmdSys::Specify(int step_rate, int head_unload_time, int head_load_tim
     auto hlt = static_cast<uint8_t>(head_load_time & 0x7f);
 
     FD_SPECIFY_PARAMS sp{};
-    sp.srt_hut = (srt << 4) | hut;
-    sp.hlt_nd = (hlt << 1) | 0;
+    sp.srt_hut = static_cast<uint8_t>(srt << 4) | hut;
+    sp.hlt_nd = static_cast<uint8_t>(hlt << 1) | 0;
 
     return Ioctl(IOCTL_FDCMD_SPECIFY, &sp, sizeof(sp));
 }

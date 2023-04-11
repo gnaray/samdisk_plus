@@ -60,7 +60,8 @@ std::string to_string(const MEDIA_TYPE& type)
     }
 }
 
-// Return the number of microseconds for 1 byte at the given rate
+// Return the number of microseconds for 1 byte at the given rate.
+// The calculation for add_drain_time is incomprehensible, luckily that parameter is never used.
 int GetDataTime(DataRate datarate, Encoding encoding, int len_bytes/*=1*/, bool add_drain_time/*=false*/)
 {
     auto uTime = 1000000 / (bits_per_second(datarate) / 8);

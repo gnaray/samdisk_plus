@@ -26,13 +26,14 @@ static auto& opt_newdrive = getOpt<int>("newdrive");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_retries = getOpt<int>("retries");
 static auto& opt_rpm = getOpt<int>("rpm");
+static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_steprate = getOpt<int>("steprate");
 
 class FdrawSysDevDisk final : public DemandDisk
 {
 public:
     FdrawSysDevDisk(const std::string& path, std::unique_ptr<FdrawcmdSys> fdrawcmd)
-        : m_fdrawcmd(std::move(fdrawcmd))
+            : m_fdrawcmd(std::move(fdrawcmd))
     {
         try
         {
@@ -128,14 +129,14 @@ void FdrawSysDevDisk::SetMetadata(const std::string& path)
 {
     auto device_path = R"(\\.\)" + path;
     Win32Handle hdev{
-        CreateFile(device_path.c_str(), 0, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, NULL) };
+        CreateFile(device_path.c_str(), 0, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr) };
 
     if (hdev.get() != INVALID_HANDLE_VALUE)
     {
         DWORD dwRet = 0;
         DISK_GEOMETRY dg[8]{};
         if (DeviceIoControl(hdev.get(), IOCTL_STORAGE_GET_MEDIA_TYPES,
-            nullptr, 0, &dg, sizeof(dg), &dwRet, NULL) && dwRet > sizeof(DISK_GEOMETRY))
+            nullptr, 0, &dg, sizeof(dg), &dwRet, nullptr) && dwRet > sizeof(DISK_GEOMETRY))
         {
             auto count = dwRet / sizeof(dg[0]);
             metadata["bios_type"] = to_string(dg[count - 1].MediaType);
@@ -239,7 +240,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 {
     Track track;
 
-    auto scan_size = static_cast<int>(sizeof(FD_TIMED_SCAN_RESULT) + sizeof(FD_TIMED_ID_HEADER) * MAX_SECTORS);
+    auto scan_size = lossless_static_cast<int>(sizeof(FD_TIMED_SCAN_RESULT) + sizeof(FD_TIMED_ID_HEADER) * MAX_SECTORS);
     MEMORY mem(scan_size);
     auto scan_result = reinterpret_cast<FD_TIMED_SCAN_RESULT*>(mem.pb);
 
@@ -285,8 +286,8 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
     if (scan_result->count > 0 && m_lastDataRate != DataRate::Unknown)
     {
         auto bit_us = GetDataTime(m_lastDataRate, m_lastEncoding) / 16;
-        track.tracktime = scan_result->tracktime;
-        track.tracklen = track.tracktime / bit_us;
+        track.tracktime = lossless_static_cast<int>(scan_result->tracktime);
+        track.tracklen = lossless_static_cast<int>(std::round(track.tracktime / bit_us));
 
         for (int i = 0; i < scan_result->count; ++i)
         {
@@ -300,7 +301,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
             Sector sector(m_lastDataRate, m_lastEncoding, header);
 
-            sector.offset = scan_header.reltime / bit_us;
+            sector.offset = lossless_static_cast<int>(std::round(lossless_static_cast<double>(scan_header.reltime) / bit_us));
             sector.set_constant_disk(false);
             track.add(std::move(sector));
         }

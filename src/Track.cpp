@@ -245,7 +245,7 @@ int Track::normal_probable_size() const {
     const auto sector_id_counter = [&](auto a, auto b) {
         if (b.has_badidcrc())
             return a;
-        return a + ((b.header.sector >=1 && b.header.sector <= max_sector_id) ? 1 : 0);
+        return a + ((b.header.sector >= 1 && b.header.sector <= max_sector_id) ? 1 : 0);
     };
     return std::accumulate(begin(), end(), 0, sector_id_counter);
 }

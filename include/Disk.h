@@ -1,13 +1,12 @@
 #pragma once
 
+#include "TrackData.h"
+#include "Format.h"
 #include <cstdint>
 #include <functional>
 #include <vector>
 #include <map>
 #include <mutex>
-
-#include "TrackData.h"
-#include "Format.h"
 
 class Disk
 {

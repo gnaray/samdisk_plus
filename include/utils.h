@@ -1,15 +1,11 @@
 #pragma once
 
+#include "Cpp_helpers.h"
 #include <cassert>
 #include <cstdint>
 #include <ostream>
 #include <sstream>
 #include <vector>
-
-inline std::ostream& operator<<(std::ostream& os, uint8_t val)
-{
-    return os << static_cast<int>(val);
-}
 
 class posix_error : public std::system_error
 {
@@ -80,11 +76,17 @@ enum class colour : uint8_t
 #endif
 
 
+
+inline std::ostream& operator<<(std::ostream& os, uint8_t val)
+{
+    return os << lossless_static_cast<int>(val);
+}
+
 namespace util
 {
 inline std::ostream& operator<<(std::ostream& os, uint8_t val)
 {
-    return os << static_cast<int>(val);
+    return os << lossless_static_cast<int>(val);
 }
 
 template <typename ... Args>
@@ -95,26 +97,26 @@ std::string make_string(Args&& ... args)
     return ss.str();
 }
 
-void bit_reverse(uint8_t* pb, int len);
+void bit_reverse(uint8_t* pb, size_t len);
 
 template <typename T> T byteswap(T x);
 
 template<>
 inline uint16_t byteswap<uint16_t>(uint16_t x)
 {
-    return (static_cast<uint16_t>(x & 0xff) << 8) | (x >> 8);
+    return (lossless_static_cast<uint16_t>((x & 0xff) << 8)) | (x >> 8);
 }
 
 template<>
 inline uint32_t byteswap<uint32_t>(uint32_t x)
 {
-    return (static_cast<uint32_t>(byteswap<uint16_t>(x & 0xffff)) << 16) | byteswap<uint16_t>(x >> 16);
+    return (lossless_static_cast<uint32_t>(byteswap<uint16_t>(x & 0xffff)) << 16) | byteswap<uint16_t>(x >> 16);
 }
 
 template<>
 inline uint64_t byteswap<uint64_t>(uint64_t x)
 {
-    return (static_cast<uint64_t>(byteswap<uint32_t>(x & 0xffffffff)) << 32) | byteswap<uint32_t>(x >> 32);
+    return (lossless_static_cast<uint64_t>(byteswap<uint32_t>(x & 0xffffffff)) << 32) | byteswap<uint32_t>(x >> 32);
 }
 
 // ToDo: detect compile endian
@@ -247,7 +249,7 @@ LogHelper& operator<<(LogHelper& h, const T& t)
 
 
 template <typename ForwardIter>
-void hex_dump(ForwardIter it, ForwardIter itEnd, int start_offset = 0, colour* pColours = nullptr, size_t per_line = 16)
+void hex_dump(ForwardIter it, ForwardIter itEnd, int start_offset = 0, colour* pColours = nullptr, int per_line = 16)
 {
     assert(per_line != 0);
     static const char hex[] = "0123456789ABCDEF";
@@ -262,7 +264,7 @@ void hex_dump(ForwardIter it, ForwardIter itEnd, int start_offset = 0, colour* p
 
     while (it < itEnd)
     {
-        std::string text(per_line, ' ');
+        std::string text(lossless_static_cast<std::string::size_type>(per_line), ' ');
 
         if (c != colour::none)
         {
@@ -277,7 +279,7 @@ void hex_dump(ForwardIter it, ForwardIter itEnd, int start_offset = 0, colour* p
 
         base_offset += per_line;
 
-        for (size_t i = 0; i < per_line; i++)
+        for (int i = 0; i < per_line; i++)
         {
             if (start_offset-- <= 0 && it < itEnd)
             {

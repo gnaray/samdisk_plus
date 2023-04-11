@@ -89,17 +89,17 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
         // If repair mode and normal disk then determine normal track size by calculating the average track size.
         int normal_track_size = 0;
-        int normal_first_sector_id = 1;
+        int normal_first_sector_id = opt_base > 0 ? opt_base : 1;
         if (opt_repair && opt_normal_disk) {
-            // If sectors is specified then it is the normal track size.
+            // If sectors is specified then the normal track size is the sectors plus first sector id 0-based.
             if (opt_sectors > 0)
-        {
-                normal_track_size = opt_sectors;
+            {
+                normal_track_size = lossless_static_cast<int>(opt_sectors) + normal_first_sector_id - 1;
             }
             else
             {
                 int dst_track_amount = 0;
-                int sum_dst_track_size = 0;
+                long sum_dst_track_size = 0;
                 opt_range.each([&](const CylHead& cylhead) {
                     Track dst_track = dst_disk->read_track(cylhead);
                     NormaliseTrack(cylhead, dst_track);
@@ -110,10 +110,8 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                     }
                 });
                 if (dst_track_amount > 0)
-                    normal_track_size = static_cast<int>(std::round(static_cast<double>(sum_dst_track_size) / dst_track_amount));
+                    normal_track_size = lossless_static_cast<int>(std::round(lossless_static_cast<double>(sum_dst_track_size) / dst_track_amount));
             }
-            if (opt_base > 0)
-                normal_first_sector_id = opt_base;
         }
 
         int repair_track_changed_amount_per_disk = 0;
@@ -154,7 +152,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                     // If repair mode and user specified normal-disk then do not repair tracks
                     // which has track size amount of id sequence at least.
                     if (opt_normal_disk && normal_track_size > 0
-                        && headers_of_stable_sectors.has_id_sequence(normal_first_sector_id, normal_track_size))
+                        && headers_of_stable_sectors.HasIdSequence(normal_first_sector_id, normal_track_size - normal_first_sector_id + 1))
                         return;
                 }
                 if (opt_verbose && opt_repair && !headers_of_stable_sectors.empty()) {
@@ -329,7 +327,7 @@ bool Image2Trinity(const std::string& path, const std::string&/*trinity_path*/) 
         auto uBlock = std::min(file_length - uPos, 510 - uOffset);
         auto& data = s->data_copy();
 
-        memcpy(mem + uPos, data.data() + uOffset, uBlock);
+        memcpy(mem + uPos, data.data() + uOffset, lossless_static_cast<size_t>(uBlock));
         uPos += uBlock;
         uOffset = 0;
 
@@ -401,7 +399,7 @@ bool Hdd2Hdd(const std::string& src_path, const std::string& dst_path)
                 auto used_bytes = (bdcDst.records * BDOS_LABEL_SIZE) & (dst_hdd->sector_size - 1);
 
                 // Clear the unused space to remove any entries lost by resizing, and write it back
-                memset(mem + used_bytes, 0, dst_hdd->sector_size - used_bytes);
+                memset(mem + used_bytes, 0, lossless_static_cast<size_t>(dst_hdd->sector_size - used_bytes));
                 dst_hdd->Seek(bdcDst.base_sectors - 1);
                 dst_hdd->Write(mem, 1);
             }
@@ -452,7 +450,7 @@ bool Hdd2Boot(const std::string& path, const std::string& boot_path)
         file = fopen(boot_path.c_str(), "wb");
         if (!file)
             Error("open");
-        else if (!fwrite(mem, mem.size, 1, file))
+        else if (!fwrite(mem, lossless_static_cast<size_t>(mem.size), 1, file))
             Error("write");
         else
             fRet = true;

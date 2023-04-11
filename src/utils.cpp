@@ -6,6 +6,7 @@
 #include <cstdarg>
 #include <fstream>
 #include <iostream>
+#include <math.h>
 #include <unistd.h>
 
 namespace util
@@ -77,7 +78,7 @@ std::string prepend_extension(const std::string& s, const std::string& prepender
     return new_s;
 }
 
-void bit_reverse(uint8_t* pb, int len)
+void bit_reverse(uint8_t* pb, size_t len)
 {
     while (len-- > 0)
     {

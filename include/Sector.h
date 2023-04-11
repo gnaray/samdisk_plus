@@ -1,16 +1,19 @@
 #pragma once
 
 #include "Header.h"
+#include "Cpp_helpers.h"
 
 class Data : public std::vector<uint8_t>
 {
 public:
     using std::vector<uint8_t>::vector;
-    int size() const { return static_cast<int>(std::vector<uint8_t>::size()); }
+    int size() const { return lossless_static_cast<int>(std::vector<uint8_t>::size()); }
 };
 
-using DataList = std::vector<Data>;
+typedef Data::size_type DataST;
 
+using DataList = std::vector<Data>;
+typedef DataList::size_type DataListST;
 
 class Sector;
 
@@ -43,7 +46,8 @@ public:
 private:
     int m_read_count = 0; // Amount of reading (good or bad) data of the owner sector (provided only by not constant (real) disks).
 };
-
+typedef std::vector<DataReadStats> DataReadStatsList;
+typedef DataReadStatsList::size_type DataReadStatsListST;
 
 class Sector
 {
@@ -121,8 +125,8 @@ public:
 private:
     bool m_bad_id_crc = false;
     bool m_bad_data_crc = false;
-    std::vector<Data> m_data{};         // copies of sector data
-    std::vector<DataReadStats> m_data_read_stats{}; // Readstats of copies of sector data.
+    DataList m_data{};         // copies of sector data
+    DataReadStatsList m_data_read_stats{}; // Readstats of copies of sector data.
     int m_read_attempts = 0; // Amount of reading data attempts of this sector (provided only by real disks).
     bool m_constant_disk = true; // If this sector is part of disk image then true, else it comes from physical device so false.
 };
