@@ -6,7 +6,6 @@
 #include <cstdarg>
 #include <fstream>
 #include <iostream>
-#include <math.h>
 #include <unistd.h>
 
 namespace util
@@ -76,22 +75,6 @@ std::string prepend_extension(const std::string& s, const std::string& prepender
         new_s.replace(i + 1, new_s.length() - i - 1, replacer);
     }
     return new_s;
-}
-
-void bit_reverse(uint8_t* pb, size_t len)
-{
-    while (len-- > 0)
-    {
-        auto& b = *pb++;
-        b = ((b & 1) << 7) |
-            ((b & 2) << 5) |
-            ((b & 4) << 3) |
-            ((b & 8) << 1) |
-            ((b & 16) >> 1) |
-            ((b & 32) >> 3) |
-            ((b & 64) >> 5) |
-            ((b & 128) >> 7);
-    }
 }
 
 std::string resource_dir()
