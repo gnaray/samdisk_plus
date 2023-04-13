@@ -471,31 +471,6 @@ bool Sector::has_normaldata() const
     return has_data() && data_size() == size();
 }
 
-bool Sector::has_badidcrc() const
-{
-    return m_bad_id_crc;
-}
-
-bool Sector::has_baddatacrc() const
-{
-    return m_bad_data_crc;
-}
-
-bool Sector::is_deleted() const
-{
-    return dam == 0xf8 || dam == 0xf9;
-}
-
-bool Sector::is_altdam() const
-{
-    return dam == 0xfa;
-}
-
-bool Sector::is_rx02dam() const
-{
-    return dam == 0xfd;
-}
-
 bool Sector::is_8k_sector() const
 {
     // +3 and CPC disks treat this as a virtual complete sector
@@ -600,18 +575,7 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
     }
 }
 
-// Map a size code to how it's treated by the uPD765 FDC on the PC
-int Sector::SizeCodeToRealSizeCode(int size)
 {
-    // Sizes above 8 are treated as 8 (32K)
-    return (size <= 7) ? size : 8;
-}
-
-// Return the sector length for a given sector size code
-int Sector::SizeCodeToLength(int size)
-{
-    // 2 ^ (7 + size)
-    return 128 << SizeCodeToRealSizeCode(size);
 }
 
 //////////////////////////////////////////////////////////////////////////////

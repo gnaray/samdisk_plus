@@ -69,11 +69,31 @@ public:
     bool has_gapdata() const;
     bool has_shortdata() const;
     bool has_normaldata() const;
-    bool has_badidcrc() const;
-    bool has_baddatacrc() const;
-    bool is_deleted() const;
-    bool is_altdam() const;
-    bool is_rx02dam() const;
+    constexpr bool has_badidcrc() const
+    {
+        return m_bad_id_crc;
+    }
+
+    constexpr bool has_baddatacrc() const
+    {
+        return m_bad_data_crc;
+    }
+
+    constexpr bool is_deleted() const
+    {
+        return dam == 0xf8 || dam == 0xf9;
+    }
+
+    constexpr bool is_altdam() const
+    {
+        return dam == 0xfa;
+    }
+
+    constexpr bool is_rx02dam() const
+    {
+        return dam == 0xfd;
+    }
+
     bool is_8k_sector() const;
     bool is_checksummable_8k_sector() const;
 
@@ -111,8 +131,21 @@ public:
     void add_read_stats(int instance, DataReadStats&& data_read_stats);
     void set_read_stats(int instance, DataReadStats&& data_read_stats);
 
-    static int SizeCodeToRealSizeCode(int size);
-    static int SizeCodeToLength(int size);
+    // Map a size code to how it's treated by the uPD765 FDC on the PC
+    static constexpr int SizeCodeToRealSizeCode(int size)
+    {
+        // Sizes above 8 are treated as 8 (32K)
+        return (size <= 7) ? size : 8;
+    }
+
+    // Return the sector length for a given sector size code
+    static constexpr int SizeCodeToLength(int size)
+    {
+        // 2 ^ (7 + size)
+        return 128 << SizeCodeToRealSizeCode(size);
+    }
+
+    std::string ToString(bool onlyRelevantData = true) const;
 
 public:
     Header header{ 0,0,0,0 };               // cyl, head, sector, size
