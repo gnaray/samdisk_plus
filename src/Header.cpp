@@ -9,10 +9,10 @@ std::string to_string(const DataRate& datarate)
 {
     switch (datarate)
     {
-    case DataRate::_250K:   return "250Kbps";       break;
-    case DataRate::_300K:   return "300Kbps";       break;
-    case DataRate::_500K:   return "500Kbps";       break;
-    case DataRate::_1M:     return "1Mbps";         break;
+    case DataRate::_250K:   return "250Kbps";
+    case DataRate::_300K:   return "300Kbps";
+    case DataRate::_500K:   return "500Kbps";
+    case DataRate::_1M:     return "1Mbps";
     case DataRate::Unknown: break;
     }
     return "Unknown";
@@ -22,17 +22,17 @@ std::string to_string(const Encoding& encoding)
 {
     switch (encoding)
     {
-    case Encoding::MFM:     return "MFM";           break;
-    case Encoding::FM:      return "FM";            break;
-    case Encoding::RX02:    return "RX02";          break;
-    case Encoding::Amiga:   return "Amiga";         break;
-    case Encoding::GCR:     return "GCR";           break;
-    case Encoding::Ace:     return "Ace";           break;
-    case Encoding::MX:      return "MX";            break;
-    case Encoding::Agat:    return "Agat";          break;
-    case Encoding::Apple:   return "Apple";         break;
-    case Encoding::Victor:  return "Victor";        break;
-    case Encoding::Vista:   return "Vista";         break;
+    case Encoding::MFM:     return "MFM";
+    case Encoding::FM:      return "FM";
+    case Encoding::RX02:    return "RX02";
+    case Encoding::Amiga:   return "Amiga";
+    case Encoding::GCR:     return "GCR";
+    case Encoding::Ace:     return "Ace";
+    case Encoding::MX:      return "MX";
+    case Encoding::Agat:    return "Agat";
+    case Encoding::Apple:   return "Apple";
+    case Encoding::Victor:  return "Victor";
+    case Encoding::Vista:   return "Vista";
     case Encoding::Unknown: break;
     }
     return "Unknown";
@@ -42,17 +42,17 @@ std::string short_name(const Encoding& encoding)
 {
     switch (encoding)
     {
-    case Encoding::MFM:     return "mfm";           break;
-    case Encoding::FM:      return "fm";            break;
-    case Encoding::RX02:    return "rx";            break;
-    case Encoding::Amiga:   return "ami";           break;
-    case Encoding::GCR:     return "gcr";           break;
-    case Encoding::Ace:     return "ace";           break;
-    case Encoding::MX:      return "mx";            break;
-    case Encoding::Agat:    return "agat";          break;
-    case Encoding::Apple:   return "a2";            break;
-    case Encoding::Victor:  return "vic";           break;
-    case Encoding::Vista:   return "vis";           break;
+    case Encoding::MFM:     return "mfm";
+    case Encoding::FM:      return "fm";
+    case Encoding::RX02:    return "rx";
+    case Encoding::Amiga:   return "ami";
+    case Encoding::GCR:     return "gcr";
+    case Encoding::Ace:     return "ace";
+    case Encoding::MX:      return "mx";
+    case Encoding::Agat:    return "agat";
+    case Encoding::Apple:   return "a2";
+    case Encoding::Victor:  return "vic";
+    case Encoding::Vista:   return "vis";
     case Encoding::Unknown: break;
     }
     return "unk";
