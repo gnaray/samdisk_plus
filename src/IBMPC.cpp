@@ -60,15 +60,6 @@ std::string to_string(const MEDIA_TYPE& type)
     }
 }
 
-// Return the number of microseconds for 1 byte at the given rate.
-// The calculation for add_drain_time is incomprehensible, luckily that parameter is never used.
-int GetDataTime(DataRate datarate, Encoding encoding, int len_bytes/*=1*/, bool add_drain_time/*=false*/)
-{
-    auto uTime = 1000000 / (bits_per_second(datarate) / 8);
-    if (encoding == Encoding::FM) uTime <<= 1;
-    return (uTime * len_bytes) + (add_drain_time ? (uTime * 69 / 100) : 0);     // 0.69 250Kbps bytes @300rpm = 86us = FDC data drain time
-}
-
 int GetTrackOverhead(Encoding encoding)
 {
     return (encoding == Encoding::MFM) ? TRACK_OVERHEAD_MFM : TRACK_OVERHEAD_FM;

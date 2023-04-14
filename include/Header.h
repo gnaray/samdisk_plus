@@ -29,7 +29,7 @@ inline int bitcell_ns(DataRate datarate)
     return 0;
 }
 
-inline int bits_per_second(DataRate datarate)
+constexpr int bits_per_second(DataRate datarate)
 {
     return static_cast<int>(datarate);
 }
