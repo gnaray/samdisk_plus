@@ -23,6 +23,30 @@ T make_error(Args&& ... args)
     return T(make_string2(std::forward<Args>(args)...));
 }
 
+// https://stackoverflow.com/questions/17333/what-is-the-most-effective-way-for-float-and-double-comparison
+template<class T>
+typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+constexpr approximately_equal(T x, T y)
+{
+    const auto absDiff = std::fabs(x - y);
+    return absDiff <= std::max({1.0, std::fabs(x), std::fabs(y)}) * std::numeric_limits<double>::epsilon()
+            || absDiff < std::numeric_limits<T>::min();
+    std::numeric_limits<float>::epsilon();
+}
+
+// https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+template<class T>
+typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+    almost_equal(T x, T y, int ulp)
+{
+    const auto absDiff = std::fabs(x - y);
+    // the machine epsilon has to be scaled to the magnitude of the values used
+    // and multiplied by the desired precision in ULPs (units in the last place)
+    return absDiff <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
+        // unless the result is subnormal
+        || absDiff < std::numeric_limits<T>::min();
+}
+
 template<typename T, typename U>
 T lossless_static_cast(U opt_sectors);
 
@@ -103,9 +127,7 @@ constexpr int lossless_static_cast(double x)
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
     const auto result = static_cast<int>(x);
     const auto xCheck = static_cast<double>(result);
-    const auto xDiff = std::fabs(x - xCheck);
-    // https://stackoverflow.com/questions/17333/what-is-the-most-effective-way-for-float-and-double-comparison
-    if (xDiff <= std::max({1.0, std::fabs(x), std::fabs(xCheck)}) * std::numeric_limits<double>::epsilon()) // approximatelyEqual.
+    if (!approximately_equal(x, xCheck))
         throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
     return result;
 }
