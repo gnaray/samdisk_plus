@@ -123,7 +123,7 @@ bool DirMgtEntry(int n_, const MGT_DIR* p_, bool fHidden_)
             "EDOS NOMEN", "EDOS SYSTEM", "EDOS OVERLAY", nullptr, "HDOS DOS", "HDOS DIR", "HDOS DISK", "HDOS TEMP"
         };
 
-        if (file_type < static_cast<int>(arraysize(szTypes)) && szTypes[file_type])
+        if (file_type < lossless_static_cast<int>(arraysize(szTypes)) && szTypes[file_type])
             ss << szTypes[file_type];
         else
             ss << "WHAT?";
@@ -149,6 +149,7 @@ bool DirMgtEntry(int n_, const MGT_DIR* p_, bool fHidden_)
 }
 
 
+// https://sinclair.wiki.zxnet.co.uk/wiki/TR-DOS_filesystem
 struct TRDOS_DIR
 {
     uint8_t abName[8];      // Name
@@ -185,10 +186,10 @@ bool IsTrDosDirSector(const Sector& sector)
     if (sector.header.sector != 1 || sector.header.size != 1)
         return false;
 
-    auto dir_entries = sector.size() / sizeof(TRDOS_DIR);
+    auto dir_entries = sector.size() / lossless_static_cast<int>(sizeof(TRDOS_DIR));
     auto pd = reinterpret_cast<const TRDOS_DIR*>(data.data());
 
-    for (size_t entry = 0; entry < dir_entries; ++entry, ++pd)
+    for (auto entry = 0; entry < dir_entries; ++entry, ++pd)
     {
         if (!IsTrDosDirEntry(pd))
             return false;
@@ -210,10 +211,10 @@ bool DirTrDos(Disk& disk)
         auto& sector = disk.get_sector(Header(0, 0, i, 1));
         auto& data = sector.data_copy();
 
-        auto dir_entries = sector.size() / sizeof(TRDOS_DIR);
+        auto dir_entries = sector.size() / lossless_static_cast<int>(sizeof(TRDOS_DIR));
         auto pd = reinterpret_cast<const TRDOS_DIR*>(data.data());
 
-        for (size_t entry = 0; entry < dir_entries; ++entry, ++pd)
+        for (auto entry = 0; entry < dir_entries; ++entry, ++pd)
         {
             bool unused = pd->abName[0] == 0x00;
             bool hidden = pd->abName[0] == 0x01;
@@ -235,12 +236,12 @@ bool DirTrDos(Disk& disk)
                 util::cout << colour::red << util::fmt(" ?%-7.7s <%c> %3u  %05u %05u", pd->abName + 1, pd->bExt, pd->bSectors, uStart, uLength) << colour::none;
             }
 
-            // If it's a BASIC program, check for auto-start line number
+            // If it's a BASIC program and it is not empty, check for auto-start line number
             // ToDo: skip this for real disks due to seek cost?
-            if (pd->bExt == 'B')
+            if (pd->bExt == 'B' && uLength > 0)
             {
                 // Locate the final sector for the file
-                uint8_t block = pd->bStartSector + static_cast<uint8_t>((uLength + 255) / 256) - 1;
+                uint8_t block = pd->bStartSector + lossless_static_cast<uint8_t>((uLength + 255) / 256 - 1);
                 auto offset = (uLength & 0xff) + 2;
 
                 uint8_t cyl = pd->bStartTrack + (block >> 4);
@@ -253,7 +254,7 @@ bool DirTrDos(Disk& disk)
 
                 if (offset < sectorE.size() - 1)
                 {
-                    auto line = (dataE[offset + 1] << 8) | dataE[offset];
+                    auto line = (dataE[lossless_static_cast<DataST>(offset + 1)] << 8) | dataE[lossless_static_cast<DataST>(offset)];
                     if (line)
                     {
                         if (hidden)
@@ -305,7 +306,7 @@ bool IsOpusDirSector(const Sector& sector)
         return false;
 
     auto pd = reinterpret_cast<const OPUS_DIR*>(data.data());
-    auto dir_entries = static_cast<int>(data.size() / sizeof(OPUS_DIR));
+    auto dir_entries = data.size() / lossless_static_cast<int>(sizeof(OPUS_DIR));
 
     for (auto entry = 0; entry < dir_entries; ++entry, ++pd)
     {
@@ -348,7 +349,7 @@ bool DirOpus(Disk& disk)
         }
 
         auto pd = reinterpret_cast<const OPUS_DIR*>(data.data());
-        auto dir_entries = fmt.sector_size() / static_cast<int>(sizeof(OPUS_DIR));
+        auto dir_entries = fmt.sector_size() / lossless_static_cast<int>(sizeof(OPUS_DIR));
 
         for (auto j = 0; j < dir_entries; ++j, ++pd)
         {
@@ -702,7 +703,7 @@ bool DirCpm(Disk& disk, const Sector& s)
         pdpb = &asDPB[0];   // +3
 
     int nSectorsPerBlock = 1 << (pdpb->bBlockShift - pdpb->bSize);
-    int nDirSectors = static_cast<uint8_t>(pdpb->bDirBlocks * nSectorsPerBlock);
+    auto nDirSectors = lossless_static_cast<uint8_t>(pdpb->bDirBlocks * nSectorsPerBlock);
     uint8_t bSectorBase = (s.header.sector & 0xc0) + 1;
     int total_blocks = 0;
     int num_files = 0;
@@ -732,9 +733,9 @@ bool DirCpm(Disk& disk, const Sector& s)
             // Process the sector data, ignoring gap data.
             auto data = sector->data_copy();
             if (data.size() > sector->size())
-                data.resize(sector->size());
+                data.resize(lossless_static_cast<DataST>(sector->size()));
 
-            for (auto j = 0; j < data.size() / static_cast<int>(sizeof(CPM_DIR)); ++j)
+            for (auto j = 0; j < data.size() / lossless_static_cast<int>(sizeof(CPM_DIR)); ++j)
             {
                 auto p = &reinterpret_cast<const CPM_DIR*>(data.data())[j];
 
