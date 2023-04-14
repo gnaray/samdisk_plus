@@ -243,11 +243,11 @@ public:
         : std::runtime_error(make_string(std::forward<Args>(args)...)) {}
 };
 
-class diskslow_exception : public exception
+class diskspeedwrong_exception : public exception
 {
 public:
     template <typename ... Args>
-    explicit diskslow_exception(Args&& ... args)
+    explicit diskspeedwrong_exception(Args&& ... args)
         : exception(make_string(std::forward<Args>(args)...)) {}
 };
 

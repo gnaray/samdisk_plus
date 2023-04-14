@@ -26,6 +26,7 @@ static auto& opt_newdrive = getOpt<int>("newdrive");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_retries = getOpt<int>("retries");
 static auto& opt_rpm = getOpt<int>("rpm");
+static auto& opt_rpm_tolerance_permille = getOpt<int>("rpm_tolerance_permille");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_steprate = getOpt<int>("steprate");
 
@@ -259,27 +260,21 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             throw win32_error(GetLastError(), "scan");
     }
 
-    if (opt_normal_disk)
+    if (opt_rpm > 0)
     {
-        const auto rpm_time_tolerance = 0.01;
-        int rpm_time = RPM_TIME_300; // Default value, see SAMdisk OPT_RPM.
-        if (opt_rpm == 200)
-            rpm_time = RPM_TIME_200;
-        else if (opt_rpm == 300)
-            rpm_time = RPM_TIME_300;
-        else if (opt_rpm == 360)
-            rpm_time = RPM_TIME_360;
-        auto tolerated_max_rpm_time = static_cast<DWORD>((1 + rpm_time_tolerance) * rpm_time);
-        // If the track time is slower than the specified rpm time, something is wrong.
-        if (scan_result->tracktime > tolerated_max_rpm_time)
+        const auto tolerated_min_rpm_time = RPM_TIME_MICROSEC(opt_rpm * (1 + opt_rpm_tolerance_permille / 1000.));
+        const auto tolerated_max_rpm_time = RPM_TIME_MICROSEC(opt_rpm * (1 - opt_rpm_tolerance_permille / 1000.));
+        // If the track read time is out of allowed rpm time range, something is wrong and offsets are not perfect.
+        if (scan_result->tracktime < tolerated_min_rpm_time || scan_result->tracktime > tolerated_max_rpm_time)
         {
-            Message(msgWarning, "track read of %s is too slow (%u > %u)",
-                CH(cylhead.cyl, cylhead.head), scan_result->tracktime, rpm_time);
-            throw util::diskslow_exception("track time is too big thus disk is too slow");
+            Message(msgWarning, "track read time of %s is out of allowed range (%u %c %u)",
+                CH(cylhead.cyl, cylhead.head), scan_result->tracktime,
+                    scan_result->tracktime < tolerated_min_rpm_time ? '<' : '>', tolerated_min_rpm_time);
+            throw util::diskspeedwrong_exception("disk speed is wrong (track read time is out of allowed range)");
         }
     }
     if (scan_result->tracktime > RPM_TIME_200)
-        throw util::diskslow_exception("index-halving cables are no longer supported");
+        throw util::diskspeedwrong_exception("index-halving cables are no longer supported");
 
     firstSectorSeen = scan_result->firstseen;
 

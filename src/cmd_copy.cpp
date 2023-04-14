@@ -9,6 +9,7 @@
 #include "Trinity.h"
 //#include "SpectrumPlus3.h"
 #include "Util.h"
+#include "utils.h"
 
 #include <cmath>
 #include <cstring>
@@ -161,8 +162,8 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                 }
 
                 TrackData src_data;
-                auto is_disk_slow = true;
-                for (auto i = 5; is_disk_slow && i > 0; i--) // Try 5 times, it could be commandline argument.
+                int src_disk_read_i;
+                for (src_disk_read_i = 5; src_disk_read_i > 0; src_disk_read_i--) // Try 5 times, it could be commandline option argument.
                 {
                     try
                     {
@@ -170,22 +171,19 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                         // Seeking head forward then backward then forward etc. when track is retried.
                         const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk->cyls() - 1)) : -1;
                         src_data = src_disk->read(cylhead * opt_step, !src_disk->is_constant_disk(), with_head_seek_to, headers_of_stable_sectors);
-                        is_disk_slow = false;
+                        break;
                     }
-                    catch (util::diskslow_exception & e)
+                    catch (util::diskspeedwrong_exception & e)
                     {
-                        if (opt_normal_disk)
-                        {
-                            util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
-                            Message(msgInfo, "If it happens too often, specifying lower rpm might help.");
-                            if (!OpenReadImage(src_path, src_disk))
-                                throw util::exception("Reopening ", src_path, " failed");
-                        }
-                        else
+                        if (!opt_normal_disk)
                             throw;
+                        util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
                     }
+                    Message(msgInfo, "If it happens too often, adjusting rpm and rpm-tolerance-permille should help.");
+                    if (!OpenReadImage(src_path, src_disk))
+                        throw util::exception("Reopening ", src_path, " failed");
                 }
-                if (is_disk_slow)
+                if (src_disk_read_i == 0)
                     continue;
                 auto src_track = src_data.track();
 
