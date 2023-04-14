@@ -2,6 +2,7 @@
 
 #include "SAMdisk.h"
 #include "Options.h"
+#include "Util.h"
 #include "types.h"
 //#include "Disk.h"
 #include "BlockDevice.h"
