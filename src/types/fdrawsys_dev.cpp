@@ -286,9 +286,9 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 
     if (scan_result->count > 0 && m_lastDataRate != DataRate::Unknown)
     {
-        auto bit_us = GetDataTime(m_lastDataRate, m_lastEncoding) / 16;
+        const auto mfmbit_us = GetDataMfmBitTime(m_lastDataRate, m_lastEncoding);
         track.tracktime = lossless_static_cast<int>(scan_result->tracktime);
-        track.tracklen = lossless_static_cast<int>(std::round(track.tracktime / bit_us));
+        track.tracklen = lossless_static_cast<int>(std::round(track.tracktime / mfmbit_us));
 
         for (int i = 0; i < scan_result->count; ++i)
         {
@@ -302,7 +302,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
             Sector sector(m_lastDataRate, m_lastEncoding, header);
 
-            sector.offset = lossless_static_cast<int>(std::round(lossless_static_cast<double>(scan_header.reltime) / bit_us));
+            sector.offset = lossless_static_cast<int>(std::round(lossless_static_cast<double>(scan_header.reltime) / mfmbit_us));
             sector.set_constant_disk(false);
             track.add(std::move(sector));
         }
