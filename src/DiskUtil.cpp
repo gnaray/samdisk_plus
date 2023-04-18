@@ -170,7 +170,7 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
         if ((flags & DUMP_OFFSETS) && !track.empty() && track.tracklen)
         {
             auto prevoffset = 0;
-            auto shift = (context.sector.encoding == Encoding::FM) ? 5 : 4;
+            const auto shift = (context.sector.encoding == Encoding::FM) ? 5 : 4;
 
             util::cout << util::fmt("\n         %s: ", WordStr(track.tracklen >> shift));
 
@@ -178,27 +178,28 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
             {
                 const bool ignored_sector = ignored_sectors.Contains(sector);
                 const auto offset = sector.offset;
-
-                // Invalid or missing offset?
-                if (offset < prevoffset)
-                {
-                    if (!ignored_sector) {
-                        // Show a red question mark instead of the offset
-                        util::cout << colour::RED << '?' << colour::none;
-                    }
+                // Missing offset?
+                if (offset == 0) {
+                    if (!ignored_sector)
+                        // Show a red N.A. instead of the offset.
+                        util::cout << colour::RED << "N.A. " << colour::none;
                 }
                 else
                 {
-                    if (!ignored_sector) {
-                        // Show offset from previous sector
-                        if (offset >= prevoffset)
-                            util::cout << util::fmt("%s ", WordStr((offset - prevoffset) >> shift));
-                        else
-                            util::cout << util::fmt("-%s ", WordStr((prevoffset - offset) >> shift));
+                    const auto offset_abs_diff = offset < prevoffset ? prevoffset - offset : offset - prevoffset;
+                    if (!ignored_sector)
+                    {
+                        // Invalid offset?
+                        if (offset < prevoffset)
+                            // Show a red question mark and minus sign prior to the offset.
+                            util::cout << colour::RED << "?-";
+                        else if (!opt_absoffsets)
+                            prevoffset = offset;
+                        // Show offset from previous sector.
+                        util::cout << util::fmt("%s ", WordStr((offset_abs_diff) >> shift));
+                        if (offset < prevoffset)
+                            util::cout << colour::none;
                     }
-
-                    if (!opt_absoffsets)
-                        prevoffset = offset;
                 }
             }
 
