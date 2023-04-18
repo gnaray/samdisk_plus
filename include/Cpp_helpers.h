@@ -23,15 +23,13 @@ T make_error(Args&& ... args)
     return T(make_string2(std::forward<Args>(args)...));
 }
 
-// https://stackoverflow.com/questions/17333/what-is-the-most-effective-way-for-float-and-double-comparison
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
 constexpr approximately_equal(T x, T y)
 {
     const auto absDiff = std::fabs(x - y);
-    return absDiff <= std::max({1.0, std::fabs(x), std::fabs(y)}) * std::numeric_limits<double>::epsilon()
+    return absDiff <= std::max(std::fabs(x), std::fabs(y)) * std::numeric_limits<double>::epsilon()
             || absDiff < std::numeric_limits<T>::min();
-    std::numeric_limits<float>::epsilon();
 }
 
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
