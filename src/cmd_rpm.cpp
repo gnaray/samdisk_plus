@@ -1,6 +1,7 @@
 // RPM command
 
 #include "Disk.h"
+#include "IBMPC.h"
 #include "Image.h"
 #include "Options.h"
 
@@ -39,7 +40,7 @@ bool DiskRpm(const std::string& path)
         }
 
         auto time_us = track.tracktime;
-        auto rpm = 60'000'000.0f / lossless_static_cast<double>(track.tracktime);
+        auto rpm = MIRCOSEC_PER_MINUTE / lossless_static_cast<double>(track.tracktime);
 
         std::stringstream ss;
         ss << std::setw(6) << time_us << " = " <<
