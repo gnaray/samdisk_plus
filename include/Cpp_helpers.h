@@ -1,13 +1,13 @@
 #ifndef CPP_HELPERS_H
 #define CPP_HELPERS_H
 
+#include <algorithm>
 #include <climits>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
 #include <sstream>
-#include <algorithm>
 
 template <typename ... Args>
 std::string make_string2(Args&& ... args)
@@ -22,6 +22,32 @@ T make_error(Args&& ... args)
 {
     return T(make_string2(std::forward<Args>(args)...));
 }
+
+
+
+template<typename TargetType, bool Throw, typename ValueType,
+         std::enable_if_t<Throw == false> * = nullptr>
+constexpr bool is_value_in_type_range(ValueType x)
+{
+    return !(x > std::numeric_limits<TargetType>::max() || x < std::numeric_limits<TargetType>::min());
+}
+
+template<typename TargetType, bool Throw, typename ValueType,
+         std::enable_if_t<Throw == true> * = nullptr>
+constexpr void is_value_in_type_range(ValueType x)
+{
+    if (!is_value_in_type_range<TargetType, false>(x))
+        throw make_error<std::runtime_error>("value ", x, " is out of range");
+}
+
+// Required separately because of the long::max to double conversion warning.
+template<>
+constexpr bool is_value_in_type_range<long, false, double>(double x)
+{   // Checking x >= max because long::max (9223372036854775807) becomes (9223372036854775808).
+    return (x < std::numeric_limits<long>::min() || x >= static_cast<double>(std::numeric_limits<long>::max()));
+}
+
+
 
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
@@ -45,8 +71,10 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
         || absDiff < std::numeric_limits<T>::min();
 }
 
+
+
 template<typename T, typename U>
-T lossless_static_cast(U opt_sectors);
+T lossless_static_cast(U x);
 
 template<>
 constexpr int lossless_static_cast(unsigned char x)
@@ -57,8 +85,7 @@ constexpr int lossless_static_cast(unsigned char x)
 template<>
 constexpr int lossless_static_cast(long x)
 {
-    if (x > std::numeric_limits<int>::max() || x < std::numeric_limits<int>::min())
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
+    is_value_in_type_range<int, true>(x);
     return static_cast<int>(x);
 }
 
@@ -121,13 +148,21 @@ constexpr double lossless_static_cast(int x)
 template<>
 constexpr int lossless_static_cast(double x)
 {
-    if (x > std::numeric_limits<int>::max() || x < std::numeric_limits<int>::min())
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    const auto result = static_cast<int>(x);
-    const auto xCheck = static_cast<double>(result);
-    if (!approximately_equal(x, xCheck))
+    double xIntegralPart {};
+    if (std::modf(x, &xIntegralPart) != 0)
         throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
-    return result;
+    is_value_in_type_range<int, true>(xIntegralPart);
+    return static_cast<int>(xIntegralPart);
+}
+
+template<>
+constexpr long lossless_static_cast(double x)
+{
+    double xIntegralPart {};
+    if (std::modf(x, &xIntegralPart) != 0)
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
+    is_value_in_type_range<long, true>(xIntegralPart);
+    return static_cast<long>(xIntegralPart);
 }
 
 template<>
@@ -142,8 +177,10 @@ constexpr uint64_t lossless_static_cast(uint32_t x)
     return static_cast<uint64_t>(x);
 }
 
+
+
 template<typename T, typename U>
-T limited_static_cast(U opt_sectors);
+T limited_static_cast(U x);
 
 template<>
 constexpr int limited_static_cast(size_t x)
@@ -152,4 +189,34 @@ constexpr int limited_static_cast(size_t x)
         return std::numeric_limits<int>::max();
     return static_cast<int>(x);
 }
+
+
+
+template<typename T,
+         std::enable_if_t<!std::is_floating_point<T>::value, int> = 0,
+         typename U,
+         std::enable_if_t<std::is_floating_point<U>::value, int> = 0>
+inline T round_AS(U x)
+{
+    return lossless_static_cast<T>(std::round(x));
+}
+
+template<typename T,
+         std::enable_if_t<!std::is_floating_point<T>::value, int> = 0,
+         typename U,
+         std::enable_if_t<std::is_floating_point<U>::value, int> = 0>
+inline T floor_AS(U x)
+{
+    return lossless_static_cast<T>(std::floor(x));
+}
+
+template<typename T,
+         std::enable_if_t<!std::is_floating_point<T>::value, int> = 0,
+         typename U,
+         std::enable_if_t<std::is_floating_point<U>::value, int> = 0>
+inline T ceil_AS(U x)
+{
+    return lossless_static_cast<T>(std::ceil(x));
+}
+
 #endif // CPP_HELPERS_H
