@@ -63,44 +63,11 @@ protected:
         return true;
     }
 
-    TrackData load(const CylHead& cylhead, bool /*first_read*/,
-        int with_head_seek_to, const Headers& headers_of_stable_sectors) override
     {
-        // Limiting sector reading as specified in case of normal disk request.
-        auto normal_sector_id_begin = opt_base > 0 ? opt_base : 1;
-        auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
-
-        if (with_head_seek_to >= 0)
-            m_fdrawcmd->Seek(with_head_seek_to, cylhead.head);
-        m_fdrawcmd->Seek(cylhead.cyl, cylhead.head);
-
-        auto firstSectorSeen{ 0 };
-        auto track = BlindReadHeaders(cylhead, firstSectorSeen);
-
-        bool read_first_gap_requested = opt_gaps >= GAPS_CLEAN;
-        // Read sector if either
-        // 1) its index is 0 and read first gap is requested, its data is used there for sanity checking.
-        // 2) its id is not in specfied headers of good sectors, else it is wasting time.
-        // If sector has bad id or has good data, then ReadSector will skip reading it.
-        int i;
-        for (i = 0; i < track.size(); i += 2) {
-            auto& sector = track[i];
-            if ((i == 0 && read_first_gap_requested) || (!headers_of_stable_sectors.contains(sector.header)
-                && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
-                ReadSector(cylhead, track, i, firstSectorSeen);
-        }
-        for (i = 1; i < track.size(); i += 2) {
-            auto& sector = track[i];
-            if ((i == 0 && read_first_gap_requested) || (!headers_of_stable_sectors.contains(sector.header)
-                && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
-                ReadSector(cylhead, track, i, firstSectorSeen);
-        }
-
-        if (read_first_gap_requested)
-            ReadFirstGap(cylhead, track);
-
-        return TrackData(cylhead, std::move(track));
     }
+
+    TrackData load(const CylHead& cylhead, bool /*first_read*/,
+            int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override;
 
     bool preload(const Range&/*range*/, int /*cyl_step*/) override
     {
@@ -165,6 +132,45 @@ void FdrawSysDevDisk::SetMetadata(const std::string& path)
         metadata["fdc_type"] = (info.ControllerType < fdc_types.size()) ? fdc_types[info.ControllerType] : "???";
         metadata["data_rates"] = ss.str();
     }
+}
+
+TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
+        int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/)
+{
+    // Limiting sector reading as specified in case of normal disk request.
+    auto normal_sector_id_begin = opt_base > 0 ? opt_base : 1;
+    auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
+
+    if (with_head_seek_to >= 0)
+        m_fdrawcmd->Seek(with_head_seek_to, cylhead.head);
+    m_fdrawcmd->Seek(cylhead.cyl, cylhead.head);
+
+    auto firstSectorSeen{ 0 };
+    auto track = BlindReadHeaders(cylhead, firstSectorSeen);
+
+    bool read_first_gap_requested = opt_gaps >= GAPS_CLEAN;
+    // Read sector if either
+    // 1) its index is 0 and read first gap is requested, its data is used there for sanity checking.
+    // 2) its id is not in specfied headers of good sectors, else it is wasting time.
+    // If sector has bad id or has good data, then ReadSector will skip reading it.
+    int i;
+    for (i = 0; i < track.size(); i += 2) {
+        auto& sector = track[i];
+        if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector)
+            && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
+            ReadSector(cylhead, track, i, firstSectorSeen);
+    }
+    for (i = 1; i < track.size(); i += 2) {
+        auto& sector = track[i];
+        if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector)
+            && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
+            ReadSector(cylhead, track, i, firstSectorSeen);
+    }
+
+    if (read_first_gap_requested)
+        ReadFirstGap(cylhead, track);
+
+    return TrackData(cylhead, std::move(track));
 }
 
 // Detect encoding and data rate of the track under the given drive head.

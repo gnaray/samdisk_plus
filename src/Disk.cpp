@@ -81,7 +81,7 @@ void Disk::disk_is_read()
 }
 
 
-const TrackData& Disk::read(const CylHead& cylhead, bool /*uncached*/, int /*with_head_seek_to*/, const Headers& /*headers_of_stable_sectors*/)
+const TrackData& Disk::read(const CylHead& cylhead, bool /*uncached*/, int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/)
 {
     // Safe look-up requires mutex ownership, in case of call from preload()
     std::lock_guard<std::mutex> lock(m_trackdata_mutex);

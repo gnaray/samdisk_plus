@@ -27,12 +27,12 @@ void DemandDisk::disk_is_read()
 { // Do nothing because this is demand disk and as such is not read completly when this trigger is fired.
 } // The goal of calling this method is to fix readstats which is done per track in read method in case of demand disk.
 
-const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int with_head_seek_to, const Headers& headers_of_good_sectors)
+const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy)
 {
     if (uncached || !m_loaded[cylhead])
     {
         // Quick first read, plus sector-based conversion.
-        auto trackdata = load(cylhead, true, with_head_seek_to, headers_of_good_sectors);
+        auto trackdata = load(cylhead, true, with_head_seek_to, deviceReadingPolicy);
         auto& track = trackdata.track();
 
         // If the disk supports sector-level retries we won't duplicate them.
@@ -43,10 +43,10 @@ const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int wit
         while (rescans > 0 || retries > 0)
         {
             // If no more rescans are required, stop when there's nothing to fix.
-            if (rescans <= 0 && track.has_stable_data(headers_of_good_sectors))
+            if (rescans <= 0 && track.has_stable_data(deviceReadingPolicy.SkippableSectors()))
                 break;
             // Do not seek to 0th cyl at second, third, etc. loading.
-            auto rescan_trackdata = load(cylhead, false, false, headers_of_good_sectors);
+            auto rescan_trackdata = load(cylhead, false, false, deviceReadingPolicy);
             auto& rescan_track = rescan_trackdata.track();
 
             // If the rescan found more sectors, use the new track data.

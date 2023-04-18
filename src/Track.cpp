@@ -157,11 +157,11 @@ bool Track::is_repeated(const Sector& sector) const
     return false;
 }
 
-bool Track::has_good_data(const Headers& headers_of_good_sectors) const
+bool Track::has_good_data(const Sectors& good_sectors) const
 {
     auto it = std::find_if(begin(), end(), [&](const Sector& sector) {
         // Sector in headers of good sectors is considered good sector.
-        if (!sector.has_badidcrc() && headers_of_good_sectors.contains(sector.header))
+        if (!sector.has_badidcrc() && good_sectors.Contains(sector))
             return false;
         if (sector.is_checksummable_8k_sector())
             return false;
@@ -212,11 +212,11 @@ const Sectors Track::stable_sectors() const {
     return stable_sectors;
 }
 
-bool Track::has_stable_data(const Headers& headers_of_stable_sectors) const
+bool Track::has_stable_data(const Sectors& good_sectors) const
 {
     auto it = std::find_if(begin(), end(), [&](const Sector& sector) {
         // Sector in headers of stable sectors is considered stable sector.
-        if (!sector.has_badidcrc() && headers_of_stable_sectors.contains(sector.header))
+        if (!sector.has_badidcrc() && good_sectors.Contains(sector))
             return false;
         if (!sector.has_data())
             return true;

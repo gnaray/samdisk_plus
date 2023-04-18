@@ -150,24 +150,39 @@ int Header::sector_size() const
 
 //////////////////////////////////////////////////////////////////////////////
 
-bool Headers::contains(const Header& header) const
+bool Headers::Contains(const Header& header) const
 {
-    return std::find(begin(), end(), header) != end();
+    return std::find(cbegin(), cend(), header) != cend();
 }
 
-std::string Headers::to_string() const
-{
-    std::stringstream s;
-    std::copy(begin(), end(), std::ostream_iterator<Header>(s, " "));
-    return s.str();
-}
-
-std::string Headers::sector_ids_to_string() const
+std::string Headers::ToString(bool onlyRelevantData/* = true*/) const
 {
     std::ostringstream ss;
-    std::for_each(begin(), end(), [&](const Header& header) {
-        if (&header != &*begin())
-            ss << " ";
+    if (!onlyRelevantData || !empty())
+    {
+        bool writingStarted = false;
+        std::for_each(cbegin(), cend(), [&](const Header& header)
+        {
+            if (writingStarted)
+                ss << ' ';
+            else
+                writingStarted = true;
+            ss << header;
+        });
+    }
+    return ss.str();
+}
+
+std::string Headers::SectorIdsToString() const
+{
+    std::ostringstream ss;
+    bool writingStarted = false;
+    std::for_each(cbegin(), cend(), [&](const Header& header)
+    {
+        if (writingStarted)
+            ss << ' ';
+        else
+            writingStarted = true;
         ss << header.sector;
     });
     return ss.str();

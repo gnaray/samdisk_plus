@@ -42,7 +42,7 @@ static void item_separator(int items)
         util::cout << ',';
 }
 
-void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const Headers& headers_of_ignored_sectors/*=Headers()*/)
+void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const Sectors &ignored_sectors/* = Sectors{}*/)
 {
     if (opt_hex != 1)
         util::cout << util::fmt(" %2u.%u  ", cylhead.cyl, cylhead.head);
@@ -56,7 +56,7 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
         for (auto& sector : track.sectors())
         {
             // Skip ignored sectors.
-            if (headers_of_ignored_sectors.contains(sector.header))
+            if (ignored_sectors.Contains(sector))
                 continue;
 
             util::cout << RecordStr(sector.header.sector);
@@ -176,8 +176,8 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
 
             for (const auto& sector : track.sectors())
             {
-                bool ignored_sector = headers_of_ignored_sectors.contains(sector.header);
-                auto offset = sector.offset;
+                const bool ignored_sector = ignored_sectors.Contains(sector);
+                const auto offset = sector.offset;
 
                 // Invalid or missing offset?
                 if (offset < prevoffset)
@@ -652,7 +652,7 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
 }
 
 // Attempt to repair a track, given another copy of the same track.
-int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Headers& headers_of_ignored_sectors/*=Headers()*/)
+int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Sectors &ignored_sectors/*=Headers{}*/)
 {
     int changed_amount = 0;
 
@@ -660,7 +660,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
     for (auto& src_sector : src_track)
     {
         // Skip source sector if specified as ignored sector.
-        if (headers_of_ignored_sectors.contains(src_sector.header))
+        if (ignored_sectors.Contains(src_sector))
             continue;
 
         // Skip repeated source sectors, as the data source is ambiguous.

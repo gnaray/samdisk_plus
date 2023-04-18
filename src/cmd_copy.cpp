@@ -145,20 +145,20 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                     NormaliseTrack(cylhead, dst_track);
                 }
 
-                Headers headers_of_stable_sectors;
+                DeviceReadingPolicy deviceReadingPolicy;
                 // If repair mode and user specified skip_stable_sectors then skip checking those.
                 if (opt_repair && skip_stable_sectors) // Repair mode => dst track can be checked.
                 {
-                    headers_of_stable_sectors = dst_track.stable_sectors().headers();
+                    deviceReadingPolicy.SetSkippableSectors(dst_track.stable_sectors());
                     // If repair mode and user specified normal-disk then do not repair tracks
                     // which has track size amount of id sequence at least.
                     if (opt_normal_disk && normal_track_size > 0
-                        && headers_of_stable_sectors.HasIdSequence(normal_first_sector_id, normal_track_size - normal_first_sector_id + 1))
+                        && deviceReadingPolicy.SkippableSectors().HasIdSequence(normal_first_sector_id, normal_track_size - normal_first_sector_id + 1))
                         return;
                 }
-                if (opt_verbose && opt_repair && !headers_of_stable_sectors.empty()) {
+                if (opt_verbose && opt_repair && !deviceReadingPolicy.SkippableSectors().empty()) {
                     Message(msgInfo, "Ignoring already good sectors on %s: %s",
-                        CH(cylhead.cyl, cylhead.head), headers_of_stable_sectors.sector_ids_to_string().c_str());
+                        CH(cylhead.cyl, cylhead.head), deviceReadingPolicy.SkippableSectors().SectorIdsToString().c_str());
                 }
 
                 TrackData src_data;
@@ -170,7 +170,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                         // https://docs.rs-online.com/41b6/0900766b8001b0a3.pdf, 7.2 Read error
                         // Seeking head forward then backward then forward etc. when track is retried.
                         const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk->cyls() - 1)) : -1;
-                        src_data = src_disk->read(cylhead * opt_step, !src_disk->is_constant_disk(), with_head_seek_to, headers_of_stable_sectors);
+                        src_data = src_disk->read(cylhead * opt_step, !src_disk->is_constant_disk(), with_head_seek_to, deviceReadingPolicy);
                         break;
                     }
                     catch (util::diskspeedwrong_exception & e)
@@ -200,13 +200,13 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                 bool changed = NormaliseTrack(cylhead, src_track);
 
                 if (opt_verbose)
-                    ScanTrack(cylhead, src_track, context, headers_of_stable_sectors);
+                    ScanTrack(cylhead, src_track, context, deviceReadingPolicy.SkippableSectors());
 
                 // Repair or copy?
                 if (opt_repair)
                 {
                     // Repair the target track using the source track.
-                    auto repair_track_changed_amount = RepairTrack(cylhead, dst_track, src_track, headers_of_stable_sectors);
+                    auto repair_track_changed_amount = RepairTrack(cylhead, dst_track, src_track, deviceReadingPolicy.SkippableSectors());
 
                     dst_disk->write(cylhead, std::move(dst_track));
                     // If track retry is automatic and repairing then stop when repair could not improve the dst disk.

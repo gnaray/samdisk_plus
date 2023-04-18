@@ -15,7 +15,7 @@ std::string short_name(const Encoding& encoding);
 DataRate datarate_from_string(std::string str);
 Encoding encoding_from_string(std::string str);
 
-inline int bitcell_ns(DataRate datarate)
+constexpr int bitcell_ns(DataRate datarate)
 {
     switch (datarate)
     {
@@ -90,6 +90,11 @@ public:
     bool compare_chrn(const Header& rhs) const;
     bool compare_crn(const Header& rhs) const;
 
+    constexpr bool empty() const
+    {
+        return cyl == 0 && head == 0 && sector == 0 && size == 0;
+    }
+
     int cyl = 0, head = 0, sector = 0, size = 0;
 };
 
@@ -98,8 +103,14 @@ class Headers : public std::vector<Header>
 public:
     Headers() = default;
 
-    bool contains(const Header& header) const;
-    std::string to_string() const;
-    std::string sector_ids_to_string() const;
     bool HasIdSequence(const int first_id, const int length) const;
+    bool Contains(const Header& header) const;
+    std::string ToString(bool onlyRelevantData = true) const;
+    friend std::string to_string(const Headers& headers, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << headers.ToString(onlyRelevantData);
+        return ss.str();
+    }
+    std::string SectorIdsToString() const;
 };

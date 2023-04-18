@@ -106,6 +106,7 @@ public:
     bool has_stable_data() const;
     bool are_copies_full(int max_copies) const;
     void limit_copies(int max_copies);
+    constexpr bool has_same_record_properties(const Sector& sector) const;
 
     int size() const;
     int data_size() const;
@@ -146,6 +147,12 @@ public:
     }
 
     std::string ToString(bool onlyRelevantData = true) const;
+    friend std::string to_string(const Sector& sector, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << sector.ToString(onlyRelevantData);
+        return ss.str();
+    }
 
 public:
     Header header{ 0,0,0,0 };               // cyl, head, sector, size
@@ -164,11 +171,25 @@ private:
     bool m_constant_disk = true; // If this sector is part of disk image then true, else it comes from physical device so false.
 };
 
+inline std::ostream& operator<<(std::ostream& os, const Sector& sector) { return os << to_string(sector); }
+
 class Sectors : public std::vector<Sector>
 {
 public:
     Sectors() = default;
 
-    bool has_id_sequence(const int first_id, const int up_to_id) const;
-    Headers headers() const;
+    bool HasIdSequence(const int first_id, const int length) const;
+    class Headers Headers() const;
+
+    bool Contains(const Sector& sector) const;
+    std::string SectorIdsToString() const;
+    std::string ToString(bool onlyRelevantData = true) const;
+    friend std::string to_string(const Sectors& sectors, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << sectors.ToString(onlyRelevantData);
+        return ss.str();
+    }
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Sectors& sectors) { return os << to_string(sectors); }

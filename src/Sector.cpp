@@ -560,6 +560,25 @@ void Sector::limit_copies(int max_copies)
     }
 }
 
+constexpr bool Sector::has_same_record_properties(const Sector& sector) const
+{
+    // Headers must match.
+    if (sector.has_badidcrc() || has_badidcrc() || sector.header != header)
+        return false;
+
+    // Encodings must match.
+    if (sector.encoding != encoding)
+        return false;
+
+    // Datarates must match interchangably.
+    if (sector.datarate != datarate &&
+            !((sector.datarate == DataRate::_250K || sector.datarate == DataRate::_300K)
+            && (datarate == DataRate::_250K || datarate == DataRate::_300K));
+        return false;
+
+    return true;
+}
+
 void Sector::remove_gapdata(bool keep_crc/*=false*/)
 {
     if (!has_gapdata())
@@ -575,21 +594,66 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
     }
 }
 
+std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
 {
+    std::ostringstream ss;
+    if (!onlyRelevantData || !header.empty())
+    {
+        ss << header;
+    }
+    return ss.str();
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-bool Sectors::has_id_sequence(const int first_id, const int up_to_id) const
+bool Sectors::HasIdSequence(const int first_id, const int length) const
 {
-    return this->headers().has_id_sequence(first_id, up_to_id);
+    return this->Headers().HasIdSequence(first_id, length);
 }
 
-Headers Sectors::headers() const
+class Headers Sectors::Headers() const
 {
-    Headers headers;
+    class Headers headers;
     for_each(begin(), end(), [&](const Sector& sector) {
         headers.push_back(sector.header);
     });
     return headers;
+}
+
+bool Sectors::Contains(const Sector& sector) const
+{
+    return std::any_of(cbegin(), cend(), [&](const Sector& sectorI) {
+        return sectorI.has_same_record_properties(sector);
+    });
+}
+
+std::string Sectors::SectorIdsToString() const
+{
+    std::ostringstream ss;
+    bool writingStarted = false;
+    std::for_each(cbegin(), cend(), [&](const Sector& sector) {
+        if (writingStarted)
+            ss << ' ';
+        else
+            writingStarted = true;
+        ss << sector.header.sector;
+    });
+    return ss.str();
+}
+
+std::string Sectors::ToString(bool onlyRelevantData/* = true*/) const
+{
+    std::ostringstream ss;
+    if (!onlyRelevantData || !empty())
+    {
+        bool writingStarted = false;
+        std::for_each(cbegin(), cend(), [&](const Sector& sector) {
+            if (writingStarted)
+                ss << ' ';
+            else
+                writingStarted = true;
+            ss << sector;
+        });
+    }
+    return ss.str();
 }
