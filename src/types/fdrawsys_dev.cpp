@@ -26,7 +26,7 @@ static auto& opt_newdrive = getOpt<int>("newdrive");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_retries = getOpt<int>("retries");
 static auto& opt_rpm = getOpt<int>("rpm");
-static auto& opt_rpm_tolerance_permille = getOpt<int>("rpm_tolerance_permille");
+static auto& opt_time_tolerance_permille = getOpt<int>("time_tolerance_permille");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_steprate = getOpt<int>("steprate");
 
@@ -266,20 +266,23 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             throw win32_error(GetLastError(), "scan");
     }
 
+    const auto tracktime = lossless_static_cast<int>(scan_result->tracktime);
     if (opt_rpm > 0)
     {
-        const auto tolerated_min_rpm_time = RPM_TIME_MICROSEC(opt_rpm * (1 + opt_rpm_tolerance_permille / 1000.));
-        const auto tolerated_max_rpm_time = RPM_TIME_MICROSEC(opt_rpm * (1 - opt_rpm_tolerance_permille / 1000.));
+        const auto time_tolerance = opt_time_tolerance_permille / 1000.;
+        // Since disk speed is not perfectly constant the tracktime might fluctuate within a tolerated range.
+        const auto tolerated_min_rpm_time = lossless_static_cast<int>(RPM_TIME_MICROSEC(opt_rpm) * (1 - time_tolerance));
+        const auto tolerated_max_rpm_time = lossless_static_cast<int>(RPM_TIME_MICROSEC(opt_rpm) * (1 + time_tolerance));
         // If the track read time is out of allowed rpm time range, something is wrong and offsets are not perfect.
-        if (scan_result->tracktime < tolerated_min_rpm_time || scan_result->tracktime > tolerated_max_rpm_time)
+        if (tracktime < tolerated_min_rpm_time || tracktime > tolerated_max_rpm_time)
         {
-            Message(msgWarning, "track read time of %s is out of allowed range (%u %c %u)",
+            Message(msgWarning, "track read time of %s is out of allowed range (%ul %c %i)",
                 CH(cylhead.cyl, cylhead.head), scan_result->tracktime,
-                    scan_result->tracktime < tolerated_min_rpm_time ? '<' : '>', tolerated_min_rpm_time);
+                    tracktime < tolerated_min_rpm_time ? '<' : '>', tolerated_min_rpm_time);
             throw util::diskspeedwrong_exception("disk speed is wrong (track read time is out of allowed range)");
         }
     }
-    if (scan_result->tracktime > RPM_TIME_200)
+    if (tracktime > RPM_TIME_200)
         throw util::diskspeedwrong_exception("index-halving cables are no longer supported");
 
     firstSectorSeen = scan_result->firstseen;
@@ -287,7 +290,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
     if (scan_result->count > 0 && m_lastDataRate != DataRate::Unknown)
     {
         const auto mfmbit_us = GetDataMfmBitTime(m_lastDataRate, m_lastEncoding);
-        track.tracktime = lossless_static_cast<int>(scan_result->tracktime);
+        track.tracktime = tracktime;
         track.tracklen = lossless_static_cast<int>(std::round(track.tracktime / mfmbit_us));
 
         for (int i = 0; i < scan_result->count; ++i)

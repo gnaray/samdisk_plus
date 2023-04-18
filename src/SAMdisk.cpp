@@ -43,7 +43,7 @@ struct OPTIONS
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
     int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
     int track_retries = -1, disk_retries = -1;
-    int stability_level = -1, rpm_tolerance_permille = 10;
+    int stability_level = -1, time_tolerance_permille = 10;
 
     Encoding encoding{ Encoding::Unknown };
     DataRate datarate{ DataRate::Unknown };
@@ -127,7 +127,7 @@ int& getOpt(const std::string& key)
         {"resize", opt.resize},
         {"retries", opt.retries},
         {"rpm", opt.rpm},
-        {"rpm_tolerance_permille", opt.rpm_tolerance_permille},
+        {"time_tolerance_permille", opt.time_tolerance_permille},
         {"scale", opt.scale},
         {"size", opt.size},
         {"skew", opt.skew},
@@ -364,7 +364,7 @@ enum {
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
     OPT_TRACK_RETRIES, OPT_DISK_RETRIES, OPT_NORMAL_DISK,
     OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL,
-    OPT_RPM_TOLERANCE_PERMILLE
+    OPT_TIME_TOLERANCE_PERMILLE
 };
 
 static struct option long_options[] =
@@ -477,7 +477,7 @@ static struct option long_options[] =
     { "skip-stable-sectors",no_argument, nullptr, OPT_SKIP_STABLE_SECTORS },      // undocumented. in repair mode skip those sectors which are already rescued in destination.
     { "track-retries",    required_argument, nullptr, OPT_TRACK_RETRIES }, // undocumented. Amount od track retries. Each retry move the floppy drive head a bit.
     { "disk-retries",     required_argument, nullptr, OPT_DISK_RETRIES },  // undocumented. Amount of disk retries. If auto then do it while data improved.
-    { "rpm-tolerance-permille", required_argument, nullptr, OPT_RPM_TOLERANCE_PERMILLE},
+    { "time-tolerance-permille", required_argument, nullptr, OPT_TIME_TOLERANCE_PERMILLE},
 
     { nullptr, 0, nullptr, 0 }
 };
@@ -724,11 +724,12 @@ bool ParseCommandLine(int argc_, char* argv_[])
             opt.skip_stable_sectors = true;
             break;
 
-        case OPT_RPM_TOLERANCE_PERMILLE:
-            // This parameter is used for not allowing too slow or too fast disk. See also OPT_RPM.
-            opt.rpm_tolerance_permille = util::str_value<int>(optarg);
-            if (opt.rpm_tolerance_permille < 0 || opt.rpm_tolerance_permille > 500)
-                throw util::exception("invalid rpm-tolerance-permille '", optarg, "', expected between 0 and 500");
+        case OPT_TIME_TOLERANCE_PERMILLE:
+            // This parameter is used for not allowing too slow or too fast disk.
+            // Instead of tolerating RPM, its reciprocal is tolerated which is time (MPR). See also OPT_RPM.
+            opt.time_tolerance_permille = util::str_value<int>(optarg);
+            if (opt.time_tolerance_permille < 0 || opt.time_tolerance_permille > 500)
+                throw util::exception("invalid time-tolerance-permille '", optarg, "', expected between 0 and 500 inclusive");
             break;
 
         case ':':

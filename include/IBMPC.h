@@ -41,11 +41,19 @@ constexpr int RPM_300 = 300;
 constexpr int RPM_360 = 360;
 constexpr int MIRCOSEC_PER_MINUTE = 60'000'000;
 
-inline int RPM_TIME_MICROSEC(double rpm)
+constexpr double RPM_TIME_MICROSEC(double rpm)
 {
-    return static_cast<int>(std::round(MIRCOSEC_PER_MINUTE / rpm));
+    return MIRCOSEC_PER_MINUTE / rpm;
 }
-// The RPM_TIME_* do not use RPM_TIME_MICROSEC function because it is not constexpr because of std::round.
+
+template<typename T,
+         std::enable_if_t<!std::is_floating_point<T>::value, int> = 0>
+inline T RPM_TIME_MICROSEC_AS(double rpm)
+{
+    return round_AS<T>(RPM_TIME_MICROSEC(rpm));
+}
+
+// The RPM_TIME_* do not use RPM_TIME_MICROSEC_AS function because it is not constexpr because of std::round.
 constexpr int RPM_TIME_200 = MIRCOSEC_PER_MINUTE / RPM_200;
 constexpr int RPM_TIME_300 = MIRCOSEC_PER_MINUTE / RPM_300;
 constexpr int RPM_TIME_360 = MIRCOSEC_PER_MINUTE / RPM_360;
