@@ -161,7 +161,7 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
 
             if (encoding == Encoding::MFM && found_am)
             {
-                // A1 sync byte (red if aligned to bitstream, magenta if not).
+                // A1 sync byte (bright yellow if aligned to bitstream, dark yellow if not).
                 colours.push_back((bits == 16) ? colour::YELLOW : colour::yellow);
                 ++a1;
             }
@@ -170,32 +170,32 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
                 if (am == 0xfe && am_dist == 4)
                     data_size = Sector::SizeCodeToLength(b);
 
-                if (a1 == 3)
+                if (a1 == 3) // MFM address mark.
                 {
                     colours.push_back(colour::RED);
                     am = b;
                     am_dist = 0;
                 }
-                else if (encoding == Encoding::FM && found_am)
+                else if (encoding == Encoding::FM && found_am) // FM address mark.
                 {
                     colours.push_back((bits == 32) ? colour::RED : colour::red);
                     am = b;
                     am_dist = 0;
                 }
-                else if (am == 0xfe && am_dist >= 1 && am_dist <= 4)
+                else if (am == 0xfe && am_dist >= 1 && am_dist <= 4) // Sector CHRN.
                 {
                     colours.push_back((am_dist == 3) ? colour::GREEN : colour::green);
                 }
-                else if (am == 0xfb && am_dist >= 1 && am_dist <= data_size)
+                else if (am == 0xfb && am_dist >= 1 && am_dist <= data_size) // Sector data.
                 {
                     colours.push_back(colour::white);
                 }
                 else if ((am == 0xfe && am_dist > 4 && am_dist <= 6) ||
-                    (am == 0xfb && am_dist > data_size&& am_dist <= (data_size + 2)))
+                    (am == 0xfb && am_dist > data_size && am_dist <= (data_size + 2))) // Block CRC.
                 {
                     colours.push_back(colour::MAGENTA);
                 }
-                else
+                else // Everything else alias gaps.
                 {
                     colours.push_back(colour::grey);
                 }
