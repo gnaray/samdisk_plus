@@ -668,14 +668,11 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
         if (src_track.is_repeated(src_sector))
             continue;
 
+        // The datarates of sectors on track must be equal and same as of first sector.
         auto src_sector_copy = src_sector;
         // In real-world use 250Kbps/300Kbps are interchangeable due to 300rpm/360rpm.
-        if (!track.empty() &&
-            are_interchangeably_equal_datarates(track[0].datarate, src_sector_copy.datarate))
-        {
-            // Convert source to target data rate.
-            src_sector_copy.datarate = track[0].datarate;
-        }
+        if (!track.empty())
+            src_sector_copy.normalise_datarate(track[0].datarate);
 
         // Find a target sector with the same CHRN, datarate, and encoding.
         auto it = track.find(src_sector_copy.header, src_sector_copy.datarate, src_sector_copy.encoding);

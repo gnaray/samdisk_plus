@@ -712,15 +712,19 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                 {
                     auto sector = track[i];
 
+                    auto rpm_time = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
+                    auto track_capacity = GetTrackCapacity(rpm_time, sector.datarate, sector.encoding);
+
                     // If any offsets are zero we can't generate append an offsets block.
                     if (!sector.offset)
                         add_offsets_block = false;
                     // Take care to only output offsets on the first pass around the fitting loop.
                     else if (!added_sector_offsets)
+                    {
+                        // This dsk format converts datarate 300Kbps to 250Kbps so do it on sectors as well.
+                        sector.normalise_datarate(datarate);
                         offsets.push_back(util::htole(static_cast<uint16_t>(sector.offset / 16)));
-
-                    auto rpm_time = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
-                    auto track_capacity = GetTrackCapacity(rpm_time, sector.datarate, sector.encoding);
+                    }
 
                     // Accept only normal and deleted DAMs, removing the data field for other types.
                     // Hercule II (CPC) has a non-standard DAM (0xFD), and expects it to be unreadable.
