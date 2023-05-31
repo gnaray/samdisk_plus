@@ -26,7 +26,7 @@ static auto& opt_newdrive = getOpt<int>("newdrive");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_retries = getOpt<int>("retries");
 static auto& opt_rpm = getOpt<int>("rpm");
-static auto& opt_time_tolerance_permille = getOpt<int>("time_tolerance_permille");
+static auto& opt_rpm_time_tolerance_permille = getOpt<int>("rpm_time_tolerance_permille");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_steprate = getOpt<int>("steprate");
 
@@ -269,16 +269,16 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
     const auto tracktime = lossless_static_cast<int>(scan_result->tracktime);
     if (opt_rpm > 0)
     {
-        const auto time_tolerance = opt_time_tolerance_permille / 1000.;
+        const auto rpm_time_tolerance = opt_rpm_time_tolerance_permille / 1000.;
         // Since disk speed is not perfectly constant the tracktime might fluctuate within a tolerated range.
-        const auto tolerated_min_rpm_time = lossless_static_cast<int>(RPM_TIME_MICROSEC(opt_rpm) * (1 - time_tolerance));
-        const auto tolerated_max_rpm_time = lossless_static_cast<int>(RPM_TIME_MICROSEC(opt_rpm) * (1 + time_tolerance));
+        const auto rpm_time_tolerated_min = lossless_static_cast<int>(RPM_TIME_MICROSEC(opt_rpm) * (1 - rpm_time_tolerance));
+        const auto rpm_time_tolerated_max = lossless_static_cast<int>(RPM_TIME_MICROSEC(opt_rpm) * (1 + rpm_time_tolerance));
         // If the track read time is out of allowed rpm time range, something is wrong and offsets are not perfect.
-        if (tracktime < tolerated_min_rpm_time || tracktime > tolerated_max_rpm_time)
+        if (tracktime < rpm_time_tolerated_min || tracktime > rpm_time_tolerated_max)
         {
             Message(msgWarning, "track read time of %s is out of allowed range (%ul %c %i)",
                 CH(cylhead.cyl, cylhead.head), scan_result->tracktime,
-                    tracktime < tolerated_min_rpm_time ? '<' : '>', tolerated_min_rpm_time);
+                    tracktime < rpm_time_tolerated_min ? '<' : '>', rpm_time_tolerated_min);
             throw util::diskspeedwrong_exception("disk speed is wrong (track read time is out of allowed range)");
         }
     }
