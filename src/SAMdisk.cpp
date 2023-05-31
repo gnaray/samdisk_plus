@@ -43,7 +43,7 @@ struct OPTIONS
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
     int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
     int track_retries = -1, disk_retries = -1;
-    int stability_level = -1, rpm_time_tolerance_permille = 10;
+    int stability_level = -1, rpm_time_tolerance_permille = 10, byte_tolerance_of_time = Track::COMPARE_TOLERANCE_BYTES;
 
     Encoding encoding{ Encoding::Unknown };
     DataRate datarate{ DataRate::Unknown };
@@ -73,6 +73,7 @@ int& getOpt(const char* key)
         {"atom", Options::opt.atom},
         {"base", Options::opt.base},
         {"bdos", Options::opt.bdos},
+        {"byte_tolerance_of_time", Options::opt.byte_tolerance_of_time},
         {"bytes_begin", Options::opt.bytes_begin},
         {"bytes_end", Options::opt.bytes_end},
         {"byteswap", Options::opt.byteswap},
@@ -370,7 +371,7 @@ enum {
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
     OPT_TRACK_RETRIES, OPT_DISK_RETRIES, OPT_NORMAL_DISK,
     OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL,
-    OPT_RPM_TIME_TOLERANCE_PERMILLE
+    OPT_RPM_TIME_TOLERANCE_PERMILLE, OPT_BYTE_TOLERANCE_OF_TIME
 };
 
 static struct option long_options[] =
@@ -484,6 +485,7 @@ static struct option long_options[] =
     { "track-retries",    required_argument, nullptr, OPT_TRACK_RETRIES }, // undocumented. Amount od track retries. Each retry move the floppy drive head a bit.
     { "disk-retries",     required_argument, nullptr, OPT_DISK_RETRIES },  // undocumented. Amount of disk retries. If auto then do it while data improved.
     { "rpm-time-tolerance-permille", required_argument, nullptr, OPT_RPM_TIME_TOLERANCE_PERMILLE},
+    { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME},
 
     { nullptr, 0, nullptr, 0 }
 };
@@ -736,6 +738,13 @@ bool ParseCommandLine(int argc_, char* argv_[])
             Options::opt.rpm_time_tolerance_permille = util::str_value<int>(optarg);
             if (Options::opt.rpm_time_tolerance_permille < 0 || Options::opt.rpm_time_tolerance_permille > 250)
                 throw util::exception("invalid rpm-time-tolerance-permille '", optarg, "', expected between 0 and 250 inclusive");
+            break;
+
+        case OPT_BYTE_TOLERANCE_OF_TIME:
+            // This parameter is used for matching sectors if difference of their time is within this tolerance.
+            Options::opt.byte_tolerance_of_time = util::str_value<int>(optarg);
+            if (Options::opt.byte_tolerance_of_time < 0 || Options::opt.byte_tolerance_of_time > 127)
+                throw util::exception("invalid byte-tolerance-of-time '", optarg, "', expected between 0 and 127 inclusive");
             break;
 
         case ':':
