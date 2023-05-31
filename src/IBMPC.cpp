@@ -87,12 +87,17 @@ int GetSyncOverhead(Encoding encoding)
     return (encoding == Encoding::MFM) ? SYNC_OVERHEAD_MFM : SYNC_OVERHEAD_FM;
 }
 
+// The drive_speed is rpm_time which is the time duration while the disk rotates once.
+// The drive_speed of 360 RPM is 166666,6... floored to int as 166666.
 int GetRawTrackCapacity(int drive_speed, DataRate datarate, Encoding encoding)
 {
     auto len_bits = bits_per_second(datarate);
     assert(len_bits != 0);
 
-    auto len_bytes = ((len_bits / 8) * (drive_speed / 10)) / 100000;
+    // Max len_bits is 1000000, max drive_speed is 300000 (at RPM 200).
+    // Thus operator order is important to avoid overflow (of int assumed to be 32 bits).
+    // Dividing by 1000 two times instead of once to avoid overflow for sure.
+    auto len_bytes = len_bits / 1000 * drive_speed / 1000 / 8;
     if (encoding == Encoding::FM) len_bytes >>= 1;
     return len_bytes;
 }
