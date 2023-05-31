@@ -111,7 +111,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                     }
                 });
                 if (dst_track_amount > 0)
-                    normal_track_size = lossless_static_cast<int>(std::round(lossless_static_cast<double>(sum_dst_track_size) / dst_track_amount));
+                    normal_track_size = round_AS<int>(lossless_static_cast<double>(sum_dst_track_size) / dst_track_amount);
             }
         }
 

@@ -376,7 +376,7 @@ void Sector::process_merge_result(const Merge& ret, int new_read_attempts, const
             auto read_rate = lossless_static_cast<double>(data_read_stats.ReadCount()) / m_read_attempts;
             auto new_read_rate = lossless_static_cast<double>(new_data_read_stats.ReadCount()) / new_read_attempts;
             auto combined_read_rate = read_rate + new_read_rate - read_rate * new_read_rate;
-            auto combined_read_count = lossless_static_cast<int>(std::round(combined_read_rate * combined_read_attempts));
+            auto combined_read_count = round_AS<int>(combined_read_rate * combined_read_attempts);
             if (ret == Merge::Matched)
                 m_data_read_stats[u_affected_data_index] = DataReadStats(combined_read_count);
             else // Improved

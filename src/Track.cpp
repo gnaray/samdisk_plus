@@ -241,7 +241,7 @@ int Track::normal_probable_size() const {
     if (amount_of_sector_id == 0)
         return 0;
     const auto average_sector_id = static_cast<double>(sum_of_sector_id) / amount_of_sector_id;
-    const auto max_sector_id = static_cast<int>(std::round(average_sector_id * 2 + 1)); // Back to sector indexing from 1 thus the +1.
+    const auto max_sector_id = round_AS<int>(average_sector_id * 2 + 1); // Back to sector indexing from 1 thus the +1.
     const auto sector_id_counter = [&](auto a, auto b) {
         if (b.has_badidcrc())
             return a;
