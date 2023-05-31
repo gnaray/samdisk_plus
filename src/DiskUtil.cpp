@@ -669,10 +669,9 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
             continue;
 
         auto src_sector_copy = src_sector;
-        // In real-world use 250Kbps/300Kbps are interchangable due to 300rpm/360rpm.
+        // In real-world use 250Kbps/300Kbps are interchangeable due to 300rpm/360rpm.
         if (!track.empty() &&
-            (track[0].datarate == DataRate::_250K || track[0].datarate == DataRate::_300K) &&
-            (src_sector_copy.datarate == DataRate::_250K || src_sector_copy.datarate == DataRate::_300K))
+            are_interchangeably_equal_datarates(track[0].datarate, src_sector_copy.datarate))
         {
             // Convert source to target data rate.
             src_sector_copy.datarate = track[0].datarate;
@@ -719,10 +718,10 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
 
                 // Attempt to find the same sector on the target track.
                 it = track.find(s.header, s.datarate, s.encoding);
-                // If not found then try with different interchangable datarate.
+                // If not found and its datarate is different interchangeable then try that also.
                 if (it == track.end() && s.datarate != src_sector_copy.datarate &&
-                    (s.datarate == DataRate::_250K || s.datarate == DataRate::_300K) &&
-                    (src_sector_copy.datarate == DataRate::_250K || src_sector_copy.datarate == DataRate::_300K)) {
+                        are_interchangeably_equal_datarates(s.datarate, src_sector_copy.datarate))
+                {
                     it = track.find(s.header, src_sector_copy.datarate, s.encoding);
                 }
 

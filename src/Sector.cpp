@@ -570,10 +570,8 @@ constexpr bool Sector::has_same_record_properties(const Sector& sector) const
     if (sector.encoding != encoding)
         return false;
 
-    // Datarates must match interchangably.
-    if (sector.datarate != datarate &&
-            !((sector.datarate == DataRate::_250K || sector.datarate == DataRate::_300K)
-            && (datarate == DataRate::_250K || datarate == DataRate::_300K));
+    // Datarates must match interchangeably.
+    if (sector.datarate != datarate && !are_interchangeably_equal_datarates(sector.datarate, datarate))
         return false;
 
     return true;

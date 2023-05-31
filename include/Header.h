@@ -14,6 +14,11 @@ std::string to_string(const Encoding& encoding);
 std::string short_name(const Encoding& encoding);
 DataRate datarate_from_string(std::string str);
 Encoding encoding_from_string(std::string str);
+constexpr bool are_interchangeably_equal_datarates(const DataRate& datarate1, const DataRate& datarate2)
+{
+    return ((datarate1 == DataRate::_250K || datarate1 == DataRate::_300K)
+            && (datarate2 == DataRate::_250K || datarate2 == DataRate::_300K));
+}
 
 constexpr int bitcell_ns(DataRate datarate)
 {
