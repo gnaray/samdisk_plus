@@ -52,93 +52,98 @@ struct OPTIONS
     std::string label{}, boot{};
 
     char szSource[MAX_PATH], szTarget[MAX_PATH];
-
 };
 
-static OPTIONS opt;
+class Options
+{
+public:
+    static struct OPTIONS opt;
+};
+
+struct OPTIONS Options::opt;
 
 template<>
 int& getOpt(const std::string& key)
 {
     static const std::map<std::string, int&> s_mapStringToIntegerVariables =
     {
-        {"a1sync", opt.a1sync},
-        {"absoffsets", opt.absoffsets},
-        {"align", opt.align},
-        {"atom", opt.atom},
-        {"base", opt.base},
-        {"bdos", opt.bdos},
-        {"bytes_begin", opt.bytes_begin},
-        {"bytes_end", opt.bytes_end},
-        {"byteswap", opt.byteswap},
-        {"calibrate", opt.calibrate},
-        {"check8k", opt.check8k},
-        {"command", opt.command},
-        {"cpm", opt.cpm},
-        {"cylsfirst", opt.cylsfirst},
-        {"datacopy", opt.datacopy},
-        {"debug", opt.debug},
-        {"disk_retries", opt.disk_retries},
-        {"fill", opt.fill},
-        {"fix", opt.fix},
-        {"flip", opt.flip},
-        {"fmoverlap", opt.fmoverlap},
-        {"force", opt.force},
-        {"gap2", opt.gap2},
-        {"gap3", opt.gap3},
-        {"gap4b", opt.gap4b},
-        {"gapmask", opt.gapmask},
-        {"gaps", opt.gaps},
-        {"hardsectors", opt.hardsectors},
-        {"hdf", opt.hdf},
-        {"head0", opt.head0},
-        {"head1", opt.head1},
-        {"hex", opt.hex},
-        {"idcrc", opt.idcrc},
-        {"interleave", opt.interleave},
-        {"keepoverlap", opt.keepoverlap},
-        {"legacy", opt.legacy},
-        {"log", opt.log},
-        {"maxcopies", opt.maxcopies},
-        {"maxsplice", opt.maxsplice},
-        {"merge", opt.merge},
-        {"minimal", opt.minimal},
-        {"mt", opt.mt},
-        {"multiformat", opt.multiformat},
-        {"newdrive", opt.newdrive},
-        {"nocfa", opt.nocfa},
-        {"nodata", opt.nodata},
-        {"nodiff", opt.nodiff},
-        {"nodups", opt.nodups},
-        {"noformat", opt.noformat},
-        {"noidentify", opt.noidentify},
-        {"nosig", opt.nosig},
-        {"nospecial", opt.nospecial},
-        {"nottb", opt.nottb},
-        {"noweak", opt.noweak},
-        {"nowobble", opt.nowobble},
-        {"nozip", opt.nozip},
-        {"offsets", opt.offsets},
-        {"plladjust", opt.plladjust},
-        {"pllphase", opt.pllphase},
-        {"quick", opt.quick},
-        {"repair", opt.repair},
-        {"rescans", opt.rescans},
-        {"resize", opt.resize},
-        {"retries", opt.retries},
-        {"rpm", opt.rpm},
-        {"time_tolerance_permille", opt.time_tolerance_permille},
-        {"scale", opt.scale},
-        {"size", opt.size},
-        {"skew", opt.skew},
-        {"stability_level", opt.stability_level},
-        {"step", opt.step},
-        {"steprate", opt.steprate},
-        {"time", opt.time},
-        {"track_retries", opt.track_retries},
-        {"trim", opt.trim},
-        {"tty", opt.tty},
-        {"verbose", opt.verbose},
+        {"a1sync", Options::opt.a1sync},
+        {"absoffsets", Options::opt.absoffsets},
+        {"align", Options::opt.align},
+        {"atom", Options::opt.atom},
+        {"base", Options::opt.base},
+        {"bdos", Options::opt.bdos},
+        {"bytes_begin", Options::opt.bytes_begin},
+        {"bytes_end", Options::opt.bytes_end},
+        {"byteswap", Options::opt.byteswap},
+        {"calibrate", Options::opt.calibrate},
+        {"check8k", Options::opt.check8k},
+        {"command", Options::opt.command},
+        {"cpm", Options::opt.cpm},
+        {"cylsfirst", Options::opt.cylsfirst},
+        {"datacopy", Options::opt.datacopy},
+        {"debug", Options::opt.debug},
+        {"disk_retries", Options::opt.disk_retries},
+        {"fill", Options::opt.fill},
+        {"fix", Options::opt.fix},
+        {"flip", Options::opt.flip},
+        {"fmoverlap", Options::opt.fmoverlap},
+        {"force", Options::opt.force},
+        {"gap2", Options::opt.gap2},
+        {"gap3", Options::opt.gap3},
+        {"gap4b", Options::opt.gap4b},
+        {"gapmask", Options::opt.gapmask},
+        {"gaps", Options::opt.gaps},
+        {"hardsectors", Options::opt.hardsectors},
+        {"hdf", Options::opt.hdf},
+        {"head0", Options::opt.head0},
+        {"head1", Options::opt.head1},
+        {"hex", Options::opt.hex},
+        {"idcrc", Options::opt.idcrc},
+        {"interleave", Options::opt.interleave},
+        {"keepoverlap", Options::opt.keepoverlap},
+        {"legacy", Options::opt.legacy},
+        {"log", Options::opt.log},
+        {"maxcopies", Options::opt.maxcopies},
+        {"maxsplice", Options::opt.maxsplice},
+        {"merge", Options::opt.merge},
+        {"minimal", Options::opt.minimal},
+        {"mt", Options::opt.mt},
+        {"multiformat", Options::opt.multiformat},
+        {"newdrive", Options::opt.newdrive},
+        {"nocfa", Options::opt.nocfa},
+        {"nodata", Options::opt.nodata},
+        {"nodiff", Options::opt.nodiff},
+        {"nodups", Options::opt.nodups},
+        {"noformat", Options::opt.noformat},
+        {"noidentify", Options::opt.noidentify},
+        {"nosig", Options::opt.nosig},
+        {"nospecial", Options::opt.nospecial},
+        {"nottb", Options::opt.nottb},
+        {"noweak", Options::opt.noweak},
+        {"nowobble", Options::opt.nowobble},
+        {"nozip", Options::opt.nozip},
+        {"offsets", Options::opt.offsets},
+        {"plladjust", Options::opt.plladjust},
+        {"pllphase", Options::opt.pllphase},
+        {"quick", Options::opt.quick},
+        {"repair", Options::opt.repair},
+        {"rescans", Options::opt.rescans},
+        {"resize", Options::opt.resize},
+        {"retries", Options::opt.retries},
+        {"rpm", Options::opt.rpm},
+        {"time_tolerance_permille", Options::opt.rpm_time_tolerance_permille},
+        {"scale", Options::opt.scale},
+        {"size", Options::opt.size},
+        {"skew", Options::opt.skew},
+        {"stability_level", Options::opt.stability_level},
+        {"step", Options::opt.step},
+        {"steprate", Options::opt.steprate},
+        {"time", Options::opt.time},
+        {"track_retries", Options::opt.track_retries},
+        {"trim", Options::opt.trim},
+        {"tty", Options::opt.tty},
+        {"verbose", Options::opt.verbose},
     };
     return s_mapStringToIntegerVariables.at(key);
 }
@@ -148,10 +153,10 @@ bool& getOpt(const std::string& key)
 {
     static const std::map<std::string, bool&> s_mapStringToBoolVariables =
     {
-        {"normal_disk", opt.normal_disk},
-        {"paranoia", opt.paranoia},
-        {"readstats", opt.readstats},
-        {"skip_stable_sectors", opt.skip_stable_sectors}
+        {"normal_disk", Options::opt.normal_disk},
+        {"paranoia", Options::opt.paranoia},
+        {"readstats", Options::opt.readstats},
+        {"skip_stable_sectors", Options::opt.skip_stable_sectors}
     };
     return s_mapStringToBoolVariables.at(key);
 }
@@ -161,7 +166,7 @@ long& getOpt(const std::string& key)
 {
     static const std::map<std::string, long&> s_mapStringToLongVariables =
     {
-        {"sectors", opt.sectors}
+        {"sectors", Options::opt.sectors}
     };
 
     return s_mapStringToLongVariables.at(key);
@@ -172,7 +177,7 @@ Range& getOpt(const std::string& key)
 {
     static const std::map<std::string, Range&> s_mapStringToRangeVariables =
     {
-        {"range", opt.range}
+        {"range", Options::opt.range}
     };
 
     return s_mapStringToRangeVariables.at(key);
@@ -183,7 +188,7 @@ Encoding& getOpt(const std::string& key)
 {
     static const std::map<std::string, Encoding&> s_mapStringToEncodingVariables =
     {
-        {"encoding", opt.encoding}
+        {"encoding", Options::opt.encoding}
     };
 
     return s_mapStringToEncodingVariables.at(key);
@@ -194,7 +199,7 @@ DataRate& getOpt(const std::string& key)
 {
     static const std::map<std::string, DataRate&> s_mapStringToDataRateVariables =
     {
-        {"datarate", opt.datarate}
+        {"datarate", Options::opt.datarate}
     };
 
     return s_mapStringToDataRateVariables.at(key);
@@ -205,7 +210,7 @@ PreferredData& getOpt(const std::string& key)
 {
     static const std::map<std::string, PreferredData&> s_mapStringToPreferredDataVariables =
     {
-        {"prefer", opt.prefer}
+        {"prefer", Options::opt.prefer}
     };
 
     return s_mapStringToPreferredDataVariables.at(key);
@@ -216,8 +221,8 @@ std::string& getOpt(const std::string& key)
 {
     static const std::map<std::string, std::string&> s_mapStringToStringVariables =
     {
-        {"label", opt.label},
-        {"boot", opt.boot}
+        {"label", Options::opt.label},
+        {"boot", Options::opt.boot},
     };
 
     return s_mapStringToStringVariables.at(key);
@@ -228,8 +233,8 @@ charArrayMAX_PATH& getOpt(const std::string& key)
 {
     static const std::map<std::string, char(&)[MAX_PATH]> s_mapStringToCharArrayVariables =
     {
-        {"szSource", opt.szSource},
-        {"szTarget", opt.szTarget}
+        {"szSource", Options::opt.szSource},
+        {"szTarget", Options::opt.szTarget}
     };
 
     return s_mapStringToCharArrayVariables.at(key);
@@ -254,8 +259,8 @@ int Usage()
         << "  -c, --cyls=N        cylinder count (N) or range (A-B)\n"
         << "  -h, --head=N        single head select (0 or 1)\n"
         << "  -s, --sector[s]     sector count for format, or single sector select\n"
-        << "  -r, --retries=N     retry count for bad sectors (default=" << opt.retries << ")\n"
-        << "  -R, --rescans=N     rescan count for full track reads (default=" << opt.rescans << ")\n"
+        << "  -r, --retries=N     retry count for bad sectors (default=" << Options::opt.retries << ")\n"
+        << "  -R, --rescans=N     rescan count for full track reads (default=" << Options::opt.rescans << ")\n"
         << "  -d, --double-step   step floppy head twice between tracks\n"
         << "  -f, --force         suppress confirmation prompts (careful!)\n"
         << "\n"
@@ -397,61 +402,61 @@ static struct option long_options[] =
     { "datarate",   required_argument, nullptr, 't' },
 
     { "debug",      optional_argument, nullptr, OPT_DEBUG },
-    { "dec",              no_argument, &opt.hex, 0 },
-    { "hex-ish",          no_argument, &opt.hex, 2 },
-    { "calibrate",        no_argument, &opt.calibrate, 1 },
-    { "cpm",              no_argument, &opt.cpm, 1 },
-    { "resize",           no_argument, &opt.resize, 1 },
-    { "fm-overlap",       no_argument, &opt.fmoverlap, 1 },
-    { "multi-format",     no_argument, &opt.multiformat, 1 },
-    { "offsets",          no_argument, &opt.offsets, 1 },
-    { "abs-offsets",      no_argument, &opt.absoffsets, 1 },
-    { "no-offsets",       no_argument, &opt.offsets, 0 },
-    { "id-crc",           no_argument, &opt.idcrc, 1 },
-    { "no-gap2",          no_argument, &opt.gap2, 0 },
-    { "no-gap4b",         no_argument, &opt.gap4b, 0 },
-    { "no-gaps",          no_argument, &opt.gaps, GAPS_NONE },
-    { "gaps",             no_argument, &opt.gaps, GAPS_CLEAN },
-    { "clean-gaps",       no_argument, &opt.gaps, GAPS_CLEAN },
-    { "all-gaps",         no_argument, &opt.gaps, GAPS_ALL },
-    { "gap2",             no_argument, &opt.gap2, 1 },
-    { "keep-overlap",     no_argument, &opt.keepoverlap, 1 },
-    { "no-diff",          no_argument, &opt.nodiff, 1 },
-    { "no-copies",        no_argument, &opt.maxcopies, 1 },
-    { "no-duplicates",    no_argument, &opt.nodups, 1 },
-    { "no-dups",          no_argument, &opt.nodups, 1 },
-    { "no-check8k",       no_argument, &opt.check8k, 0 },
-    { "no-data",          no_argument, &opt.nodata, 1 },
-    { "no-wobble",        no_argument, &opt.nowobble, 1 },
-    { "no-mt",            no_argument, &opt.mt, 0 },
-    { "new-drive",        no_argument, &opt.newdrive, 1 },
-    { "old-drive",        no_argument, &opt.newdrive, 0 },
-    { "slow-step",        no_argument, &opt.newdrive, 0 },
-    { "no-signature",     no_argument, &opt.nosig, 1 },
-    { "no-zip",           no_argument, &opt.nozip, 1 },
-    { "no-cfa",           no_argument, &opt.nocfa, 1 },
-    { "no-identify",      no_argument, &opt.noidentify, 1 },
-    { "no-ttb",           no_argument, &opt.nottb, 1},          // undocumented
-    { "no-special",       no_argument, &opt.nospecial, 1 },     // undocumented
-    { "byte-swap",        no_argument, &opt.byteswap, 1 },
-    { "atom",             no_argument, &opt.byteswap, 1 },
+    { "dec",              no_argument, &Options::opt.hex, 0 },
+    { "hex-ish",          no_argument, &Options::opt.hex, 2 },
+    { "calibrate",        no_argument, &Options::opt.calibrate, 1 },
+    { "cpm",              no_argument, &Options::opt.cpm, 1 },
+    { "resize",           no_argument, &Options::opt.resize, 1 },
+    { "fm-overlap",       no_argument, &Options::opt.fmoverlap, 1 },
+    { "multi-format",     no_argument, &Options::opt.multiformat, 1 },
+    { "offsets",          no_argument, &Options::opt.offsets, 1 },
+    { "abs-offsets",      no_argument, &Options::opt.absoffsets, 1 },
+    { "no-offsets",       no_argument, &Options::opt.offsets, 0 },
+    { "id-crc",           no_argument, &Options::opt.idcrc, 1 },
+    { "no-gap2",          no_argument, &Options::opt.gap2, 0 },
+    { "no-gap4b",         no_argument, &Options::opt.gap4b, 0 },
+    { "no-gaps",          no_argument, &Options::opt.gaps, GAPS_NONE },
+    { "gaps",             no_argument, &Options::opt.gaps, GAPS_CLEAN },
+    { "clean-gaps",       no_argument, &Options::opt.gaps, GAPS_CLEAN },
+    { "all-gaps",         no_argument, &Options::opt.gaps, GAPS_ALL },
+    { "gap2",             no_argument, &Options::opt.gap2, 1 },
+    { "keep-overlap",     no_argument, &Options::opt.keepoverlap, 1 },
+    { "no-diff",          no_argument, &Options::opt.nodiff, 1 },
+    { "no-copies",        no_argument, &Options::opt.maxcopies, 1 },
+    { "no-duplicates",    no_argument, &Options::opt.nodups, 1 },
+    { "no-dups",          no_argument, &Options::opt.nodups, 1 },
+    { "no-check8k",       no_argument, &Options::opt.check8k, 0 },
+    { "no-data",          no_argument, &Options::opt.nodata, 1 },
+    { "no-wobble",        no_argument, &Options::opt.nowobble, 1 },
+    { "no-mt",            no_argument, &Options::opt.mt, 0 },
+    { "new-drive",        no_argument, &Options::opt.newdrive, 1 },
+    { "old-drive",        no_argument, &Options::opt.newdrive, 0 },
+    { "slow-step",        no_argument, &Options::opt.newdrive, 0 },
+    { "no-signature",     no_argument, &Options::opt.nosig, 1 },
+    { "no-zip",           no_argument, &Options::opt.nozip, 1 },
+    { "no-cfa",           no_argument, &Options::opt.nocfa, 1 },
+    { "no-identify",      no_argument, &Options::opt.noidentify, 1 },
+    { "no-ttb",           no_argument, &Options::opt.nottb, 1},          // undocumented
+    { "no-special",       no_argument, &Options::opt.nospecial, 1 },     // undocumented
+    { "byte-swap",        no_argument, &Options::opt.byteswap, 1 },
+    { "atom",             no_argument, &Options::opt.byteswap, 1 },
     { "ace",              no_argument, nullptr, OPT_ACE },
     { "mx",               no_argument, nullptr, OPT_MX },
     { "agat",             no_argument, nullptr, OPT_AGAT },
-    { "quick",            no_argument, &opt.quick, 1 },
-    { "repair",           no_argument, &opt.repair, 1},
-    { "fix",              no_argument, &opt.fix, 1 },
-    { "align",            no_argument, &opt.align, 1 },
-    { "a1-sync",          no_argument, &opt.a1sync, 1 },
-    { "no-fix",           no_argument, &opt.fix, 0 },
+    { "quick",            no_argument, &Options::opt.quick, 1 },
+    { "repair",           no_argument, &Options::opt.repair, 1},
+    { "fix",              no_argument, &Options::opt.fix, 1 },
+    { "align",            no_argument, &Options::opt.align, 1 },
+    { "a1-sync",          no_argument, &Options::opt.a1sync, 1 },
+    { "no-fix",           no_argument, &Options::opt.fix, 0 },
     { "no-fm",            no_argument, nullptr, OPT_NOFM },
-    { "no-weak",          no_argument, &opt.noweak, 1 },
-    { "merge",            no_argument, &opt.merge, 1 },
-    { "trim",             no_argument, &opt.trim, 1 },
-    { "flip",             no_argument, &opt.flip, 1 },
-    { "legacy",           no_argument, &opt.legacy, 1 },
-    { "time",             no_argument, &opt.time, 1 },          // undocumented
-    { "tty",              no_argument, &opt.tty, 1 },
+    { "no-weak",          no_argument, &Options::opt.noweak, 1 },
+    { "merge",            no_argument, &Options::opt.merge, 1 },
+    { "trim",             no_argument, &Options::opt.trim, 1 },
+    { "flip",             no_argument, &Options::opt.flip, 1 },
+    { "legacy",           no_argument, &Options::opt.legacy, 1 },
+    { "time",             no_argument, &Options::opt.time, 1 },          // undocumented
+    { "tty",              no_argument, &Options::opt.tty, 1 },
     { "help",             no_argument, nullptr, 0 },
 
     { "log",        optional_argument, nullptr, OPT_LOG },
@@ -506,11 +511,11 @@ bool ParseCommandLine(int argc_, char* argv_[])
         switch (arg)
         {
         case 'c':
-            util::str_range(optarg, opt.range.cyl_begin, opt.range.cyl_end);
+            util::str_range(optarg, Options::opt.range.cyl_begin, Options::opt.range.cyl_end);
 
             // -c0 is shorthand for -c0-0
-            if (opt.range.cyls() == 0)
-                opt.range.cyl_end = 1;
+            if (Options::opt.range.cyls() == 0)
+                Options::opt.range.cyl_end = 1;
             break;
 
         case 'h':
@@ -519,73 +524,73 @@ bool ParseCommandLine(int argc_, char* argv_[])
             if (heads > MAX_DISK_HEADS)
                 throw util::exception("invalid head count/select '", optarg, "', expected 0-", MAX_DISK_HEADS);
 
-            opt.range.head_begin = (heads == 1) ? 1 : 0;
-            opt.range.head_end = (heads == 0) ? 1 : 2;
+            Options::opt.range.head_begin = (heads == 1) ? 1 : 0;
+            Options::opt.range.head_end = (heads == 0) ? 1 : 2;
             break;
         }
 
         case 's':
-            opt.sectors = util::str_value<long>(optarg);
+            Options::opt.sectors = util::str_value<long>(optarg);
             break;
 
         case 'H':
-            opt.hardsectors = util::str_value<int>(optarg);
-            if (opt.hardsectors <= 1)
+            Options::opt.hardsectors = util::str_value<int>(optarg);
+            if (Options::opt.hardsectors <= 1)
                 throw util::exception("invalid hard-sector count '", optarg, "'");
             break;
 
         case 'r':
-            opt.retries = util::str_value<int>(optarg);
+            Options::opt.retries = util::str_value<int>(optarg);
             break;
 
         case 'R':
-            opt.rescans = util::str_value<int>(optarg);
+            Options::opt.rescans = util::str_value<int>(optarg);
             break;
 
-        case 'n':   opt.noformat = 1; break;
-        case 'm':   opt.minimal = 1; break;
+        case 'n':   Options::opt.noformat = 1; break;
+        case 'm':   Options::opt.minimal = 1; break;
 
-        case 'b':   opt.base = util::str_value<int>(optarg); break;
-        case 'z':   opt.size = util::str_value<int>(optarg); break;
-        case 'g':   opt.gap3 = util::str_value<int>(optarg); break;
-        case 'i':   opt.interleave = util::str_value<int>(optarg); break;
-        case 'k':   opt.skew = util::str_value<int>(optarg); break;
-        case 'D':   opt.datacopy = util::str_value<int>(optarg); break;
+        case 'b':   Options::opt.base = util::str_value<int>(optarg); break;
+        case 'z':   Options::opt.size = util::str_value<int>(optarg); break;
+        case 'g':   Options::opt.gap3 = util::str_value<int>(optarg); break;
+        case 'i':   Options::opt.interleave = util::str_value<int>(optarg); break;
+        case 'k':   Options::opt.skew = util::str_value<int>(optarg); break;
+        case 'D':   Options::opt.datacopy = util::str_value<int>(optarg); break;
 
         case 'F':
-            opt.fill = util::str_value<int>(optarg);
-            if (opt.fill > 255)
+            Options::opt.fill = util::str_value<int>(optarg);
+            if (Options::opt.fill > 255)
                 throw util::exception("invalid fill value '", optarg, "', expected 0-255");
             break;
         case '0':
-            opt.head0 = util::str_value<int>(optarg);
-            if (opt.head0 > 1)
+            Options::opt.head0 = util::str_value<int>(optarg);
+            if (Options::opt.head0 > 1)
                 throw util::exception("invalid head0 value '", optarg, "', expected 0 or 1");
             break;
         case '1':
-            opt.head1 = util::str_value<int>(optarg);
-            if (opt.head1 > 1)
+            Options::opt.head1 = util::str_value<int>(optarg);
+            if (Options::opt.head1 > 1)
                 throw util::exception("invalid head1 value '", optarg, "', expected 0 or 1");
             break;
 
         case 't':
-            opt.datarate = datarate_from_string(optarg);
-            if (opt.datarate == DataRate::Unknown)
+            Options::opt.datarate = datarate_from_string(optarg);
+            if (Options::opt.datarate == DataRate::Unknown)
                 throw util::exception("invalid data rate '", optarg, "'");
             break;
 
         case 'e':
-            opt.encoding = encoding_from_string(optarg);
-            if (opt.encoding == Encoding::Unknown)
+            Options::opt.encoding = encoding_from_string(optarg);
+            if (Options::opt.encoding == Encoding::Unknown)
                 throw util::exception("invalid encoding '", optarg, "'");
             break;
 
-        case 'd':   opt.step = 2; break;
-        case 'f':   ++opt.force; break;
-        case 'v':   ++opt.verbose; break;
-        case 'x':   opt.hex = 1; break;
+        case 'd':   Options::opt.step = 2; break;
+        case 'f':   ++Options::opt.force; break;
+        case 'v':   ++Options::opt.verbose; break;
+        case 'x':   Options::opt.hex = 1; break;
 
-        case 'L':   opt.label = optarg; break;
+        case 'L':   Options::opt.label = optarg; break;
 
         case OPT_LOG:
             util::log.open(optarg ? optarg : "samdisk.log");
@@ -598,9 +603,9 @@ bool ParseCommandLine(int argc_, char* argv_[])
         {
             auto str = util::lowercase(optarg);
             if (str == std::string("cylinders").substr(0, str.length()))
-                opt.cylsfirst = 1;
+                Options::opt.cylsfirst = 1;
             else if (str == std::string("heads").substr(0, str.length()))
-                opt.cylsfirst = 0;
+                Options::opt.cylsfirst = 0;
             else
                 throw util::exception("invalid order type '", optarg, "', expected 'cylinders' or 'heads'");
             break;
@@ -610,77 +615,77 @@ bool ParseCommandLine(int argc_, char* argv_[])
         {
             auto str = util::lowercase(optarg);
             if (str == std::string("track").substr(0, str.length()))
-                opt.prefer = PreferredData::Track;
+                Options::opt.prefer = PreferredData::Track;
             else if (str == std::string("bitstream").substr(0, str.length()))
-                opt.prefer = PreferredData::Bitstream;
+                Options::opt.prefer = PreferredData::Bitstream;
             else if (str == std::string("flux").substr(0, str.length()))
-                opt.prefer = PreferredData::Flux;
+                Options::opt.prefer = PreferredData::Flux;
             else
                 throw util::exception("invalid data type '", optarg, "', expected track/bitstream/flux");
             break;
         }
 
-        case OPT_ACE:   opt.encoding = Encoding::Ace;   break;
-        case OPT_MX:    opt.encoding = Encoding::MX;    break;
-        case OPT_AGAT:  opt.encoding = Encoding::Agat;  break;
-        case OPT_NOFM:  opt.encoding = Encoding::MFM;   break;
+        case OPT_ACE:   Options::opt.encoding = Encoding::Ace;   break;
+        case OPT_MX:    Options::opt.encoding = Encoding::MX;    break;
+        case OPT_AGAT:  Options::opt.encoding = Encoding::Agat;  break;
+        case OPT_NOFM:  Options::opt.encoding = Encoding::MFM;   break;
 
         case OPT_GAPMASK:
-            opt.gapmask = util::str_value<int>(optarg);
+            Options::opt.gapmask = util::str_value<int>(optarg);
             break;
         case OPT_MAXCOPIES:
-            opt.maxcopies = util::str_value<int>(optarg);
-            if (!opt.maxcopies)
+            Options::opt.maxcopies = util::str_value<int>(optarg);
+            if (!Options::opt.maxcopies)
                 throw util::exception("invalid data copy count '", optarg, "', expected >= 1");
             break;
         case OPT_MAXSPLICE:
-            opt.maxsplice = util::str_value<int>(optarg);
+            Options::opt.maxsplice = util::str_value<int>(optarg);
             break;
         case OPT_CHECK8K:
-            opt.check8k = !optarg ? 1 : util::str_value<int>(optarg);
+            Options::opt.check8k = !optarg ? 1 : util::str_value<int>(optarg);
             break;
         case OPT_RPM:
             // https://en.wikipedia.org/wiki/List_of_floppy_disk_formats, rpm values.
             // This parameter is used for not allowing too slow or too fast disk
             // thus accepting it in a range.
-            opt.rpm = util::str_value<int>(optarg);
-            if (opt.rpm < 150 || opt.rpm > 360)
+            Options::opt.rpm = util::str_value<int>(optarg);
+            if (Options::opt.rpm < 150 || Options::opt.rpm > 360)
                 throw util::exception("invalid rpm '", optarg, "', expected between 150 and 360");
             break;
         case OPT_HDF:
-            opt.hdf = util::str_value<int>(optarg);
-            if (opt.hdf != 10 && opt.hdf != 11)
+            Options::opt.hdf = util::str_value<int>(optarg);
+            if (Options::opt.hdf != 10 && Options::opt.hdf != 11)
                 throw util::exception("invalid HDF version '", optarg, "', expected 10 or 11");
             break;
         case OPT_SCALE:
-            opt.scale = util::str_value<int>(optarg);
+            Options::opt.scale = util::str_value<int>(optarg);
             break;
         case OPT_PLLADJUST:
-            opt.plladjust = util::str_value<int>(optarg);
-            if (opt.plladjust <= 0 || opt.plladjust > MAX_PLL_ADJUST)
+            Options::opt.plladjust = util::str_value<int>(optarg);
+            if (Options::opt.plladjust <= 0 || Options::opt.plladjust > MAX_PLL_ADJUST)
                 throw util::exception("invalid pll adjustment '", optarg, "', expected 1-", MAX_PLL_ADJUST);
             break;
         case OPT_PLLPHASE:
-            opt.pllphase = util::str_value<int>(optarg);
-            if (opt.pllphase <= 0 || opt.pllphase > MAX_PLL_PHASE)
+            Options::opt.pllphase = util::str_value<int>(optarg);
+            if (Options::opt.pllphase <= 0 || Options::opt.pllphase > MAX_PLL_PHASE)
                 throw util::exception("invalid pll phase '", optarg, "', expected 1-", MAX_PLL_PHASE);
             break;
         case OPT_STEPRATE:
-            opt.steprate = util::str_value<int>(optarg);
-            if (opt.steprate > 15)
+            Options::opt.steprate = util::str_value<int>(optarg);
+            if (Options::opt.steprate > 15)
                 throw util::exception("invalid step rate '", optarg, "', expected 0-15");
             break;
 
         case OPT_BYTES:
-            util::str_range(optarg, opt.bytes_begin, opt.bytes_end);
+            util::str_range(optarg, Options::opt.bytes_begin, Options::opt.bytes_end);
             break;
 
         case OPT_DEBUG:
             if (OPTIONAL_ARGUMENT_IS_PRESENT)
-                opt.debug = util::str_value<int>(optarg);
+                Options::opt.debug = util::str_value<int>(optarg);
             else
-                opt.debug = 1;
-            if (opt.debug < 0)
+                Options::opt.debug = 1;
+            if (Options::opt.debug < 0)
                 throw util::exception("invalid debug level, expected >= 0");
             break;
 
@@ -692,9 +697,9 @@ bool ParseCommandLine(int argc_, char* argv_[])
         {
             auto str = util::lowercase(optarg);
             if (str == std::string("auto").substr(0, str.length()))
-                opt.track_retries = DISK_RETRY_AUTO;
+                Options::opt.track_retries = DISK_RETRY_AUTO;
             else
-                opt.track_retries = util::str_value<int>(optarg);
+                Options::opt.track_retries = util::str_value<int>(optarg);
             break;
         }
 
@@ -702,34 +707,34 @@ bool ParseCommandLine(int argc_, char* argv_[])
         {
             auto str = util::lowercase(optarg);
             if (str == std::string("auto").substr(0, str.length()))
-                opt.disk_retries = DISK_RETRY_AUTO;
+                Options::opt.disk_retries = DISK_RETRY_AUTO;
             else
-                opt.disk_retries = util::str_value<int>(optarg);
+                Options::opt.disk_retries = util::str_value<int>(optarg);
             break;
         }
 
         case OPT_NORMAL_DISK:
-            opt.normal_disk = true;
+            Options::opt.normal_disk = true;
             break;
 
         case OPT_READSTATS:
-            opt.readstats = true;
+            Options::opt.readstats = true;
             break;
 
         case OPT_PARANOIA:
-            opt.paranoia = true;
+            Options::opt.paranoia = true;
             break;
 
         case OPT_SKIP_STABLE_SECTORS:
-            opt.skip_stable_sectors = true;
+            Options::opt.skip_stable_sectors = true;
             break;
 
         case OPT_TIME_TOLERANCE_PERMILLE:
             // This parameter is used for not allowing too slow or too fast disk.
             // Instead of tolerating RPM, its reciprocal is tolerated which is time (MPR). See also OPT_RPM.
-            opt.time_tolerance_permille = util::str_value<int>(optarg);
-            if (opt.time_tolerance_permille < 0 || opt.time_tolerance_permille > 500)
-                throw util::exception("invalid time-tolerance-permille '", optarg, "', expected between 0 and 500 inclusive");
+            Options::opt.time_tolerance_permille = util::str_value<int>(optarg);
+            if (Options::opt.time_tolerance_permille < 0 || Options::opt.time_tolerance_permille > 250)
+                throw util::exception("invalid time-tolerance-permille '", optarg, "', expected between 0 and 250 inclusive");
             break;
 
         case ':':
@@ -750,7 +755,7 @@ bool ParseCommandLine(int argc_, char* argv_[])
     // Fail if there are no non-option arguments
     if (optind >= argc_)
     {
-        if (!opt.verbose)
+        if (!Options::opt.verbose)
             Usage();
 
         // Allow -v to show the --version details
@@ -767,28 +772,28 @@ bool ParseCommandLine(int argc_, char* argv_[])
         if (!strcasecmp(pszCommand, aszCommands[i]))
         {
             // Fail if a command has already been set
-            if (opt.command)
+            if (Options::opt.command)
                 Usage();
 
             // Set the command and advance to the next argument position
-            opt.command = i;
+            Options::opt.command = i;
             ++optind;
             break;
         }
     }
 
-    if (opt.absoffsets) opt.offsets = 1;
+    if (Options::opt.absoffsets) Options::opt.offsets = 1;
 
-    if (opt.stability_level > 0 && (!opt.readstats || !opt.paranoia))
+    if (Options::opt.stability_level > 0 && (!Options::opt.readstats || !Options::opt.paranoia))
         throw util::exception("invalid usage of stability_level: it also requires readstats and paranoia parameters");
-    if (opt.paranoia)
+    if (Options::opt.paranoia)
     {
-        if (!opt.readstats)
+        if (!Options::opt.readstats)
             throw util::exception("invalid usage of paranoia: it also requires readstats parameter");
-        if (opt.stability_level <= 0)
+        if (Options::opt.stability_level <= 0)
         {
-            opt.stability_level = STABILITY_LEVEL_DEFAULT;
-            util::cout << "The stability-level is not specified, using " << opt.stability_level << " by default\n";
+            Options::opt.stability_level = STABILITY_LEVEL_DEFAULT;
+            util::cout << "The stability-level is not specified, using " << Options::opt.stability_level << " by default\n";
         }
     }
 
@@ -865,32 +870,32 @@ int main(int argc_, char* argv_[])
             return 1;
 
         // Read at most two non-option command-line arguments
-        if (optind < argc_) strncpy(opt.szSource, argv_[optind++], arraysize(opt.szSource) - 1);
-        if (optind < argc_) strncpy(opt.szTarget, argv_[optind++], arraysize(opt.szTarget) - 1);
+        if (optind < argc_) strncpy(Options::opt.szSource, argv_[optind++], arraysize(Options::opt.szSource) - 1);
+        if (optind < argc_) strncpy(Options::opt.szTarget, argv_[optind++], arraysize(Options::opt.szTarget) - 1);
         if (optind < argc_) Usage();
 
-        int nSource = GetArgType(opt.szSource);
-        int nTarget = GetArgType(opt.szTarget);
+        int nSource = GetArgType(Options::opt.szSource);
+        int nTarget = GetArgType(Options::opt.szTarget);
 
-        switch (opt.command)
+        switch (Options::opt.command)
         {
         case cmdCopy:
         {
             if (nSource == argNone || nTarget == argNone)
                 Usage();
 
-            if (nSource == argDisk && IsTrinity(opt.szTarget))
-                f = Image2Trinity(opt.szSource, opt.szTarget);          // file/image -> Trinity
+            if (nSource == argDisk && IsTrinity(Options::opt.szTarget))
+                f = Image2Trinity(Options::opt.szSource, Options::opt.szTarget);          // file/image -> Trinity
             else if ((nSource == argBlock || nSource == argDisk) && (nTarget == argDisk || nTarget == argHDD /*for .raw*/))
-                f = ImageToImage(opt.szSource, opt.szTarget);           // image -> image
+                f = ImageToImage(Options::opt.szSource, Options::opt.szTarget);           // image -> image
             else if ((nSource == argHDD || nSource == argBlock) && nTarget == argHDD)
-                f = Hdd2Hdd(opt.szSource, opt.szTarget);                // hdd -> hdd
+                f = Hdd2Hdd(Options::opt.szSource, Options::opt.szTarget);                // hdd -> hdd
             else if (nSource == argBootSector && nTarget == argDisk)
-                f = Hdd2Boot(opt.szSource, opt.szTarget);               // boot -> file
+                f = Hdd2Boot(Options::opt.szSource, Options::opt.szTarget);               // boot -> file
             else if (nSource == argDisk && nTarget == argBootSector)
-                f = Boot2Hdd(opt.szSource, opt.szTarget);               // file -> boot
+                f = Boot2Hdd(Options::opt.szSource, Options::opt.szTarget);               // file -> boot
             else if (nSource == argBootSector && nTarget == argBootSector)
-                f = Boot2Boot(opt.szSource, opt.szTarget);              // boot -> boot
+                f = Boot2Boot(Options::opt.szSource, Options::opt.szTarget);              // boot -> boot
             else
                 Usage();
 
@@ -903,11 +908,11 @@ int main(int argc_, char* argv_[])
                 Usage();
 
             if (nSource == argNone)
-                f = ListDrives(opt.verbose);
+                f = ListDrives(Options::opt.verbose);
             else if (nSource == argHDD || nSource == argBlock)
-                f = ListRecords(opt.szSource);
+                f = ListRecords(Options::opt.szSource);
             else if (nSource == argDisk)
-                f = DirImage(opt.szSource);
+                f = DirImage(Options::opt.szSource);
             else
                 Usage();
 
@@ -920,13 +925,13 @@ int main(int argc_, char* argv_[])
                 Usage();
 #if 0
             if (nSource == argFloppy)
-                f = DirFloppy(opt.szSource);
+                f = DirFloppy(Options::opt.szSource);
             else
 #endif
                 if (nSource == argHDD)
-                    f = ListRecords(opt.szSource);
+                    f = ListRecords(Options::opt.szSource);
                 else if (nSource == argDisk)
-                    f = DirImage(opt.szSource);
+                    f = DirImage(Options::opt.szSource);
                 else
                     Usage();
 
@@ -939,7 +944,7 @@ int main(int argc_, char* argv_[])
                 Usage();
 
             if (nSource == argBlock || nSource == argDisk)
-                f = ScanImage(opt.szSource, opt.range);
+                f = ScanImage(Options::opt.szSource, Options::opt.range);
             else
                 Usage();
 
@@ -952,14 +957,14 @@ int main(int argc_, char* argv_[])
                 Usage();
 
             // Don't write disk signatures during any formatting
-            opt.nosig = true;
+            Options::opt.nosig = true;
 
             if (nSource == argHDD)
-                f = FormatHdd(opt.szSource);
-            else if (IsRecord(opt.szSource))
-                f = FormatRecord(opt.szSource);
+                f = FormatHdd(Options::opt.szSource);
+            else if (IsRecord(Options::opt.szSource))
+                f = FormatRecord(Options::opt.szSource);
             else if (nSource == argDisk)
-                f = UnformatImage(opt.szSource, opt.range);
+                f = UnformatImage(Options::opt.szSource, Options::opt.range);
             else
                 Usage();
 
@@ -972,11 +977,11 @@ int main(int argc_, char* argv_[])
                 Usage();
 
             if (nSource == argHDD)
-                FormatHdd(opt.szSource);
+                FormatHdd(Options::opt.szSource);
             else if (nSource == argBootSector)
-                FormatBoot(opt.szSource);
+                FormatBoot(Options::opt.szSource);
             else if (nSource == argDisk)
-                FormatImage(opt.szSource, opt.range);
+                FormatImage(Options::opt.szSource, Options::opt.range);
             else
                 Usage();
 
@@ -991,10 +996,10 @@ int main(int argc_, char* argv_[])
             if (nSource == argNone)
                 Usage();
 
-            if (nSource == argHDD && IsHddImage(opt.szSource) && (nTarget != argNone || opt.sectors != -1))
-                f = CreateHddImage(opt.szSource, util::str_value<int>(opt.szTarget));
+            if (nSource == argHDD && IsHddImage(Options::opt.szSource) && (nTarget != argNone || Options::opt.sectors != -1))
+                f = CreateHddImage(Options::opt.szSource, util::str_value<int>(Options::opt.szTarget));
             else if (nSource == argDisk && nTarget == argNone)
-                f = CreateImage(opt.szSource, opt.range);
+                f = CreateImage(Options::opt.szSource, Options::opt.range);
             else
                 Usage();
 
@@ -1007,9 +1012,9 @@ int main(int argc_, char* argv_[])
                 Usage();
 
             if (nSource == argHDD || nSource == argBlock)
-                f = HddInfo(opt.szSource, opt.verbose);
+                f = HddInfo(Options::opt.szSource, Options::opt.verbose);
             else if (nSource == argDisk)
-                f = ImageInfo(opt.szSource);
+                f = ImageInfo(Options::opt.szSource);
             else
                 Usage();
 
@@ -1022,11 +1027,11 @@ int main(int argc_, char* argv_[])
                 Usage();
 
             if (nSource == argHDD || nSource == argBlock)
-                f = ViewHdd(opt.szSource, opt.range);
+                f = ViewHdd(Options::opt.szSource, Options::opt.range);
             else if (nSource == argBootSector)
-                f = ViewBoot(opt.szSource, opt.range);
+                f = ViewBoot(Options::opt.szSource, Options::opt.range);
             else if (nSource == argDisk)
-                f = ViewImage(opt.szSource, opt.range);
+                f = ViewImage(Options::opt.szSource, Options::opt.range);
             else
                 Usage();
 
@@ -1039,7 +1044,7 @@ int main(int argc_, char* argv_[])
                 Usage();
 
             if (nSource == argDisk)
-                f = DiskRpm(opt.szSource);
+                f = DiskRpm(Options::opt.szSource);
             else
                 Usage();
 
@@ -1084,7 +1089,7 @@ int main(int argc_, char* argv_[])
     }
 #endif
 
-    if (opt.time)
+    if (Options::opt.time)
     {
         auto end_time = std::chrono::system_clock::now();
         auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
