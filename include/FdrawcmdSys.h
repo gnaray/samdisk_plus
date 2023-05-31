@@ -25,6 +25,7 @@ public:
     static std::unique_ptr<FdrawcmdSys> Open(int device);
 
 public:
+    bool GetVersion(int& version);
     bool GetResult(FD_CMD_RESULT& result);
     bool SetEncRate(Encoding encoding, DataRate datarate);
     bool SetHeadSettleTime(int ms);
@@ -47,6 +48,7 @@ public:
     bool CmdFormatAndWrite(FD_FORMAT_PARAMS* params, int size);
     bool CmdScan(int head, FD_SCAN_RESULT* scan, int size);
     bool CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int size);
+    bool CmdTimedMultiScan(int head, int track_retries, FD_TIMED_MULTI_SCAN_RESULT *timed_multi_scan, int size, int byte_tolerance_of_time = -1);
     bool CmdReadId(int head, FD_CMD_RESULT& result);
     bool FdRawReadTrack(int head, int size, MEMORY& mem);
     bool FdSetSectorOffset(int index);
@@ -54,6 +56,7 @@ public:
     bool FdGetRemainCount(int& remain);
     bool FdCheckDisk();
     bool FdGetTrackTime(int& microseconds);
+    bool FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT *time_tolerance, uint8_t revolutions = 10);
     bool FdReset();
 
 private:

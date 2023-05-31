@@ -1,14 +1,8 @@
 // fdrawcmd.sys device
 
-#include "config.h"
-
-#ifdef HAVE_FDRAWCMD_H
-
-#include "Header.h"
-#include "Util.h"
 #include "FdrawcmdSys.h"
 
-#include <memory>
+#ifdef HAVE_FDRAWCMD_H
 
 /*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device_index)
 {
@@ -47,6 +41,13 @@ constexpr uint8_t FdrawcmdSys::DtlFromSize(int size)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool FdrawcmdSys::GetVersion(int& version)
+{
+    return Ioctl(IOCTL_FDRAWCMD_GET_VERSION,
+        nullptr, 0,
+        &version, sizeof(version));
+}
 
 bool FdrawcmdSys::GetResult(FD_CMD_RESULT& result)
 {
@@ -275,6 +276,25 @@ bool FdrawcmdSys::CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int s
         timed_scan, size);
 }
 
+bool FdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
+                                    FD_TIMED_MULTI_SCAN_RESULT* timed_multi_scan, int size,
+                                    int byte_tolerance_of_time /* = -1 */)
+{
+    if (head < 0 || head > 1)
+        throw util::exception("unsupported head (", head, ")");
+    if (track_retries == 0)
+        throw util::exception("unsupported track_retries (", track_retries, ")");
+    FD_MULTI_SCAN_PARAMS msp{};
+    msp.flags = m_encoding_flags;
+    msp.head = lossless_static_cast<uint8_t>(head);
+    msp.track_retries = lossless_static_cast<int8_t>(track_retries);
+    msp.byte_tolerance_of_time = lossless_static_cast<int8_t>(byte_tolerance_of_time);
+
+    return Ioctl(IOCTL_FD_TIMED_MULTI_SCAN_TRACK,
+        &msp, sizeof(msp),
+        timed_multi_scan, size);
+}
+
 bool FdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT& result)
 {
     FD_READ_ID_PARAMS rip{};
@@ -332,6 +352,13 @@ bool FdrawcmdSys::FdGetTrackTime(int& microseconds)
     return Ioctl(IOCTL_FD_GET_TRACK_TIME,
         nullptr, 0,
         &microseconds, sizeof(microseconds));
+}
+
+bool FdrawcmdSys::FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT *track_time, uint8_t revolutions /* = 10*/)
+{
+    return Ioctl(IOCTL_FD_GET_MULTI_TRACK_TIME,
+        &revolutions, sizeof(revolutions),
+        track_time, sizeof(FD_MULTI_TRACK_TIME_RESULT));
 }
 
 bool FdrawcmdSys::FdReset()

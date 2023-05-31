@@ -1,4 +1,4 @@
-// fdrawcmd.sys 1.0.1.11
+// fdrawcmd.sys 1.0.1.12
 //
 // Low-level floppy filter, by Simon Owen
 //
@@ -7,18 +7,17 @@
 #ifndef FDRAWCMD_H
 #define FDRAWCMD_H
 
-#ifndef _WIN32
-#include "WindowsStub.h"
-#endif
-
 #ifndef CTL_CODE
-#include <winioctl.h>
+#ifdef _WIN32
+#include <winioctl.h> // Requires preincluded windows.h.
+#endif
 #endif
 
-#define FDRAWCMD_VERSION                0x0100010b      // Compile-time version, for structures and definitions below
+#define FDRAWCMD_VERSION                0x0100010c      // Compile-time version, for structures and definitions below
                                                         // Must be checked with run-time driver for compatibility
 
 #define FD_CTL_CODE(i,m)                CTL_CODE(FILE_DEVICE_UNKNOWN, i, m, FILE_READ_DATA|FILE_WRITE_DATA)
+//Helper for calculating FD_CTL_CODEs: FD_CTL_CODE(code, method) = 0x22C000 | code << 2 | method
 
                                                                                 // If you're not using C/C++, use the IOCTL values below
 #define IOCTL_FDRAWCMD_GET_VERSION      FD_CTL_CODE(0x888, METHOD_BUFFERED)     // 0x0022e220
@@ -73,6 +72,9 @@
 #define IOCTL_FD_RAW_READ_TRACK         FD_CTL_CODE(0x916, METHOD_OUT_DIRECT)   // 0x0022e45a   // added in 1.0.1.4
 #define IOCTL_FD_CHECK_DISK             FD_CTL_CODE(0x917, METHOD_BUFFERED)     // 0x0022e45c   // added in 1.0.1.10
 #define IOCTL_FD_GET_TRACK_TIME         FD_CTL_CODE(0x918, METHOD_BUFFERED)     // 0x0022e460   // added in 1.0.1.10
+
+#define IOCTL_FD_GET_MULTI_TRACK_TIME   FD_CTL_CODE(0x919, METHOD_BUFFERED)     // 0x0022e464   // added in 1.0.1.12
+#define IOCTL_FD_TIMED_MULTI_SCAN_TRACK FD_CTL_CODE(0x91a, METHOD_BUFFERED)     // 0x0022e468   // added in 1.0.1.12
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -159,7 +161,15 @@ typedef struct tagFD_FORMAT_PARAMS
     BYTE phead;
     BYTE size, sectors, gap, fill;
 
-    FD_ID_HEADER Header[];
+    // Empty array definition is replaced with HeaderArray methods.
+    inline FD_ID_HEADER* HeaderArray()
+    {
+        return reinterpret_cast<FD_ID_HEADER*>(&this[1]);
+    }
+    inline FD_ID_HEADER& HeaderArray(const int index)
+    {
+        return HeaderArray()[index];
+    }
 }
 FD_FORMAT_PARAMS, *PFD_FORMAT_PARAMS;
 
@@ -256,10 +266,17 @@ FD_SCAN_PARAMS, *PFD_SCAN_PARAMS;
 typedef struct tagFD_SCAN_RESULT
 {
     BYTE count;                         // count of returned headers
-    FD_ID_HEADER Header[];              // array of 'count' id fields
+    // array of 'count' id fields. Empty array definition is replaced with HeaderArray methods.
+    inline FD_ID_HEADER* HeaderArray()
+    {
+        return reinterpret_cast<FD_ID_HEADER*>(&this[1]);
+    }
+    inline FD_ID_HEADER& HeaderArray(const int index)
+    {
+        return HeaderArray()[index];
+    }
 }
 FD_SCAN_RESULT, *PFD_SCAN_RESULT;
-
 
 typedef struct tagFD_TIMED_ID_HEADER
 {
@@ -273,9 +290,58 @@ typedef struct tagFD_TIMED_SCAN_RESULT
     BYTE count;                         // count of returned headers
     BYTE firstseen;                     // offset of first sector detected
     DWORD tracktime;                    // total time for track (in microseconds)
-    FD_TIMED_ID_HEADER Header[];        // array of 'count' id fields
+    // array of 'count' id fields. Empty array definition is replaced with HeaderArray methods.
+    inline FD_TIMED_ID_HEADER* HeaderArray()
+    {
+        return reinterpret_cast<FD_TIMED_ID_HEADER*>(&this[1]);
+    }
+    inline FD_TIMED_ID_HEADER& HeaderArray(const int index)
+    {
+        return HeaderArray()[index];
+    }
 }
 FD_TIMED_SCAN_RESULT, *PFD_TIMED_SCAN_RESULT;
+
+typedef struct tagFD_MULTI_SCAN_PARAMS
+{
+    BYTE flags;                         // MFM
+    BYTE head;
+    char track_retries;
+    char byte_tolerance_of_time;
+}
+FD_MULTI_SCAN_PARAMS, *PFD_MULTI_SCAN_PARAMS;
+
+typedef struct tagFD_TIMED_MULTI_ID_HEADER
+{
+    DWORD reltime;                      // time relative to index (in microseconds)
+    BYTE revolution;
+    BYTE cyl, head, sector, size;
+}
+FD_TIMED_MULTI_ID_HEADER, *PFD_TIMED_MULTI_ID_HEADER;
+
+typedef struct tagFD_TIMED_MULTI_SCAN_RESULT
+{
+    DWORD tracktime;                    // total time for track (in microseconds)
+    BYTE track_retries;                   // the number of track_retries scanned
+    BYTE byte_tolerance_of_time;
+    WORD count;                         // count of returned headers
+    // array of 'count' id fields. Empty array definition is replaced with HeaderArray methods.
+    inline FD_TIMED_MULTI_ID_HEADER* HeaderArray()
+    {
+        return reinterpret_cast<FD_TIMED_MULTI_ID_HEADER*>(&this[1]);
+    }
+    inline FD_TIMED_MULTI_ID_HEADER& HeaderArray(const int index)
+    {
+        return HeaderArray()[index];
+    }
+}
+FD_TIMED_MULTI_SCAN_RESULT, *PFD_TIMED_MULTI_SCAN_RESULT;
+
+typedef struct tagFD_MULTI_TRACK_TIME_RESULT
+{
+    DWORD spintime;
+}
+FD_MULTI_TRACK_TIME_RESULT, *PFD_MULTI_TRACK_TIME_RESULT;
 
 typedef struct tagFD_FDC_INFO
 {
