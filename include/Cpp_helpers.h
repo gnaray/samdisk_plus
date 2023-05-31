@@ -83,10 +83,27 @@ constexpr int lossless_static_cast(unsigned char x)
 }
 
 template<>
+constexpr int lossless_static_cast(unsigned int x)
+{
+    if (x > std::numeric_limits<int>::max())
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
+    return static_cast<int>(x);
+}
+
+template<>
 constexpr int lossless_static_cast(long x)
 {
     is_value_in_type_range<int, true>(x);
     return static_cast<int>(x);
+}
+
+template<>
+constexpr double lossless_static_cast(unsigned int x)
+{
+    const auto result = static_cast<double>(x);
+    if (x != static_cast<unsigned int>(result))
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
+    return result;
 }
 
 template<>
@@ -113,6 +130,14 @@ constexpr int lossless_static_cast(size_t x)
     if (x > std::numeric_limits<int>::max())
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
     return static_cast<int>(x);
+}
+
+template<>
+constexpr int8_t lossless_static_cast(int x)
+{
+    if (x < std::numeric_limits<int8_t>::min() || x > std::numeric_limits<int8_t>::max())
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
+    return static_cast<int8_t>(x);
 }
 
 template<>
