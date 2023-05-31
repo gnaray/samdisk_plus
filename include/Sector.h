@@ -106,6 +106,7 @@ public:
     bool has_stable_data() const;
     bool are_copies_full(int max_copies) const;
     void limit_copies(int max_copies);
+    void normalise_datarate(const DataRate& datarate_target);
     constexpr bool has_same_record_properties(const Sector& sector) const;
 
     int size() const;

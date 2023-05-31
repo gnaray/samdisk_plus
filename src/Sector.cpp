@@ -560,6 +560,17 @@ void Sector::limit_copies(int max_copies)
     }
 }
 
+void Sector::normalise_datarate(const DataRate& datarate_target)
+{
+    if (datarate_target != datarate && are_interchangeably_equal_datarates(datarate, datarate_target))
+    {
+        // Convert this offset according to target data rate.
+        offset = convert_offset_by_datarate(offset, datarate, datarate_target);
+        // Convert this to target data rate.
+        datarate = datarate_target;
+    }
+}
+
 constexpr bool Sector::has_same_record_properties(const Sector& sector) const
 {
     // Headers must match.

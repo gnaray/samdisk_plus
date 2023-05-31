@@ -39,6 +39,13 @@ constexpr int bits_per_second(DataRate datarate)
     return static_cast<int>(datarate);
 }
 
+constexpr int convert_offset_by_datarate(int offset, const DataRate& datarate_source, const DataRate& datarate_target)
+{
+    // The offset = reltime * datarate * constant, thus new offset = new datarate * old offset / old datarate.
+    // Dividing and multiplying with constant in order to avoid overflow.
+    return bits_per_second(datarate_target) / 10000 * offset / bits_per_second(datarate_source) * 10000;
+}
+
 inline std::ostream& operator<<(std::ostream& os, const DataRate dr) { return os << to_string(dr); }
 inline std::ostream& operator<<(std::ostream& os, const Encoding e) { return os << to_string(e); }
 
