@@ -91,19 +91,30 @@ constexpr uint8_t STREG2_MISSING_ADDRESS_MARK_IN_DATA_FIELD = 0x01;
 
 std::string to_string(const MEDIA_TYPE& type);
 
-// Return the number of microseconds for 1 byte at the given rate.
+// Return the number of microseconds for given (default 1) bytes at the given rate.
 // The calculation for add_drain_time is incomprehensible, luckily that parameter is never used.
-constexpr int GetDataTime(DataRate datarate, Encoding encoding, int len_bytes/*=1*/, bool add_drain_time/*=false*/)
+constexpr double GetFmOrMfmDataBytesTime(DataRate datarate, Encoding encoding, int len_bytes = 1, bool add_drain_time = false)
 {
-    auto uTime = 1000000 / (bits_per_second(datarate) / 8);
-    if (encoding == Encoding::FM) uTime <<= 1;
-    return (uTime * len_bytes) + (add_drain_time ? (uTime * 69 / 100) : 0);     // 0.69 250Kbps bytes @300rpm = 86us = FDC data drain time
+    const auto uTime = 1'000'000 * (encoding == Encoding::FM ? 2 : 1) / (bits_per_second(datarate) / 8.);
+    return uTime * len_bytes + (add_drain_time ? (uTime * 69 / 100) : 0);     // 0.69 250Kbps bytes @300rpm = 86us = FDC data drain time
+}
+
+// Return the number of bytes for given microseconds at the given rate.
+inline int GetFmOrMfmBitTimeDataBytes(DataRate datarate, Encoding encoding, int time)
+{
+    return round_AS<int>(time / GetFmOrMfmDataBytesTime(datarate, encoding));
 }
 
 // Return the number of microseconds for 1 mfmbit (halfbit) at the given rate.
-constexpr double GetDataMfmBitTime(DataRate datarate, Encoding encoding, int len_bytes = 1, bool add_drain_time = false)
+constexpr double GetFmOrMfmDataBitTime(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
 {
-    return GetDataTime(datarate, encoding, len_bytes, add_drain_time) / 16;
+    return GetFmOrMfmDataBytesTime(datarate, encoding, len_fmormfmbits, add_drain_time) / 16;
+}
+
+// Return the number of mfmbits (halfbits) for given microseconds at the given rate.
+inline int GetFmOrMfmBitTimeDataBits(DataRate datarate, Encoding encoding, int time)
+{
+    return round_AS<int>(time / GetFmOrMfmDataBitTime(datarate, encoding));
 }
 
 int GetTrackOverhead(Encoding encoding);
