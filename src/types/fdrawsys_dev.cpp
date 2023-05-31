@@ -334,7 +334,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         }
 
         // Invalidate the content so misbehaving FDCs can be identififed.
-        memset(mem.pb, 0xee, mem.size);
+        memset(mem.pb, 0xee, lossless_static_cast<size_t>(mem.size));
 
         const Header& header = sector.header;
         if (!m_fdrawcmd->CmdRead(cylhead.head, header.cyl, header.head, header.sector, header.size, 1, mem))
@@ -423,7 +423,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
     for (int i = 0; i <= opt_retries; ++i)
     {
         // Invalidate the content so misbehaving FDCs can be identififed.
-        memset(mem.pb, 0xee, mem.size);
+        memset(mem.pb, 0xee, lossless_static_cast<size_t>(mem.size));
 
         if (!m_fdrawcmd->CmdReadTrack(cylhead.head, 0, 0, 0, size_code, 1, mem))
         {
@@ -450,7 +450,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
         if (sector.has_good_data())
         {
             const auto data = sector.data_copy();
-            if (std::memcmp(data.data(), mem.pb, data.size()))
+            if (std::memcmp(data.data(), mem.pb, lossless_static_cast<size_t>(data.size())))
             {
                 Message(msgWarning, "track read of %s doesn't match first sector content", CH(cylhead.cyl, cylhead.head));
                 break;
