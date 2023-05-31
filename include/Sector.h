@@ -106,8 +106,9 @@ public:
     bool has_stable_data() const;
     bool are_copies_full(int max_copies) const;
     void limit_copies(int max_copies);
+    bool is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int tracklen) const;
     void normalise_datarate(const DataRate& datarate_target);
-    constexpr bool has_same_record_properties(const Sector& sector) const;
+    bool has_same_record_properties(const Sector& other_sector, const int other_tracklen) const;
 
     int size() const;
     int data_size() const;
@@ -182,7 +183,7 @@ public:
     bool HasIdSequence(const int first_id, const int length) const;
     class Headers Headers() const;
 
-    bool Contains(const Sector& sector) const;
+    bool Contains(const Sector& other_sector, const int other_tracklen) const;
     std::string SectorIdsToString() const;
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Sectors& sectors, bool onlyRelevantData = true)

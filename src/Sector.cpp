@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cmath>
 
+static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_fill = getOpt<int>("fill");
 static auto& opt_maxcopies = getOpt<int>("maxcopies");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
@@ -560,6 +561,13 @@ void Sector::limit_copies(int max_copies)
     }
 }
 
+bool Sector::is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int tracklen) const
+{
+    // Sector must be close enough and have the same header.
+    return are_offsets_tolerated_same(offset, sector.offset, byte_tolerance_of_time, tracklen)
+            && header == sector.header;
+}
+
 void Sector::normalise_datarate(const DataRate& datarate_target)
 {
     if (datarate_target != datarate && are_interchangeably_equal_datarates(datarate, datarate_target))
@@ -571,21 +579,26 @@ void Sector::normalise_datarate(const DataRate& datarate_target)
     }
 }
 
-constexpr bool Sector::has_same_record_properties(const Sector& sector) const
+// The sector and tracklen is from same track, this sector is from another.
+bool Sector::has_same_record_properties(const Sector& other_sector, const int other_tracklen) const
 {
     // Headers must match.
-    if (sector.has_badidcrc() || has_badidcrc() || sector.header != header)
+    if (other_sector.has_badidcrc() || has_badidcrc() || other_sector.header != header)
         return false;
 
     // Encodings must match.
-    if (sector.encoding != encoding)
+    if (other_sector.encoding != encoding)
         return false;
 
     // Datarates must match interchangeably.
-    if (sector.datarate != datarate && !are_interchangeably_equal_datarates(sector.datarate, datarate))
+    if (other_sector.datarate != datarate && !are_interchangeably_equal_datarates(other_sector.datarate, datarate))
         return false;
 
-    return true;
+    // Offsets must match interchangeably.
+    auto offset_normalised = offset;
+    if (other_sector.datarate != datarate && are_interchangeably_equal_datarates(other_sector.datarate, datarate))
+        offset_normalised = convert_offset_by_datarate(offset, datarate, other_sector.datarate);
+    return are_offsets_tolerated_same(offset_normalised, other_sector.offset, opt_byte_tolerance_of_time, other_tracklen);
 }
 
 void Sector::remove_gapdata(bool keep_crc/*=false*/)
@@ -629,10 +642,10 @@ class Headers Sectors::Headers() const
     return headers;
 }
 
-bool Sectors::Contains(const Sector& sector) const
+bool Sectors::Contains(const Sector& other_sector, const int other_tracklen) const
 {
     return std::any_of(cbegin(), cend(), [&](const Sector& sectorI) {
-        return sectorI.has_same_record_properties(sector);
+        return sectorI.has_same_record_properties(other_sector, other_tracklen);
     });
 }
 

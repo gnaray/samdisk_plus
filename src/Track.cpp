@@ -7,6 +7,7 @@
 #include <cmath>
 #include <numeric>
 
+static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 Track::Track(int num_sectors/*=0*/)
@@ -160,8 +161,7 @@ bool Track::is_repeated(const Sector& sector) const
 bool Track::has_good_data(const Sectors& good_sectors) const
 {
     auto it = std::find_if(begin(), end(), [&](const Sector& sector) {
-        // Sector in headers of good sectors is considered good sector.
-        if (!sector.has_badidcrc() && good_sectors.Contains(sector))
+        if (!sector.has_badidcrc() && good_sectors.Contains(sector, tracklen))
             return false;
         if (sector.is_checksummable_8k_sector())
             return false;
@@ -216,7 +216,7 @@ bool Track::has_stable_data(const Sectors& good_sectors) const
 {
     auto it = std::find_if(begin(), end(), [&](const Sector& sector) {
         // Sector in headers of stable sectors is considered stable sector.
-        if (!sector.has_badidcrc() && good_sectors.Contains(sector))
+        if (!sector.has_badidcrc() && good_sectors.Contains(sector, tracklen))
             return false;
         if (!sector.has_data())
             return true;
@@ -279,8 +279,8 @@ Track::AddResult Track::add(Sector&& sector)
     if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
         throw util::exception("can't mix datarates on a track");
 
-    // If there's no positional information, simply append
-    if (sector.offset == 0)
+    // If there's no positional information, simply append.
+    if (sector.offset == 0 || tracklen == 0) // The offset is 0 exactly when tracklen is 0 but safer to check both.
     {
         m_sectors.emplace_back(std::move(sector));
         return AddResult::Append;
@@ -289,15 +289,7 @@ Track::AddResult Track::add(Sector&& sector)
     {
         // Find a sector close enough to the new offset to be the same one
         auto it = std::find_if(begin(), end(), [&](const Sector& s) {
-            auto offset_min = std::min(sector.offset, s.offset);
-            auto offset_max = std::max(sector.offset, s.offset);
-            auto distance = std::min(offset_max - offset_min, tracklen + offset_min - offset_max);
-
-            // Sector must be close enough and have the same header
-            if (distance <= COMPARE_TOLERANCE_BITS && sector.header == s.header)
-                return true;
-
-            return false;
+            return sector.is_sector_tolerated_same(s, opt_byte_tolerance_of_time, tracklen);
             });
 
         // If that failed, we have a new sector with an offset

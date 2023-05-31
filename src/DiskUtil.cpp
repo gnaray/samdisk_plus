@@ -56,7 +56,7 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
         for (auto& sector : track.sectors())
         {
             // Skip ignored sectors.
-            if (ignored_sectors.Contains(sector))
+            if (ignored_sectors.Contains(sector, track.tracklen))
                 continue;
 
             util::cout << RecordStr(sector.header.sector);
@@ -176,7 +176,7 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
 
             for (const auto& sector : track.sectors())
             {
-                const bool ignored_sector = ignored_sectors.Contains(sector);
+                const bool ignored_sector = ignored_sectors.Contains(sector, track.tracklen);
                 const auto offset = sector.offset;
                 // Missing offset?
                 if (offset == 0) {
@@ -661,7 +661,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
     for (auto& src_sector : src_track)
     {
         // Skip source sector if specified as ignored sector.
-        if (ignored_sectors.Contains(src_sector))
+        if (ignored_sectors.Contains(src_sector, track.tracklen))
             continue;
 
         // Skip repeated source sectors, as the data source is ambiguous.
