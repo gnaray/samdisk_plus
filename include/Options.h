@@ -14,33 +14,39 @@ enum { GAPS_AUTO = -1, GAPS_NONE, GAPS_CLEAN, GAPS_ALL };
 typedef char charArrayMAX_PATH[MAX_PATH];
 
 template<typename T>
-T& getOpt(const std::string& key);
+T& getOpt(const char* key);
+
+template<typename T>
+inline T& getOpt(const std::string& key)
+{
+    return getOpt<T>(key.c_str());
+}
 
 template<>
-int& getOpt(const std::string& key);
+int& getOpt(const char* key);
 
 template<>
-bool& getOpt(const std::string& key);
+bool& getOpt(const char* key);
 
 template<>
-long& getOpt(const std::string& key);
+long& getOpt(const char* key);
 
 template<>
-Range& getOpt(const std::string& key);
+Range& getOpt(const char* key);
 
 template<>
-Encoding& getOpt(const std::string& key);
+Encoding& getOpt(const char* key);
 
 template<>
-DataRate& getOpt(const std::string& key);
+DataRate& getOpt(const char* key);
 
 template<>
-PreferredData& getOpt(const std::string& key);
+PreferredData& getOpt(const char* key);
 
 template<>
-std::string& getOpt(const std::string& key);
+std::string& getOpt(const char* key);
 
 template<>
-charArrayMAX_PATH& getOpt(const std::string& key);
+charArrayMAX_PATH& getOpt(const char* key);
 
 #endif // OPTIONS_H

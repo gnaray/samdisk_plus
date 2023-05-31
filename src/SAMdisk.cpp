@@ -63,7 +63,7 @@ public:
 struct OPTIONS Options::opt;
 
 template<>
-int& getOpt(const std::string& key)
+int& getOpt(const char* key)
 {
     static const std::map<std::string, int&> s_mapStringToIntegerVariables =
     {
@@ -149,7 +149,7 @@ int& getOpt(const std::string& key)
 }
 
 template<>
-bool& getOpt(const std::string& key)
+bool& getOpt(const char* key)
 {
     static const std::map<std::string, bool&> s_mapStringToBoolVariables =
     {
@@ -162,7 +162,7 @@ bool& getOpt(const std::string& key)
 }
 
 template<>
-long& getOpt(const std::string& key)
+long& getOpt(const char* key)
 {
     static const std::map<std::string, long&> s_mapStringToLongVariables =
     {
@@ -173,7 +173,7 @@ long& getOpt(const std::string& key)
 }
 
 template<>
-Range& getOpt(const std::string& key)
+Range& getOpt(const char* key)
 {
     static const std::map<std::string, Range&> s_mapStringToRangeVariables =
     {
@@ -184,7 +184,7 @@ Range& getOpt(const std::string& key)
 }
 
 template<>
-Encoding& getOpt(const std::string& key)
+Encoding& getOpt(const char* key)
 {
     static const std::map<std::string, Encoding&> s_mapStringToEncodingVariables =
     {
@@ -195,7 +195,7 @@ Encoding& getOpt(const std::string& key)
 }
 
 template<>
-DataRate& getOpt(const std::string& key)
+DataRate& getOpt(const char* key)
 {
     static const std::map<std::string, DataRate&> s_mapStringToDataRateVariables =
     {
@@ -206,7 +206,7 @@ DataRate& getOpt(const std::string& key)
 }
 
 template<>
-PreferredData& getOpt(const std::string& key)
+PreferredData& getOpt(const char* key)
 {
     static const std::map<std::string, PreferredData&> s_mapStringToPreferredDataVariables =
     {
@@ -217,19 +217,20 @@ PreferredData& getOpt(const std::string& key)
 }
 
 template<>
-std::string& getOpt(const std::string& key)
+std::string& getOpt(const char* key)
 {
     static const std::map<std::string, std::string&> s_mapStringToStringVariables =
     {
         {"label", Options::opt.label},
         {"boot", Options::opt.boot},
+        {"floppyRawTrackFolder", Options::opt.floppyRawTrackFolder}
     };
 
     return s_mapStringToStringVariables.at(key);
 }
 
 template<>
-charArrayMAX_PATH& getOpt(const std::string& key)
+charArrayMAX_PATH& getOpt(const char* key)
 {
     static const std::map<std::string, char(&)[MAX_PATH]> s_mapStringToCharArrayVariables =
     {
