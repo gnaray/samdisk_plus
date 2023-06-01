@@ -12,7 +12,7 @@ public:
     BlockDevice();
     BlockDevice(const BlockDevice&) = delete;
     BlockDevice& operator= (const BlockDevice&) = delete;
-    ~BlockDevice();
+    ~BlockDevice() override;
 
 public:
     bool Open(const std::string& path, bool uncached) override;
