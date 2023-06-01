@@ -147,16 +147,24 @@ bool FdrawcmdSys::Recalibrate()
     return Ioctl(IOCTL_FDCMD_RECALIBRATE);
 }
 
-bool FdrawcmdSys::Seek(int cyl, int head)
+bool FdrawcmdSys::Seek(int cyl, int head /*= -1*/)
 {
     if (cyl == 0)
         return Recalibrate();
 
     FD_SEEK_PARAMS sp{};
     sp.cyl = static_cast<uint8_t>(cyl);
-    sp.head = static_cast<uint8_t>(head);
+    int sp_size = sizeof(sp);
+    if (head >= 0)
+    {
+        if (head < 0 || head > 1)
+            throw util::exception("unsupported head (", head, ")");
+        sp.head = static_cast<uint8_t>(head);
+    }
+    else
+        sp_size -= sizeof(sp.head);
 
-    return Ioctl(IOCTL_FDCMD_SEEK, &sp, sizeof(sp));
+    return Ioctl(IOCTL_FDCMD_SEEK, &sp, sp_size);
 }
 
 bool FdrawcmdSys::RelativeSeek(int head, int offset)

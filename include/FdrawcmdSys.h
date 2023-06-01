@@ -37,7 +37,7 @@ public:
     bool Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk);
     bool Specify(int step_rate, int head_unload_time, int head_load_time);
     bool Recalibrate();
-    bool Seek(int cyl, int head);
+    bool Seek(int cyl, int head = -1);
     bool RelativeSeek(int head, int offset);
     bool CmdVerify(int cyl, int head, int start, int size, int eot);
     bool CmdVerify(int phead, int cyl, int head, int sector, int size, int eot);
