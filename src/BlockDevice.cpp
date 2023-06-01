@@ -389,7 +389,7 @@ bool BlockDevice::ReadIdentifyData(HANDLE h_, IDENTIFYDEVICE& identify_)
     if (!ioctl(h, HDIO_GET_IDENTITY, &hd))
     {
         identify_.len = std::min(sizeof(hd), sizeof(identify_.byte));
-        memcpy(&identify_.byte, &hd, identify_.len);
+        memcpy(&identify_.byte, &hd, lossless_static_cast<size_t>(identify_.len));
     }
 #else
     (void)identify_;
@@ -512,9 +512,9 @@ int BlockDevice::ScsiCmd(int fd, const uint8_t* cmd, int cmd_len, void* data, in
     struct sg_io_hdr io_hdr = {};
     io_hdr.interface_id = 'S';
     io_hdr.cmdp = const_cast<uint8_t*>(cmd);
-    io_hdr.cmd_len = cmd_len;
+    io_hdr.cmd_len = lossless_static_cast<unsigned char>(cmd_len);
     io_hdr.dxferp = data;
-    io_hdr.dxfer_len = data_len;
+    io_hdr.dxfer_len = lossless_static_cast<unsigned int>(data_len);
     io_hdr.dxfer_direction = read ? SG_DXFER_FROM_DEV : SG_DXFER_TO_DEV;
     io_hdr.sbp = sense;
     io_hdr.mx_sb_len = sizeof(sense);

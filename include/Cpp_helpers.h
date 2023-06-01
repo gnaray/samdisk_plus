@@ -157,6 +157,14 @@ constexpr uint16_t lossless_static_cast(int x)
 }
 
 template<>
+constexpr uint32_t lossless_static_cast(int x)
+{
+    if (x < 0)
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
+    return static_cast<uint32_t>(x);
+}
+
+template<>
 constexpr size_t lossless_static_cast(int x)
 {
     if (x < 0)
