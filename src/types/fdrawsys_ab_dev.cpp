@@ -77,7 +77,7 @@ protected:
         {
             MEMORY mem(Sector::SizeCodeToLength(RAW_READ_SIZE_CODE));
             if (!m_fdrawcmd->FdRawReadTrack(cylhead.head, RAW_READ_SIZE_CODE, mem))
-                throw win32_error(GetLastError(), "FdRawReadTrack");
+                throw win32_error(GetLastError_MP(), "FdRawReadTrack");
 
             util::bit_reverse(mem.pb, mem.size);
             BitBuffer bitbuf(DataRate::_250K, mem.pb, mem.size * 8);
@@ -134,7 +134,7 @@ bool ReadFdrawcmdSysAB(const std::string& path, std::shared_ptr<Disk>& disk)
 
     FD_CMD_RESULT result{};
     fdrawcmd->SetEncRate(Encoding::MFM, DataRate::_500K);
-    if (!fdrawcmd->CmdReadId(0, result) || GetLastError() == ERROR_FLOPPY_ID_MARK_NOT_FOUND)
+    if (!fdrawcmd->CmdReadId(0, result) || GetLastError_MP() == ERROR_FLOPPY_ID_MARK_NOT_FOUND)
         throw util::exception("please insert a formatted high-density disk in B:");
 
     fdrawcmd.reset();
@@ -142,7 +142,7 @@ bool ReadFdrawcmdSysAB(const std::string& path, std::shared_ptr<Disk>& disk)
     if (!fdrawcmd)
         throw util::exception("failed to open fdrawcmd.sys A:");
     else if (!fdrawcmd->FdCheckDisk())
-        throw win32_error(GetLastError(), "A");
+        throw win32_error(GetLastError_MP(), "A");
 
     auto fdrawcmd_dev_disk = std::make_shared<FdrawSysDevABDisk>(std::move(fdrawcmd));
     fdrawcmd_dev_disk->extend(CylHead(83 - 1, 2 - 1));

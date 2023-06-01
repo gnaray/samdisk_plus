@@ -1,25 +1,25 @@
 // Win32 error exception
 
-//#include "SAMdisk.h"
+#include "win32_error.h"
+#include "Cpp_helpers.h"
 
-#include "WindowsStub.h"
-
-#include <string>
 #include <sstream>
 #include <vector>
 
-std::string GetWin32ErrorStr(DWORD error_code, bool english)
+std::string GetWin32ErrorStr(uint32_t error_code = 0, bool english = false)
 {
     if (!error_code)
-        error_code = GetLastError();
+        error_code = GetLastError_MP();
 
     if (!error_code)
         return "";
 
-    LPWSTR pMessage = nullptr;
-    DWORD length = 0;
 
+    std::ostringstream ss;
 #ifdef _WIN32
+    DWORD length = 0;
+    LPWSTR pMessage = nullptr;
+
     // Try for English first?
     if (english)
     {
@@ -34,9 +34,6 @@ std::string GetWin32ErrorStr(DWORD error_code, bool english)
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
             nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), reinterpret_cast<LPWSTR>(&pMessage), 0, nullptr);
     }
-#endif // _WIN32
-    std::ostringstream ss;
-#ifdef _WIN32
 
     if (length)
     {
@@ -61,4 +58,18 @@ std::string GetWin32ErrorStr(DWORD error_code, bool english)
 
     ss << " (" << error_code << ')';
     return ss.str();
+}
+
+
+
+std::string win32_category_impl::message(int error_code) const
+{
+   return GetWin32ErrorStr(lossless_static_cast<uint32_t>(error_code));
+}
+
+
+
+win32_error::win32_error(uint32_t error_code, const char* message)
+        : std::system_error(lossless_static_cast<int>(error_code), win32_category(), message)
+{
 }

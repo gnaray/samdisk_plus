@@ -95,15 +95,6 @@ typedef struct _DISK_GEOMETRY {
 // Specifying Device Types: https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/specifying-device-types
 // WinIoCtl.h (WinIoCtl.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/WinIoCtl.h
 #define FILE_DEVICE_UNKNOWN             0x00000022 // [used by win32_error.cpp]
-// Errors (Error.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/Error.h
-#define ERROR_FILE_NOT_FOUND             2L
-#define ERROR_NO_MORE_FILES              18L
-#define ERROR_INVALID_HANDLE        6
-#define ERROR_CRC           23
-#define ERROR_SECTOR_NOT_FOUND      27
-
-// System Error Codes (1000-1299): https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--1000-1299-
-#define ERROR_FLOPPY_ID_MARK_NOT_FOUND 0x462
 
 #define DeviceIoControl(a,b,c,d,e,f,g,h)    (*g = 0) // [used by fdrawcmd.h]
 
@@ -159,7 +150,6 @@ inline HANDLE CreateFile(LPCSTR lpFileName,DWORD dwDesiredAccess,
         DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes,
                    HANDLE hTemplateFile) { return INVALID_HANDLE_VALUE; }
 inline BOOL CloseHandle(HANDLE hObject) { return false; }
-inline DWORD GetLastError() { return ERROR_INVALID_HANDLE; } // [win32_error]
 
 // Service Control Manager (WinSvc.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/WinSvc.h
 #define DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name

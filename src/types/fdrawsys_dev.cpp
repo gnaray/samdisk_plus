@@ -229,13 +229,13 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
                 }
 
                 // Give up on the current settings if nothing was found.
-                if (GetLastError() == ERROR_FLOPPY_ID_MARK_NOT_FOUND ||
-                    GetLastError() == ERROR_SECTOR_NOT_FOUND)
+                if (GetLastError_MP() == ERROR_FLOPPY_ID_MARK_NOT_FOUND ||
+                    GetLastError_MP() == ERROR_SECTOR_NOT_FOUND)
                     break;
 
                 // Fail for any reason except a CRC error
-                if (GetLastError() != ERROR_CRC)
-                    throw win32_error(GetLastError(), "READ_ID");
+                if (GetLastError_MP() != ERROR_CRC)
+                    throw win32_error(GetLastError_MP(), "READ_ID");
             }
         }
     }
@@ -256,7 +256,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
         DetectEncodingAndDataRate(cylhead.head);
 
     if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
-        throw win32_error(GetLastError(), "scan");
+        throw win32_error(GetLastError_MP(), "scan");
 
     // If nothing was found and we have valid settings, they might have changed.
     if (!scan_result->count && m_lastEncoding != Encoding::Unknown)
@@ -264,7 +264,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
         DetectEncodingAndDataRate(cylhead.head);
 
         if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
-            throw win32_error(GetLastError(), "scan");
+            throw win32_error(GetLastError_MP(), "scan");
     }
 
     const auto tracktime = lossless_static_cast<int>(scan_result->tracktime);
@@ -341,7 +341,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         if (!m_fdrawcmd->CmdRead(cylhead.head, header.cyl, header.head, header.sector, header.size, 1, mem))
         {
             // Reject errors other than CRC, sector not found and missing address marks
-            auto error{ GetLastError() };
+            auto error{ GetLastError_MP() };
             if (error != ERROR_CRC &&
                 error != ERROR_SECTOR_NOT_FOUND &&
                 error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
@@ -353,7 +353,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         // Get the controller result for the read to find out more
         FD_CMD_RESULT result{};
         if (!m_fdrawcmd->GetResult(result))
-            throw win32_error(GetLastError(), "result");
+            throw win32_error(GetLastError_MP(), "result");
 
         // Try again if header or data field are missing.
         if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_NO_DATA))
@@ -429,7 +429,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
         if (!m_fdrawcmd->CmdReadTrack(cylhead.head, 0, 0, 0, size_code, 1, mem))
         {
             // Reject errors other than CRC, sector not found and missing address marks
-            auto error{ GetLastError() };
+            auto error{ GetLastError_MP() };
             if (error != ERROR_CRC &&
                 error != ERROR_SECTOR_NOT_FOUND &&
                 error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
@@ -440,7 +440,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
 
         FD_CMD_RESULT result{};
         if (!m_fdrawcmd->GetResult(result))
-            throw win32_error(GetLastError(), "result");
+            throw win32_error(GetLastError_MP(), "result");
 
         if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_END_OF_CYLINDER))
             continue;
