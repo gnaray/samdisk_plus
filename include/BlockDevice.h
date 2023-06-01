@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Platform.h"
 #include "HDD.h"
-#include "WindowsStub.h"
 
 #include <string>
 

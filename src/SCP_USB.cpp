@@ -1,7 +1,7 @@
 // USB backend for SuperCard Pro device
 
 #include "SCP_USB.h"
-#include "FileIO.h"
+#include "FileIO.h" // O_BINARY
 
 #include <fcntl.h>
 #include <string>

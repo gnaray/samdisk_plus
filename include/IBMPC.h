@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WindowsStub.h"
+#include "Platform.h"
 #include "Header.h"
 #include "Track.h"
 

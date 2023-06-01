@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WindowsStub.h"
+#include "Platform.h"
 
 #include <string>
 #include <system_error>

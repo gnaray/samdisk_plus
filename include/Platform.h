@@ -1,7 +1,15 @@
-#ifndef WINDOWSSTUB_H
-#define WINDOWSSTUB_H
+#ifndef PLATFORM_H
+#define PLATFORM_H
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include "windows.h"
+#else
+
+// For fdrawcmd.h the following are required (which winioctl.h provides on Windows):
+// CTL_CODE
+// FILE_DEVICE_UNKNOWN
+// DeviceIoControl()
+// METHOD_*
 
 #include <cstdint>
 typedef __int64_t __int64;
@@ -9,7 +17,8 @@ typedef __int64_t __int64;
 // Defining things so this file can be included not only on Windows platform.
 #define CTL_CODE( DeviceType, Function, Method, Access ) (                 \
     ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
-)
+) // [used by fdrawcmd.h]
+
 // Win32 definitions (win32.h): http://www.jbox.dk/sanos/source/include/win32.h.html
 // Chromium's windows_types.h: https://chromium.googlesource.com/chromium/src/+/66.0.3359.158/base/win/windows_types.h
 // ToDo: fix BlockDevice so it doesn't need these
@@ -23,9 +32,10 @@ typedef unsigned short *LPWSTR;
 typedef void* HANDLE;
 
 typedef unsigned char BYTE;
-typedef unsigned long DWORD;
-typedef unsigned long ULONG;
-typedef long LONG;
+typedef unsigned short WORD;
+typedef unsigned int DWORD; // Originally long which is 32 bits except in Unix-like systems where 64 bits.
+typedef unsigned int ULONG; // Originally long which is 32 bits except in Unix-like systems where 64 bits.
+typedef int LONG; // Originally long which is 32 bits except in Unix-like systems where 64 bits.
 typedef __int64 LONGLONG;
 
 typedef int BOOL;
@@ -84,8 +94,7 @@ typedef struct _DISK_GEOMETRY {
 
 // Specifying Device Types: https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/specifying-device-types
 // WinIoCtl.h (WinIoCtl.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/WinIoCtl.h
-#define FILE_DEVICE_UNKNOWN             0x00000022
-
+#define FILE_DEVICE_UNKNOWN             0x00000022 // [used by win32_error.cpp]
 // Errors (Error.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/Error.h
 #define ERROR_FILE_NOT_FOUND             2L
 #define ERROR_NO_MORE_FILES              18L
@@ -96,22 +105,12 @@ typedef struct _DISK_GEOMETRY {
 // System Error Codes (1000-1299): https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--1000-1299-
 #define ERROR_FLOPPY_ID_MARK_NOT_FOUND 0x462
 
-// (fcntl.h): https://www.rpi.edu/dept/cis/software/g77-mingw32/include/fcntl.h
-// TODO hint to check these values: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/open-wopen?view=msvc-170
-#define O_SEQUENTIAL    0x0020 // TODO check this on Windows.
-#ifndef O_BINARY
-#define O_BINARY        0x8000 // TODO check this on Windows.
-#endif
-#ifndef O_DIRECT
-#define O_DIRECT	00040000 // TODO check this on Windows.
-#endif
-
-#define DeviceIoControl(a,b,c,d,e,f,g,h)    (*g = 0)
+#define DeviceIoControl(a,b,c,d,e,f,g,h)    (*g = 0) // [used by fdrawcmd.h]
 
 // https://www.codeproject.com/script/Content/ViewAssociatedFile.aspx?rzp=%2FKB%2Fasp%2Fuseraccesscheck%2Fuseraccesscheck_demo.zip&zep=ASPDev%2FMasks.txt&obid=1881&obtid=2&ovid=1
-#define FILE_READ_DATA            ( 0x0001 )    // file & pipe
+#define FILE_READ_DATA            ( 0x0001 )    // file & pipe [used by fdrawcmd.h]
 #define FILE_LIST_DIRECTORY       ( 0x0001 )    // directory
-#define FILE_WRITE_DATA           ( 0x0002 )    // file & pipe
+#define FILE_WRITE_DATA           ( 0x0002 )    // file & pipe [used by fdrawcmd.h]
 #define FILE_ADD_FILE             ( 0x0002 )    // directory
 
 // http://www.jbox.dk/sanos/source/include/win32.h.html
@@ -145,9 +144,9 @@ typedef struct _DISK_GEOMETRY {
 #define FILE_ATTRIBUTE_DEVICE            0x00000040
 #define FILE_ATTRIBUTE_NORMAL            0x00000080
 
-#define METHOD_BUFFERED                 0
-#define METHOD_IN_DIRECT                1
-#define METHOD_OUT_DIRECT               2
+#define METHOD_BUFFERED                 0 // [used by fdrawcmd.h]
+#define METHOD_IN_DIRECT                1 // [used by fdrawcmd.h]
+#define METHOD_OUT_DIRECT               2 // [used by fdrawcmd.h]
 #define METHOD_NEITHER                  3
 
 #define FILE_ANY_ACCESS                 0
@@ -160,7 +159,7 @@ inline HANDLE CreateFile(LPCSTR lpFileName,DWORD dwDesiredAccess,
         DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes,
                    HANDLE hTemplateFile) { return INVALID_HANDLE_VALUE; }
 inline BOOL CloseHandle(HANDLE hObject) { return false; }
-inline DWORD GetLastError() { return ERROR_INVALID_HANDLE; }
+inline DWORD GetLastError() { return ERROR_INVALID_HANDLE; } // [win32_error]
 
 // Service Control Manager (WinSvc.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/WinSvc.h
 #define DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name
@@ -194,4 +193,4 @@ inline BOOL CloseServiceHandle(SC_HANDLE hSCObject) { return false; }
 
 #endif // _WIN32
 
-#endif // WINDOWSSTUB_H
+#endif // PLATFORM_H

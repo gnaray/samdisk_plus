@@ -3,7 +3,7 @@
 
 #include "Header.h"
 #include "Range.h"
-#include "FileIO.h"
+#include "FileIO.h" // MAX_PATH
 
 #include <string>
 

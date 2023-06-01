@@ -2,7 +2,7 @@
 
 #include "Util.h"
 #include "config.h"
-#include "FileIO.h"
+#include "FileIO.h" // PATH_SEPARATOR_CHR
 #include "MemFile.h"
 
 #ifdef HAVE_ZLIB

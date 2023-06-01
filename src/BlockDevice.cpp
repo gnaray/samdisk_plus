@@ -1,11 +1,14 @@
 // Platform specific HDD device handling
 
-#include "Options.h"
 #include "BlockDevice.h"
+#include "FileIO.h" // Although included by Options.h as well.
+#include "Options.h"
 #include "Util.h"
 
 #include <algorithm>
+#include <cstring>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 
 #ifdef HAVE_SYS_DISK_H

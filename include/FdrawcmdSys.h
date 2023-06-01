@@ -1,9 +1,11 @@
 #pragma once
 
 #include "config.h"
-#ifdef HAVE_FDRAWCMD_H
 
+#ifdef HAVE_FDRAWCMD_H
+#include "Platform.h"
 #include "fdrawcmd.h"
+
 #include "Header.h"
 #include "Util.h"
 

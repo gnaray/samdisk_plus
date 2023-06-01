@@ -3,10 +3,10 @@
 #include "config.h"
 
 #ifdef HAVE_FDRAWCMD_H
+#include "Platform.h"
+#include "fdrawcmd.h"
 
 #include "utils.h"
-
-#include <fdrawcmd.h>
 
 DWORD GetDriverVersion()
 {
