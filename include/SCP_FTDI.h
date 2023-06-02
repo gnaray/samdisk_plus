@@ -1,8 +1,11 @@
 #pragma once
 
+#include "config.h"
+
 #ifdef HAVE_FTDI
 
 #include "SuperCardPro.h"
+
 #include <ftdi.h>
 
 class SuperCardProFTDI final : public SuperCardPro

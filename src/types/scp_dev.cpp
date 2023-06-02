@@ -1,13 +1,16 @@
 // SuperCard Pro real device wrapper
 //  http://www.cbmstuff.com/downloads/scp/scp_sdk.pdf
 
+#include "PlatformConfig.h"
 #include "DiskUtil.h"
 #include "Options.h"
 #include "DemandDisk.h"
 //#include "BitstreamDecoder.h"
 #include "SuperCardPro.h"
 #include "Util.h"
+
 #include <numeric>
+#include <algorithm>
 
 static auto& opt_newdrive = getOpt<int>("newdrive");
 static auto& opt_range = getOpt<Range>("range");

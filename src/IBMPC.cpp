@@ -1,7 +1,10 @@
 // Calculations related to IBM PC format MFM/FM disks (System/34 compatible)
 
-#include "Options.h"
+#include "PlatformConfig.h"
 #include "IBMPC.h"
+#include "Options.h"
+
+#include <algorithm>
 
 static auto& opt_debug = getOpt<int>("debug");
 static auto& opt_verbose = getOpt<int>("verbose");

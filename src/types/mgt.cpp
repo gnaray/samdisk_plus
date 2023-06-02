@@ -9,6 +9,7 @@
 #include "MemFile.h"
 
 #include <memory>
+#include <array>
 
 bool ReadMGT(MemFile& file, std::shared_ptr<Disk>& disk)
 {

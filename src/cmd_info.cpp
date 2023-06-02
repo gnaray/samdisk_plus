@@ -1,5 +1,6 @@
 // Info command
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "SAMdisk.h"
 #include "Image.h"
@@ -7,6 +8,7 @@
 #include "Disk.h"
 #include "Util.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <memory>
 

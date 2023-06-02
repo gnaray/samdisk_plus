@@ -1,5 +1,6 @@
 // Simple block floppy device (USB and SCSI)
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "DemandDisk.h"
 #include "BlockDevice.h"

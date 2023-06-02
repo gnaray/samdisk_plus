@@ -1,7 +1,10 @@
 #pragma once
 
+#include "config.h"
+
 #ifdef HAVE_WINUSB
 
+#include "Platform.h"
 #include "winusb_defs.h" // just the definitions we need
 #include "KryoFlux.h"
 

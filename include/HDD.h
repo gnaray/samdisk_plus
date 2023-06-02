@@ -1,10 +1,14 @@
 #pragma once
 
+#include "config.h"
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 class MEMORY;
 

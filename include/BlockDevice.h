@@ -5,7 +5,6 @@
 
 #include <string>
 
-
 class BlockDevice final : public HDD
 {
 public:

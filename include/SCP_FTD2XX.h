@@ -1,8 +1,11 @@
 #pragma once
 
+#include "config.h"
+
 #ifdef HAVE_FTD2XX
 
 #include "SuperCardPro.h"
+
 #include <ftd2xx.h>
 
 class SuperCardProFTD2XX final : public SuperCardPro

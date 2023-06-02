@@ -2,10 +2,12 @@
 //
 // PLL code from Keir Frasier's Disk-Utilities/libdisk
 
-#include "Options.h"
+#include "PlatformConfig.h"
 #include "FluxDecoder.h"
+#include "Options.h"
 
 #include <cassert>
+#include <algorithm>
 
 static auto& opt_pllphase = getOpt<int>("pllphase");
 

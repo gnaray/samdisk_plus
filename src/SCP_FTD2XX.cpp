@@ -1,6 +1,5 @@
 // Closed-source FTDI backend for SuperCard Pro device
 
-#include "SAMdisk.h"
 #include "SCP_FTD2XX.h"
 
 #ifdef HAVE_FTD2XX

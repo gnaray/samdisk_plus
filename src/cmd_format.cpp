@@ -1,5 +1,6 @@
 // Format and unformat commands
 
+#include "PlatformConfig.h"
 #include "Options.h"
 //#include "record.h"
 #include "Image.h"
@@ -8,6 +9,7 @@
 #include "Util.h"
 
 #include <cstring>
+#include <algorithm>
 
 static auto& opt_boot = getOpt<std::string>("boot");
 static auto& opt_byteswap = getOpt<int>("byteswap");

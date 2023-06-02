@@ -1,6 +1,7 @@
 // Toshiba Pasopia 7:
 //  http://www1.plala.or.jp/aoto/tech.htm
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "Disk.h"
 #include "DiskUtil.h"

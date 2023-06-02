@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+//#include <winioctl.h>
 
 #ifdef HAVE_SYS_DISK_H
 #include <sys/disk.h>

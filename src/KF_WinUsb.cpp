@@ -1,9 +1,11 @@
 // WinUsb backend for KryoFlux device
 
-#include "SAMdisk.h"
 #include "KF_WinUsb.h"
 
 #ifdef HAVE_WINUSB
+
+#include "Util.h"
+#include "win32_error.h"
 
 #include <codecvt>
 #include <setupapi.h>

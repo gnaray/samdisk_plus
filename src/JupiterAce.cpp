@@ -1,5 +1,6 @@
 // Jupiter Ace helper functions for the Deep Thought floppy disk interface
 
+#include "JupiterAce.h"
 #include "Sector.h"
 #include "Util.h"
 

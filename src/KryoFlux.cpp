@@ -1,12 +1,13 @@
 // KryoFlux device base class
 
-#include "config.h"
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "KryoFlux.h"
 
 #include <cstring>
 #include <thread>
 #include <fstream>
+#include <algorithm>
 
 static auto& opt_hardsectors = getOpt<int>("hardsectors");
 

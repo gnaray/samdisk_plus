@@ -1,6 +1,5 @@
 // Open source FTDI backend for SuperCard Pro device
 
-#include "SAMdisk.h"
 #include "SCP_FTDI.h"
 
 #ifdef HAVE_FTDI

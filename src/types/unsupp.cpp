@@ -5,6 +5,7 @@
 #include "MemFile.h"
 
 #include <memory>
+#include <array>
 
 bool ReadUnsupported(MemFile& file, std::shared_ptr<Disk>&/*disk*/)
 {

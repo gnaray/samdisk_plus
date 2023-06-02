@@ -1,5 +1,6 @@
 // Atari ST
 
+#include "PlatformConfig.h"
 #include "HDD.h"
 #include "Util.h"
 #include "Disk.h"
@@ -8,6 +9,7 @@
 
 #include <memory>
 #include <numeric>
+#include <array>
 
 constexpr uint16_t ST_BOOT_CHECKSUM = 0x1234;
 

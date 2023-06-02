@@ -1,9 +1,11 @@
 // SAM Coupe helper functions
 
-#include "Options.h"
+#include "PlatformConfig.h"
 #include "SAMCoupe.h"
+#include "Options.h"
 
 #include <cstring>
+#include <algorithm>
 
 static auto& opt_fix = getOpt<int>("fix");
 static auto& opt_nosig = getOpt<int>("nosig");

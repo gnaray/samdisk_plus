@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.h"
+#include "PlatformConfig.h"
 
 #ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>   // include before windows.h to avoid winsock.h

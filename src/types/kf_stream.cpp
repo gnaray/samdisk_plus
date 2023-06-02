@@ -8,7 +8,7 @@
 #include "Util.h"
 
 #include <memory>
-
+#include <cctype>
 
 bool ReadSTREAM(MemFile& file, std::shared_ptr<Disk>& disk)
 {

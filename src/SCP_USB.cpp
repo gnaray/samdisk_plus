@@ -1,11 +1,14 @@
 // USB backend for SuperCard Pro device
 
+#include "PlatformConfig.h"
 #include "SCP_USB.h"
 #include "FileIO.h" // O_BINARY
 
 #include <fcntl.h>
 #include <string>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #ifdef _WIN32
 #include "SCP_Win32.h"

@@ -1,11 +1,14 @@
 // Base class for HDD devices and image files
 
+#include "PlatformConfig.h"
+#include "HDD.h"
 #include "Options.h"
 #include "BlockDevice.h"
 #include "HDFHDD.h"
 #include "Util.h"
 
 #include <cstring>
+#include <algorithm>
 
 #define SECTOR_BLOCK    2048    // access CF/HDD devices in 1MB chunks
 

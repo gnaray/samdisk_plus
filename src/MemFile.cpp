@@ -1,9 +1,12 @@
 // Memory-backed files used for disk images
 
+#include "PlatformConfig.h"
+#include "MemFile.h"
 #include "Util.h"
 #include "config.h"
 #include "FileIO.h" // PATH_SEPARATOR_CHR
-#include "MemFile.h"
+
+#include <algorithm>
 
 #ifdef HAVE_ZLIB
 #include <zlib.h>

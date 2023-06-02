@@ -4,6 +4,8 @@
 
 #ifdef HAVE_FDRAWCMD_H
 
+#include <algorithm>
+
 /*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device_index)
 {
     auto path = util::format(R"(\\.\fdraw)", device_index);

@@ -2,6 +2,8 @@
 
 #ifdef _WIN32
 
+#include "Platform.h"
+
 #pragma warning(push)
 #pragma warning(disable:4091)   // Ignore for 8.1 SDK + VS2015 warning
 #include <DbgHelp.h>

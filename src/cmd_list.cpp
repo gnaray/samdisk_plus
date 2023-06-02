@@ -1,5 +1,6 @@
 // List command
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "BlockDevice.h"
 #include "SAMCoupe.h"

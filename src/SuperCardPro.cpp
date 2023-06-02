@@ -1,11 +1,15 @@
 // SuperCard Pro device base class
 
-#include "Options.h"
+#include "PlatformConfig.h"
 #include "SuperCardPro.h"
+#include "Options.h"
 #include "Sector.h"
 
 #include <cstring>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#include <algorithm>
 
 static auto& opt_scale = getOpt<int>("scale");
 

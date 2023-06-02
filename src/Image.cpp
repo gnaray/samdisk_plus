@@ -1,5 +1,7 @@
 // High-level disk image/device reading and writing
 
+#include "PlatformConfig.h"
+#include "Image.h"
 #include "Options.h"
 //#include "record.h"
 #include "SpectrumPlus3.h"

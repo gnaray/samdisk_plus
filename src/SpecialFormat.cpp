@@ -4,6 +4,7 @@
 // Output will be in bitstream or flux format (or both),
 // depending on the format requirements.
 
+#include "SpecialFormat.h"
 #include "Options.h"
 #include "IBMPC.h"
 #include "BitstreamTrackBuilder.h"
@@ -12,6 +13,7 @@
 #include "Util.h"
 
 #include <cstring>
+#include <cctype>
 
 static auto& opt_debug = getOpt<int>("debug");
 

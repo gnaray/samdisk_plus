@@ -1,5 +1,6 @@
 // View command
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "SAMdisk.h"
 #include "DiskUtil.h"
@@ -7,6 +8,7 @@
 #include "Track.h"
 #include "Util.h"
 
+#include <algorithm>
 #include <memory>
 
 static auto& opt_a1sync = getOpt<int>("a1sync");

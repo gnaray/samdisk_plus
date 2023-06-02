@@ -1,8 +1,10 @@
 // Windows crash dump support, to save a minidump image for debugging
 
-#include "SAMdisk.h"
-
 #ifdef _WIN32
+
+#include "CrashDump.h"
+
+#include <string>
 
 #pragma comment(lib, "DbgHelp.lib")
 

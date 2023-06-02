@@ -1,8 +1,11 @@
 #pragma once
 
 #include "Cpp_helpers.h"
+
 #include <cassert>
+#include <cctype>
 #include <cstdint>
+#include <fstream>
 #include <ostream>
 #include <sstream>
 #include <vector>

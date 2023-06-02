@@ -1,8 +1,9 @@
 // Disk class utilities
 
+#include "PlatformConfig.h"
+#include "DiskUtil.h"
 #include "Options.h"
 #include "CRC16.h"
-#include "DiskUtil.h"
 #include "SpecialFormat.h"
 #include "TrackDataParser.h"
 #include "Util.h"

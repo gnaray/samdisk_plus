@@ -1,5 +1,10 @@
 #pragma once
 
+#include "config.h"
+
+#ifdef HAVE_WINUSB
+#include "Platform.h"
+
 #define SHORT_PACKET_TERMINATE  0x01
 #define AUTO_CLEAR_STALL        0x02
 #define PIPE_TRANSFER_TIMEOUT   0x03
@@ -117,3 +122,5 @@ WinUsb_WritePipe(
 );
 
 };  // extern "C"
+
+#endif

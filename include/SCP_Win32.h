@@ -2,6 +2,8 @@
 
 #ifdef _WIN32
 
+#include "Platform.h"
+
 #include "SuperCardPro.h"
 
 class SuperCardProWin32 final : public SuperCardPro

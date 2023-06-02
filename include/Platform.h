@@ -1,6 +1,8 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+#include "PlatformConfig.h"
+
 #ifdef _WIN32
 #include "windows.h"
 #else

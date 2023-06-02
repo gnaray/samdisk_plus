@@ -1,10 +1,12 @@
 // Legacy utility functions
 
+#include "PlatformConfig.h"
+#include "Util.h"
 #include "Options.h"
 #include "Image.h"
 #include "SAMCoupe.h"
-#include "Util.h"
 
+#include <cctype>
 #include <cstring>
 #include <set>
 #include <string>

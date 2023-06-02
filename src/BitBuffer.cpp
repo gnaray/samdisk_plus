@@ -1,9 +1,11 @@
 // Bit buffer to hold decoded flux data for scanning
 
+#include "PlatformConfig.h"
 #include "BitBuffer.h"
 #include "Options.h"
 
 #include <cstring>
+#include <algorithm>
 
 static auto& opt_a1sync = getOpt<int>("a1sync");
 static auto& opt_debug = getOpt<int>("debug");

@@ -11,8 +11,6 @@
 // It is considered as EDSK version 2.
 // It supports readstats info and big tracks (size can be > 0xff00).
 
-#include "SAMdisk.h"
-#include "IBMPC.h"
 #include "types/dsk.h"
 
 bool ReadRDSK(MemFile& file, std::shared_ptr<Disk>& disk)

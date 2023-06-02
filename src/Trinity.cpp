@@ -6,6 +6,12 @@
 #include "utils.h"
 #include "Format.h"
 
+#ifdef _WIN32
+#include "Util.h"
+#endif
+
+#include <algorithm>
+
 std::unique_ptr<Trinity> Trinity::Open()
 {
     std::unique_ptr<Trinity> trinity;

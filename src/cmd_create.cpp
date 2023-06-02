@@ -1,5 +1,6 @@
 // Create command
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "Disk.h"
 #include "DiskUtil.h"

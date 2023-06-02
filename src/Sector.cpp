@@ -1,8 +1,9 @@
+#include "PlatformConfig.h"
+#include "Sector.h"
 #include "Cpp_helpers.h"
 #include "Options.h"
 #include "CRC16.h"
 #include "DiskUtil.h"
-#include "Sector.h"
 
 #include <algorithm>
 #include <cstring>

@@ -1,5 +1,6 @@
 // Sinclair Spectrum +3 helper functions
 
+#include "SpectrumPlus3.h"
 #include "CRC16.h"
 #include "Disk.h"
 #include "Sector.h"

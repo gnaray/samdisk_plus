@@ -6,8 +6,10 @@
 #include "SAMCoupe.h"
 #include "opd.h"
 #include "trd.h"
+#include "utils.h"
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <fstream>
 

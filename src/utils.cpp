@@ -1,12 +1,19 @@
 // Utility functions
 
 #include "utils.h"
+#include "Util.h"
 
 #include <algorithm>
 #include <cstdarg>
 #include <fstream>
 #include <iostream>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#include <cctype>
+#ifdef HAVE_IO_H
+#include <io.h>
+#endif
 
 namespace util
 {

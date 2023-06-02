@@ -1,10 +1,12 @@
-#include "Options.h"
+#include "PlatformConfig.h"
 #include "Track.h"
+#include "Options.h"
 //#include "DiskUtil.h"
 #include "IBMPC.h"
 
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 #include <numeric>
 
 static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");

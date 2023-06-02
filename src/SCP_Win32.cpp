@@ -1,6 +1,5 @@
 // Win32 backend for SuperCard Pro device
 
-#include "SAMdisk.h"
 #include "SCP_Win32.h"
 
 #ifdef _WIN32

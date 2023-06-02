@@ -1,6 +1,7 @@
 // HFE format for HxC floppy emulator:
 //  http://hxc2001.com/download/floppy_drive_emulator/SDCard_HxC_Floppy_Emulator_HFE_file_format.pdf
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "DiskUtil.h"
 #include "Disk.h"
@@ -10,6 +11,8 @@
 #include <memory>
 #include <cstdint>
 #include <string>
+#include <algorithm>
+#include <array>
 
 // Note: currently only format revision 00 is supported.
 

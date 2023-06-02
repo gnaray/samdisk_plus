@@ -1,5 +1,6 @@
 // Scan command
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "SAMdisk.h"
 #include "Image.h"

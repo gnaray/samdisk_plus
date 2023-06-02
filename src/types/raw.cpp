@@ -1,5 +1,6 @@
 // Raw image files matched by file size alone
 
+#include "PlatformConfig.h"
 #include "DiskUtil.h"
 #include "Options.h"
 #include "Disk.h"
@@ -7,6 +8,7 @@
 #include "Util.h"
 
 #include <memory>
+#include <algorithm>
 
 static auto& opt_range = getOpt<Range>("range");
 static auto& opt_sectors = getOpt<long>("sectors");

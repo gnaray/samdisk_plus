@@ -1,5 +1,6 @@
 // Copy command
 
+#include "PlatformConfig.h"
 #include "Options.h"
 #include "DiskUtil.h"
 #include "Image.h"
@@ -11,6 +12,7 @@
 #include "Util.h"
 #include "utils.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <strings.h>
