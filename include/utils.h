@@ -422,4 +422,26 @@ inline void str_range(const std::string& str, int& range_begin, int& range_end)
     throw util::exception(util::format("invalid range '", str, "'"));
 }
 
+class Version
+{
+public:
+    constexpr uint8_t MajorValue() const
+    {
+        return (value >> 24) & 0xff;
+    }
+    constexpr uint8_t MinorValue() const
+    {
+        return (value >> 16) & 0xff;
+    }
+    constexpr uint8_t MaintenanceValue() const
+    {
+        return (value >> 8) & 0xff;
+    }
+    constexpr uint8_t BuildValue() const
+    {
+        return 0xff;
+    }
+    uint32_t value;
+};
+
 } // namespace util

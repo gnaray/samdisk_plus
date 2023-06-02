@@ -27,7 +27,7 @@ public:
     static std::unique_ptr<FdrawcmdSys> Open(int device);
 
 public:
-    bool GetVersion(int& version);
+    bool GetVersion(util::Version& version);
     bool GetResult(FD_CMD_RESULT& result);
     bool SetEncRate(Encoding encoding, DataRate datarate);
     bool SetHeadSettleTime(int ms);

@@ -42,11 +42,14 @@ constexpr uint8_t FdrawcmdSys::DtlFromSize(int size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool FdrawcmdSys::GetVersion(int& version)
+bool FdrawcmdSys::GetVersion(util::Version& version)
 {
-    return Ioctl(IOCTL_FDRAWCMD_GET_VERSION,
+    DWORD dwVersion = 0;
+    const auto result = Ioctl(IOCTL_FDRAWCMD_GET_VERSION,
         nullptr, 0,
-        &version, sizeof(version));
+        &dwVersion, sizeof(dwVersion));
+    version.value = dwVersion;
+    return result;
 }
 
 bool FdrawcmdSys::GetResult(FD_CMD_RESULT& result)
