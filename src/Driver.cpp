@@ -6,16 +6,19 @@
 #include "Platform.h"
 #include "fdrawcmd.h"
 
+#include "FdrawcmdSys.h"
 #include "utils.h"
 
-DWORD GetDriverVersion()
+util::Version GetDriverVersion()
 {
-    DWORD version = 0, ret;
+    util::Version version{ 0 };
 
-    HANDLE h = CreateFile(R"(\\.\fdrawcmd)", GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+    const HANDLE h = CreateFile(R"(\\.\fdrawcmd)", GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
     if (h != INVALID_HANDLE_VALUE)
     {
-        DeviceIoControl(h, IOCTL_FDRAWCMD_GET_VERSION, nullptr, 0, &version, sizeof(version), &ret, nullptr);
+        DWORD ret, dwVersion = 0;
+        if (DeviceIoControl(h, IOCTL_FDRAWCMD_GET_VERSION, nullptr, 0, &dwVersion, sizeof(dwVersion), &ret, nullptr))
+            version.value = dwVersion;
         CloseHandle(h);
     }
 
@@ -25,15 +28,15 @@ DWORD GetDriverVersion()
 
 bool CheckDriver()
 {
-    auto version = GetDriverVersion();
-    auto compatible = (version & 0xffff0000) == (FDRAWCMD_VERSION & 0xffff0000);
+    const auto version = GetDriverVersion();
+    const auto compatible = (version.value & 0xffff0000) == (FDRAWCMD_VERSION & 0xffff0000);
 
     // Compatible driver installed?
-    if (version && compatible)
+    if (version.value && compatible)
         return true;
 
     // If a version was found we're not compatible with it
-    if (version)
+    if (version.value)
         throw util::exception("installed fdrawcmd.sys is incompatible, please update");
     else
         util::cout << "\nFloppy features require fdrawcmd.sys from " << colour::CYAN << "http://simonowen.com/fdrawcmd/" << colour::none << '\n';
@@ -72,9 +75,9 @@ bool IsFdcDriverRunning()
 
 bool ReportDriverVersion()
 {
-    auto version = GetDriverVersion();
+    const auto version = GetDriverVersion();
 
-    if (!version)
+    if (!version.value)
     {
         if (IsFdcDriverRunning())
             util::cout << "\nfdrawcmd.sys is not currently installed.\n";
@@ -85,10 +88,10 @@ bool ReportDriverVersion()
     }
 
     // Report the version number of the active driver
-    util::cout << util::fmt("\nfdrawcmd.sys version %u.%u.%u.%u is installed.",
-        (version >> 24) & 0xff, (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+    util::cout << util::fmt("\nfdrawcmd.sys version %hhu.%hhu.%hhu.%hhu is installed.",
+        version.MajorValue(), version.MinorValue(), version.MaintenanceValue(), version.BuildValue());
 
-    if (version < FDRAWCMD_VERSION) util::cout << ' ' << colour::YELLOW << "[update available]" << colour::none;
+    if (version.value < FDRAWCMD_VERSION) util::cout << ' ' << colour::YELLOW << "[update available]" << colour::none;
     util::cout << '\n';
 
     return true;
