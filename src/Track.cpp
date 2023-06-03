@@ -225,7 +225,8 @@ bool Track::has_all_stable_data(const Sectors& stable_sectors) const
     return it == end();
 }
 
-int Track::normal_probable_size() const {
+int Track::normal_probable_size() const
+{
     int amount_of_sector_id = 0;
     const auto sector_id_summer = [&](auto a, auto b) {
         if (b.has_badidcrc())

@@ -24,7 +24,7 @@ bool DemandDisk::supports_retries() const
 }
 
 void DemandDisk::disk_is_read()
-{ // Do nothing because this is demand disk and as such is not read completly when this trigger is fired.
+{ // Do nothing because this is demand disk and as such is not read completely when this trigger is fired.
 } // The goal of calling this method is to fix readstats which is done per track in read method in case of demand disk.
 
 const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy)

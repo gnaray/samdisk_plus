@@ -130,7 +130,6 @@ class Headers : public std::vector<Header>
 public:
     Headers() = default;
 
-    bool HasIdSequence(const int first_id, const int length) const;
     bool Contains(const Header& header) const;
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Headers& headers, bool onlyRelevantData = true)
@@ -140,4 +139,5 @@ public:
         return ss.str();
     }
     std::string SectorIdsToString() const;
+    bool HasIdSequence(const int first_id, const int length) const;
 };

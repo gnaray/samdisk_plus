@@ -33,7 +33,7 @@ FdrawcmdSys::FdrawcmdSys(HANDLE hdev)
 bool FdrawcmdSys::Ioctl(DWORD code, void* inbuf, int insize, void* outbuf, int outsize)
 {
     DWORD dwRet{ 0 };
-    return !!DeviceIoControl(m_hdev.get(), code, inbuf, insize, outbuf, outsize, &dwRet, NULL);
+    return !!DeviceIoControl(m_hdev.get(), code, inbuf, insize, outbuf, outsize, &dwRet, nullptr);
 }
 
 constexpr uint8_t FdrawcmdSys::DtlFromSize(int size)

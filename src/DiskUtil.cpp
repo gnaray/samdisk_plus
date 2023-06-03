@@ -43,7 +43,7 @@ static void item_separator(int items)
         util::cout << ',';
 }
 
-void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const Sectors &ignored_sectors/* = Sectors{}*/)
+void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const Sectors& ignored_sectors/* = Sectors{}*/)
 {
     if (opt_hex != 1)
         util::cout << util::fmt(" %2u.%u  ", cylhead.cyl, cylhead.head);

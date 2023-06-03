@@ -404,7 +404,7 @@ Sector::Merge Sector::merge(Sector&& sector)
     // If the existing header is bad, repair it
     if (has_badidcrc())
     {
-        header = sector.header;
+        header = sector.header; // TODO Always equals. Else the assert above would have been activated.
         set_badidcrc(false);
         ret = Merge::Improved;
     }

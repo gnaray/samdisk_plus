@@ -7,7 +7,11 @@ class Data : public std::vector<uint8_t>
 {
 public:
     using std::vector<uint8_t>::vector;
-    int size() const { return lossless_static_cast<int>(std::vector<uint8_t>::size()); }
+
+    int size() const
+    {
+        return lossless_static_cast<int>(std::vector<uint8_t>::size());
+    }
 };
 
 typedef Data::size_type DataST;
