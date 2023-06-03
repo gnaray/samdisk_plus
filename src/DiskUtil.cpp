@@ -708,26 +708,29 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
             // Default to adding to the end of the track.
             auto insert_idx = track.size();
 
-            // Loop over sectors appearing after the current sector on the source track.
-            auto idx_src = src_track.index_of(src_sector); // Searching for pointer of original src_sector instead of copy.
-            for (int i = idx_src + 1; i < src_track.size(); ++i)
+            if (!track.empty())
             {
-                auto& s = src_track[i];
-
-                // Attempt to find the same sector on the target track.
-                it = track.find(s.header, s.datarate, s.encoding);
-                // If not found and its datarate is different interchangeable then try that also.
-                if (it == track.end() && s.datarate != src_sector_copy.datarate &&
-                        are_interchangeably_equal_datarates(s.datarate, src_sector_copy.datarate))
+                // Loop over sectors appearing after the current sector on the source track.
+                auto idx_src = src_track.index_of(src_sector); // Searching for pointer of original src_sector instead of copy.
+                for (int i = idx_src + 1; i < src_track.size(); ++i)
                 {
-                    it = track.find(s.header, src_sector_copy.datarate, s.encoding);
-                }
+                    auto& s = src_track[i];
 
-                if (it != track.end())
-                {
-                    // The missing sector must appear before the match we just found.
-                    insert_idx = track.index_of(*it);
-                    break;
+                    // Attempt to find the same sector on the target track.
+                    it = track.find(s.header, s.datarate, s.encoding);
+                    // If not found and its datarate is different interchangeable then try that also.
+                    if (it == track.end() && s.datarate != src_sector_copy.datarate &&
+                            are_interchangeably_equal_datarates(s.datarate, src_sector_copy.datarate))
+                    {
+                        it = track.find(s.header, src_sector_copy.datarate, s.encoding);
+                    }
+
+                    if (it != track.end())
+                    {
+                        // The missing sector must appear before the match we just found.
+                        insert_idx = track.index_of(*it);
+                        break;
+                    }
                 }
             }
 
