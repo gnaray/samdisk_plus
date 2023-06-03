@@ -43,7 +43,7 @@ const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int wit
         while (rescans > 0 || retries > 0)
         {
             // If no more rescans are required, stop when there's nothing to fix.
-            if (rescans <= 0 && track.has_stable_data(deviceReadingPolicy.SkippableSectors()))
+            if (rescans <= 0 && track.has_all_stable_data(deviceReadingPolicy.SkippableSectors()))
                 break;
             // Do not seek to 0th cyl at second, third, etc. loading.
             auto rescan_trackdata = load(cylhead, false, false, deviceReadingPolicy);

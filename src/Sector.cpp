@@ -98,7 +98,7 @@ DataReadStats& Sector::data_copy_read_stats(int instance/*=0*/)
 
 int Sector::get_best_data_index() const
 {
-    if (copies() == 0)
+    if (!has_data())
         return -1;
     if (!opt_readstats)
         return 0;
@@ -113,15 +113,14 @@ int Sector::get_best_data_index() const
     return max_index;
 }
 
+// The stable sector is good sector and in paranoia mode it is read at least stability level times.
 bool Sector::has_stable_data() const
 {
+    const bool result = has_good_data(!opt_normal_disk, opt_normal_disk);
+    // Backward compatibility: if no paranoia then good data is also stable data.
+    if (!opt_paranoia || !result)
+        return result;
     const auto best_data_index = get_best_data_index();
-    if (best_data_index < 0)
-        return false;
-    const auto bad_crc = (!opt_normal_disk && is_checksummable_8k_sector()) ? false : has_baddatacrc();
-    // Backward compatibility: if no paranoia then stable data means good data.
-    if (!opt_paranoia)
-        return !bad_crc;
     const auto read_count = data_copy_read_stats(best_data_index).ReadCount();
     return read_count >= opt_stability_level;
 }
@@ -453,9 +452,12 @@ bool Sector::has_data() const
     return copies() != 0;
 }
 
-bool Sector::has_good_data() const
+// consider_normal_disk inhibits consider_checksummable_8K because checksummable_8K is not normal.
+bool Sector::has_good_data(bool consider_checksummable_8K, bool consider_normal_disk) const
 {
-    return has_data() && !has_baddatacrc() && !has_gapdata();
+    return consider_normal_disk ? has_good_normaldata()
+            : ((consider_checksummable_8K && is_checksummable_8k_sector())
+            || (has_data() && !has_baddatacrc() && !has_gapdata()));
 }
 
 bool Sector::has_gapdata() const
@@ -470,7 +472,12 @@ bool Sector::has_shortdata() const
 
 bool Sector::has_normaldata() const
 {
-    return has_data() && data_size() == size();
+    return data_size() == size();
+}
+
+bool Sector::has_good_normaldata() const
+{
+    return has_data() && !has_baddatacrc() && has_normaldata();
 }
 
 bool Sector::is_8k_sector() const

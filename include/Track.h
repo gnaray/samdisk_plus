@@ -26,12 +26,12 @@ public:
     bool is_mixed_encoding() const;
     bool is_8k_sector() const;
     bool is_repeated(const Sector& sector) const;
-    bool has_good_data(const Sectors& good_sectors = Sectors{}) const;
+    bool has_all_good_data() const;
     bool has_any_good_data() const;
 
     const Sectors good_sectors() const;
     const Sectors stable_sectors() const;
-    bool has_stable_data(const Sectors &good_sectors) const;
+    bool has_all_stable_data(const Sectors &stable_sectors) const;
     int normal_probable_size() const;
 
     void clear();

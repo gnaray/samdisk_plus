@@ -65,10 +65,11 @@ public:
     Merge merge(Sector&& sector);
 
     bool has_data() const;
-    bool has_good_data() const;
+    bool has_good_data(bool consider_checksummable_8K = false, bool consider_normal_disk = false) const;
     bool has_gapdata() const;
     bool has_shortdata() const;
     bool has_normaldata() const;
+    bool has_good_normaldata() const;
     constexpr bool has_badidcrc() const
     {
         return m_bad_id_crc;

@@ -160,14 +160,13 @@ bool Track::is_repeated(const Sector& sector) const
     return false;
 }
 
-bool Track::has_good_data(const Sectors& good_sectors) const
+bool Track::has_all_good_data() const
 {
+    if (empty())
+        return true;
+
     auto it = std::find_if(begin(), end(), [&](const Sector& sector) {
-        if (!sector.has_badidcrc() && good_sectors.Contains(sector, tracklen))
-            return false;
-        if (sector.is_checksummable_8k_sector())
-            return false;
-        return !sector.has_good_data();
+        return !sector.has_good_data(true);
         });
 
     return it == end();
@@ -185,46 +184,41 @@ bool Track::has_any_good_data() const
     return it != end();
 }
 
-const Sectors Track::good_sectors() const {
+const Sectors Track::good_sectors() const
+{
     Sectors good_sectors;
     std::copy_if(begin(), end(), std::back_inserter(good_sectors), [&](const Sector& sector) {
-        if (sector.has_badidcrc() || !sector.has_data())
+        if (sector.has_badidcrc())
             return false;
-        if (!opt_normal_disk && sector.is_checksummable_8k_sector())
-            return true;
-        if (opt_normal_disk && !sector.has_normaldata())
-            return false;
-        return sector.has_good_data();
+        // Checksummable 8k sector is considered in has_good_data method.
+        return sector.has_good_data(!opt_normal_disk, opt_normal_disk);
     });
 
     return good_sectors;
 }
 
-const Sectors Track::stable_sectors() const {
+const Sectors Track::stable_sectors() const
+{
     Sectors stable_sectors;
     std::copy_if(begin(), end(), std::back_inserter(stable_sectors), [&](const Sector& sector) {
-        if (sector.has_badidcrc() || !sector.has_data())
+        if (sector.has_badidcrc())
             return false;
         // Checksummable 8k sector is considered in has_stable_data method.
-        if (opt_normal_disk && !sector.has_normaldata())
-            return false;
         return sector.has_stable_data();
     });
 
     return stable_sectors;
 }
 
-bool Track::has_stable_data(const Sectors& good_sectors) const
+bool Track::has_all_stable_data(const Sectors& stable_sectors) const
 {
+    if (empty())
+        return true;
+
     auto it = std::find_if(begin(), end(), [&](const Sector& sector) {
-        // Sector in headers of stable sectors is considered stable sector.
-        if (!sector.has_badidcrc() && good_sectors.Contains(sector, tracklen))
+        if (!sector.has_badidcrc() && stable_sectors.Contains(sector, tracklen))
             return false;
-        if (!sector.has_data())
-            return true;
         // Checksummable 8k sector is considered in has_stable_data method.
-        if (opt_normal_disk && !sector.has_normaldata())
-            return true;
         return !sector.has_stable_data();
     });
 

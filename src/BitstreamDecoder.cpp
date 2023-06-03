@@ -1136,7 +1136,7 @@ void scan_flux_amiga(TrackData& trackdata)
         auto& track = trackdata.track();
 
         // Stop if there's nothing to fix or motor wobble is disabled
-        if (track.has_good_data() || opt_nowobble)
+        if (track.has_all_good_data() || opt_nowobble)
             break;
     }
 }
@@ -1485,12 +1485,12 @@ void scan_flux_mfm_fm(TrackData& trackdata, DataRate last_datarate)
                 scan_bitstream_mfm_fm(trackdata);
 
                 // Stop scaling if the track is error free.
-                if (trackdata.track().has_good_data())
+                if (trackdata.track().has_all_good_data())
                     break;
             }
 
             // Stop adjusting PLL if the track is error free.
-            if (trackdata.track().has_good_data())
+            if (trackdata.track().has_all_good_data())
                 break;
         }
 
