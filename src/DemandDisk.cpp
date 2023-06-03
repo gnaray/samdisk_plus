@@ -45,8 +45,8 @@ const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int wit
             // If no more rescans are required, stop when there's nothing to fix.
             if (rescans <= 0 && track.has_all_stable_data(deviceReadingPolicy.SkippableSectors()))
                 break;
-            // Do not seek to 0th cyl at second, third, etc. loading.
-            auto rescan_trackdata = load(cylhead, false, false, deviceReadingPolicy);
+            // Do not seek at second, third, etc. loading.
+            auto rescan_trackdata = load(cylhead, false, -1, deviceReadingPolicy);
             auto& rescan_track = rescan_trackdata.track();
 
             // If the rescan found more sectors, use the new track data.
