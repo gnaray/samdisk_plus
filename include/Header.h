@@ -1,8 +1,10 @@
 #pragma once
 
+#include "PlatformConfig.h"
 #include "DiskConstants.h"
 #include "utils.h"
 
+#include <algorithm>
 #include <cassert>
 #include <string>
 #include <map>
@@ -21,7 +23,7 @@ constexpr bool are_interchangeably_equal_datarates(const DataRate& datarate1, co
             && (datarate2 == DataRate::_250K || datarate2 == DataRate::_300K));
 }
 
-constexpr int bitcell_ns(DataRate datarate)
+inline int bitcell_ns(DataRate datarate)
 {
     switch (datarate)
     {
@@ -47,7 +49,7 @@ constexpr int convert_offset_by_datarate(int offset, const DataRate& datarate_so
     return bits_per_second(datarate_target) / 10000 * offset / bits_per_second(datarate_source) * 10000;
 }
 
-constexpr bool are_offsets_tolerated_same(const int offset1, const int offset2, const int byte_tolerance_of_time, const int tracklen)
+inline bool are_offsets_tolerated_same(const int offset1, const int offset2, const int byte_tolerance_of_time, const int tracklen)
 {
     if (tracklen == 0 || offset1 == 0 || offset2 == 0) // The offset is 0 exactly when tracklen is 0 but safer to check both.
         return true; // No offsets to compare, they are considered same.
@@ -117,7 +119,7 @@ public:
     bool compare_chrn(const Header& rhs) const;
     bool compare_crn(const Header& rhs) const;
 
-    constexpr bool empty() const
+    inline bool empty() const
     {
         return cyl == 0 && head == 0 && sector == 0 && size == 0;
     }

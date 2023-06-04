@@ -19,7 +19,7 @@ typedef Data::size_type DataST;
 using DataList = std::vector<Data>;
 typedef DataList::size_type DataListST;
 
-class Sector;
+
 
 class DataReadStats
 {
@@ -53,6 +53,8 @@ private:
 typedef std::vector<DataReadStats> DataReadStatsList;
 typedef DataReadStatsList::size_type DataReadStatsListST;
 
+
+
 class Sector
 {
 public:
@@ -74,27 +76,27 @@ public:
     bool has_shortdata() const;
     bool has_normaldata() const;
     bool has_good_normaldata() const;
-    constexpr bool has_badidcrc() const
+    inline bool has_badidcrc() const
     {
         return m_bad_id_crc;
     }
 
-    constexpr bool has_baddatacrc() const
+    inline bool has_baddatacrc() const
     {
         return m_bad_data_crc;
     }
 
-    constexpr bool is_deleted() const
+    inline bool is_deleted() const
     {
         return dam == 0xf8 || dam == 0xf9;
     }
 
-    constexpr bool is_altdam() const
+    inline bool is_altdam() const
     {
         return dam == 0xfa;
     }
 
-    constexpr bool is_rx02dam() const
+    inline bool is_rx02dam() const
     {
         return dam == 0xfd;
     }
@@ -179,6 +181,8 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Sector& sector) { return os << to_string(sector); }
+
+
 
 class Sectors : public std::vector<Sector>
 {

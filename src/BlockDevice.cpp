@@ -8,9 +8,10 @@
 #include <algorithm>
 #include <cstring>
 #include <fcntl.h>
+#ifndef _WIN32
 #include <sys/ioctl.h>
+#endif
 #include <sys/stat.h>
-//#include <winioctl.h>
 
 #ifdef HAVE_SYS_DISK_H
 #include <sys/disk.h>

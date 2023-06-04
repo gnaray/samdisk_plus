@@ -8,6 +8,10 @@
 #include <vector>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#else
+#ifdef _WIN32
+#include <io.h>
+#endif
 #endif
 
 class MEMORY;
@@ -30,7 +34,7 @@ class HDD
 {
 public:
     HDD() { Reset(); }
-    virtual ~HDD() { Unlock(); if (h != -1) close(h); Reset(); }
+    virtual ~HDD();
 
     int64_t Tell() const;
     bool Seek(int64_t sector) const;

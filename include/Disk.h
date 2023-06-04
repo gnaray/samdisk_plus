@@ -10,6 +10,12 @@
 #include <map>
 #include <mutex>
 
+#include <cstdint>
+#include <functional>
+#include <vector>
+#include <map>
+#include <mutex>
+
 class Disk
 {
 public:

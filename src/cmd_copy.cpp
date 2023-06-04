@@ -8,14 +8,12 @@
 #include "SAMdisk.h"
 #include "SAMCoupe.h"
 #include "Trinity.h"
-//#include "SpectrumPlus3.h"
 #include "Util.h"
 #include "utils.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <strings.h>
 
 static auto& opt_base = getOpt<int>("base");
 static auto& opt_encoding = getOpt<Encoding>("encoding");
@@ -102,7 +100,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
             else
             {
                 int dst_track_amount = 0;
-                long sum_dst_track_size = 0;
+                int sum_dst_track_size = 0;
                 opt_range.each([&](const CylHead& cylhead) {
                     Track dst_track = dst_disk->read_track(cylhead);
                     NormaliseTrack(cylhead, dst_track);
@@ -249,6 +247,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
             result = WriteImage(dst_path, dst_disk);
         if (!result)
             break;
+
         if (opt_verbose && repair_track_changed_amount_per_disk > 0)
             Message(msgInfo, "Destination disk's tracks were repaired %u times in %uth round", repair_track_changed_amount_per_disk, disk_round);
         // Switching to repair mode from normal mode so disk retry will repair instead of overwrite.

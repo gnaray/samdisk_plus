@@ -65,7 +65,7 @@ protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
         int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
     {
-        m_fdrawcmd->Seek(cylhead.cyl, cylhead.head);
+        m_fdrawcmd->Seek(cylhead.cyl);
         m_fdrawcmd->SetEncRate(Encoding::MFM, DataRate::_500K);
         Track track;
 

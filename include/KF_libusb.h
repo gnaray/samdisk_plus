@@ -2,9 +2,9 @@
 
 #include "config.h"
 
-#include <mutex>
-
 #ifdef HAVE_LIBUSB1
+
+#include <mutex>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push

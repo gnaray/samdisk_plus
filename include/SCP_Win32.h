@@ -6,6 +6,8 @@
 
 #include "SuperCardPro.h"
 
+#include <Windows.h>
+
 class SuperCardProWin32 final : public SuperCardPro
 {
 public:

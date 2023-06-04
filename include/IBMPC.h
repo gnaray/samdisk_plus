@@ -93,7 +93,7 @@ std::string to_string(const MEDIA_TYPE& type);
 
 // Return the number of microseconds for given (default 1) bytes at the given rate.
 // The calculation for add_drain_time is incomprehensible, luckily that parameter is never used.
-constexpr double GetFmOrMfmDataBytesTime(DataRate datarate, Encoding encoding, int len_bytes = 1, bool add_drain_time = false)
+inline double GetFmOrMfmDataBytesTime(DataRate datarate, Encoding encoding, int len_bytes = 1, bool add_drain_time = false)
 {
     const auto uTime = 1'000'000 * (encoding == Encoding::FM ? 2 : 1) / (bits_per_second(datarate) / 8.);
     return uTime * len_bytes + (add_drain_time ? (uTime * 69 / 100) : 0);     // 0.69 250Kbps bytes @300rpm = 86us = FDC data drain time
@@ -106,7 +106,7 @@ inline int GetFmOrMfmBitTimeDataBytes(DataRate datarate, Encoding encoding, int 
 }
 
 // Return the number of microseconds for 1 mfmbit (halfbit) at the given rate.
-constexpr double GetFmOrMfmDataBitTime(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
+inline double GetFmOrMfmDataBitTime(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
 {
     return GetFmOrMfmDataBytesTime(datarate, encoding, len_fmormfmbits, add_drain_time) / 16;
 }

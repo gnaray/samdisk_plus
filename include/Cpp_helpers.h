@@ -83,22 +83,30 @@ constexpr int lossless_static_cast(unsigned char x)
 }
 
 template<>
-constexpr int lossless_static_cast(unsigned int x)
+inline int lossless_static_cast(uint32_t x)
 {
-    if (x > std::numeric_limits<int>::max())
+    if (x > static_cast<uint32_t>(std::numeric_limits<int>::max()))
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
     return static_cast<int>(x);
 }
 
 template<>
-constexpr int lossless_static_cast(long x)
+inline int lossless_static_cast(long x)
 {
     is_value_in_type_range<int, true>(x);
     return static_cast<int>(x);
 }
 
 template<>
-constexpr double lossless_static_cast(unsigned int x)
+inline int lossless_static_cast(unsigned long x)
+{
+    if (x > static_cast<unsigned long>(std::numeric_limits<int>::max()))
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
+    return static_cast<int>(x);
+}
+
+template<>
+inline double lossless_static_cast(unsigned int x)
 {
     const auto result = static_cast<double>(x);
     if (x != static_cast<unsigned int>(result))
@@ -107,7 +115,7 @@ constexpr double lossless_static_cast(unsigned int x)
 }
 
 template<>
-constexpr double lossless_static_cast(long x)
+inline double lossless_static_cast(long x)
 {
     const auto result = static_cast<double>(x);
     if (x != static_cast<long>(result))
@@ -116,7 +124,7 @@ constexpr double lossless_static_cast(long x)
 }
 
 template<>
-constexpr double lossless_static_cast(unsigned long x)
+inline double lossless_static_cast(unsigned long x)
 {
     const auto result = static_cast<double>(x);
     if (x != static_cast<unsigned long>(result))
@@ -125,15 +133,7 @@ constexpr double lossless_static_cast(unsigned long x)
 }
 
 template<>
-constexpr int lossless_static_cast(size_t x)
-{
-    if (x > std::numeric_limits<int>::max())
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<int>(x);
-}
-
-template<>
-constexpr int8_t lossless_static_cast(int x)
+inline int8_t lossless_static_cast(int x)
 {
     if (x < std::numeric_limits<int8_t>::min() || x > std::numeric_limits<int8_t>::max())
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
@@ -141,7 +141,7 @@ constexpr int8_t lossless_static_cast(int x)
 }
 
 template<>
-constexpr uint8_t lossless_static_cast(int x)
+inline uint8_t lossless_static_cast(int x)
 {
     if (x < 0 || x > std::numeric_limits<uint8_t>::max())
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
@@ -149,7 +149,7 @@ constexpr uint8_t lossless_static_cast(int x)
 }
 
 template<>
-constexpr uint16_t lossless_static_cast(int x)
+inline uint16_t lossless_static_cast(int x)
 {
     if (x < 0 || x > std::numeric_limits<uint16_t>::max())
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
@@ -157,7 +157,7 @@ constexpr uint16_t lossless_static_cast(int x)
 }
 
 template<>
-constexpr uint32_t lossless_static_cast(int x)
+inline uint32_t lossless_static_cast(int x)
 {
     if (x < 0)
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
@@ -165,7 +165,7 @@ constexpr uint32_t lossless_static_cast(int x)
 }
 
 template<>
-constexpr size_t lossless_static_cast(int x)
+inline unsigned long lossless_static_cast(int x)
 {
     if (x < 0)
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
@@ -179,7 +179,7 @@ constexpr double lossless_static_cast(int x)
 }
 
 template<>
-constexpr int lossless_static_cast(double x)
+inline int lossless_static_cast(double x)
 {
     double xIntegralPart {};
     if (std::modf(x, &xIntegralPart) != 0)
@@ -189,7 +189,7 @@ constexpr int lossless_static_cast(double x)
 }
 
 template<>
-constexpr long lossless_static_cast(double x)
+inline long lossless_static_cast(double x)
 {
     double xIntegralPart {};
     if (std::modf(x, &xIntegralPart) != 0)
@@ -216,9 +216,9 @@ template<typename T, typename U>
 T limited_static_cast(U x);
 
 template<>
-constexpr int limited_static_cast(size_t x)
+inline int limited_static_cast(size_t x)
 {
-    if (x > std::numeric_limits<int>::max())
+    if (x > static_cast<size_t>(std::numeric_limits<int>::max()))
         return std::numeric_limits<int>::max();
     return static_cast<int>(x);
 }

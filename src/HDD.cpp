@@ -62,6 +62,14 @@ void HDD::Reset()
     strMakeModel = strSerialNumber = strFirmwareRevision = "";
 }
 
+HDD::~HDD()
+{
+    Unlock();
+    if (h != -1)
+        close(h);
+    Reset();
+}
+
 int64_t HDD::Tell() const
 {
 #ifdef _WIN32

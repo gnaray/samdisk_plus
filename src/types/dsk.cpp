@@ -804,7 +804,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                         const Data& data = sector.data_copy(copy);
 
                         // Only copy if there's room - we'll check it fits later
-                        if (track_size + data_size < mem.size)
+                        if (lossless_static_cast<int>(track_size) + data_size < mem.size)
                         {
                             if (data.size() >= data_size)
                                 memcpy(pb, data.data(), data_size);
@@ -844,7 +844,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                 }
 
                 // If the track fits, we're done
-                if (track_size <= mem.size)
+                if (lossless_static_cast<int>(track_size) <= mem.size)
                 {
                     // Clear any unused space, then break out to save it
                     memset(mem + track_size, 0, mem.size - track_size);

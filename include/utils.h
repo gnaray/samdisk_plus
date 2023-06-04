@@ -25,6 +25,8 @@ enum class ttycmd : uint8_t
 
 #ifdef _WIN32
 
+#include "Platform.h"
+
 enum class colour : uint8_t
 {
     black = 0,
@@ -100,7 +102,7 @@ std::string make_string(Args&& ... args)
     return ss.str();
 }
 
-constexpr uint8_t reverse_byte_cpu(uint8_t byte)
+inline uint8_t reverse_byte_cpu(uint8_t byte)
 {
     return lossless_static_cast<uint8_t>(((byte & 1) << 7) |
         ((byte & 2) << 5) |
@@ -152,7 +154,7 @@ constexpr uint8_t reverse_byte(uint8_t byte)
     return reverse_byte_table[byte];
 }
 
-constexpr void bit_reverse(uint8_t* pb, size_t len)
+inline void bit_reverse(uint8_t* pb, size_t len)
 {
     while (len-- > 0)
     {

@@ -4,7 +4,8 @@
 #include "PlatformConfig.h"
 
 #ifdef _WIN32
-#include "windows.h"
+#include <windows.h>
+#include <winioctl.h> // _MEDIA_TYPE
 #else
 
 // For fdrawcmd.h the following are required (which winioctl.h provides on Windows):

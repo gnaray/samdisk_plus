@@ -8,6 +8,10 @@
 #include <string>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#else
+#ifdef _WIN32
+#include <io.h>
+#endif
 #endif
 
 #ifdef _WIN32

@@ -143,8 +143,9 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
 
     if (with_head_seek_to >= 0)
-        m_fdrawcmd->Seek(with_head_seek_to, cylhead.head);
-    m_fdrawcmd->Seek(cylhead.cyl, cylhead.head);
+        m_fdrawcmd->Seek(with_head_seek_to);
+    m_fdrawcmd->Seek(cylhead.cyl);
+
 
     auto firstSectorSeen{ 0 };
     auto track = BlindReadHeaders(cylhead, firstSectorSeen);
@@ -189,8 +190,10 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
             return true;
     }
 
+    // Prefer MFM to FM.
     for (auto encoding : { Encoding::MFM, Encoding::FM })
     {
+        // Prefer higher datarates.
         for (auto datarate : { DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K })
         {
             // Skip FM if we're only looking for MFM, or the data rate is 1Mbps.
@@ -218,7 +221,7 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
             m_fdrawcmd->SetEncRate(encoding, datarate);
 
             // Retry in case of spurious header CRC errors.
-            for (auto i = 0; i <= opt_retries; ++i)
+            for (auto i = 0; i <= 3; ++i) // TODO opt_retries replacable with opt_encratedetect_retries
             {
                 if (m_fdrawcmd->CmdReadId(head, result))
                 {
@@ -306,7 +309,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
             Sector sector(m_lastDataRate, m_lastEncoding, header);
 
-            sector.offset = round_AS<int>(lossless_static_cast<double>(scan_header.reltime) / mfmbit_us);
+            sector.offset = round_AS<int>(scan_header.reltime / mfmbit_us);
             sector.set_constant_disk(false);
             track.add(std::move(sector));
         }

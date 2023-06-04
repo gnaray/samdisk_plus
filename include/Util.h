@@ -1,5 +1,7 @@
 #pragma once
 
+#include "config.h"
+
 #include "Disk.h"
 #include "HDD.h"
 #include "utils.h"

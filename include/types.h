@@ -34,6 +34,8 @@ struct DEVICE_ENTRY
 #if !defined(TypesH2) || defined(DEFINITIONS_FOR_CPP)
 #define TypesH2
 
+#include "config.h"
+
 #ifndef DEFINITIONS_FOR_CPP
 
 extern IMAGE_ENTRY aImageTypes[];

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <string>
-#include <system_error>
-
-#ifndef _WIN32
+#ifdef _WIN32
+#include "Platform.h"
+#else
 // Errors (Error.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/Error.h
 #define ERROR_FILE_NOT_FOUND             2L
 #define ERROR_NO_MORE_FILES              18L
@@ -14,6 +13,9 @@
 // System Error Codes (1000-1299): https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--1000-1299-
 #define ERROR_FLOPPY_ID_MARK_NOT_FOUND 0x462
 #endif
+
+#include <string>
+#include <system_error>
 
 
 

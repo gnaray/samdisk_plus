@@ -4,9 +4,9 @@
 #include "Options.h"
 #include "Util.h"
 #include "types.h"
-//#include "Disk.h"
 #include "BlockDevice.h"
 #include "FluxDecoder.h"
+#include "CrashDump.h"
 
 constexpr int STABILITY_LEVEL_DEFAULT = 3;
 
@@ -224,7 +224,6 @@ std::string& getOpt(const char* key)
     {
         {"label", Options::opt.label},
         {"boot", Options::opt.boot},
-        {"floppyRawTrackFolder", Options::opt.floppyRawTrackFolder}
     };
 
     return s_mapStringToStringVariables.at(key);
