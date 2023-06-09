@@ -155,6 +155,12 @@ public:
         return 128 << SizeCodeToRealSizeCode(size);
     }
 
+    // Return the sector length for a given sector size code as treated by the uPD765 FDC on the PC.
+    static constexpr int SizeCodeToRealLength(int size)
+    {
+        return SizeCodeToLength(SizeCodeToRealSizeCode(size));
+    }
+
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Sector& sector, bool onlyRelevantData = true)
     {
