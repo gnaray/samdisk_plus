@@ -325,7 +325,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
     if (sector.has_badidcrc() || sector.has_good_data())
         return;
 
-    auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(sector.header.size));
+    auto size = Sector::SizeCodeToRealLength(sector.header.size);
     MEMORY mem(size);
 
     for (int i = 0; i <= opt_retries; ++i)
@@ -421,7 +421,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
 
     // Read a size
     auto size_code = sector.header.size + 1;
-    auto size = sector.SizeCodeToLength(sector.SizeCodeToRealSizeCode(size_code));
+    auto size = Sector::SizeCodeToRealLength(size_code);
     MEMORY mem(size);
 
     for (int i = 0; i <= opt_retries; ++i)
