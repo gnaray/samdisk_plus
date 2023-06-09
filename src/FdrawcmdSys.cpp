@@ -4,6 +4,8 @@
 
 #ifdef HAVE_FDRAWCMD_H
 
+#include "utils.h"
+
 #include <algorithm>
 
 /*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device_index)
@@ -40,6 +42,38 @@ constexpr uint8_t FdrawcmdSys::DtlFromSize(int size)
 {
     // Data length used only for 128-byte sectors.
     return (size == 0) ? 0x80 : 0xff;
+}
+
+util::Version& FdrawcmdSys::GetVersion()
+{
+    if (m_driver_version.value == 0)
+        if (!GetVersion(m_driver_version))
+            throw util::exception("GetVersion error in fdrawcmd.sys");
+    return m_driver_version;
+}
+
+FD_FDC_INFO* FdrawcmdSys::GetFdcInfo()
+{
+    if (!m_fdc_info_queried)
+    {
+        if (!GetFdcInfo(m_fdc_info))
+            return nullptr;
+        m_fdc_info_queried = true;
+    }
+    return &m_fdc_info;
+}
+
+int FdrawcmdSys::GetMaxTransferSize()
+{
+    if (m_max_transfer_size == 0)
+    {
+        GetVersion(); // Required for MaxTransferSize.
+        GetFdcInfo(); // Required for MaxTransferSize.
+        const auto have_max_transfer_size = m_driver_version.value >= 0x0100010c && m_fdc_info_queried;
+                      // Version 12 returns MaxTransferSize. In older version let it be IoBufferSize (32768).
+        m_max_transfer_size = have_max_transfer_size ? m_fdc_info.MaxTransferSize : 32768;
+    }
+    return m_max_transfer_size;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

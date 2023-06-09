@@ -25,6 +25,9 @@ class FdrawcmdSys
 public:
     FdrawcmdSys(HANDLE hdev);
     static std::unique_ptr<FdrawcmdSys> Open(int device);
+    util::Version& GetVersion();
+    FD_FDC_INFO* GetFdcInfo();
+    int GetMaxTransferSize();
 
 public:
     bool GetVersion(util::Version& version);
@@ -69,6 +72,10 @@ private:
 
     uint8_t m_encoding_flags{ FD_OPTION_MFM };  // FD_OPTION_FM or FD_OPTION_MFM only.
     Win32Handle m_hdev{};
+    util::Version m_driver_version{};
+    FD_FDC_INFO m_fdc_info{};
+    bool m_fdc_info_queried = false;
+    int m_max_transfer_size = 0;
 };
 
 #endif // HAVE_FDRAWCMD_H

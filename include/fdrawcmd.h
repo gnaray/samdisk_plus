@@ -352,6 +352,7 @@ typedef struct tagFD_FDC_INFO
     DWORD BusNumber;
     DWORD ControllerNumber;
     DWORD PeripheralNumber;
+    DWORD MaxTransferSize; // Originally ULONG but DWORD is good enough.
 }
 FD_FDC_INFO, *PFD_FDC_INFO;
 

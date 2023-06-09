@@ -112,8 +112,8 @@ void FdrawSysDevDisk::SetMetadata(const std::string& path)
         }
     }
 
-    FD_FDC_INFO info{};
-    if (m_fdrawcmd->GetFdcInfo(info))
+    const auto info = m_fdrawcmd->GetFdcInfo();
+    if (m_fdrawcmd->GetFdcInfo() != nullptr)
     {
         static const std::vector<std::string> fdc_types{
             "Unknown", "Unknown1", "Normal", "Enhanced", "82077", "82077AA", "82078_44", "82078_64", "National" };
@@ -123,14 +123,14 @@ void FdrawSysDevDisk::SetMetadata(const std::string& path)
         std::stringstream ss;
         for (size_t i = 0, n = 0; i < data_rates.size(); ++i)
         {
-            if (!(info.SpeedsAvailable & (1U << i)))
+            if (!(info->SpeedsAvailable & (1U << i)))
                 continue;
 
             if (n++) ss << " / ";
             ss << data_rates[i];
         }
 
-        metadata["fdc_type"] = (info.ControllerType < fdc_types.size()) ? fdc_types[info.ControllerType] : "???";
+        metadata["fdc_type"] = (info->ControllerType < fdc_types.size()) ? fdc_types[info->ControllerType] : "???";
         metadata["data_rates"] = ss.str();
     }
 }
