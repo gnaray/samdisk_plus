@@ -32,10 +32,12 @@ FdrawcmdSys::FdrawcmdSys(HANDLE hdev)
     m_hdev.reset(hdev);
 }
 
-bool FdrawcmdSys::Ioctl(DWORD code, void* inbuf, int insize, void* outbuf, int outsize)
+bool FdrawcmdSys::Ioctl(DWORD code, void* inbuf, int insize, void* outbuf, int outsize, DWORD* dwReturn)
 {
-    DWORD dwRet{ 0 };
-    return !!DeviceIoControl(m_hdev.get(), code, inbuf, insize, outbuf, outsize, &dwRet, nullptr);
+    DWORD dwRet;
+    const auto dwReturnLocal = dwReturn == nullptr ? &dwRet : dwReturn;
+    *dwReturnLocal = 0;
+    return !!DeviceIoControl(m_hdev.get(), code, inbuf, insize, outbuf, outsize, dwReturnLocal, nullptr);
 }
 
 constexpr uint8_t FdrawcmdSys::DtlFromSize(int size)

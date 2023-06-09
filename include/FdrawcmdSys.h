@@ -68,7 +68,7 @@ private:
     static constexpr int RW_GAP = 0x0a;
     static constexpr uint8_t DtlFromSize(int size);
 
-    bool Ioctl(DWORD code, void* inbuf = nullptr, int insize = 0, void* outbuf = nullptr, int outsize = 0);
+    bool Ioctl(DWORD code, void* inbuf = nullptr, int insize = 0, void* outbuf = nullptr, int outsize = 0, DWORD* dwReturn = nullptr);
 
     uint8_t m_encoding_flags{ FD_OPTION_MFM };  // FD_OPTION_FM or FD_OPTION_MFM only.
     Win32Handle m_hdev{};
