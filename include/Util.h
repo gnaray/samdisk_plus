@@ -209,12 +209,29 @@ bool DiskHasMBR(const HDD& hdd);
 class MEMORY
 {
 public:
+    MEMORY() : size(0), pb(nullptr) {}
     explicit MEMORY(int uSize_) : size(uSize_), pb(AllocMem(size)) {}
     MEMORY(const MEMORY&) = delete;
-    virtual ~MEMORY() { FreeMem(pb); }
+    virtual ~MEMORY() { if (size > 0) FreeMem(pb); }
 
     operator uint8_t* () { return pb; }
     //  uint8_t& operator[] (size_t u_) { return pb[u_]; }
+    void resize(int uSize)
+    {
+        if (size == uSize)
+            return;
+        if (size > 0)
+        {
+            FreeMem(pb);
+            pb = nullptr;
+            size = 0;
+        }
+        if (uSize > 0)
+        {
+            pb = AllocMem(uSize);
+            size = uSize;
+        }
+    }
 
     int size = 0;
     uint8_t* pb = nullptr;
