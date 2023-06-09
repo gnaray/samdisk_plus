@@ -223,6 +223,14 @@ inline int limited_static_cast(size_t x)
     return static_cast<int>(x);
 }
 
+template<>
+inline uint8_t limited_static_cast(int x)
+{
+    if (x > static_cast<int>(std::numeric_limits<uint8_t>::max()))
+        return std::numeric_limits<uint8_t>::max();
+    return static_cast<uint8_t>(x);
+}
+
 
 
 template<typename T,
