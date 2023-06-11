@@ -137,6 +137,15 @@ bool FdrawcmdSys::GetResult(FD_CMD_RESULT& result)
     return Ioctl(IOCTL_FD_GET_RESULT,
         nullptr, 0,
         &result, sizeof(result));
+bool FdrawcmdSys::SetPerpendicularMode(int ow_ds_gap_wgate)
+{
+    FD_PERPENDICULAR_PARAMS pp{};
+    pp.ow_ds_gap_wgate = lossless_static_cast<uint8_t>(ow_ds_gap_wgate);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_PERPENDICULAR_MODE;
+    ioctl_params.inbuf = &pp;
+    ioctl_params.insize = sizeof(pp);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::SetPerpendicularMode: ow_ds_gap_wgate=", ow_ds_gap_wgate));
 }
 
 bool FdrawcmdSys::SetEncRate(Encoding encoding, DataRate datarate)

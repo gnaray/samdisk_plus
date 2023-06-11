@@ -42,6 +42,9 @@ public:
 public:
     bool GetVersion(util::Version& version);
     bool GetResult(FD_CMD_RESULT& result);
+protected:
+    bool SetPerpendicularMode(int ow_ds_gap_wgate);
+public:
     bool SetEncRate(Encoding encoding, DataRate datarate);
     bool SetHeadSettleTime(int ms);
     bool SetMotorTimeout(int seconds);
