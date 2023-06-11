@@ -4,6 +4,7 @@
 
 #ifdef HAVE_FDRAWCMD_H
 
+#include "Cpp_helpers.h"
 #include "utils.h"
 
 #include <algorithm>
@@ -124,19 +125,23 @@ int FdrawcmdSys::GetMaxTransferSize()
 
 bool FdrawcmdSys::GetVersion(util::Version& version)
 {
-    DWORD dwVersion = 0;
-    const auto result = Ioctl(IOCTL_FDRAWCMD_GET_VERSION,
-        nullptr, 0,
-        &dwVersion, sizeof(dwVersion));
-    version.value = dwVersion;
-    return result;
+    version.value = 0;
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDRAWCMD_GET_VERSION;
+    ioctl_params.outbuf = &version.value;
+    ioctl_params.outsize = sizeof(version.value);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::GetVersion"));
 }
 
 bool FdrawcmdSys::GetResult(FD_CMD_RESULT& result)
 {
-    return Ioctl(IOCTL_FD_GET_RESULT,
-        nullptr, 0,
-        &result, sizeof(result));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_GET_RESULT;
+    ioctl_params.outbuf = &result;
+    ioctl_params.outsize = sizeof(result);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::GetResult"));
+}
+
 bool FdrawcmdSys::SetPerpendicularMode(int ow_ds_gap_wgate)
 {
     FD_PERPENDICULAR_PARAMS pp{};
@@ -154,9 +159,7 @@ bool FdrawcmdSys::SetEncRate(Encoding encoding, DataRate datarate)
         throw util::exception("unsupported encoding (", encoding, ") for fdrawcmd.sys");
 
     // Set perpendicular mode and write-enable for 1M data rate
-    FD_PERPENDICULAR_PARAMS pp{};
-    pp.ow_ds_gap_wgate = (datarate == DataRate::_1M) ? 0xbc : 0x00;
-    Ioctl(IOCTL_FDCMD_PERPENDICULAR_MODE, &pp, sizeof(pp));
+    SetPerpendicularMode((datarate == DataRate::_1M) ? 0xbc : 0x00);
 
     uint8_t rate;
     switch (datarate)
@@ -171,44 +174,66 @@ bool FdrawcmdSys::SetEncRate(Encoding encoding, DataRate datarate)
 
     m_encoding_flags = encoding == Encoding::MFM ? FD_OPTION_MFM : FD_OPTION_FM;
 
-    return Ioctl(IOCTL_FD_SET_DATA_RATE, &rate, sizeof(rate));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_SET_DATA_RATE;
+    ioctl_params.inbuf = &rate;
+    ioctl_params.insize = sizeof(rate);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::SetEncRate: encoding=", encoding, ", datarate=", datarate));
 }
 
 bool FdrawcmdSys::SetHeadSettleTime(int ms)
 {
-    auto hst = static_cast<uint8_t>(std::max(0, std::min(255, ms)));
-    return Ioctl(IOCTL_FD_SET_HEAD_SETTLE_TIME, &hst, sizeof(hst));
+    auto hst = limited_static_cast<uint8_t>(ms);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_SET_HEAD_SETTLE_TIME;
+    ioctl_params.inbuf = &hst;
+    ioctl_params.insize = sizeof(hst);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::SetHeadSettleTime: ms=", ms));
 }
 
 bool FdrawcmdSys::SetMotorTimeout(int seconds)
 {
-    auto timeout = static_cast<uint8_t>(std::max(0, std::min(3, seconds)));
-    return Ioctl(IOCTL_FD_SET_MOTOR_TIMEOUT, &timeout, sizeof(timeout));
+    auto timeout = limited_static_cast<uint8_t>(std::min(3, seconds));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_SET_MOTOR_TIMEOUT;
+    ioctl_params.inbuf = &timeout;
+    ioctl_params.insize = sizeof(timeout);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::SetMotorTimeout: seconds=", seconds));
 }
 
 bool FdrawcmdSys::SetMotorOff()
 {
-    return Ioctl(IOCTL_FD_MOTOR_OFF);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_MOTOR_OFF;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::SetMotorOff"));
 }
 
 bool FdrawcmdSys::SetDiskCheck(bool enable)
 {
     uint8_t check{ static_cast<uint8_t>(enable ? 1 : 0) };
-    return Ioctl(IOCTL_FD_SET_DISK_CHECK, &check, sizeof(check));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_SET_DISK_CHECK;
+    ioctl_params.inbuf = &check;
+    ioctl_params.insize = sizeof(check);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::SetDiskCheck: enable=", enable));
 }
 
 bool FdrawcmdSys::GetFdcInfo(FD_FDC_INFO& info)
 {
-    return Ioctl(IOCTL_FD_GET_FDC_INFO,
-        nullptr, 0,
-        &info, sizeof(info));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_GET_FDC_INFO;
+    ioctl_params.outbuf = &info;
+    ioctl_params.outsize = sizeof(info);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::GetFdcInfo"));
 }
 
 bool FdrawcmdSys::CmdPartId(uint8_t& part_id)
 {
-    return Ioctl(IOCTL_FDCMD_PART_ID,
-        nullptr, 0,
-        &part_id, sizeof(part_id));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_PART_ID;
+    ioctl_params.outbuf = &part_id;
+    ioctl_params.outsize = sizeof(part_id);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdPartId"));
 }
 
 bool FdrawcmdSys::Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk)
@@ -217,32 +242,47 @@ bool FdrawcmdSys::Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk)
     cp.eis_efifo_poll_fifothr = eis_efifo_poll_fifothr;
     cp.pretrk = pretrk;
 
-    return Ioctl(IOCTL_FDCMD_CONFIGURE, &cp, sizeof(cp));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_CONFIGURE;
+    ioctl_params.inbuf = &cp;
+    ioctl_params.insize = sizeof(cp);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::Configure: eis_efifo_poll_fifothr=", eis_efifo_poll_fifothr,
+        ", pretrk=", pretrk));
 }
 
 bool FdrawcmdSys::Specify(int step_rate, int head_unload_time, int head_load_time)
 {
-    auto srt = static_cast<uint8_t>(step_rate & 0x0f);
-    auto hut = static_cast<uint8_t>(head_unload_time & 0x0f);
-    auto hlt = static_cast<uint8_t>(head_load_time & 0x7f);
+    const auto srt = static_cast<uint8_t>(step_rate & 0x0f);
+    const auto hut = static_cast<uint8_t>(head_unload_time & 0x0f);
+    const auto hlt = static_cast<uint8_t>(head_load_time & 0x7f);
 
     FD_SPECIFY_PARAMS sp{};
     sp.srt_hut = static_cast<uint8_t>(srt << 4) | hut;
     sp.hlt_nd = static_cast<uint8_t>(hlt << 1) | 0;
 
-    return Ioctl(IOCTL_FDCMD_SPECIFY, &sp, sizeof(sp));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_SPECIFY;
+    ioctl_params.inbuf = &sp;
+    ioctl_params.insize = sizeof(sp);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::Specify: step_rate=", step_rate,
+        ", head_unload_time=", head_unload_time, ", head_load_time=", head_load_time));
 }
 
 bool FdrawcmdSys::Recalibrate()
 {
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_RECALIBRATE;
     // ToDo: should we check TRACK0 and retry if not signalled?
-    return Ioctl(IOCTL_FDCMD_RECALIBRATE);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::Recalibrate"));
 }
 
 bool FdrawcmdSys::Seek(int cyl, int head /*= -1*/)
 {
     if (cyl == 0)
+    {
+        util::cout << util::format("FdrawcmdSys::Seek(alias recalibrate): cyl=", cyl, ", head=", head);
         return Recalibrate();
+    }
 
     FD_SEEK_PARAMS sp{};
     sp.cyl = static_cast<uint8_t>(cyl);
@@ -256,7 +296,11 @@ bool FdrawcmdSys::Seek(int cyl, int head /*= -1*/)
     else
         sp_size -= sizeof(sp.head);
 
-    return Ioctl(IOCTL_FDCMD_SEEK, &sp, sp_size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_SEEK;
+    ioctl_params.inbuf = &sp;
+    ioctl_params.insize = sizeof(sp);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::Seek: cyl=", cyl, ", head=", head));
 }
 
 bool FdrawcmdSys::RelativeSeek(int head, int offset)
@@ -266,7 +310,12 @@ bool FdrawcmdSys::RelativeSeek(int head, int offset)
     rsp.head = static_cast<uint8_t>(head);
     rsp.offset = static_cast<uint8_t>(std::abs(offset));
 
-    return Ioctl(IOCTL_FDCMD_RELATIVE_SEEK, &rsp, sizeof(rsp));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_RELATIVE_SEEK;
+    ioctl_params.inbuf = &rsp;
+    ioctl_params.insize = sizeof(rsp);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::RelativeSeek: (flags=", rsp.flags,
+        "), head=", head, ", offset=", offset));
 }
 
 bool FdrawcmdSys::CmdVerify(int cyl, int head, int sector, int size, int eot)
@@ -287,7 +336,13 @@ bool FdrawcmdSys::CmdVerify(int phead, int cyl, int head, int sector, int size, 
     rwp.gap = RW_GAP;
     rwp.datalen = DtlFromSize(size);
 
-    return Ioctl(IOCTL_FDCMD_VERIFY, &rwp, sizeof(rwp));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_VERIFY;
+    ioctl_params.inbuf = &rwp;
+    ioctl_params.insize = sizeof(rwp);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdVerify: (flags=", rwp.flags,
+        "), phead=", phead, "cyl=", cyl, ", head=", head, ", sector=", sector,
+        ", size=", size, ", eot=", eot, ", (gap=", rwp.gap, ")"));
 }
 
 bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int size, int eot, MEMORY& mem)
@@ -303,9 +358,16 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
     rwp.gap = RW_GAP;
     rwp.datalen = DtlFromSize(size);
 
-    return Ioctl(IOCTL_FDCMD_READ_TRACK,
-        &rwp, sizeof(rwp),
-        mem, eot * Sector::SizeCodeToLength(rwp.size));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_READ_TRACK;
+    ioctl_params.inbuf = &rwp;
+    ioctl_params.insize = sizeof(rwp);
+    ioctl_params.outbuf = mem.pb;
+    ioctl_params.outsize = eot * Sector::SizeCodeToLength(rwp.size);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdReadTrack: (flags=", rwp.flags,
+        "), phead=", phead, ", cyl=", cyl, ", head=", head, ", sector=", sector,
+        ", size=", size, ", eot=", eot, ", (gap=", rwp.gap, "), bufferlen=", mem.size,
+        ", output_size = ", output_size));
 }
 
 bool FdrawcmdSys::CmdRead(int phead, int cyl, int head, int sector, int size, int count, MEMORY& mem, size_t data_offset, bool deleted)
@@ -321,9 +383,17 @@ bool FdrawcmdSys::CmdRead(int phead, int cyl, int head, int sector, int size, in
     rwp.gap = RW_GAP;
     rwp.datalen = DtlFromSize(size);
 
-    return Ioctl(deleted ? IOCTL_FDCMD_READ_DELETED_DATA : IOCTL_FDCMD_READ_DATA,
-        &rwp, sizeof(rwp),
-        mem + data_offset, count * Sector::SizeCodeToLength(size));
+    const auto total_size = count * Sector::SizeCodeToRealLength(rwp.size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = deleted ? IOCTL_FDCMD_READ_DELETED_DATA : IOCTL_FDCMD_READ_DATA;
+    ioctl_params.inbuf = &rwp;
+    ioctl_params.insize = sizeof(rwp);
+    ioctl_params.outbuf = mem.pb + data_offset;
+    ioctl_params.outsize = total_size;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdRead: (flags=", rwp.flags,
+        "), phead=", phead, ", cyl=", cyl, ", head=", head, ", sector=", sector,
+        ", size=", size, ", count=", count, ", deleted=", deleted, ", (gap=", rwp.gap,
+        "), data_offset=", data_offset, ", bufferlen=", mem.size, ", outputlen = ", total_size));
 }
 
 bool FdrawcmdSys::CmdWrite(int phead, int cyl, int head, int sector, int size, int count, MEMORY& mem, bool deleted)
@@ -339,19 +409,39 @@ bool FdrawcmdSys::CmdWrite(int phead, int cyl, int head, int sector, int size, i
     rwp.gap = RW_GAP;
     rwp.datalen = DtlFromSize(size);
 
-    return Ioctl(deleted ? IOCTL_FDCMD_WRITE_DELETED_DATA : IOCTL_FDCMD_WRITE_DATA,
-        &rwp, sizeof(rwp),
-        mem, count * Sector::SizeCodeToLength(size));
+    const auto total_size = count * Sector::SizeCodeToRealLength(rwp.size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = deleted ? IOCTL_FDCMD_WRITE_DELETED_DATA : IOCTL_FDCMD_WRITE_DATA;
+    ioctl_params.inbuf = &rwp;
+    ioctl_params.insize = sizeof(rwp);
+    ioctl_params.outbuf = mem.pb;
+    ioctl_params.outsize = total_size;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdWrite: (flags=", rwp.flags,
+        "), phead=", phead, ", cyl=", cyl, ", head=", head, ", sector=", sector,
+        ", size=", size, ", count=", count, ", deleted=", deleted, ", (gap=", rwp.gap,
+        "), bufferlen=", mem.size, ", outputlen = ", total_size));
 }
 
 bool FdrawcmdSys::CmdFormat(FD_FORMAT_PARAMS* params, int size)
 {
-    return Ioctl(IOCTL_FDCMD_FORMAT_TRACK, params, size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_FORMAT_TRACK;
+    ioctl_params.inbuf = params;
+    ioctl_params.insize = size;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdFormat: p.flags=", params->flags,
+        ", p.phead=", params->phead, ", p.size=", params->size, ", p.sectors=", params->sectors,
+        ", p.gap=", params->gap, ", p.fill=", params->fill, ", size=", size));
 }
 
 bool FdrawcmdSys::CmdFormatAndWrite(FD_FORMAT_PARAMS* params, int size)
 {
-    return Ioctl(IOCTL_FDCMD_FORMAT_AND_WRITE, params, size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_FORMAT_AND_WRITE;
+    ioctl_params.inbuf = params;
+    ioctl_params.insize = size;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdFormatAndWrite: p.flags=", params->flags,
+        ", p.phead=", params->phead, ", p.size=", params->size, ", p.sectors=", params->sectors,
+        ", p.gap=", params->gap, ", p.fill=", params->fill, ", size=", size));
 }
 
 bool FdrawcmdSys::CmdScan(int head, FD_SCAN_RESULT* scan, int size)
@@ -360,9 +450,14 @@ bool FdrawcmdSys::CmdScan(int head, FD_SCAN_RESULT* scan, int size)
     sp.flags = m_encoding_flags;
     sp.head = static_cast<uint8_t>(head);
 
-    return Ioctl(IOCTL_FD_SCAN_TRACK,
-        &sp, sizeof(sp),
-        scan, size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_SCAN_TRACK;
+    ioctl_params.inbuf = &sp;
+    ioctl_params.insize = sizeof(sp);
+    ioctl_params.outbuf = scan;
+    ioctl_params.outsize = size;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdScan: (flags=", sp.flags,
+        "), head=", head, ", size=", size));
 }
 
 bool FdrawcmdSys::CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int size)
@@ -371,9 +466,14 @@ bool FdrawcmdSys::CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int s
     sp.flags = m_encoding_flags;
     sp.head = static_cast<uint8_t>(head);
 
-    return Ioctl(IOCTL_FD_TIMED_SCAN_TRACK,
-        &sp, sizeof(sp),
-        timed_scan, size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_TIMED_SCAN_TRACK;
+    ioctl_params.inbuf = &sp;
+    ioctl_params.insize = sizeof(sp);
+    ioctl_params.outbuf = timed_scan;
+    ioctl_params.outsize = size;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdTimedScan: (flags=", sp.flags,
+        "), head=", head, ", size=", size));
 }
 
 bool FdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
@@ -390,9 +490,15 @@ bool FdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     msp.track_retries = lossless_static_cast<int8_t>(track_retries);
     msp.byte_tolerance_of_time = lossless_static_cast<int8_t>(byte_tolerance_of_time);
 
-    return Ioctl(IOCTL_FD_TIMED_MULTI_SCAN_TRACK,
-        &msp, sizeof(msp),
-        timed_multi_scan, size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_TIMED_MULTI_SCAN_TRACK;
+    ioctl_params.inbuf = &msp;
+    ioctl_params.insize = sizeof(msp);
+    ioctl_params.outbuf = timed_multi_scan;
+    ioctl_params.outsize = size;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdTimedMultiScan: (flags=", msp.flags,
+        "), head=", head, ", track_retries=", track_retries,
+        ", size=", size, ", byte_tolerance_of_time=", byte_tolerance_of_time));
 }
 
 bool FdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT& result)
@@ -401,9 +507,13 @@ bool FdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT& result)
     rip.flags = m_encoding_flags;
     rip.head = static_cast<uint8_t>(head);
 
-    return Ioctl(IOCTL_FDCMD_READ_ID,
-        &rip, sizeof(rip),
-        &result, sizeof(result));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FDCMD_READ_ID;
+    ioctl_params.inbuf = &rip;
+    ioctl_params.insize = sizeof(rip);
+    ioctl_params.outbuf = &result;
+    ioctl_params.outsize = sizeof(result);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdReadId: (flags=", rip.flags, "), head=", head));
 }
 
 bool FdrawcmdSys::FdRawReadTrack(int head, int size, MEMORY& mem)
@@ -413,17 +523,26 @@ bool FdrawcmdSys::FdRawReadTrack(int head, int size, MEMORY& mem)
     rrp.head = static_cast<uint8_t>(head);
     rrp.size = static_cast<uint8_t>(size);
 
-    return Ioctl(IOCTL_FD_RAW_READ_TRACK,
-        &rrp, sizeof(rrp),
-        mem.pb, mem.size);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_RAW_READ_TRACK;
+    ioctl_params.inbuf = &rrp;
+    ioctl_params.insize = sizeof(rrp);
+    ioctl_params.outbuf = mem.pb;
+    ioctl_params.outsize = mem.size;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::FdRawReadTrack: (flags=", rrp.flags,
+        "), head=", head, ", size=", size, ", bufferlen=", mem.size));
 }
 
 bool FdrawcmdSys::FdSetSectorOffset(int index)
 {
     FD_SECTOR_OFFSET_PARAMS sop{};
-    sop.sectors = static_cast<uint8_t>(std::max(0, std::min(255, index)));
+    sop.sectors = limited_static_cast<uint8_t>(index);
 
-    return Ioctl(IOCTL_FD_SET_SECTOR_OFFSET, &sop, sizeof(sop));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_SET_SECTOR_OFFSET;
+    ioctl_params.inbuf = &sop;
+    ioctl_params.insize = sizeof(sop);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::FdSetSectorOffset: index=", index));
 }
 
 bool FdrawcmdSys::FdSetShortWrite(int length, int finetune)
@@ -432,38 +551,54 @@ bool FdrawcmdSys::FdSetShortWrite(int length, int finetune)
     swp.length = static_cast<DWORD>(length);
     swp.finetune = static_cast<DWORD>(finetune);
 
-    return Ioctl(IOCTL_FD_SET_SHORT_WRITE, &swp, sizeof(swp));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_SET_SHORT_WRITE;
+    ioctl_params.inbuf = &swp;
+    ioctl_params.insize = sizeof(swp);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::FdSetShortWrite: length=", length, ", finetune=", finetune));
 }
 
 bool FdrawcmdSys::FdGetRemainCount(int& remain)
 {
-    return Ioctl(IOCTL_FD_GET_REMAIN_COUNT,
-        nullptr, 0,
-        &remain, sizeof(remain));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_GET_REMAIN_COUNT;
+    ioctl_params.outbuf = &remain;
+    ioctl_params.outsize = sizeof(remain);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::FdGetRemainCount"));
 }
 
 bool FdrawcmdSys::FdCheckDisk()
 {
-    return Ioctl(IOCTL_FD_CHECK_DISK);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_CHECK_DISK;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::FdCheckDisk"));
 }
 
 bool FdrawcmdSys::FdGetTrackTime(int& microseconds)
 {
-    return Ioctl(IOCTL_FD_GET_TRACK_TIME,
-        nullptr, 0,
-        &microseconds, sizeof(microseconds));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_GET_TRACK_TIME;
+    ioctl_params.outbuf = &microseconds;
+    ioctl_params.outsize = sizeof(microseconds);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::FdGetTrackTime"));
 }
 
 bool FdrawcmdSys::FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& track_time, uint8_t revolutions /* = 10*/)
 {
-    return Ioctl(IOCTL_FD_GET_MULTI_TRACK_TIME,
-        &revolutions, sizeof(revolutions),
-        &track_time, sizeof(FD_MULTI_TRACK_TIME_RESULT));
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_GET_MULTI_TRACK_TIME;
+    ioctl_params.inbuf = &revolutions;
+    ioctl_params.insize = sizeof(revolutions);
+    ioctl_params.outbuf = &track_time;
+    ioctl_params.outsize = sizeof(track_time);
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::FdGetMultiTrackTime: revolutions=", revolutions));
 }
 
 bool FdrawcmdSys::FdReset()
 {
-    return Ioctl(IOCTL_FD_RESET);
+    IOCTL_PARAMS ioctl_params{};
+    ioctl_params.code = IOCTL_FD_RESET;
+    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::FdReset"));
 }
 
 #endif // HAVE_FDRAWCMD_H
