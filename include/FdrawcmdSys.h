@@ -74,7 +74,7 @@ public:
     bool FdGetRemainCount(int& remain);
     bool FdCheckDisk();
     bool FdGetTrackTime(int& microseconds);
-    bool FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT *time_tolerance, uint8_t revolutions = 10);
+    bool FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& time_tolerance, uint8_t revolutions = 10);
     bool FdReset();
 
 private:

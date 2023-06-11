@@ -454,11 +454,11 @@ bool FdrawcmdSys::FdGetTrackTime(int& microseconds)
         &microseconds, sizeof(microseconds));
 }
 
-bool FdrawcmdSys::FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT *track_time, uint8_t revolutions /* = 10*/)
+bool FdrawcmdSys::FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& track_time, uint8_t revolutions /* = 10*/)
 {
     return Ioctl(IOCTL_FD_GET_MULTI_TRACK_TIME,
         &revolutions, sizeof(revolutions),
-        track_time, sizeof(FD_MULTI_TRACK_TIME_RESULT));
+        &track_time, sizeof(FD_MULTI_TRACK_TIME_RESULT));
 }
 
 bool FdrawcmdSys::FdReset()
