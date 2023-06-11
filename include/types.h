@@ -90,7 +90,7 @@ IMAGE_ENTRY aImageTypes[] = {
 
     // Types with distinctive fields
     ADD_IMAGE_RO(D80)
-    ADD_IMAGE_RO(ST)
+    ADD_IMAGE_RW(ST)
     ADD_IMAGE_RO(BPB)
     ADD_IMAGE_RW(ADF)
     ADD_IMAGE_RO(DMK)

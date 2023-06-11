@@ -239,6 +239,40 @@ auto be_value(const uint8_t(&arr)[N])
     return value;
 }
 
+template <typename T, int N, std::enable_if_t<N == 2> * = nullptr>
+void store_le_value(T value, uint8_t(&arr)[N])
+{
+    arr[0] = value & 255;
+    arr[1] = value >> 8;
+}
+
+template <typename T, int N, std::enable_if_t<N == 3 || N == 4> * = nullptr>
+void store_le_value(T value, uint8_t(&arr)[N])
+{
+    for (int i = 0; i < N; i++)
+    {
+        arr[i] = value & 255;
+        value >>= 8;
+    }
+}
+
+template <typename T, int N, std::enable_if_t<N == 2> * = nullptr>
+void store_be_value(T value, uint8_t(&arr)[N])
+{
+    arr[0] = value >> 8;
+    arr[1] = value & 255;
+}
+
+template <typename T, int N, std::enable_if_t<N == 3 || N == 4> * = nullptr>
+void store_be_value(T value, uint8_t(&arr)[N])
+{
+    for (int i = N - 1; i >= 0; i--)
+    {
+        arr[i] = value & 255;
+        value >>= 8;
+    }
+}
+
 
 class exception : public std::runtime_error
 {

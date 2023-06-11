@@ -6,6 +6,9 @@
 #include "Disk.h"
 #include "MemFile.h"
 #include "bpb.h"
+#include "Fat12Filesystem.h"
+#include "types/raw.h"
+#include "DiskUtil.h"
 
 #include <memory>
 #include <numeric>
@@ -75,4 +78,41 @@ bool ReadST(MemFile& file, std::shared_ptr<Disk>& disk)
     }
 
     return false;
+}
+
+bool WriteST(FILE* f_, std::shared_ptr<Disk>& disk)
+{
+    const auto fmt = CheckBeforeWriteRAW(disk);
+
+    Fat12Filesystem fat12_fs(fmt, *disk);
+    const auto is_boot_sector = fat12_fs.PrepareBootSector();
+    fat12_fs.ReconstructBpb();
+    // Writing BPB into disk's boot sector (hacking its constness) before the
+    // WriteRegularDisk writes the sectors so it can mark even the modified
+    // boot sector as well. This is possible only if there is boot sector data.
+    if (is_boot_sector)
+    {
+        auto boot_sector_writable = const_cast<uint8_t*>(fat12_fs.boot_sector->data_copy().data());
+        std::memcpy(boot_sector_writable, &fat12_fs.bpb, sizeof(fat12_fs.bpb));
+    }
+
+    auto result = WriteRegularDisk(f_, *disk, fmt);
+    if (result) {
+        util::cout << util::fmt("Wrote %u cyl%s, %u head%s, %2u sector%s, %4u bytes/sector = %u bytes\n",
+            fmt.cyls, (fmt.cyls == 1) ? "" : "s",
+            fmt.heads, (fmt.heads == 1) ? "" : "s",
+            fmt.sectors, (fmt.sectors == 1) ? "" : "s",
+            fmt.sector_size(), fmt.disk_size());
+        // If there is no boot sector data then a new one is written here.
+        if (!is_boot_sector || !fat12_fs.boot_sector->has_data())
+        {
+            std::copy(BAD_SECTOR_SIGN.begin(), BAD_SECTOR_SIGN.end(), fat12_fs.new_boot_sector_data.begin()); // Signing sector with BADS.
+            if (fseek(f_, 0, SEEK_SET))
+                throw util::exception("seek error");
+            if (fwrite(fat12_fs.new_boot_sector_data.data(), fat12_fs.new_boot_sector_data.size(), 1, f_) != 1)
+                throw util::exception("write error");
+        }
+        util::cout << "Wrote boot sector with reconstructed BPB\n";
+    }
+    return result;
 }
