@@ -732,6 +732,21 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
                         break;
                     }
                 }
+                // Look for more exact position by offsets if both src sector offset ...
+                if (src_sector_copy.offset > 0)
+                {
+                    while (insert_idx > 0)
+                    {
+                        insert_idx--;
+                        // ... and target offset are available.
+                        // If target offset is not available or it is <= sector offset then stop searching.
+                        if (track[insert_idx].offset == 0 || track[insert_idx].offset <= src_sector_copy.offset)
+                        {
+                            insert_idx++;
+                            break;
+                        }
+                    }
+                }
             }
 
             std::string details = "(";
