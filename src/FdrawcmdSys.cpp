@@ -9,7 +9,9 @@
 
 #include <algorithm>
 
-#ifdef _DEBUG
+#define IGNORE_DEBUG 1
+
+#if defined(_DEBUG) && (!defined(IGNORE_DEBUG) || IGNORE_DEBUG == 0)
 // Macro overloading reference:
 // http://stackoverflow.com/questions/3046889/optional-parameters-with-c-macros/28074198#28074198
 // or shorter: https://stackoverflow.com/a/28074198
@@ -280,7 +282,7 @@ bool FdrawcmdSys::Seek(int cyl, int head /*= -1*/)
 {
     if (cyl == 0)
     {
-        util::cout << util::format("FdrawcmdSys::Seek(alias recalibrate): cyl=", cyl, ", head=", head);
+        util::cout << util::format("FdrawcmdSys::Seek(alias recalibrate): cyl=", cyl, ", head=", head) << '\n';
         return Recalibrate();
     }
 
