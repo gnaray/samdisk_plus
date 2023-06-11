@@ -71,6 +71,8 @@ bool FdrawcmdSys::SetEncRate(Encoding encoding, DataRate datarate)
         throw util::exception("unsupported datarate (", datarate, ")");
     }
 
+    m_encoding_flags = encoding == Encoding::MFM ? FD_OPTION_MFM : FD_OPTION_FM;
+
     return Ioctl(IOCTL_FD_SET_DATA_RATE, &rate, sizeof(rate));
 }
 
