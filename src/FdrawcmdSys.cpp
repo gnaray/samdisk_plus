@@ -345,8 +345,30 @@ bool FdrawcmdSys::CmdVerify(int phead, int cyl, int head, int sector, int size, 
         ", size=", size, ", eot=", eot, ", (gap=", rwp.gap, ")"));
 }
 
+/*
+ * Input:
+ * - eot: number of sectors
+ * - mem: the memory where the read sectors are stored. Its size is auto calculated if 0.
+ */
 bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int size, int eot, MEMORY& mem)
 {
+    /* Def.: SectorSize is the size of sector in bytes calculated by SizeCodeToRealLength(rwp.size).
+     * 1) The sector is ignored by FDC and is 1 by default.
+     * 2) Must be rwp.eot >= output_size / SectorSize else FDC
+     *    returns "Sector not found" error.
+     * 3) Should be output_size <= (MaxTransferSize / SectorSize + 1) * SectorSize else it is waste of memory.
+     * 4) Must be output_size <= mem.size else FDC returns
+     *    "Invalid memory access" error.
+     * 5) The bytes read value returned by fdrawcmd is usually 0 except when
+     *    rwp.eot > output_size / SectorSize and output_size % SectorSize = 0.
+     * 6) Consequences:
+     *    The rwp.eot specifies the amount of sectors to read.
+     *    The best if rwp.eot = output_size / SectorSize + 1.
+     *    Also best if output_size = eot * SectorSize.
+     *    Thus best if rwp.eot = eot + 1.
+     *    All best if output_size = min(mem.size, eot * SectorSize, (MaxTransferSize / sector_size + 1) * sector_size).
+     */
+
     FD_READ_WRITE_PARAMS rwp{};
     rwp.flags = m_encoding_flags;
     rwp.phead = static_cast<uint8_t>(phead);
@@ -354,20 +376,37 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
     rwp.head = static_cast<uint8_t>(head);
     rwp.sector = static_cast<uint8_t>(sector);
     rwp.size = static_cast<uint8_t>(size);
-    rwp.eot = static_cast<uint8_t>(eot);
+    rwp.eot = limited_static_cast<uint8_t>(eot + 1); // +1 for 5) above.
     rwp.gap = RW_GAP;
     rwp.datalen = DtlFromSize(size);
+
+    const auto sector_size = Sector::SizeCodeToRealLength(rwp.size);
+    auto output_size = std::min(eot * sector_size, (GetMaxTransferSize() / sector_size + 1) * sector_size);
+    if (mem.size > 0)
+    {
+        if (mem.size < output_size)
+        {
+            mem.resize((mem.size / sector_size) * sector_size); // Flooring to sector_size boundary for 5) above.
+            output_size = mem.size;
+        }
+    }
+    else
+        mem.resize(output_size);
 
     IOCTL_PARAMS ioctl_params{};
     ioctl_params.code = IOCTL_FDCMD_READ_TRACK;
     ioctl_params.inbuf = &rwp;
     ioctl_params.insize = sizeof(rwp);
     ioctl_params.outbuf = mem.pb;
-    ioctl_params.outsize = eot * Sector::SizeCodeToLength(rwp.size);
-    RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::CmdReadTrack: (flags=", rwp.flags,
+    ioctl_params.outsize = output_size;
+    bool result;
+    IOCTL(result, ioctl_params, util::format("FdrawcmdSys::CmdReadTrack: (flags=", rwp.flags,
         "), phead=", phead, ", cyl=", cyl, ", head=", head, ", sector=", sector,
         ", size=", size, ", eot=", eot, ", (gap=", rwp.gap, "), bufferlen=", mem.size,
         ", output_size = ", output_size));
+    if (result && output_size != ioctl_params.returned)
+        util::cout << "Warning: CmdReadTrack reports reading " << ioctl_params.returned << " bytes instead of " << output_size << '\n';
+    return result;
 }
 
 bool FdrawcmdSys::CmdRead(int phead, int cyl, int head, int sector, int size, int count, MEMORY& mem, size_t data_offset, bool deleted)
