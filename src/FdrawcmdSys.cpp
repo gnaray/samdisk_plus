@@ -8,6 +8,48 @@
 
 #include <algorithm>
 
+#ifdef _DEBUG
+// Macro overloading reference:
+// http://stackoverflow.com/questions/3046889/optional-parameters-with-c-macros/28074198#28074198
+// or shorter: https://stackoverflow.com/a/28074198
+
+// These are the macros which are called with proper amount of parameters.
+#define IOCTL_3(RESULT,IO_PARAMS,DEBUG_MSG) (RESULT = Ioctl(IO_PARAMS), \
+(util::cout << (DEBUG_MSG) << ", success=" << (RESULT) << ", returned=" << (IO_PARAMS).returned << '\n'), (RESULT))
+#define IOCTL_2(RESULT,IO_PARAMS) RESULT = Ioctl(IO_PARAMS) // No debug text in third parameter, ignoring debug.
+// We do not need IOCTL_1 because at least the result and the ioctl_params structure must be passed.
+// We do not need IOCTL_0 because at least the result and the ioctl_params structure must be passed.
+
+#define RETURN_IOCTL_2(IO_PARAMS,DEBUG_MSG) const auto RESULT = Ioctl(IO_PARAMS); \
+util::cout << (DEBUG_MSG) << ", success=" << RESULT << ", returned=" << (IO_PARAMS).returned << '\n'; \
+return RESULT
+#define RETURN_IOCTL_1(IO_PARAMS) return Ioctl(IO_PARAMS) // No debug text in second parameter, ignoring debug.
+// We do not need RETURN_IOCTL_0 because at least the ioctl_params structure must be passed.
+
+// Macro magic to use desired macro with optional 0, 1, 2, 3 parameters.
+#define IOCTL_FUNC_CHOOSER(_f1, _f2, _f3, _f4, ...) _f4
+#define IOCTL_FUNC_RECOMPOSER(argsWithParentheses) IOCTL_FUNC_CHOOSER argsWithParentheses
+#define IOCTL_CHOOSE_FROM_ARG_COUNT(...) IOCTL_FUNC_RECOMPOSER((__VA_ARGS__, IOCTL_3, IOCTL_2, IOCTL_1, ))
+#define IOCTL_NO_ARG_EXPANDER() ,,IOCTL_0
+#define IOCTL_MACRO_CHOOSER(...) IOCTL_CHOOSE_FROM_ARG_COUNT(IOCTL_NO_ARG_EXPANDER __VA_ARGS__ ())
+
+// Macro magic to use desired macro with optional 0, 1, 2 parameters.
+#define RETURN_IOCTL_FUNC_CHOOSER(_f1, _f2, _f3, ...) _f3
+#define RETURN_IOCTL_FUNC_RECOMPOSER(argsWithParentheses) RETURN_IOCTL_FUNC_CHOOSER argsWithParentheses
+#define RETURN_IOCTL_CHOOSE_FROM_ARG_COUNT(...) RETURN_IOCTL_FUNC_RECOMPOSER((__VA_ARGS__, RETURN_IOCTL_2, RETURN_IOCTL_1, ))
+#define RETURN_IOCTL_NO_ARG_EXPANDER() ,,RETURN_IOCTL_0
+#define RETURN_IOCTL_MACRO_CHOOSER(...) RETURN_IOCTL_CHOOSE_FROM_ARG_COUNT(RETURN_IOCTL_NO_ARG_EXPANDER __VA_ARGS__ ())
+
+// These are the macros that the user can call.
+// IOCTL parameters: {writable} bool result, {writable} IOCTL_PARAMS ioctl_params, {optional, util::cout acceptable} debug_text
+#define IOCTL(...) IOCTL_MACRO_CHOOSER(__VA_ARGS__)(__VA_ARGS__)
+// RETURN_IOCTL parameters: {writable} IOCTL_PARAMS ioctl_params, {optional, util::cout acceptable} debug_text
+#define RETURN_IOCTL(...) RETURN_IOCTL_MACRO_CHOOSER(__VA_ARGS__)(__VA_ARGS__)
+#else
+#define IOCTL(RESULT, IO_PARAMS, ...) RESULT = Ioctl(IO_PARAMS) // Third parameter is debug text, ignoring it.
+#define RETURN_IOCTL(IO_PARAMS, ...) return Ioctl(IO_PARAMS) // Second parameter is debug text, ignoring it.
+#endif
+
 /*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device_index)
 {
     auto path = util::format(R"(\\.\fdraw)", device_index);
@@ -32,12 +74,12 @@ FdrawcmdSys::FdrawcmdSys(HANDLE hdev)
     m_hdev.reset(hdev);
 }
 
-bool FdrawcmdSys::Ioctl(DWORD code, void* inbuf, int insize, void* outbuf, int outsize, DWORD* dwReturn)
+bool FdrawcmdSys::Ioctl(DWORD code, void* inbuf, int insize, void* outbuf, int outsize, DWORD* returned)
 {
-    DWORD dwRet;
-    const auto dwReturnLocal = dwReturn == nullptr ? &dwRet : dwReturn;
-    *dwReturnLocal = 0;
-    return !!DeviceIoControl(m_hdev.get(), code, inbuf, insize, outbuf, outsize, dwReturnLocal, nullptr);
+    DWORD returned_local;
+    const auto pReturned = returned == nullptr ? &returned_local : returned;
+    *pReturned = 0;
+    return !!DeviceIoControl(m_hdev.get(), code, inbuf, insize, outbuf, outsize, pReturned, nullptr);
 }
 
 constexpr uint8_t FdrawcmdSys::DtlFromSize(int size)

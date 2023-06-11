@@ -20,6 +20,16 @@ struct handle_closer
 using Win32Handle = std::unique_ptr<std::remove_pointer<HANDLE>::type, handle_closer>;
 
 
+typedef struct _IOCTL_PARAMS
+{
+    DWORD code;
+    void* inbuf = nullptr;
+    int insize = 0;
+    void* outbuf = nullptr;
+    int outsize = 0;
+    DWORD returned = 0;
+} IOCTL_PARAMS;
+
 class FdrawcmdSys
 {
 public:
@@ -68,7 +78,12 @@ private:
     static constexpr int RW_GAP = 0x0a;
     static constexpr uint8_t DtlFromSize(int size);
 
-    bool Ioctl(DWORD code, void* inbuf = nullptr, int insize = 0, void* outbuf = nullptr, int outsize = 0, DWORD* dwReturn = nullptr);
+    bool Ioctl(DWORD code, void* inbuf = nullptr, int insize = 0, void* outbuf = nullptr, int outsize = 0, DWORD* returned = nullptr);
+    inline bool Ioctl(IOCTL_PARAMS& ioctl_params)
+    {
+        return Ioctl(ioctl_params.code, ioctl_params.inbuf, ioctl_params.insize,
+            ioctl_params.outbuf, ioctl_params.outsize, &ioctl_params.returned);
+    }
 
     uint8_t m_encoding_flags{ FD_OPTION_MFM };  // FD_OPTION_FM or FD_OPTION_MFM only.
     Win32Handle m_hdev{};
