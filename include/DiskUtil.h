@@ -41,6 +41,7 @@ std::vector<std::pair<char, size_t>> DiffSectorCopies(const Sector& sector);
 Sector GetTypicalSector(const CylHead& cylhead, const Track& track, const Sector& last);
 
 const std::string BAD_SECTOR_SIGN{ "BADS" };
+const std::string MISSING_SECTOR_SIGN{ "MISS" };
 
 bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& format);
 bool WriteAppleDODisk(FILE* f_, Disk& disk, const Format& format);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "PlatformConfig.h"
 #include "types/bpb.h"
 #include "Format.h"
 
@@ -23,9 +22,11 @@ class Fat12Filesystem
 {
 public:
     Fat12Filesystem(const Format& fmt, Disk& disk);
+    Fat12Filesystem(const Fat12Filesystem&) = delete;
+    Fat12Filesystem& operator= (const Fat12Filesystem&) = delete;
 
+    void PrepareBootSector();
     bool GetLogicalSector(int sector_index, const Sector*& found_sector);
-    bool PrepareBootSector();
     int DetermineSectorsPerCluster();
     bool IsEofFatIndex(int fat_index);
     bool IsNextFatIndex(int fat_index);
@@ -34,15 +35,13 @@ public:
     int AnalyseDirEntries();
     // Examining sector distance of FAT copies and finding the best distance which equals to fat sectors.
     int AnalyseFatSectors();
-    void ReconstructBpb();
+    bool ReconstructBpb();
 
     const Format& fmt;
     Disk& disk;
-    const Sector* boot_sector;
-    Data new_boot_sector_data;
-    BIOS_PARAMETER_BLOCK& bpb;
-    Data fat1;
-    Data fat2;
+    BIOS_PARAMETER_BLOCK* bpb = nullptr;
+    Data fat1{};
+    Data fat2{};
     int new_fat_sectors = 0;
     int new_root_dir_entries = 0;
     int sectors_per_cluster_by_root_files = 0;
