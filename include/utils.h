@@ -218,9 +218,10 @@ uint16_t le_value(const uint8_t(&arr)[N])
 template <int N, std::enable_if_t<N == 3 || N == 4> * = nullptr>
 auto le_value(const uint8_t(&arr)[N])
 {
-    uint32_t value = 0, i = 0;
-    for (auto x : arr)
-        value |= (x << (8 * i++));
+    int i = N - 1;
+    uint32_t value = arr[i--];
+    while (i >= 0)
+        value = (value << 8) | arr[i--];
     return value;
 }
 
@@ -233,9 +234,10 @@ uint16_t be_value(const uint8_t(&arr)[N])
 template <int N, std::enable_if_t<N == 3 || N == 4> * = nullptr>
 auto be_value(const uint8_t(&arr)[N])
 {
-    uint32_t value = 0;
-    for (auto x : arr)
-        value = (value << 8) | x;
+    int i = 0;
+    uint32_t value = arr[i++];
+    while (i >= 0)
+        value = (value << 8) | arr[i++];
     return value;
 }
 
