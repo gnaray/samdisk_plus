@@ -47,8 +47,8 @@ public:
     void flip_sides();
     void resize(int cyls, int heads);
 
-    bool find(const Header& header, const Sector*& found_sector);
     const Sector& get_sector(const Header& header);
+    bool find(const Header& header, const Sector*& found_sector);
 
     Range range() const;
     int cyls() const;

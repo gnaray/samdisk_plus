@@ -88,21 +88,21 @@ const TrackData& Disk::read(const CylHead& cylhead, bool /*uncached*/, int /*wit
     return m_trackdata[cylhead];
 }
 
-const Track& Disk::read_track(const CylHead& cylhead, bool uncached)
+const Track& Disk::read_track(const CylHead& cylhead, bool uncached /* = false*/)
 {
     read(cylhead, uncached);
     std::lock_guard<std::mutex> lock(m_trackdata_mutex);
     return m_trackdata[cylhead].track();
 }
 
-const BitBuffer& Disk::read_bitstream(const CylHead& cylhead, bool uncached)
+const BitBuffer& Disk::read_bitstream(const CylHead& cylhead, bool uncached /* = false*/)
 {
     read(cylhead, uncached);
     std::lock_guard<std::mutex> lock(m_trackdata_mutex);
     return m_trackdata[cylhead].bitstream();
 }
 
-const FluxData& Disk::read_flux(const CylHead& cylhead, bool uncached)
+const FluxData& Disk::read_flux(const CylHead& cylhead, bool uncached /* = false*/)
 {
     read(cylhead, uncached);
     std::lock_guard<std::mutex> lock(m_trackdata_mutex);
@@ -133,14 +133,14 @@ const BitBuffer& Disk::write(const CylHead& cylhead, BitBuffer&& bitbuf)
     return read_bitstream(cylhead);
 }
 
-const FluxData& Disk::write(const CylHead& cylhead, FluxData&& flux_revs, bool normalised)
+const FluxData& Disk::write(const CylHead& cylhead, FluxData&& flux_revs, bool normalised /* = false*/)
 {
     write(TrackData(cylhead, std::move(flux_revs), normalised));
     return read_flux(cylhead);
 }
 
 
-void Disk::each(const std::function<void(const CylHead & cylhead, const Track & track)>& func, bool cyls_first)
+void Disk::each(const std::function<void(const CylHead & cylhead, const Track & track)>& func, bool cyls_first /* = false*/)
 {
     if (!m_trackdata.empty())
     {
@@ -150,12 +150,12 @@ void Disk::each(const std::function<void(const CylHead & cylhead, const Track & 
     }
 }
 
-void Disk::format(const RegularFormat& reg_fmt, const Data& data, bool cyls_first)
+void Disk::format(const RegularFormat& reg_fmt, const Data& data /* = Data()*/, bool cyls_first /* = false*/)
 {
     format(Format(reg_fmt), data, cyls_first);
 }
 
-void Disk::format(const Format& new_fmt, const Data& data, bool cyls_first)
+void Disk::format(const Format& new_fmt, const Data& data /* = Data()*/, bool cyls_first /* = false*/)
 {
     auto it = data.begin(), itEnd = data.end();
 
