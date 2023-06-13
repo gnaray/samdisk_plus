@@ -1,6 +1,6 @@
 // Raw image files matched by file size alone
 
-#include "PlatformConfig.h"
+//#include "PlatformConfig.h"
 #include "DiskUtil.h"
 #include "Options.h"
 #include "Disk.h"
@@ -82,9 +82,8 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
 
 Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
 {
-    int max_id = -1;
-
     auto range = opt_range;
+    // Ensure that disk contains range but modified range is junk because it is determined below.
     ValidateRange(range, disk->cyls(), disk->heads());
 
     Format fmt;
@@ -92,6 +91,7 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
     fmt.heads = 0;
     fmt.base = 0xff;
 
+    // Determine cyls, heads, datarate, encoding, size, sector range (base, sectors).
     disk->each([&](const CylHead& cylhead, const Track& track) {
         // Skip empty tracks
         if (track.empty())
@@ -130,8 +130,9 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
 
     // Allow user overrides for flexibility
     fmt.Override(true);
-    bool sectorsOverriden = opt_sectors != -1;
 
+    int max_id = -1;
+    const auto sector_above = fmt.base + fmt.sectors;
     disk->each([&](const CylHead& cylhead, const Track& track) {
         // Skip empty tracks
         if (track.empty())
@@ -139,10 +140,8 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
 
         for (auto& s : track.sectors())
         {
-            if (s.header.sector < fmt.base) // Possible only if base is overriden with higher value.
-                continue;
-            // If sectors is overriden then ignore too big, possible non-sequential sector numbers.
-            if (sectorsOverriden && s.header.sector >= fmt.base + fmt.sectors)
+            if (s.header.sector < fmt.base // Ignore sectors below sector range.
+                    || s.header.sector >= sector_above) // Ignore sectors above sequential sector range.
                 continue;
 
             // Track the highest sector number
@@ -163,7 +162,7 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
 
     if (max_id < fmt.base)
         throw util::exception("not found selected sectors");
-    if (max_id >= fmt.base + fmt.sectors)
+    if (max_id >= sector_above)
         throw util::exception("non-sequential sector numbers are unsuitable for raw output");
     return fmt;
 }
