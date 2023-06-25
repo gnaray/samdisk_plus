@@ -4,6 +4,7 @@
 
 #ifdef HAVE_LIBUSB1
 
+#include <array>
 #include <mutex>
 
 #ifdef __GNUC__
@@ -21,7 +22,7 @@ class KF_libusb final : public KryoFlux
 {
 public:
     KF_libusb(libusb_context* ctx, libusb_device_handle* hdev);
-    ~KF_libusb();
+    ~KF_libusb() override;
     static std::unique_ptr<KryoFlux> Open();
 
     void ReadCallback(libusb_transfer* transfer);
