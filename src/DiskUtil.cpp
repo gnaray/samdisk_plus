@@ -940,7 +940,7 @@ bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
             auto it = track.find(header);
             if (it != track.end() && (*it).has_data())
             {
-                const auto& data = (*it).data_copy((*it).get_best_data_index());
+                const auto& data = (*it).data_best_copy();
                 std::copy(data.begin(), data.begin() + std::min(data.size(), buf.size()), buf.begin());
                 if (!(*it).has_good_data())
                 {

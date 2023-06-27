@@ -124,9 +124,13 @@ public:
     DataList& datas();
     const Data& data_copy(int copy = 0) const;
     Data& data_copy(int copy = 0);
+    const Data& data_best_copy() const;
+    Data& data_best_copy();
     const DataReadStats& data_copy_read_stats(int instance = 0) const;
     DataReadStats& data_copy_read_stats(int instance = 0);
-    int get_best_data_index() const;
+    const DataReadStats& data_best_copy_read_stats() const;
+    DataReadStats& data_best_copy_read_stats();
+    int get_data_best_copy_index() const;
     int read_attempts() const;
     void set_read_attempts(int read_attempts);
     void add_read_attempts(int read_attempts);

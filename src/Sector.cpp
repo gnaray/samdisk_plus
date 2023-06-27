@@ -80,6 +80,16 @@ Data& Sector::data_copy(int copy/*=0*/)
     return m_data[u_copy];
 }
 
+const Data& Sector::data_best_copy() const
+{
+    return data_copy(get_data_best_copy_index());
+}
+
+Data& Sector::data_best_copy()
+{
+    return data_copy(get_data_best_copy_index());
+}
+
 const DataReadStats& Sector::data_copy_read_stats(int instance/*=0*/) const
 {
     assert(m_data_read_stats.size() != 0);
@@ -96,7 +106,17 @@ DataReadStats& Sector::data_copy_read_stats(int instance/*=0*/)
     return m_data_read_stats[u_instance];
 }
 
-int Sector::get_best_data_index() const
+const DataReadStats& Sector::data_best_copy_read_stats() const
+{
+    return data_copy_read_stats(get_data_best_copy_index());
+}
+
+DataReadStats& Sector::data_best_copy_read_stats()
+{
+    return data_copy_read_stats(get_data_best_copy_index());
+}
+
+int Sector::get_data_best_copy_index() const
 {
     if (!has_data())
         return -1;
@@ -120,8 +140,7 @@ bool Sector::has_stable_data() const
     // Backward compatibility: if no paranoia then good data is also stable data.
     if (!opt_paranoia || !result)
         return result;
-    const auto best_data_index = get_best_data_index();
-    const auto read_count = data_copy_read_stats(best_data_index).ReadCount();
+    const auto read_count = data_best_copy_read_stats().ReadCount();
     return read_count >= opt_stability_level;
 }
 
