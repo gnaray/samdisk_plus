@@ -155,10 +155,10 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                     if (opt_normal_disk && normal_track_size > 0
                         && deviceReadingPolicy.SkippableSectors().HasIdSequence(normal_first_sector_id, normal_track_size - normal_first_sector_id + 1))
                         return;
-                }
-                if (opt_verbose && opt_repair && !deviceReadingPolicy.SkippableSectors().empty()) {
-                    Message(msgInfo, "Ignoring already good sectors on %s: %s",
-                        CH(cylhead.cyl, cylhead.head), deviceReadingPolicy.SkippableSectors().SectorIdsToString().c_str());
+                    if (opt_verbose && !deviceReadingPolicy.SkippableSectors().empty()) {
+                        Message(msgInfo, "Ignoring already good sectors on %s: %s",
+                            CH(cylhead.cyl, cylhead.head), deviceReadingPolicy.SkippableSectors().SectorIdsToString().c_str());
+                    }
                 }
 
                 TrackData src_data;
@@ -179,7 +179,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                             throw;
                         util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
                     }
-                    Message(msgInfo, "If it happens too often, adjusting rpm and rpm-tolerance-permille should help.");
+                    Message(msgInfo, "If it happens too often then adjusting rpm and rpm-time-tolerance-permille should help.");
                     if (!OpenReadImage(src_path, src_disk))
                         throw util::exception("Reopening ", src_path, " failed");
                 }
