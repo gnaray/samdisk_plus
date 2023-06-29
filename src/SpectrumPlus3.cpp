@@ -73,8 +73,8 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
     bool patched = false;
 
     // Attempt to read the standard +3 boot sector
-    const Sector* sector = nullptr;
-    if (!disk->find(Header(0, 0, 1, 2), sector) || sector->data_size() < 512)
+    auto sector = disk->find(Header(0, 0, 1, 2));
+    if (sector == nullptr || sector->data_size() < 512)
         return false;
 
     // Create a working copy to modify
@@ -287,7 +287,7 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
 
 
     // Read a potential second stage loader from the following track
-    if (!disk->find(Header(1, 0, 193, 6), sector) || sector->data_size() < 6144)
+    if ((sector = disk->find(Header(1, 0, 193, 6))) == nullptr || sector->data_size() < 6144)
         return false;
 
     data = sector->data_copy();

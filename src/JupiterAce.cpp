@@ -39,17 +39,14 @@ bool IsDeepThoughtSector(const Sector& sector, int& offset)
         (offset = GetDeepThoughtDataOffset(sector.data_copy())) > 0;
 }
 
-bool IsDeepThoughtDisk(Disk& disk, const Sector*& sector)
+const Sector* IsDeepThoughtDisk(Disk& disk)
 {
     // Try the primary catalogue location on cyl 0
-    if (!disk.find(Header(0, 0, 0, SizeToCode(4096)), sector))
-    {
-        // Try the backup location on cyl 1
-        if (!disk.find(Header(1, 0, 0, SizeToCode(4096)), sector))
-            return false;
-    }
-
-    return true;
+    auto sector = disk.find(Header(0, 0, 0, SizeToCode(4096)));
+    if (sector != nullptr)
+        return sector;
+    // Try the backup location on cyl 1
+    return disk.find(Header(1, 0, 0, SizeToCode(4096)));
 }
 
 bool IsValidDeepThoughtData(const Data& data)

@@ -431,8 +431,8 @@ void TrackUsedInit(Disk& disk)
     memset(&adwUsed, 0, sizeof(adwUsed));
     adwUsed[0][0] |= 0x00000011;
 
-    const Sector* sector = nullptr;
-    if (!disk.find(Header(0, 0, 1, 2), sector) || sector->data_size() < SECTOR_SIZE)
+    auto sector = disk.find(Header(0, 0, 1, 2));
+    if (sector == nullptr || sector->data_size() < SECTOR_SIZE)
         throw util::exception("disk is not MGT format");
 
     MGT_DISK_INFO di;
@@ -448,7 +448,7 @@ void TrackUsedInit(Disk& disk)
                 continue;
 
             CylHead cylhead(cyl, 0);
-            if (!disk.find(Header(cyl, 0, sec, 2), sector) || sector->data_size() < SECTOR_SIZE)
+            if ((sector = disk.find(Header(cyl, 0, sec, 2))) == nullptr || sector->data_size() < SECTOR_SIZE)
                 throw util::exception("cyl ", cyl, " head 0 sector ", sec, " not found");
 
             for (int entry = 0; !fDone && entry < 2; ++entry)

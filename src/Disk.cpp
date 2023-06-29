@@ -214,15 +214,11 @@ const Sector& Disk::get_sector(const Header& header)
     return read_track(header).get_sector(header);
 }
 
-bool Disk::find(const Header& header, const Sector*& found_sector)
+const Sector* Disk::find(const Header& header)
 {
     auto& track = read_track(header);
     auto it = track.find(header);
     if (it != track.end())
-    {
-        found_sector = &*it;
-        return true;
-    }
-
-    return false;
+        return &*it;
+    return nullptr;
 }

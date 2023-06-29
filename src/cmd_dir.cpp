@@ -728,8 +728,8 @@ bool DirCpm(Disk& disk, const Sector& s)
             uint8_t head = track & (side_flip ? 1 : 0);
             uint8_t sec = bSectorBase + (i % pdpb->bSectors);
 
-            const Sector* sector = nullptr;
-            if (!disk.find(Header(cyl, head, sec, 2), sector) || sector->has_shortdata())
+            auto sector = disk.find(Header(cyl, head, sec, 2));
+            if (sector == nullptr || sector->has_shortdata())
                 throw util::exception(CHR(cyl, head, sec), " not found");
 
             // Process the sector data, ignoring gap data.
@@ -823,13 +823,14 @@ bool DirCpm(Disk& disk, const Sector& s)
 
 bool DirAce(Disk& disk)
 {
-    const Sector* ps = nullptr;
 
     // Try the primary catalogue location on cyl 0
-    if (!disk.find(Header(0, 0, 0, SizeToCode(4096)), ps))
+    auto ps = disk.find(Header(0, 0, 0, SizeToCode(4096)));
+    if (ps == nullptr)
     {
         // Try the backup location on cyl 1
-        if (!disk.find(Header(1, 0, 0, SizeToCode(4096)), ps))
+        ps = disk.find(Header(1, 0, 0, SizeToCode(4096)));
+        if (ps == nullptr)
             return false;
     }
 
@@ -987,15 +988,12 @@ bool DirMgt(Disk& disk)
 
 bool Dir(Disk& disk)
 {
-    const Sector* sector = nullptr;
+    auto sector = IsDeepThoughtDisk(disk);
 
-    if (disk.find(Header(0, 0, 0, 5), sector))
-    {
-        if (IsDeepThoughtDisk(disk, sector))
-            return DirAce(disk);
-    }
+    if (sector != nullptr)
+        return DirAce(disk);
 
-    if (disk.find(Header(0, 0, 1, 2), sector))
+    if ((sector = disk.find(Header(0, 0, 1, 2))) != nullptr)
     {
         if (IsDidaktikDirSector(*sector))
             return DirDidaktik(disk);
@@ -1004,15 +1002,15 @@ bool Dir(Disk& disk)
         else if (IsMgtDirSector(*sector))
             return DirMgt(disk);
     }
-    else if (disk.find(Header(0, 0, 1, 1), sector))
+    else if ((sector = disk.find(Header(0, 0, 1, 1))) != nullptr)
     {
         if (IsOpusDirSector(*sector))
             return DirOpus(disk);
         else if (IsTrDosDirSector(*sector))
             return DirTrDos(disk);
     }
-    else if (disk.find(Header(0, 0, 0x41, 2), sector) ||
-        disk.find(Header(0, 0, 0xc1, 2), sector))
+    else if ((sector = disk.find(Header(0, 0, 0x41, 2))) != nullptr ||
+        (sector = disk.find(Header(0, 0, 0xc1, 2))) != nullptr)
     {
         if (IsCpmDirSector(*sector))
             return DirCpm(disk, *sector);

@@ -80,9 +80,9 @@ bool ReadDTI(MemFile& file, std::shared_ptr<Disk>& disk)
 
 bool WriteDTI(FILE* f_, std::shared_ptr<Disk>& disk)
 {
-    const Sector* ps = nullptr;
+    auto ps = IsDeepThoughtDisk(*disk);
 
-    if (!IsDeepThoughtDisk(*disk, ps) || ps->encoding != Encoding::Ace)
+    if (ps == nullptr || ps->encoding != Encoding::Ace)
         throw util::exception("source is not in Deep Thought format");
 
     auto track_data = GetDeepThoughtData(ps->data_copy());

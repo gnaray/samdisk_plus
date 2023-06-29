@@ -47,8 +47,8 @@ bool ReadQDOS(MemFile& file, std::shared_ptr<Disk>& disk)
 
 bool WriteQDOS(FILE* f_, std::shared_ptr<Disk>& disk)
 {
-    const Sector* sector = nullptr;
-    if (!disk->find(Header(0, 0, 1, 2), sector))
+    auto sector = disk->find(Header(0, 0, 1, 2));
+    if (sector == nullptr)
         return false;
 
     auto& data = sector->data_copy();

@@ -75,8 +75,8 @@ bool WriteMBD(FILE* f_, std::shared_ptr<Disk>& disk)
 {
     Format fmt{ RegularFormat::MBD820 };
 
-    const Sector* ps = nullptr;
-    if (!disk->find(Header(0, 0, fmt.base, fmt.size), ps) || ps->data_size() < static_cast<int>(sizeof(MBD_BOOTSECTOR)))
+    auto ps = disk->find(Header(0, 0, fmt.base, fmt.size));
+    if (ps == nullptr || ps->data_size() < static_cast<int>(sizeof(MBD_BOOTSECTOR)))
         return false;
 
     auto pbs = reinterpret_cast<const MBD_BOOTSECTOR*>(ps->data_copy().data());

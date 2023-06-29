@@ -43,8 +43,8 @@ bool WriteOPD(FILE* f_, std::shared_ptr<Disk>& disk)
 {
     Format fmt{ RegularFormat::OPD };
 
-    const Sector* ps = nullptr;
-    if (!disk->find(Header(0, 0, fmt.base, fmt.size), ps) || ps->data_size() < static_cast<int>(sizeof(OPD_BOOT)))
+    auto ps = disk->find(Header(0, 0, fmt.base, fmt.size));
+    if (ps == nullptr || ps->data_size() < static_cast<int>(sizeof(OPD_BOOT)))
         return false;
 
     auto pob = reinterpret_cast<const OPD_BOOT*>(ps->data_copy().data());

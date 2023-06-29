@@ -263,7 +263,6 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 bool Image2Trinity(const std::string& path, const std::string&/*trinity_path*/) // ToDo: use trinity_path for record
 {
     auto disk = std::make_shared<Disk>();
-    const Sector* s = nullptr;
     const MGT_DIR* pdir = nullptr;
     std::string name;
 
@@ -273,7 +272,8 @@ bool Image2Trinity(const std::string& path, const std::string&/*trinity_path*/) 
     // Scanning the first 10 directory sectors should be enough
     for (auto sector = 1; !pdir && sector <= MGT_SECTORS; ++sector)
     {
-        if (!disk->find(Header(0, 0, sector, 2), s))
+        auto s = disk->find(Header(0, 0, sector, 2));
+        if (s == nullptr)
             break;
 
         // Each sector contains 2 MGT directory entries
@@ -318,7 +318,8 @@ bool Image2Trinity(const std::string& path, const std::string&/*trinity_path*/) 
         uint8_t cyl = (trk & 0x7f);
         uint8_t head = trk >> 7;
 
-        if (!disk->find(Header(cyl, head, sec, 2), s) || s->data_size() != SECTOR_SIZE)
+        auto s = disk->find(Header(cyl, head, sec, 2));
+        if (s == nullptr || s->data_size() != SECTOR_SIZE)
             throw util::exception("end of file reading ", CylHead(cyl, head), " sector", sec);
 
         // Determine the size of data in this sector, which is at most 510 bytes.

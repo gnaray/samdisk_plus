@@ -48,7 +48,7 @@ public:
     void resize(int cyls, int heads);
 
     const Sector& get_sector(const Header& header);
-    bool find(const Header& header, const Sector*& found_sector);
+    const Sector* find(const Header& header);
 
     Range range() const;
     int cyls() const;
