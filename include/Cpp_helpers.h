@@ -106,6 +106,14 @@ inline int lossless_static_cast(unsigned long x)
 }
 
 template<>
+inline long lossless_static_cast(unsigned long x)
+{
+    if (x > static_cast<unsigned long>(std::numeric_limits<long>::max()))
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
+    return static_cast<long>(x);
+}
+
+template<>
 inline double lossless_static_cast(unsigned int x)
 {
     const auto result = static_cast<double>(x);
