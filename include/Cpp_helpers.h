@@ -61,7 +61,7 @@ constexpr approximately_equal(T x, T y)
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
-    almost_equal(T x, T y, int ulp)
+constexpr almost_equal(T x, T y, int ulp)
 {
     const auto absDiff = std::fabs(x - y);
     // the machine epsilon has to be scaled to the magnitude of the values used
