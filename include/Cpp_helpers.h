@@ -270,4 +270,9 @@ inline T ceil_AS(U x)
     return lossless_static_cast<T>(std::ceil(x));
 }
 
+
+
+#define longsizeof(x) (lossless_static_cast<long>(sizeof(x)))
+#define intsizeof(x) (lossless_static_cast<int>(sizeof(x)))
+
 #endif // CPP_HELPERS_H
