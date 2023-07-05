@@ -12,8 +12,8 @@ std::string to_string(const Compress& compress);
 class MemFile
 {
 public:
-    bool open(const std::string& path, bool uncompress = true);
-    bool open(const void* buf, int size, const std::string& path,
+    void open(const std::string& path, bool uncompress = true);
+    void open(const void* buf, int size, const std::string& path,
         const std::string& filename = "");
 
     const Data& data() const;

@@ -49,8 +49,7 @@ bool ReadDSC(MemFile& file, std::shared_ptr<Disk>& disk)
         strPath[offset + 1] = 'S' | (strPath[offset + 1] & 0x20);
         strPath[offset + 2] = 'C' | (strPath[offset + 2] & 0x20);
 
-        if (!file2.open(strPath))
-            throw util::exception("missing .dsc companion file");
+        file2.open(strPath); // missing .dsc companion file
     }
     // Or if given the data file, switch to the header
     else if (IsFileExt(strPath, "dsc"))
@@ -61,8 +60,7 @@ bool ReadDSC(MemFile& file, std::shared_ptr<Disk>& disk)
         strPath[offset + 1] = 'D' | (strPath[offset + 1] & 0x20);
         strPath[offset + 2] = 'R' | (strPath[offset + 2] & 0x20);
 
-        if (!file2.open(strPath))
-            throw util::exception("missing .hdr companion file");
+        file2.open(strPath); // missing .hdr companion file
 
         std::swap(pfileHeader, pfileData);
     }

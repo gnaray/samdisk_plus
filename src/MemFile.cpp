@@ -36,7 +36,7 @@ std::string to_string(const Compress& compression)
 }
 
 
-bool MemFile::open(const std::string& path_, bool uncompress)
+void MemFile::open(const std::string& path_, bool uncompress)
 {
     std::string filename;
     MEMORY mem(MAX_IMAGE_SIZE + 1);
@@ -286,7 +286,7 @@ bool MemFile::open(const std::string& path_, bool uncompress)
     throw util::exception("file size too big");
 }
 
-bool MemFile::open(const void* buf, int len, const std::string& path_, const std::string& filename_)
+void MemFile::open(const void* buf, int len, const std::string& path_, const std::string& filename_)
 {
     auto pb = reinterpret_cast<const uint8_t*>(buf);
 
@@ -307,8 +307,6 @@ bool MemFile::open(const void* buf, int len, const std::string& path_, const std
         else if (IsFileExt(m_filename, "bz2"))
             m_filename = m_filename.substr(0, m_filename.size() - 4);
     }
-
-    return true;
 }
 
 

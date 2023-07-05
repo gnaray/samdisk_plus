@@ -1,6 +1,5 @@
 // Scan command
 
-#include "PlatformConfig.h"
 #include "Options.h"
 #include "SAMdisk.h"
 #include "Image.h"
@@ -97,48 +96,46 @@ bool ScanImage(const std::string& path, Range range)
     util::cout.screen->flush();
 
     auto disk = std::make_shared<Disk>();
-    if (ReadImage(path, disk))
+    ReadImage(path, disk);
+    Format& fmt = disk->fmt;
+
+    // Regular format and no range specified?
+    if (!opt_verbose && range.empty() && fmt.sectors > 0)
     {
-        Format& fmt = disk->fmt;
+        util::cout << util::fmt("%s %s, %2u cyls, %u heads, %2u sectors, %4u bytes/sector\n",
+            to_string(fmt.datarate).c_str(), to_string(fmt.encoding).c_str(),
+            disk->cyls(), disk->heads(), fmt.sectors, fmt.sector_size());
 
-        // Regular format and no range specified?
-        if (!opt_verbose && range.empty() && fmt.sectors > 0)
-        {
-            util::cout << util::fmt("%s %s, %2u cyls, %u heads, %2u sectors, %4u bytes/sector\n",
-                to_string(fmt.datarate).c_str(), to_string(fmt.encoding).c_str(),
-                disk->cyls(), disk->heads(), fmt.sectors, fmt.sector_size());
+        std::stringstream ss;
+        if (fmt.base != 1) { ss << util::fmt(" Base=%u", fmt.base); }
+        if (fmt.offset) { ss << util::fmt(" Offset=%u", fmt.offset); }
+        if (fmt.skew) { ss << util::fmt(" Skew=%u", fmt.skew); }
+        if (fmt.interleave > 1) { ss << util::fmt(" Interleave=%u:1", fmt.interleave); }
+        if (fmt.head0 != 0) { ss << util::fmt(" Head0=%u", fmt.head0); }
+        if (fmt.head1 != 1) { ss << util::fmt(" Head1=%u", fmt.head1); }
+        if (fmt.gap3) { ss << util::fmt(" Gap3=%u", fmt.gap3); }
 
-            std::stringstream ss;
-            if (fmt.base != 1) { ss << util::fmt(" Base=%u", fmt.base); }
-            if (fmt.offset) { ss << util::fmt(" Offset=%u", fmt.offset); }
-            if (fmt.skew) { ss << util::fmt(" Skew=%u", fmt.skew); }
-            if (fmt.interleave > 1) { ss << util::fmt(" Interleave=%u:1", fmt.interleave); }
-            if (fmt.head0 != 0) { ss << util::fmt(" Head0=%u", fmt.head0); }
-            if (fmt.head1 != 1) { ss << util::fmt(" Head1=%u", fmt.head1); }
-            if (fmt.gap3) { ss << util::fmt(" Gap3=%u", fmt.gap3); }
+        auto str = ss.str();
+        if (!str.empty())
+            util::cout << str << "\n";
+    }
+    else
+    {
+        ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
+        util::cout << range << ":\n";
 
-            auto str = ss.str();
-            if (!str.empty())
-                util::cout << str << "\n";
-        }
-        else
-        {
-            ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
-            util::cout << range << ":\n";
+        disk->preload(range, opt_step);
 
-            disk->preload(range, opt_step);
+        ScanContext context;
+        range.each([&](const CylHead cylhead) {
+            if (cylhead.cyl == range.cyl_begin)
+                context = ScanContext();
 
-            ScanContext context;
-            range.each([&](const CylHead cylhead) {
-                if (cylhead.cyl == range.cyl_begin)
-                    context = ScanContext();
+            auto track = disk->read_track(cylhead * opt_step);
 
-                auto track = disk->read_track(cylhead * opt_step);
-
-                NormaliseTrack(cylhead, track);
-                ScanTrack(cylhead, track, context);
-                }, true);
-        }
+            NormaliseTrack(cylhead, track);
+            ScanTrack(cylhead, track, context);
+            }, true);
     }
 
     return true;

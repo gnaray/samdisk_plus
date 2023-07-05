@@ -1,6 +1,5 @@
 // Copy command
 
-#include "PlatformConfig.h"
 #include "Options.h"
 #include "DiskUtil.h"
 #include "Image.h"
@@ -33,20 +32,18 @@ static auto& opt_step = getOpt<int>("step");
 static auto& opt_track_retries = getOpt<int>("track_retries");
 static auto& opt_verbose = getOpt<int>("verbose");
 
-bool OpenReadImage(const std::string& path, std::shared_ptr<Disk>& disk)
+void OpenReadImage(const std::string& path, std::shared_ptr<Disk>& disk)
 {
     disk.reset();
     disk = std::make_shared<Disk>();
     // Read the source image
-    if (!ReadImage(path, disk))
-        return false;
+    ReadImage(path, disk);
 
     // Limit to our maximum geometry, and default to copy everything present in the source
     ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
 
     if (opt_minimal)
         TrackUsedInit(*disk);
-    return true;
 }
 
 bool ImageToImage(const std::string& src_path, const std::string& dst_path)
@@ -63,8 +60,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         Message(msgInfo, "assuming --encoding=Ace due to .dti output image");
     }
 
-    if (!OpenReadImage(src_path, src_disk))
-        return false;
+    OpenReadImage(src_path, src_disk);
 
     const bool skip_stable_sectors = opt_skip_stable_sectors && !src_disk->is_constant_disk() ? true : false;
 
@@ -83,8 +79,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         if ((opt_merge || opt_repair) && !is_dst_disk_read)
         {
             // Read the image, ignore merge or repair if that fails
-            if (!ReadImage(dst_path, dst_disk, false))
-                throw util::exception("target image not found");
+            ReadImage(dst_path, dst_disk, false);
             is_dst_disk_read = true;
         }
 

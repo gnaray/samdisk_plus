@@ -59,8 +59,7 @@ uint8_t abAtomLiteBoot[] =
 bool FormatImage(const std::string& path, Range range)
 {
     auto disk = std::make_shared<Disk>();
-    if (!ReadImage(path, disk))
-        return false;
+    ReadImage(path, disk);
 
     ValidateRange(range, MAX_TRACKS, MAX_SIDES, 1, disk->cyls(), disk->heads());
 
@@ -94,8 +93,7 @@ bool FormatImage(const std::string& path, Range range)
 bool UnformatImage(const std::string& path, Range range)
 {
     auto disk = std::make_shared<Disk>();
-    if (!ReadImage(path, disk))
-        return false;
+    ReadImage(path, disk);
 
     ValidateRange(range, MAX_TRACKS, MAX_SIDES, 1, disk->cyls(), disk->heads());
 

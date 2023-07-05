@@ -34,7 +34,20 @@ bool ReadSTREAM(MemFile& file, std::shared_ptr<Disk>& disk)
         auto track_path = util::fmt("%s%02u.%u.%s", path.c_str(), cylhead.cyl, cylhead.head, ext.c_str());
 
         MemFile f;
-        if (!IsFile(track_path) || !f.open(track_path))
+        bool is_f_opened = false;
+        try
+        {
+            if (IsFile(track_path))
+            {
+                f.open(track_path);
+                is_f_opened = true;
+            }
+        }
+        catch (...)
+        {
+        }
+
+        if (!is_f_opened)
         {
             missing0 += (cylhead.head == 0);
             missing1 += (cylhead.head == 1);

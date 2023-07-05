@@ -16,8 +16,7 @@ static auto& opt_retries = getOpt<int>("retries");
 bool DiskRpm(const std::string& path)
 {
     auto disk = std::make_shared<Disk>();
-    if (!ReadImage(path, disk))
-        return false;
+    ReadImage(path, disk);
 
     // Default to using cyl 0 head 0, but allow the user to override it
     CylHead cylhead(opt_range.empty() ? 0 :

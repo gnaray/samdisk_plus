@@ -1022,5 +1022,6 @@ bool Dir(Disk& disk)
 bool DirImage(const std::string& path)
 {
     auto disk = std::make_shared<Disk>();
-    return ReadImage(path, disk) && Dir(*disk);
+    ReadImage(path, disk);
+    return Dir(*disk);
 }

@@ -1,6 +1,5 @@
 // High-level disk image/device reading and writing
 
-#include "PlatformConfig.h"
 #include "Image.h"
 #include "Options.h"
 //#include "record.h"
@@ -19,7 +18,7 @@ static auto& opt_range = getOpt<Range>("range");
 
 bool UnwrapSDF(std::shared_ptr<Disk>& src_disk, std::shared_ptr<Disk>& disk);
 
-bool ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normalise)
+void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normalise)
 {
     MemFile file;
     bool f = false;
@@ -39,8 +38,7 @@ bool ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normal
     // Next try regular files (and archives)
     if (!f)
     {
-        if (!file.open(path, !opt_nozip))
-            return false;
+        file.open(path, !opt_nozip);
 
         // Present the image to all types with read support
         for (auto p = aImageTypes; !f && p->pszType; ++p)
@@ -112,8 +110,6 @@ bool ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normal
         }
     }
 #endif
-
-    return f;
 }
 
 

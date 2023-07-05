@@ -225,41 +225,39 @@ bool ViewImage(const std::string& path, Range range)
     util::cout << "[" << path << "]\n";
 
     auto disk = std::make_shared<Disk>();
-    if (ReadImage(path, disk))
-    {
-        ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
+    ReadImage(path, disk);
+    ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
 
-        range.each([&](const CylHead& cylhead) {
-            auto track = disk->read_track(cylhead * opt_step);
-            NormaliseTrack(cylhead, track);
-            ViewTrack(cylhead, track);
+    range.each([&](const CylHead& cylhead) {
+        auto track = disk->read_track(cylhead * opt_step);
+        NormaliseTrack(cylhead, track);
+        ViewTrack(cylhead, track);
 
-            if (opt_verbose)
+        if (opt_verbose)
+        {
+            auto trackdata = disk->read(cylhead * opt_step);
+            auto bitbuf = trackdata.preferred().bitstream();
+            NormaliseBitstream(bitbuf);
+            auto encoding = (opt_encoding == Encoding::Unknown) ?
+                bitbuf.encoding : opt_encoding;
+
+            switch (encoding)
             {
-                auto trackdata = disk->read(cylhead * opt_step);
-                auto bitbuf = trackdata.preferred().bitstream();
-                NormaliseBitstream(bitbuf);
-                auto encoding = (opt_encoding == Encoding::Unknown) ?
-                    bitbuf.encoding : opt_encoding;
-
-                switch (encoding)
-                {
-                case Encoding::MFM:
-                case Encoding::Amiga:
-                case Encoding::Agat:
-                case Encoding::MX:
-                    ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
-                    break;
-                case Encoding::FM:
-                case Encoding::RX02:
-                    ViewTrack_MFM_FM(Encoding::FM, bitbuf);
-                    break;
-                default:
-                    throw util::exception("unsupported track view encoding");
-                }
+            case Encoding::MFM:
+            case Encoding::Amiga:
+            case Encoding::Agat:
+            case Encoding::MX:
+                ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
+                break;
+            case Encoding::FM:
+            case Encoding::RX02:
+                ViewTrack_MFM_FM(Encoding::FM, bitbuf);
+                break;
+            default:
+                throw util::exception("unsupported track view encoding");
             }
-            }, !opt_normal_disk);
-    }
+        }
+        }, !opt_normal_disk);
 
     return true;
 }
