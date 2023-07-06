@@ -346,7 +346,10 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.fdc = FdcType::WD;
         fmt.datarate = DataRate::_250K;
         fmt.encoding = Encoding::MFM;
+        fmt.cyls = 80;
+        fmt.heads = 2;
         fmt.sectors = 9;
+        fmt.size = 2;
         fmt.gap3 = 40;
         fmt.fill = 0x00;
         break;
