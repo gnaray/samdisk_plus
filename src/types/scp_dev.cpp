@@ -64,6 +64,11 @@ protected:
         return false;
     }
 
+    bool is_constant_disk() const override
+    {
+        return false;
+    }
+
     void save(TrackData& trackdata) override
     {
         auto preferred = trackdata.preferred();

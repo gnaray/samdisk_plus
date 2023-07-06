@@ -64,6 +64,11 @@ protected:
         return false;
     }
 
+    bool is_constant_disk() const override
+    {
+        return false;
+    }
+
 private:
     std::unique_ptr<HDD> m_blockdev;
 };
