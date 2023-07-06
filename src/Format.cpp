@@ -531,7 +531,7 @@ void Format::Validate() const
         throw util::exception("bad geometry");
 }
 
-/*static*/ void Format::Validate(int cyls_, int heads_, int sectors_, int sector_size, int max_sector_size)
+/*static*/ void Format::Validate(int cyls_, int heads_, int sectors_/* = 1*/, int sector_size/* = 512*/, int max_sector_size/* = 0*/)
 {
     if (!TryValidate(cyls_, heads_, sectors_, sector_size, max_sector_size))
         throw util::exception("bad geometry");
@@ -542,12 +542,12 @@ bool Format::TryValidate() const
     return TryValidate(cyls, heads, sectors, sector_size());
 }
 
-/*static*/ bool Format::TryValidate(int cyls_, int heads_, int sectors_, int sector_size, int max_sector_size)
+/*static*/ bool Format::TryValidate(int cyls_, int heads_, int sectors_/* = 1*/, int sector_size/* = 512*/, int max_sector_size/* = 0*/)
 {
-    return cyls_ && cyls_ <= MAX_TRACKS &&
-        heads_ && heads_ <= MAX_SIDES &&
-        sectors_ && sectors_ <= MAX_SECTORS &&
-        (!max_sector_size || sector_size <= max_sector_size);
+    return cyls_ > 0 && cyls_ <= MAX_TRACKS &&
+        heads_ > 0 && heads_ <= MAX_SIDES &&
+        sectors_ > 0 && sectors_ <= MAX_SECTORS &&
+        (max_sector_size == 0 || sector_size <= max_sector_size);
 }
 
 void Format::Override(bool full_control/*=false*/)
