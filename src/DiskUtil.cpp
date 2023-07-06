@@ -950,6 +950,7 @@ bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
             }
             else
             {
+                std::copy(MISSING_SECTOR_SIGN.begin(), MISSING_SECTOR_SIGN.end(), buf.begin()); // Signing sector with MISS.
                 missing++;
             }
 
