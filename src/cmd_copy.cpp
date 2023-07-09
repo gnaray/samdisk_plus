@@ -1,5 +1,6 @@
 // Copy command
 
+#include "Interval.h"
 #include "Options.h"
 #include "DiskUtil.h"
 #include "Image.h"
@@ -32,23 +33,109 @@ static auto& opt_step = getOpt<int>("step");
 static auto& opt_track_retries = getOpt<int>("track_retries");
 static auto& opt_verbose = getOpt<int>("verbose");
 
-void OpenReadImage(const std::string& path, std::shared_ptr<Disk>& disk)
+/*
+ * Transfer means copy, merge or repair.
+ */
+int TransferTrack(std::shared_ptr<Disk>& src_disk,
+               const CylHead& cylhead, std::shared_ptr<Disk>& dst_disk,
+               const int disk_round, ScanContext& context, DeviceReadingPolicy& deviceReadingPolicy)
 {
-    disk.reset();
-    disk = std::make_shared<Disk>();
-    // Read the source image
-    ReadImage(path, disk);
+    // In minimal reading mode, skip unused tracks
+    if (opt_minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
+        return 0;
 
-    // Limit to our maximum geometry, and default to copy everything present in the source
-    ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
+    const bool skip_stable_sectors = opt_skip_stable_sectors && !src_disk->is_constant_disk() ? true : false;
 
-    if (opt_minimal)
-        TrackUsedInit(*disk);
+    int repair_track_changed_amount_per_track = 0;
+    // Do not retry track when
+    // 1) not repairing because it overwrites previous data, wasting of time.
+    // 2) disk is constant because the constant disk image always provides the same data, wasting of time.
+    const int track_retries = opt_repair && !src_disk->is_constant_disk() && opt_track_retries >= 0 ? opt_track_retries : 0;
+    for (auto track_round = 0; track_round <= track_retries; track_round++)
+    {
+        bool is_track_retried = track_round > 0; // First reading is not retry.
+        if (opt_verbose)
+            Message(msgInfo, "%seading track in %uth round", (is_track_retried ? "Rer" : "R"), disk_round);
+
+        Track dst_track;
+        Message(msgStatus, "Reading %s", CH(cylhead.cyl, cylhead.head));
+        if (opt_repair) // Read dst track early so we can check if it has bad sectors.
+        {
+            dst_track = dst_disk->read_track(cylhead);
+            NormaliseTrack(cylhead, dst_track);
+
+            // If repair mode and user specified skip_stable_sectors then skip processing those.
+            if (skip_stable_sectors)
+            {
+                deviceReadingPolicy.SetSkippableSectors(dst_track.stable_sectors());
+                // If repair mode and user specified skip_stable_sectors and no looking for possible sectors
+                // then do not repair tracks which already contain all wanted sector ids (not empty) (thus those are skippable).
+                if (!deviceReadingPolicy.LookForPossibleSectors() && !deviceReadingPolicy.WantedSectorHeaderIds().IsEmpty()
+                        && deviceReadingPolicy.SelectWantedSectorHeaderIdsUnskippable().empty())
+                    return 0;
+                if (opt_verbose && !deviceReadingPolicy.SkippableSectors().empty()) {
+                    Message(msgInfo, "Ignoring already good sectors on %s: %s",
+                        CH(cylhead.cyl, cylhead.head), deviceReadingPolicy.SkippableSectors().SectorIdsToString().c_str());
+                }
+            }
+        }
+
+        TrackData src_data;
+        // https://docs.rs-online.com/41b6/0900766b8001b0a3.pdf, 7.2 Read error
+        // Seeking head forward then backward then forward etc. when track is retried.
+        const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk->cyls() - 1)) : -1;
+        src_data = src_disk->read(cylhead * opt_step, !src_disk->is_constant_disk(), with_head_seek_to, deviceReadingPolicy);
+        auto src_track = src_data.track();
+
+        if (src_data.has_bitstream())
+        {
+            auto bitstream = src_data.bitstream();
+            if (NormaliseBitstream(bitstream))
+            {
+                src_data = TrackData(src_data.cylhead, std::move(bitstream));
+                src_track = src_data.track();
+            }
+        }
+
+        bool changed = NormaliseTrack(cylhead, src_track);
+
+        if (opt_verbose)
+            ScanTrack(cylhead, src_track, context, deviceReadingPolicy.SkippableSectors());
+
+        // Repair or copy?
+        if (opt_repair)
+        {
+            // Repair the target track using the source track.
+            auto repair_track_changed_amount = RepairTrack(cylhead, dst_track, src_track, deviceReadingPolicy.SkippableSectors());
+
+            dst_disk->write(cylhead, std::move(dst_track));
+            // If track retry is automatic and repairing then stop when repair could not improve the dst disk.
+            if (track_retries == DISK_RETRY_AUTO && repair_track_changed_amount == 0)
+                break;
+            repair_track_changed_amount_per_track += repair_track_changed_amount;
+            if (opt_verbose && repair_track_changed_amount_per_track > 0)
+                Message(msgInfo, "Destination disk's track %s was repaired %u times in %uth round",
+                    CH(cylhead.cyl, cylhead.head), repair_track_changed_amount_per_track, disk_round);
+        }
+        else
+        {
+            // If the source track was modified it becomes the only track data.
+            if (changed)
+                dst_disk->write(cylhead, std::move(src_track));
+            else
+            {
+                // Preserve any source data.
+                src_data.cylhead = cylhead;
+                dst_disk->write(std::move(src_data));
+            }
+        }
+    }
+    return repair_track_changed_amount_per_track;
 }
 
 bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 {
-    std::shared_ptr<Disk> src_disk;
+    auto src_disk = std::make_shared<Disk>();
     auto dst_disk = std::make_shared<Disk>();
     ScanContext context;
 
@@ -60,9 +147,18 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         Message(msgInfo, "assuming --encoding=Ace due to .dti output image");
     }
 
-    OpenReadImage(src_path, src_disk);
+    // For merge or repair, read any existing target image, error if that fails.
+    if (opt_merge || opt_repair)
+        ReadImage(dst_path, dst_disk, false);
 
-    const bool skip_stable_sectors = opt_skip_stable_sectors && !src_disk->is_constant_disk() ? true : false;
+    // Read the source image
+    ReadImage(src_path, src_disk);
+
+    // Limit to our maximum geometry, and default to copy everything present in the source
+    ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, opt_step, src_disk->cyls(), src_disk->heads());
+
+    if (opt_minimal)
+        TrackUsedInit(*src_disk); // Valid only for MGT format.
 
     // tmp dst path in case of merge or repair mode.
     const std::string tmp_dst_path = util::prepend_extension(dst_path, "tmp.");
@@ -71,22 +167,18 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     // 1) merging because it overwrites previous data, wasting of time.
     // 2) disk is constant because the constant disk image always provides the same data, wasting of time.
     const int disk_retries = !opt_merge && !src_disk->is_constant_disk() && opt_disk_retries >= 0 ? opt_disk_retries : 0;
-    bool is_dst_disk_read = false;
     for (auto disk_round = 0; disk_round <= disk_retries; disk_round++)
     {
-        // For merge or repair, read any existing target image in 0th round.
-        // If switched to repair mode then read any existing target image in 1st round.
-        if ((opt_merge || opt_repair) && !is_dst_disk_read)
+        int repair_track_changed_amount_per_disk = 0;
+
         {
-            // Read the image, ignore merge or repair if that fails
-            ReadImage(dst_path, dst_disk, false);
-            is_dst_disk_read = true;
         }
 
         // If repair mode and normal disk then determine normal track size by calculating the average track size.
         int normal_track_size = 0;
         int normal_first_sector_id = opt_base > 0 ? opt_base : 1;
-        if (opt_repair && opt_normal_disk) {
+        if (opt_repair && opt_normal_disk)
+        {
             // If sectors is specified then the normal track size is the sectors plus first sector id 0-based.
             if (opt_sectors > 0)
             {
@@ -97,7 +189,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                 int dst_track_amount = 0;
                 int sum_dst_track_size = 0;
                 opt_range.each([&](const CylHead& cylhead) {
-                    Track dst_track = dst_disk->read_track(cylhead);
+                    auto dst_track = dst_disk->read_track(cylhead);
                     NormaliseTrack(cylhead, dst_track);
                     auto track_normal_probable_size = dst_track.normal_probable_size();
                     if (track_normal_probable_size > 0) {
@@ -110,122 +202,17 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
             }
         }
 
-        int repair_track_changed_amount_per_disk = 0;
+        deviceReadingPolicy.SetWantedSectorHeaderIds(Interval<int>(normal_first_sector_id, normal_track_size, BaseInterval::LeftAndSize));
+        if (!opt_normal_disk)
+            deviceReadingPolicy.SetLookForPossibleSectors(true);
         bool is_disk_retry = disk_round > 0; // First reading is not retry.
         if (opt_verbose)
             Message(msgInfo, "%seading disk in %uth round", (is_disk_retry ? "Rer" : "R"), disk_round);
 
-        // Copy the range of tracks to the target image
-        opt_range.each([&](const CylHead& cylhead) {
-            // In minimal reading mode, skip unused tracks
-            if (opt_minimal && !IsTrackUsed(cylhead.cyl, cylhead.head))
-                return;
-
-            int repair_track_changed_amount_per_track = 0;
-            // Do not retry track when
-            // 1) not repairing because it overwrites previous data, wasting of time.
-            // 2) disk is constant because the constant disk image always provides the same data, wasting of time.
-            const int track_retries = opt_repair && !src_disk->is_constant_disk() && opt_track_retries >= 0 ? opt_track_retries : 0;
-            for (auto track_round = 0; track_round <= track_retries; track_round++)
-            {
-                bool is_track_retried = track_round > 0; // First reading is not retry.
-                if (opt_verbose)
-                    Message(msgInfo, "%seading track in %uth round", (is_track_retried ? "Rer" : "R"), disk_round);
-
-                Track dst_track;
-                Message(msgStatus, "Reading %s", CH(cylhead.cyl, cylhead.head));
-                if (opt_repair) // Read dst track early so we can check if it has bad sectors.
-                {
-                    dst_track = dst_disk->read_track(cylhead);
-                    NormaliseTrack(cylhead, dst_track);
-                }
-
-                DeviceReadingPolicy deviceReadingPolicy;
-                // If repair mode and user specified skip_stable_sectors then skip checking those.
-                if (opt_repair && skip_stable_sectors) // Repair mode => dst track can be checked.
-                {
-                    deviceReadingPolicy.SetSkippableSectors(dst_track.stable_sectors());
-                    // If repair mode and user specified normal-disk then do not repair tracks
-                    // which has track size amount of id sequence at least.
-                    if (opt_normal_disk && normal_track_size > 0
-                        && deviceReadingPolicy.SkippableSectors().HasIdSequence(normal_first_sector_id, normal_track_size - normal_first_sector_id + 1))
-                        return;
-                    if (opt_verbose && !deviceReadingPolicy.SkippableSectors().empty()) {
-                        Message(msgInfo, "Ignoring already good sectors on %s: %s",
-                            CH(cylhead.cyl, cylhead.head), deviceReadingPolicy.SkippableSectors().SectorIdsToString().c_str());
-                    }
-                }
-
-                TrackData src_data;
-                int src_disk_read_i;
-                for (src_disk_read_i = 5; src_disk_read_i > 0; src_disk_read_i--) // Try 5 times, it could be commandline option argument.
-                {
-                    try
-                    {
-                        // https://docs.rs-online.com/41b6/0900766b8001b0a3.pdf, 7.2 Read error
-                        // Seeking head forward then backward then forward etc. when track is retried.
-                        const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk->cyls() - 1)) : -1;
-                        src_data = src_disk->read(cylhead * opt_step, !src_disk->is_constant_disk(), with_head_seek_to, deviceReadingPolicy);
-                        break;
-                    }
-                    catch (util::diskspeedwrong_exception & e)
-                    {
-                        if (!opt_normal_disk)
-                            throw;
-                        util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
-                    }
-                    Message(msgInfo, "If it happens too often then adjusting rpm and rpm-time-tolerance-permille should help.");
-                    if (!OpenReadImage(src_path, src_disk))
-                        throw util::exception("Reopening ", src_path, " failed");
-                }
-                if (src_disk_read_i == 0)
-                    continue;
-                auto src_track = src_data.track();
-
-                if (src_data.has_bitstream())
-                {
-                    auto bitstream = src_data.bitstream();
-                    if (NormaliseBitstream(bitstream))
-                    {
-                        src_data = TrackData(src_data.cylhead, std::move(bitstream));
-                        src_track = src_data.track();
-                    }
-                }
-
-                bool changed = NormaliseTrack(cylhead, src_track);
-
-                if (opt_verbose)
-                    ScanTrack(cylhead, src_track, context, deviceReadingPolicy.SkippableSectors());
-
-                // Repair or copy?
-                if (opt_repair)
-                {
-                    // Repair the target track using the source track.
-                    auto repair_track_changed_amount = RepairTrack(cylhead, dst_track, src_track, deviceReadingPolicy.SkippableSectors());
-
-                    dst_disk->write(cylhead, std::move(dst_track));
-                    // If track retry is automatic and repairing then stop when repair could not improve the dst disk.
-                    if (track_retries == DISK_RETRY_AUTO && repair_track_changed_amount == 0)
-                        break;
-                    repair_track_changed_amount_per_track += repair_track_changed_amount;
-                }
-                else
-                {
-                    // If the source track was modified it becomes the only track data.
-                    if (changed)
-                        dst_disk->write(cylhead, std::move(src_track));
-                    else
-                    {
-                        // Preserve any source data.
-                        src_data.cylhead = cylhead;
-                        dst_disk->write(std::move(src_data));
-                    }
-                }
-            }
-            repair_track_changed_amount_per_disk += repair_track_changed_amount_per_track;
-            if (opt_verbose && repair_track_changed_amount_per_track > 0)
-                Message(msgInfo, "Destination disk's track %s was repaired %u times in %uth round",
-                    CH(cylhead.cyl, cylhead.head), repair_track_changed_amount_per_track, disk_round);
+        // Transfer the range of tracks to the target image (i.e. copy, merge or repair).
+        opt_range.each([&](const CylHead& cylhead)
+        {
+            repair_track_changed_amount_per_disk += TransferTrack(src_disk, cylhead, dst_disk, disk_round, context, deviceReadingPolicy);
         }, !opt_normal_disk);
 
         // Copy any metadata not already present in the target (emplace doesn't replace)
@@ -261,8 +248,7 @@ bool Image2Trinity(const std::string& path, const std::string&/*trinity_path*/) 
     const MGT_DIR* pdir = nullptr;
     std::string name;
 
-    if (!ReadImage(path, disk))
-        return false;
+    ReadImage(path, disk);
 
     // Scanning the first 10 directory sectors should be enough
     for (auto sector = 1; !pdir && sector <= MGT_SECTORS; ++sector)
@@ -464,9 +450,8 @@ bool Boot2Hdd(const std::string& boot_path, const std::string& hdd_path)
 
     if (!hdd || !hdd->Seek(0))
         Error("open");
-    else if (!file.open(boot_path, !opt_nozip))
-        /* already reported */;
-    else if (file.size() != hdd->sector_size)
+    file.open(boot_path, !opt_nozip);
+    if (file.size() != hdd->sector_size)
         throw util::exception("boot sector must match sector size (", hdd->sector_size, " bytes)");
     else
     {

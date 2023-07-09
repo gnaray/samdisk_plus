@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Header.h"
 #include "Sector.h"
 
 class DeviceReadingPolicy
@@ -8,32 +7,35 @@ class DeviceReadingPolicy
 public:
     DeviceReadingPolicy() = default;
 
-    DeviceReadingPolicy(const Headers& fileSystemWantedSectorHeaders)
-        : m_fileSystemWantedSectorHeaders(fileSystemWantedSectorHeaders)
+    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds)
+        : m_wantedSectorHeaderIds(wantedSectorHeaderIds)
     {
     }
 
-    DeviceReadingPolicy(const Headers& fileSystemWantedSectorHeaders, bool lookForPossibleSectors)
-        : m_fileSystemWantedSectorHeaders(fileSystemWantedSectorHeaders), m_lookForPossibleSectors(lookForPossibleSectors)
+    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds, bool lookForPossibleSectors)
+        : m_wantedSectorHeaderIds(wantedSectorHeaderIds), m_lookForPossibleSectors(lookForPossibleSectors)
     {
     }
 
-    DeviceReadingPolicy(const Headers& fileSystemWantedSectorHeaders, const Sectors& skippableSectors, bool lookForPossibleSectors = true)
-        : m_fileSystemWantedSectorHeaders(fileSystemWantedSectorHeaders), m_skippableSectors(skippableSectors), m_lookForPossibleSectors(lookForPossibleSectors)
+    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds, const Sectors& skippableSectors, bool lookForPossibleSectors = true)
+        : m_wantedSectorHeaderIds(wantedSectorHeaderIds), m_skippableSectors(skippableSectors),
+          m_wantedSectorHeaderIdsUnskippableValid(false), m_lookForPossibleSectors(lookForPossibleSectors)
+
     {
     }
 
-    Headers FileSystemWantedSectorHeaders() const
+    const Interval<int>& WantedSectorHeaderIds() const
     {
-        return m_fileSystemWantedSectorHeaders;
+        return m_wantedSectorHeaderIds;
     }
 
-    void SetFileSystemWantedSectorHeaders(const Headers& fileSystemWantedSectorHeaders)
+    void SetWantedSectorHeaderIds(const Interval<int>& wantedSectorHeaderIds)
     {
-        m_fileSystemWantedSectorHeaders = fileSystemWantedSectorHeaders;
+        m_wantedSectorHeaderIds = wantedSectorHeaderIds;
+        m_wantedSectorHeaderIdsUnskippableValid = false;
     }
 
-    Sectors SkippableSectors() const
+    const Sectors& SkippableSectors() const
     {
         return m_skippableSectors;
     }
@@ -41,6 +43,7 @@ public:
     void SetSkippableSectors(const Sectors& skippableSectors)
     {
         m_skippableSectors = skippableSectors;
+        m_wantedSectorHeaderIdsUnskippableValid = false;
     }
 
     bool LookForPossibleSectors() const
@@ -53,14 +56,24 @@ public:
         m_lookForPossibleSectors = lookForPossibleSectors;
     }
 
+    const std::set<int>& SelectWantedSectorHeaderIdsUnskippable()
+    {
+        if (!m_wantedSectorHeaderIdsUnskippableValid)
+        {
+            m_wantedSectorHeaderIdsUnskippable = m_skippableSectors.NotContaining(m_wantedSectorHeaderIds);
+            m_wantedSectorHeaderIdsUnskippableValid = true;
+        }
+        return m_wantedSectorHeaderIdsUnskippable;
+    }
+
     friend std::string to_string(const DeviceReadingPolicy& deviceReadingPolicy, bool onlyRelevantData = true)
     {
         std::ostringstream ss;
         bool writingStarted = false;
-        std::string s = to_string(deviceReadingPolicy.m_fileSystemWantedSectorHeaders, onlyRelevantData);
+        std::string s = to_string(deviceReadingPolicy.m_wantedSectorHeaderIds, onlyRelevantData);
         if (!onlyRelevantData || !s.empty())
         {
-            ss << "Wanted sectors {" << s << "}";
+            ss << "Wanted sector ids {" << s << "}";
             writingStarted = true;
         }
         s = to_string(deviceReadingPolicy.m_skippableSectors, onlyRelevantData);
@@ -76,8 +89,10 @@ public:
     }
 
 protected:
-    Headers m_fileSystemWantedSectorHeaders{};
+    Interval<int> m_wantedSectorHeaderIds{};
     Sectors m_skippableSectors{};
+    std::set<int> m_wantedSectorHeaderIdsUnskippable{}; // Dynamically calculated.
+    bool m_wantedSectorHeaderIdsUnskippableValid = false;
     bool m_lookForPossibleSectors = true;
 };
 
