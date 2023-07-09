@@ -377,6 +377,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.heads = 1;
         fmt.size = 0;
         fmt.encoding = Encoding::FM;
+        break;
 
     case RegularFormat::DO:
         fmt.fdc = FdcType::Apple;
