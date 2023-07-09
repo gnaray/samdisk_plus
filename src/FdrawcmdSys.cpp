@@ -1,6 +1,7 @@
 // fdrawcmd.sys device
 
 #include "FdrawcmdSys.h"
+#include "win32_error.h"
 
 #ifdef HAVE_FDRAWCMD_H
 
@@ -95,7 +96,7 @@ util::Version& FdrawcmdSys::GetVersion()
 {
     if (m_driver_version.value == 0)
         if (!GetVersion(m_driver_version))
-            throw util::exception("GetVersion error in fdrawcmd.sys");
+            throw win32_error(GetLastError_MP(), "GetVersion");
     return m_driver_version;
 }
 
