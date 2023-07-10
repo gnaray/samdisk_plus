@@ -43,7 +43,7 @@ struct OPTIONS
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
     int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
     int track_retries = -1, disk_retries = -1;
-    int stability_level = -1, rpm_time_tolerance_permille = 10, byte_tolerance_of_time = Track::COMPARE_TOLERANCE_BYTES;
+    int stability_level = -1, byte_tolerance_of_time = Track::COMPARE_TOLERANCE_BYTES;
 
     Encoding encoding{ Encoding::Unknown };
     DataRate datarate{ DataRate::Unknown };
@@ -133,7 +133,6 @@ int& getOpt(const char* key)
         {"resize", Options::opt.resize},
         {"retries", Options::opt.retries},
         {"rpm", Options::opt.rpm},
-        {"rpm_time_tolerance_permille", Options::opt.rpm_time_tolerance_permille},
         {"scale", Options::opt.scale},
         {"size", Options::opt.size},
         {"skew", Options::opt.skew},
@@ -370,7 +369,7 @@ enum {
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
     OPT_TRACK_RETRIES, OPT_DISK_RETRIES, OPT_NORMAL_DISK,
     OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL,
-    OPT_RPM_TIME_TOLERANCE_PERMILLE, OPT_BYTE_TOLERANCE_OF_TIME
+    OPT_BYTE_TOLERANCE_OF_TIME
 };
 
 static struct option long_options[] =
@@ -483,7 +482,6 @@ static struct option long_options[] =
     { "skip-stable-sectors",no_argument, nullptr, OPT_SKIP_STABLE_SECTORS },      // undocumented. in repair mode skip those sectors which are already rescued in destination.
     { "track-retries",    required_argument, nullptr, OPT_TRACK_RETRIES }, // undocumented. Amount od track retries. Each retry move the floppy drive head a bit.
     { "disk-retries",     required_argument, nullptr, OPT_DISK_RETRIES },  // undocumented. Amount of disk retries. If auto then do it while data improved.
-    { "rpm-time-tolerance-permille", required_argument, nullptr, OPT_RPM_TIME_TOLERANCE_PERMILLE},
     { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME},
 
     { nullptr, 0, nullptr, 0 }
@@ -729,14 +727,6 @@ bool ParseCommandLine(int argc_, char* argv_[])
 
         case OPT_SKIP_STABLE_SECTORS:
             Options::opt.skip_stable_sectors = true;
-            break;
-
-        case OPT_RPM_TIME_TOLERANCE_PERMILLE:
-            // This parameter is used for not allowing too slow or too fast disk.
-            // Instead of tolerating RPM, its reciprocal is tolerated which is time (MPR). See also OPT_RPM.
-            Options::opt.rpm_time_tolerance_permille = util::str_value<int>(optarg);
-            if (Options::opt.rpm_time_tolerance_permille < 0 || Options::opt.rpm_time_tolerance_permille > 250)
-                throw util::exception("invalid rpm-time-tolerance-permille '", optarg, "', expected between 0 and 250 inclusive");
             break;
 
         case OPT_BYTE_TOLERANCE_OF_TIME:
