@@ -5,7 +5,7 @@
 #include "Disk.h"
 #include "MemFile.h"
 #include "bpb.h"
-#include "Fat12Filesystem.h"
+#include "filesystems/Fat12FileSystem.h"
 #include "types/raw.h"
 #include "DiskUtil.h"
 

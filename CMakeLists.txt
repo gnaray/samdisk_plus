@@ -11,9 +11,9 @@ if (CMAKE_TOOLCHAIN_FILE)
   include(${CMAKE_TOOLCHAIN_FILE})
 endif()
 
-file(GLOB CXXSRC src/*.cpp src/types/*.cpp)
+file(GLOB CXXSRC src/*.cpp src/types/*.cpp src/filesystems/*.cpp)
 file(GLOB CSRC src/*.c)
-file(GLOB CXXH include/*.h include/types/*.h)
+file(GLOB CXXH include/*.h include/types/*.h include/filesystems/*.h)
 
 add_executable(${PROJECT_NAME} ${CXXSRC} ${CSRC} ${CXXH})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
