@@ -144,8 +144,8 @@ bool ReadSCL(MemFile& file, std::shared_ptr<Disk>& disk)
     if (sum != sum_check)
         Message(msgWarning, "file checksum does not match contents");
 
-    disk->fmt = fmt;
-    disk->strType = "SCL";
+    disk->fmt() = fmt;
+    disk->strType() = "SCL";
 
     return true;
 }

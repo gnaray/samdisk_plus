@@ -37,11 +37,11 @@ bool ReadQDOS(MemFile& file, std::shared_ptr<Disk>& disk)
         Message(msgWarning, "image file isn't expected size (%d)", fmt.disk_size());
 
     auto label = util::trim(std::string(qh.label, sizeof(qh.label)));
-    disk->metadata["label"] = label;
-    disk->metadata["type"] = std::string(qh.signature, sizeof(qh.signature));
+    disk->metadata()["label"] = label;
+    disk->metadata()["type"] = std::string(qh.signature, sizeof(qh.signature));
 
     disk->format(fmt, file.data());
-    disk->strType = "QDOS (Sinclair QL)";
+    disk->strType() = "QDOS (Sinclair QL)";
     return true;
 }
 

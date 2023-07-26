@@ -151,7 +151,7 @@ bool ReadFdrawcmdSysAB(const std::string& path, std::shared_ptr<Disk>& disk)
 
     auto fdrawcmd_dev_disk = std::make_shared<FdrawSysDevABDisk>(std::move(fdrawcmd));
     fdrawcmd_dev_disk->extend(CylHead(83 - 1, 2 - 1));
-    fdrawcmd_dev_disk->strType = "fdrawcmd.sys";
+    fdrawcmd_dev_disk->strType() = "fdrawcmd.sys";
     disk = fdrawcmd_dev_disk;
 
     return true;

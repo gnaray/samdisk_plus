@@ -40,7 +40,7 @@ bool ReadMGT(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(Format(RegularFormat::MGT), file.data(), img);
-    disk->strType = img ? "IMG" : "MGT";
+    disk->strType() = img ? "IMG" : "MGT";
 
     return true;
 }

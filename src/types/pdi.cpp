@@ -63,7 +63,7 @@ bool ReadPDI(MemFile& file, std::shared_ptr<Disk>& disk)
         throw util::exception("unrecognised uncompressed size (", data.size(), ")");
 
     disk->format(fmt, data);
-    disk->strType = "PDI";
+    disk->strType() = "PDI";
 
     return true;
 }

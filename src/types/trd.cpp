@@ -89,7 +89,7 @@ bool ReadTRD(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "TRD";
+    disk->strType() = "TRD";
 
     return true;
 }

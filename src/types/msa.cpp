@@ -132,8 +132,8 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
         }
     }
 
-    disk->fmt = fmt;
-    disk->strType = "MSA";
+    disk->fmt() = fmt;
+    disk->strType() = "MSA";
 
     return true;
 }

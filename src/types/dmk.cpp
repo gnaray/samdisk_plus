@@ -193,8 +193,8 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
         }
     }
 
-    disk->metadata["protect"] = dh.protect ? "read-only" : "read-write";
+    disk->metadata()["protect"] = dh.protect ? "read-only" : "read-write";
 
-    disk->strType = "DMK";
+    disk->strType() = "DMK";
     return true;
 }

@@ -104,12 +104,12 @@ bool ReadWOZ(MemFile& file, std::shared_ptr<Disk>& disk)
             if (!file.read(&info, sizeof(info)))
                 throw util::exception("short file reading info");
 
-            disk->metadata["disk_type"] = (info.disk_type == 1) ? "5.25\"" :
+            disk->metadata()["disk_type"] = (info.disk_type == 1) ? "5.25\"" :
                 (info.disk_type == 2) ? "3.5\"" : std::to_string(info.disk_type);
-            disk->metadata["read_only"] = info.write_protect ? "yes" : "no";
-            disk->metadata["synchronised"] = info.synchronised ? "yes" : "no";
-            disk->metadata["cleaned"] = info.cleaned ? "yes" : "no";
-            disk->metadata["creator"] =
+            disk->metadata()["read_only"] = info.write_protect ? "yes" : "no";
+            disk->metadata()["synchronised"] = info.synchronised ? "yes" : "no";
+            disk->metadata()["cleaned"] = info.cleaned ? "yes" : "no";
+            disk->metadata()["creator"] =
                 util::trim(std::string(info.creator, sizeof(info.creator)));
             break;
         }
@@ -168,7 +168,7 @@ bool ReadWOZ(MemFile& file, std::shared_ptr<Disk>& disk)
             {
                 auto columns = util::split(row, '\t');
                 if (columns.size() == 2)
-                    disk->metadata[columns[0]] = columns[1];
+                    disk->metadata()[columns[0]] = columns[1];
             }
             break;
         }
@@ -185,6 +185,6 @@ bool ReadWOZ(MemFile& file, std::shared_ptr<Disk>& disk)
         file.seek(next_pos);
     }
 
-    disk->strType = "WOZ";
+    disk->strType() = "WOZ";
     return true;
 }

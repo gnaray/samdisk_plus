@@ -34,9 +34,9 @@ bool ReadD2M(MemFile& file, std::shared_ptr<Disk>& disk)
     file.rewind();
     std::swap(fmt.head0, fmt.head1);
     disk->format(fmt, file.data());
-    std::swap(disk->fmt.head0, disk->fmt.head1);
+    std::swap(disk->fmt().head0, disk->fmt().head1);
     disk->flip_sides();
-    disk->strType = "D2M";
+    disk->strType() = "D2M";
 
     return true;
 }

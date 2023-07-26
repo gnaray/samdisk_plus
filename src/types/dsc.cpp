@@ -113,6 +113,6 @@ bool ReadDSC(MemFile& file, std::shared_ptr<Disk>& disk)
         disk->write(cylhead, std::move(track));
     }
 
-    disk->strType = "DSC";
+    disk->strType() = "DSC";
     return true;
 }

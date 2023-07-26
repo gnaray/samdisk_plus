@@ -226,41 +226,41 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
         if (file.seek(footer_offset) && file.read(&ff, sizeof(ff)) &&
             std::string(ff.sig, sizeof(ff.sig)) == "FPCS")
         {
-            scp_disk->metadata["manufacturer"] = FooterString(file, ff.manufacturer_offset);
-            scp_disk->metadata["model"] = FooterString(file, ff.model_offset);
-            scp_disk->metadata["serial"] = FooterString(file, ff.serial_offset);
-            scp_disk->metadata["creator"] = FooterString(file, ff.creator_offset);
-            scp_disk->metadata["application"] = FooterString(file, ff.application_offset);
-            scp_disk->metadata["comment"] = FooterString(file, ff.comments_offset);
+            scp_disk->metadata()["manufacturer"] = FooterString(file, ff.manufacturer_offset);
+            scp_disk->metadata()["model"] = FooterString(file, ff.model_offset);
+            scp_disk->metadata()["serial"] = FooterString(file, ff.serial_offset);
+            scp_disk->metadata()["creator"] = FooterString(file, ff.creator_offset);
+            scp_disk->metadata()["application"] = FooterString(file, ff.application_offset);
+            scp_disk->metadata()["comment"] = FooterString(file, ff.comments_offset);
 
-            scp_disk->metadata["app_version"] = FooterVersion(ff.application_version);
-            scp_disk->metadata["hw_version"] = FooterVersion(ff.hardware_version);
-            scp_disk->metadata["fw_version"] = FooterVersion(ff.firmware_version);
-            scp_disk->metadata["scp_version"] = FooterVersion(ff.format_revision);
+            scp_disk->metadata()["app_version"] = FooterVersion(ff.application_version);
+            scp_disk->metadata()["hw_version"] = FooterVersion(ff.hardware_version);
+            scp_disk->metadata()["fw_version"] = FooterVersion(ff.firmware_version);
+            scp_disk->metadata()["scp_version"] = FooterVersion(ff.format_revision);
 
-            scp_disk->metadata["created"] = FooterTime(ff.creation_time);
+            scp_disk->metadata()["created"] = FooterTime(ff.creation_time);
             if (ff.modification_time != ff.creation_time)
-                scp_disk->metadata["modified"] = FooterTime(ff.modification_time);
+                scp_disk->metadata()["modified"] = FooterTime(ff.modification_time);
         }
     }
     else
     {
-        scp_disk->metadata["app_version"] = FooterVersion(fh.revision);
-        scp_disk->metadata["application"] = "SuperCard Pro software";
+        scp_disk->metadata()["app_version"] = FooterVersion(fh.revision);
+        scp_disk->metadata()["application"] = "SuperCard Pro software";
 
         std::stringstream ss;
         for (uint8_t b; file.read(&b, sizeof(b)) && std::isprint(b); )
             ss << static_cast<char>(b);
-        scp_disk->metadata["created"] = ss.str();
+        scp_disk->metadata()["created"] = ss.str();
     }
 
-    scp_disk->metadata["index"] = (fh.flags & FLAG_INDEX) ? "synchronised" : "unsynchronised";
-    scp_disk->metadata["tpi"] = (fh.flags & FLAG_TPI) ? "96 tpi" : "48 tpi";
-    scp_disk->metadata["rpm"] = (fh.flags & FLAG_RPM) ? "360 rpm" : "300 rpm";
-    scp_disk->metadata["quality"] = (fh.flags & FLAG_TYPE) ? "normalised" : "preservation";
-    scp_disk->metadata["mode"] = (fh.flags & FLAG_MODE) ? "read/write" : "read-only";
+    scp_disk->metadata()["index"] = (fh.flags & FLAG_INDEX) ? "synchronised" : "unsynchronised";
+    scp_disk->metadata()["tpi"] = (fh.flags & FLAG_TPI) ? "96 tpi" : "48 tpi";
+    scp_disk->metadata()["rpm"] = (fh.flags & FLAG_RPM) ? "360 rpm" : "300 rpm";
+    scp_disk->metadata()["quality"] = (fh.flags & FLAG_TYPE) ? "normalised" : "preservation";
+    scp_disk->metadata()["mode"] = (fh.flags & FLAG_MODE) ? "read/write" : "read-only";
 
-    scp_disk->strType = "SCP";
+    scp_disk->strType() = "SCP";
     disk = scp_disk;
 
     return true;

@@ -42,7 +42,7 @@ bool ReadD80(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "D80";
+    disk->strType() = "D80";
 
     return true;
 }

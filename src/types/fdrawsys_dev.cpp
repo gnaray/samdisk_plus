@@ -108,7 +108,7 @@ void FdrawSysDevDisk::SetMetadata(const std::string& path)
             nullptr, 0, &dg, sizeof(dg), &dwRet, nullptr) && dwRet > sizeof(DISK_GEOMETRY))
         {
             auto count = dwRet / sizeof(dg[0]);
-            metadata["bios_type"] = to_string(dg[count - 1].MediaType);
+            metadata()["bios_type"] = to_string(dg[count - 1].MediaType);
         }
     }
 
@@ -130,8 +130,8 @@ void FdrawSysDevDisk::SetMetadata(const std::string& path)
             ss << data_rates[i];
         }
 
-        metadata["fdc_type"] = (info->ControllerType < fdc_types.size()) ? fdc_types[info->ControllerType] : "???";
-        metadata["data_rates"] = ss.str();
+        metadata()["fdc_type"] = (info->ControllerType < fdc_types.size()) ? fdc_types[info->ControllerType] : "???";
+        metadata()["data_rates"] = ss.str();
     }
 }
 
@@ -498,7 +498,7 @@ bool ReadFdrawcmdSys(const std::string& path, std::shared_ptr<Disk>& disk)
     auto fdrawcmd_dev_disk = std::make_shared<FdrawSysDevDisk>(path, std::move(fdrawcmd));
     fdrawcmd_dev_disk->extend(CylHead(83 - 1, 2 - 1));
 
-    fdrawcmd_dev_disk->strType = "fdrawcmd.sys";
+    fdrawcmd_dev_disk->strType() = "fdrawcmd.sys";
     disk = fdrawcmd_dev_disk;
 
     return true;

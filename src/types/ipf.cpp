@@ -236,10 +236,10 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
     CAPSRemImage(id);
     CAPSExit();
 
-    disk->metadata["library"] = util::fmt("%lu.%lu", vi.release, vi.revision);
+    disk->metadata()["library"] = util::fmt("%lu.%lu", vi.release, vi.revision);
 
     if (cii.release != 0)
-        disk->metadata["release"] = util::fmt("%lu", cii.release);
+        disk->metadata()["release"] = util::fmt("%lu", cii.release);
 
     if (cii.platform[0] != ciipNA)
     {
@@ -252,7 +252,7 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
                 platforms += CAPSGetPlatformName(cii.platform[i]);
             }
         }
-        disk->metadata["platform"] = platforms;
+        disk->metadata()["platform"] = platforms;
     }
 
     // Shrink to just head 0 if all tracks on head 1 are unformatted
@@ -261,11 +261,11 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
 
     switch (image_type)
     {
-    case citIPF:        disk->strType = "IPF"; break;
-    case citCTRaw:      disk->strType = "CTRaw"; break;
-    case citKFStream:   disk->strType = "KFStream"; break;
-    case citDraft:      disk->strType = "Draft"; break;
-    default:            disk->strType = "CAPSImage"; break;
+    case citIPF:        disk->strType() = "IPF"; break;
+    case citCTRaw:      disk->strType() = "CTRaw"; break;
+    case citKFStream:   disk->strType() = "KFStream"; break;
+    case citDraft:      disk->strType() = "Draft"; break;
+    default:            disk->strType() = "CAPSImage"; break;
     }
 
     return true;

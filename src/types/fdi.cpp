@@ -181,10 +181,10 @@ bool ReadFDI(MemFile& file, std::shared_ptr<Disk>& disk)
 
         // To avoid confusion, don't store the default TDCVT comment
         if (str.substr(0, 29) != "\r\n'This file created by TDCVT" && str.substr(0, 3) != "FDI")
-            disk->metadata["comment"] = str;
+            disk->metadata()["comment"] = str;
     }
 
-    disk->strType = "FDI";
+    disk->strType() = "FDI";
     return true;
 }
 

@@ -196,7 +196,7 @@ bool ReadSAP(MemFile& file, std::shared_ptr<Disk>& disk)
     if (is_regular)
         disk->format(fmt, disk_data, fmt.cyls_first);
 
-    disk->strType = "SAP";
+    disk->strType() = "SAP";
     return true;
 }
 

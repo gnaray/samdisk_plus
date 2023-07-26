@@ -28,7 +28,7 @@ bool CreateImage(const std::string& path, Range range)
 
     // Set the disk label, if supplied
     if (!opt_label.empty())
-        disk->metadata["label"] = opt_label;
+        disk->metadata()["label"] = opt_label;
 
     // Extend or format the disk
     if (opt_noformat)

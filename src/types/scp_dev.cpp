@@ -150,10 +150,10 @@ bool ReadSuperCardPro(const std::string& path, std::shared_ptr<Disk>& disk)
     auto scp_dev_disk = std::make_shared<SCPDevDisk>(std::move(supercardpro));
     scp_dev_disk->extend(CylHead(83 - 1, 2 - 1));
 
-    scp_dev_disk->metadata["hw_version"] = VersionString(hw_version);
-    scp_dev_disk->metadata["fw_version"] = VersionString(fw_version);
+    scp_dev_disk->metadata()["hw_version"] = VersionString(hw_version);
+    scp_dev_disk->metadata()["fw_version"] = VersionString(fw_version);
 
-    scp_dev_disk->strType = "SuperCard Pro";
+    scp_dev_disk->strType() = "SuperCard Pro";
     disk = scp_dev_disk;
 
     return true;

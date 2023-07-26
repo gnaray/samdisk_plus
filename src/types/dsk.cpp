@@ -248,7 +248,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
     else if (cyls > MAX_TRACKS || cyls > max_cyls)
         throw util::exception("invalid cylinder count (", cyls, ")");
 
-    disk->metadata["creator"] = util::trim(std::string(peh->szCreator, sizeof(peh->szCreator)));
+    disk->metadata()["creator"] = util::trim(std::string(peh->szCreator, sizeof(peh->szCreator)));
 
     MEMORY mem(edsk_version >= 2 ? RDSK_MAX_TRACK_SIZE : EDSK_MAX_TRACK_SIZE);
     bool fWarned6K = false;
@@ -432,7 +432,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
 
                     // CPDRead sometimes stores too much data. If we find a data size that is an exact multiple on an
                     // error free sector, trim it down to the natural size.
-                    if (opt_fix != 0 && disk->metadata["creator"].substr(0, 3) == "CPD" &&
+                    if (opt_fix != 0 && disk->metadata()["creator"].substr(0, 3) == "CPD" &&
                         data_size > native_size && !data_crc_error && !(data_size % native_size))
                     {
                         // Example: Discology +3.dsk (SDP)
@@ -597,7 +597,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
         }
     }
 
-    disk->strType = edsk_version >= 2 ? "RDSK" : "EDSK";
+    disk->strType() = edsk_version >= 2 ? "RDSK" : "EDSK";
     return true;
 }
 

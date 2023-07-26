@@ -102,7 +102,7 @@ bool ReadSBT(MemFile& file, std::shared_ptr<Disk>& disk)
     file.open(mem, mem.size, "file.sbt");
 
     disk->format(RegularFormat::MGT, file.data(), true);
-    disk->strType = "SBT";
+    disk->strType() = "SBT";
 
     return true;
 }

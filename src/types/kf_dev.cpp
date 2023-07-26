@@ -82,9 +82,9 @@ bool ReadKryoFlux(const std::string& path, std::shared_ptr<Disk>& disk)
     auto kf_dev_disk = std::make_shared<KFDevDisk>(std::move(kryoflux));
     kf_dev_disk->extend(CylHead(83 - 1, 2 - 1));
 
-    kf_dev_disk->strType = "KryoFlux";
-    kf_dev_disk->metadata["info1"] = info1;
-    kf_dev_disk->metadata["info2"] = info2;
+    kf_dev_disk->strType() = "KryoFlux";
+    kf_dev_disk->metadata()["info1"] = info1;
+    kf_dev_disk->metadata()["info2"] = info2;
     disk = kf_dev_disk;
 
     return true;

@@ -78,7 +78,7 @@ bool ReadSTREAM(MemFile& file, std::shared_ptr<Disk>& disk)
     if (missing_total)
         Message(msgWarning, "%d missing or invalid stream track%s", missing_total, (missing_total == 1) ? "" : "s");
 
-    disk->strType = "STREAM";
+    disk->strType() = "STREAM";
 
     return true;
 }

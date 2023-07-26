@@ -122,7 +122,7 @@ bool ReadCQM(MemFile& file, std::shared_ptr<Disk>& disk)
         std::vector<char> comment(comment_len);
         if (!file.read(comment))
             throw util::exception("short file reading comment");
-        disk->metadata["comment"] = util::trim(std::string(comment.data(), comment.size()));
+        disk->metadata()["comment"] = util::trim(std::string(comment.data(), comment.size()));
     }
 
     if (std::accumulate(std::begin(dh.unknown), std::end(dh.unknown), 0) ||
@@ -166,31 +166,31 @@ bool ReadCQM(MemFile& file, std::shared_ptr<Disk>& disk)
 
     auto desc = util::trim(std::string(dh.description, sizeof(dh.description)));
     if (!desc.empty())
-        disk->metadata["description"] = desc;
+        disk->metadata()["description"] = desc;
 
     auto label = util::trim(std::string(dh.vol_label, sizeof(dh.vol_label)));
     if (!label.empty() && label != "** NONE **")
-        disk->metadata["label"] = label;
+        disk->metadata()["label"] = label;
 
     if (dh.cyls != dh.used_cyls)
-        disk->metadata["used_cyls"] = std::to_string(dh.used_cyls);
+        disk->metadata()["used_cyls"] = std::to_string(dh.used_cyls);
 
     static const char* read_modes[] = { "DOS", "blind", "HFS" };
     if (dh.read_mode < 3)
-        disk->metadata["read_mode"] = read_modes[dh.read_mode];
+        disk->metadata()["read_mode"] = read_modes[dh.read_mode];
 
     static const char* drv_types[] = {
         "5.25\" 360KB", "5.25\" 1.2MB", "3.5\" 720KB", "3.5\" 1.44MB", "8\"", "3.5\" 2.88MB" };
     if (dh.drv_type >= 1 && dh.drv_type <= 6)
-        disk->metadata["drive"] = drv_types[dh.drv_type - 1];
+        disk->metadata()["drive"] = drv_types[dh.drv_type - 1];
 
     auto dos_date = util::le_value(dh.dos_date);
     auto dos_time = util::le_value(dh.dos_time);
-    disk->metadata["created"] = FormatTime(dos_date, dos_time);
+    disk->metadata()["created"] = FormatTime(dos_date, dos_time);
 
     data.resize(fmt.disk_size(), fmt.fill);
     disk->format(fmt, data);
-    disk->strType = "CQM";
+    disk->strType() = "CQM";
 
     return true;
 }

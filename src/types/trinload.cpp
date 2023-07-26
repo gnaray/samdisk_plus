@@ -57,10 +57,10 @@ bool ReadTrinLoad(const std::string& path, std::shared_ptr<Disk>& disk)
     auto ip_addr_str = trinity->devices()[0];
     auto trinload_disk = std::make_shared<TrinLoadDisk>(std::move(trinity));
 
-    trinload_disk->fmt = Format(RegularFormat::MGT);
-    trinload_disk->extend(CylHead(trinload_disk->fmt.cyls - 1, trinload_disk->fmt.heads - 1));
-    trinload_disk->metadata["address"] = ip_addr_str;
-    trinload_disk->strType = "TrinLoad";
+    trinload_disk->fmt() = RegularFormat::MGT;
+    trinload_disk->extend(CylHead(trinload_disk->fmt().cyls - 1, trinload_disk->fmt().heads - 1));
+    trinload_disk->metadata()["address"] = ip_addr_str;
+    trinload_disk->strType() = "TrinLoad";
     disk = trinload_disk;
 
     return true;

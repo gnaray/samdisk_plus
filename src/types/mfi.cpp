@@ -168,10 +168,10 @@ bool ReadMFI(MemFile& file, std::shared_ptr<Disk>& disk)
         }
     }
 
-    mfi_disk->metadata["form_factor"] = util::fmt("%08X", fh.form_factor);
-    mfi_disk->metadata["variant"] = util::fmt("%08X", fh.variant);
+    mfi_disk->metadata()["form_factor"] = util::fmt("%08X", fh.form_factor);
+    mfi_disk->metadata()["variant"] = util::fmt("%08X", fh.variant);
 
-    mfi_disk->strType = "MFI";
+    mfi_disk->strType() = "MFI";
     disk = mfi_disk;
 
     return true;

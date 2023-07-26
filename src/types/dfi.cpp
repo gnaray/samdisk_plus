@@ -136,7 +136,7 @@ bool ReadDFI(MemFile& file, std::shared_ptr<Disk>& disk)
         dfi_disk->add_track_data(cylhead, std::move(track_data));
     }
 
-    dfi_disk->strType = "DFI";
+    dfi_disk->strType() = "DFI";
     disk = dfi_disk;
 
     return true;

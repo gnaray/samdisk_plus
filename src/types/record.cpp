@@ -103,7 +103,7 @@ bool ReadRecord(HDD& hdd, int record, std::shared_ptr<Disk>& disk)
         }
     }
 #endif
-    disk->strType = "BDOS Record";
+    disk->strType() = "BDOS Record";
     return true;
 }
 

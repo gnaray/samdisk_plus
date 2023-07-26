@@ -15,7 +15,7 @@ bool Read2D(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "2D";
+    disk->strType() = "2D";
 
     return true;
 }

@@ -18,7 +18,7 @@ bool ReadDO(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "DO";
+    disk->strType() = "DO";
 
     return true;
 }

@@ -138,11 +138,11 @@ bool ReadA2R(MemFile& file, std::shared_ptr<Disk>& disk)
             if (!file.read(&info, sizeof(info)))
                 throw util::exception("short file reading info");
 
-            a2r_disk->metadata["disk_type"] = (info.disk_type == 1) ? "5.25\"" :
+            a2r_disk->metadata()["disk_type"] = (info.disk_type == 1) ? "5.25\"" :
                 (info.disk_type == 2) ? "3.5\"" : std::to_string(info.disk_type);
-            a2r_disk->metadata["read_only"] = info.write_protect ? "yes" : "no";
-            a2r_disk->metadata["synchronised"] = info.synchronised ? "yes" : "no";
-            a2r_disk->metadata["creator"] =
+            a2r_disk->metadata()["read_only"] = info.write_protect ? "yes" : "no";
+            a2r_disk->metadata()["synchronised"] = info.synchronised ? "yes" : "no";
+            a2r_disk->metadata()["creator"] =
                 util::trim(std::string(info.creator, sizeof(info.creator)));
             break;
         }
@@ -189,7 +189,7 @@ bool ReadA2R(MemFile& file, std::shared_ptr<Disk>& disk)
             {
                 auto columns = util::split(row, '\t');
                 if (columns.size() == 2)
-                    a2r_disk->metadata[columns[0]] = columns[1];
+                    a2r_disk->metadata()[columns[0]] = columns[1];
             }
             break;
         }
@@ -206,7 +206,7 @@ bool ReadA2R(MemFile& file, std::shared_ptr<Disk>& disk)
         file.seek(next_pos);
     }
 
-    a2r_disk->strType = "A2R";
+    a2r_disk->strType() = "A2R";
     disk = a2r_disk;
 
     return true;

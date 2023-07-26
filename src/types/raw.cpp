@@ -64,7 +64,7 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
     if (file.size() == 737280 && IsFileExt(file.name(), "cpm"))
     {
         fmt = RegularFormat::ProDos;
-        disk->strType = "ProDos";
+        disk->strType() = "ProDos";
     }
     // Warn if the size-to-format conversion is being used unmodified.
     // This makes it more obvious when an unsupported format is matched by size.
@@ -75,7 +75,7 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "RAW";
+    disk->strType() = "RAW";
 
     return true;
 }

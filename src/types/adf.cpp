@@ -53,7 +53,7 @@ bool ReadADF(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(file.size() == fmtDD.disk_size() ? fmtDD : fmtHD, file.data(), true);
-    disk->strType = "ADF";
+    disk->strType() = "ADF";
 
     return true;
 }

@@ -17,7 +17,7 @@ bool ReadCPM(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "Pro-DOS";
+    disk->strType() = "Pro-DOS";
 
     return true;
 }

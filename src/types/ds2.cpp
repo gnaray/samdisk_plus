@@ -43,7 +43,7 @@ bool ReadDS2(MemFile& file, std::shared_ptr<Disk>& disk)
     data.insert(data.end(), file2.data().begin(), file2.data().end());
 
     disk->format(fmt, data, true);
-    disk->strType = "DS2";
+    disk->strType() = "DS2";
 
     return true;
 }

@@ -51,9 +51,9 @@ void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normal
         if (f)
         {
             if (file.compression() != Compress::None)
-                disk->metadata["archive"] = to_string(file.compression());
+                disk->metadata()["archive"] = to_string(file.compression());
             if (file.path().rfind(file.name()) + file.name().size() != file.path().size())
-                disk->metadata["filename"] = file.name();
+                disk->metadata()["filename"] = file.name();
         }
     }
 

@@ -96,7 +96,7 @@ bool ReadD88(MemFile& file, std::shared_ptr<Disk>& disk)
     }
 
     // Store the disk type as meta-data
-    disk->metadata["d88 disk type"] = util::fmt("%02X", dh.bDiskType);
+    disk->metadata()["d88 disk type"] = util::fmt("%02X", dh.bDiskType);
 
     // Assume full cyl count until we discover otherwise. Determine the head count from the disk type.
     auto cyls = D88_CYLS_2DD2HD;
@@ -104,7 +104,7 @@ bool ReadD88(MemFile& file, std::shared_ptr<Disk>& disk)
 
     // Copy any comment (we've already checked for a null-terminator above)
     if (dh.szTitle[0])
-        disk->metadata["label"] = dh.szTitle;
+        disk->metadata()["label"] = dh.szTitle;
 
     auto last_offset = 0;
     bool stop = false;
@@ -204,7 +204,7 @@ bool ReadD88(MemFile& file, std::shared_ptr<Disk>& disk)
         }
     }
 
-    disk->strType = "D88";
+    disk->strType() = "D88";
     return true;
 }
 
@@ -236,8 +236,8 @@ bool WriteD88(FILE* f_, std::shared_ptr<Disk>& disk)
         (cyls <= D88_CYLS_2D) ? D88_TYPE_2D : D88_TYPE_2DD;
 
     // Preserve any disk label
-    if (disk->metadata.find("label") != disk->metadata.end())
-        strncpy(dh.szTitle, disk->metadata["label"].c_str(), sizeof(dh.szTitle) - 1);
+    if (disk->metadata().find("label") != disk->metadata().end())
+        strncpy(dh.szTitle, disk->metadata()["label"].c_str(), sizeof(dh.szTitle) - 1);
 
     // Skip the file header, which will be written at the end
     fseek(f_, sizeof(dh), SEEK_SET);

@@ -18,7 +18,7 @@ bool ReadLIF(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "LIF";
+    disk->strType() = "LIF";
 
     return true;
 }

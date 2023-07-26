@@ -53,7 +53,7 @@ bool ReadFD(MemFile& file, std::shared_ptr<Disk>& disk)
 
     assert(fmt.disk_size() == file.size());
     disk->format(fmt, file.data(), fmt.cyls_first);
-    disk->strType = "FD";
+    disk->strType() = "FD";
     return true;
 }
 

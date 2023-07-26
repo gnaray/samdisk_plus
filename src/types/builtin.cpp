@@ -77,7 +77,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
         // 500Kbps examples
     case 0:
     {
-        disk->metadata["comment"] = "500Kbps examples";
+        disk->metadata()["comment"] = "500Kbps examples";
 #if 0
         // 21 sectors/track
         {
@@ -153,7 +153,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 300Kbps examples
     case 1:
     {
-        disk->metadata["comment"] = "300Kbps examples";
+        disk->metadata()["comment"] = "300Kbps examples";
 
         // BBC FM
         {
@@ -174,7 +174,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 250Kbps examples
     case 2:
     {
-        disk->metadata["comment"] = "250Kbps examples";
+        disk->metadata()["comment"] = "250Kbps examples";
 #if 0
         // 11-sector Atari ST
         {
@@ -849,7 +849,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 1Mbps examples
     case 3:
     {
-        disk->metadata["comment"] = "1Mbps examples";
+        disk->metadata()["comment"] = "1Mbps examples";
 
         // Normal ED format
         {
@@ -896,7 +896,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 500Kbps MFM sector size test
     case 4 + 0:
     {
-        disk->metadata["comment"] = "500Kbps MFM sector size test";
+        disk->metadata()["comment"] = "500Kbps MFM sector size test";
 
         // MFM sizes 0 to 6
         for (uint8_t size = 0; size < 7; ++size)
@@ -918,7 +918,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 500Kbps FM simple size test
     case 8 + 0:
     {
-        disk->metadata["comment"] = "500Kbps FM sector size test";
+        disk->metadata()["comment"] = "500Kbps FM sector size test";
 
         // FM sizes 0 to 5
         for (uint8_t size = 0; size < 6; ++size)
@@ -941,7 +941,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 250Kbps MFM sector size test
     case 4 + 2:
     {
-        disk->metadata["comment"] = "250Kbps MFM sector size test";
+        disk->metadata()["comment"] = "250Kbps MFM sector size test";
 
         // MFM sizes 0 to 5
         for (uint8_t size = 0; size < 6; ++size)
@@ -964,7 +964,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 250Kbps FM sector size test
     case 8 + 2:
     {
-        disk->metadata["comment"] = "250Kbps FM sector size test";
+        disk->metadata()["comment"] = "250Kbps FM sector size test";
 
         // FM sizes 0 to 4
         for (uint8_t size = 0; size < 5; ++size)
@@ -986,7 +986,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 500Kbps MFM bitstream
     case 16 + 0:
     {
-        disk->metadata["comment"] = "500Kbps MFM bitstream";
+        disk->metadata()["comment"] = "500Kbps MFM bitstream";
 
         BitstreamTrackBuilder bitbuf(DataRate::_500K, Encoding::MFM);
 
@@ -1004,7 +1004,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 250Kbps MFM bitstream
     case 16 + 2:
     {
-        disk->metadata["comment"] = "250Kbps MFM bitstream";
+        disk->metadata()["comment"] = "250Kbps MFM bitstream";
 
         // Simple 9-sector format.
         {
@@ -1062,7 +1062,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 250Kbps FM bitstream
     case 20 + 2:
     {
-        disk->metadata["comment"] = "250Kbps FM bitstream";
+        disk->metadata()["comment"] = "250Kbps FM bitstream";
 
         BitstreamTrackBuilder bitbuf(DataRate::_250K, Encoding::FM);
 
@@ -1080,7 +1080,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 500Kbps MFM flux
     case 24 + 0:
     {
-        disk->metadata["comment"] = "500Kbps MFM flux";
+        disk->metadata()["comment"] = "500Kbps MFM flux";
 
         const Data data(512, 0x00);
         FluxTrackBuilder fluxbuf(cylhead, DataRate::_500K, Encoding::MFM);
@@ -1096,7 +1096,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 250Kbps MFM flux
     case 24 + 2:
     {
-        disk->metadata["comment"] = "250Kbps MFM flux";
+        disk->metadata()["comment"] = "250Kbps MFM flux";
 
         // Simple 9-sector format.
         {
@@ -1286,7 +1286,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 250Kbps FM flux
     case 28 + 2:
     {
-        disk->metadata["comment"] = "250Kbps FM flux";
+        disk->metadata()["comment"] = "250Kbps FM flux";
 
         const Data data(256, 0x00);
         FluxTrackBuilder fluxbuf(cylhead, DataRate::_250K, Encoding::FM);
@@ -1302,7 +1302,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 500Kbps Amiga bitstream
     case 32 + 0:
     {
-        disk->metadata["comment"] = "500Kbps Amiga bitstream";
+        disk->metadata()["comment"] = "500Kbps Amiga bitstream";
 
         const Data data(512, 0x00);
         BitstreamTrackBuilder bitbuf(DataRate::_500K, Encoding::Amiga);
@@ -1318,7 +1318,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // 250Kbps bitstreams
     case 32 + 2:
     {
-        disk->metadata["comment"] = "250Kbps bitstreams";
+        disk->metadata()["comment"] = "250Kbps bitstreams";
 
         // AmigaDOS
         {
@@ -1358,7 +1358,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     // Append a blank track
     disk->write(cylhead, Track());
 
-    disk->strType = "<builtin>";
+    disk->strType() = "<builtin>";
     return true;
 }
 

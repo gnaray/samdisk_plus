@@ -14,7 +14,7 @@ static auto& opt_retries = getOpt<int>("retries");
 void DemandDisk::extend(const CylHead& cylhead)
 {
     // Access the track entry to pre-extend the disk ahead of loading it
-    m_trackdata[cylhead].cylhead = cylhead;
+    GetTrackData()[cylhead].cylhead = cylhead;
 }
 
 bool DemandDisk::supports_retries() const
@@ -27,7 +27,8 @@ void DemandDisk::disk_is_read()
 { // Do nothing because this is demand disk and as such is not read completely when this trigger is fired.
 } // The goal of calling this method is to fix readstats which is done per track in read method in case of demand disk.
 
-const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy)
+TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
+                                  int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) /*override*/
 {
     if (uncached || !m_loaded[cylhead])
     {
@@ -61,12 +62,12 @@ const TrackData& DemandDisk::read(const CylHead& cylhead, bool uncached, int wit
         }
 
         trackdata.fix_track_readstats();
-        std::lock_guard<std::mutex> lock(m_trackdata_mutex);
-        m_trackdata[cylhead] = std::move(trackdata);
+        std::lock_guard<std::mutex> lock(GetTrackDataMutex());
+        GetTrackData()[cylhead] = std::move(trackdata);
         m_loaded[cylhead] = true;
     }
 
-    return Disk::read(cylhead);
+    return Disk::readNC(cylhead);
 }
 
 void DemandDisk::save(TrackData&/*trackdata*/)
@@ -74,11 +75,11 @@ void DemandDisk::save(TrackData&/*trackdata*/)
     throw util::exception("writing to this device is not currently supported");
 }
 
-const TrackData& DemandDisk::write(TrackData&& trackdata)
+/*virtual*/ TrackData& DemandDisk::writeNC(TrackData&& trackdata)
 {
     save(trackdata);
     m_loaded[trackdata.cylhead] = true;
-    return Disk::write(std::move(trackdata));
+    return Disk::writeNC(std::move(trackdata));
 }
 
 void DemandDisk::clear()

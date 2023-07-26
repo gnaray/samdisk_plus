@@ -58,6 +58,6 @@ bool ReadS24(MemFile& file, std::shared_ptr<Disk>& disk)
         }
     }
 
-    disk->strType = "S24";
+    disk->strType() = "S24";
     return true;
 }

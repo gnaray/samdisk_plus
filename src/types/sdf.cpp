@@ -79,7 +79,7 @@ bool ReadSDF(MemFile& file, std::shared_ptr<Disk>& disk)
         disk->write(cylhead, std::move(track));
         }, true);
 
-    disk->strType = "SDF";
+    disk->strType() = "SDF";
 
     return true;
 }
@@ -193,7 +193,7 @@ bool UnwrapSDF(std::shared_ptr<Disk>&/*src_disk*/, std::shared_ptr<Disk>&/*disk*
     if (!ReadSDF(file, disk))
         throw util::exception("invalid packed SDF data");
 
-    disk->strType = "SDF (packed)";
+    disk->strType() = "SDF (packed)";
     return true;
 #endif
 }

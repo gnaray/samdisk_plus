@@ -34,7 +34,7 @@ bool ReadOPD(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data(), true);
-    disk->strType = "OPD";
+    disk->strType() = "OPD";
 
     return true;
 }

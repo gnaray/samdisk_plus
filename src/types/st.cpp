@@ -49,7 +49,7 @@ bool ReadST(MemFile& file, std::shared_ptr<Disk>& disk)
 
         file.rewind();
         disk->format(fmt, file.data());
-        disk->strType = "ST (BPB)";
+        disk->strType() = "ST (BPB)";
         return true;
     }
 
@@ -69,7 +69,7 @@ bool ReadST(MemFile& file, std::shared_ptr<Disk>& disk)
                 {
                     file.rewind();
                     disk->format(fmt, file.data());
-                    disk->strType = "ST";
+                    disk->strType() = "ST";
                     return true;
                 }
             }
@@ -87,7 +87,7 @@ bool WriteST(FILE* f_, std::shared_ptr<Disk>& disk)
 
     fat12_fs.PrepareBootSector();
     const auto bpb_modified = fat12_fs.ReconstructBpb();
-    disk->strType = "ST (BPB)";
+    disk->strType() = "ST (BPB)";
 
     const auto result = WriteRegularDisk(f_, *disk, fmt);
     if (result) {

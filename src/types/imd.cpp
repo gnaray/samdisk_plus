@@ -43,7 +43,7 @@ bool ReadIMD(MemFile& file, std::shared_ptr<Disk>& disk)
         return false;
 
     // Copy any comment
-    disk->metadata["comment"] = ss.str();
+    disk->metadata()["comment"] = ss.str();
 
     uint8_t rmap[MAX_SECTORS], cmap[MAX_SECTORS], hmap[MAX_SECTORS], nmap[MAX_SECTORS * 2];
     for (;;)
@@ -148,7 +148,7 @@ bool ReadIMD(MemFile& file, std::shared_ptr<Disk>& disk)
         disk->write(cylhead, std::move(track));
     }
 
-    disk->strType = "IMD";
+    disk->strType() = "IMD";
     return true;
 }
 

@@ -71,6 +71,6 @@ bool ReadCFI(MemFile& file, std::shared_ptr<Disk>& disk)
     if (!ReadBPB(file, disk))
         throw util::exception("invalid packed CFI content");
 
-    disk->strType = "CFI";
+    disk->strType() = "CFI";
     return true;
 }

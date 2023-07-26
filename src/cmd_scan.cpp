@@ -97,7 +97,7 @@ bool ScanImage(const std::string& path, Range range)
 
     auto disk = std::make_shared<Disk>();
     ReadImage(path, disk);
-    Format& fmt = disk->fmt;
+    const Format& fmt = disk->fmt();
 
     // Regular format and no range specified?
     if (!opt_verbose && range.empty() && fmt.sectors > 0)

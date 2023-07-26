@@ -74,7 +74,7 @@ bool ReadDTI(MemFile& file, std::shared_ptr<Disk>& disk)
         }
     }
 
-    disk->strType = "DTI";
+    disk->strType() = "DTI";
     return true;
 }
 

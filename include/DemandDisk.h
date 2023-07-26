@@ -11,8 +11,8 @@ public:
     static constexpr int FIRST_READ_REVS = 2;
     static constexpr int REMAIN_READ_REVS = 5;
 
-    const TrackData& read(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1, const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) override;
-    const TrackData& write(TrackData&& trackdata) override;
+    TrackData& readNC(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1, const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) override;
+    TrackData& writeNC(TrackData&& trackdata) override;
     void clear() override;
     void disk_is_read() override;
 

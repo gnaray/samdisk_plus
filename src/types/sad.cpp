@@ -42,7 +42,7 @@ bool ReadSAD(MemFile& file, std::shared_ptr<Disk>& disk)
         Message(msgWarning, "data size (%zu) differs from expected size (%zu)", data.size(), fmt.disk_size());
 
     disk->format(fmt, data, true);
-    disk->strType = "SAD";
+    disk->strType() = "SAD";
 
     return true;
 }

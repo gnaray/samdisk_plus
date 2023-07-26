@@ -321,7 +321,7 @@ void KryoFlux::ReadFlux(int revs, FluxData& flux_revs, std::vector<std::string>&
 
                         if (!name.empty() && !value.empty())
                         {
-                            //                                  disk.metadata[name] = value;
+                            //                                  disk.metadata()[name] = value;
 
                             if (name == "sck")
                                 ps_per_tick = PS_PER_TICK(std::atoi(value.c_str()));

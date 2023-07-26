@@ -177,13 +177,13 @@ bool ReadHFE(MemFile& file, std::shared_ptr<Disk>& disk)
         }
     }
 
-    disk->metadata["interface_mode"] = to_string(static_cast<FloppyInterfaceMode>(hh.floppy_interface_mode));
-    disk->metadata["track_encoding"] = to_string(static_cast<TrackEncoding>(hh.track_encoding));
-    disk->metadata["data_bitrate"] = std::to_string(hh.bitrate_kbps) + "Kbps";
+    disk->metadata()["interface_mode"] = to_string(static_cast<FloppyInterfaceMode>(hh.floppy_interface_mode));
+    disk->metadata()["track_encoding"] = to_string(static_cast<TrackEncoding>(hh.track_encoding));
+    disk->metadata()["data_bitrate"] = std::to_string(hh.bitrate_kbps) + "Kbps";
     if (hh.floppy_rpm)
-        disk->metadata["floppy_rpm"] = std::to_string(hh.floppy_rpm);
+        disk->metadata()["floppy_rpm"] = std::to_string(hh.floppy_rpm);
 
-    disk->strType = "HFE";
+    disk->strType() = "HFE";
     return true;
 }
 

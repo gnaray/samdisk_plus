@@ -66,7 +66,7 @@ bool ReadMBD(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "MBD";
+    disk->strType() = "MBD";
 
     return true;
 }

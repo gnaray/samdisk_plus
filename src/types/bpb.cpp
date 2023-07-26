@@ -46,7 +46,7 @@ bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
 
     file.rewind();
     disk->format(fmt, file.data());
-    disk->strType = "BPB";
 
+    disk->strType() = "BPB";
     return true;
 }

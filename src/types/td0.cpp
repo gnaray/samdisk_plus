@@ -210,7 +210,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
         std::string filename = file.name();
         file.open(mem, uSize, filename);
 
-        disk->metadata["compress"] = "advanced";
+        disk->metadata()["compress"] = "advanced";
     }
 
     // Skip the comment field, if present
@@ -221,7 +221,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
             throw util::exception("short file reading comment header");
 
         // Extract the creation date
-        disk->metadata["created"] = util::fmt("%04u-%02u-%02u %02u:%02u:%02u",
+        disk->metadata()["created"] = util::fmt("%04u-%02u-%02u %02u:%02u:%02u",
             tc.bYear + ((tc.bYear < 70) ? 2000 : 1900), tc.bMon + 1, tc.bDay,
             tc.bHour, tc.bMin, tc.bSec);
 
@@ -230,7 +230,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
         std::vector<char> comment(len);
         if (!file.read(comment))
             throw util::exception("short file reading comment data");
-        disk->metadata["comment"] = std::string(comment.data(), comment.size());
+        disk->metadata()["comment"] = std::string(comment.data(), comment.size());
     }
 
     for (;;)
@@ -342,7 +342,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
     if (no_id_sectors)
         Message(msgFix, "ignored %d suspect no-id sector%s", no_id_sectors, (no_id_sectors == 1) ? "" : "s");
 
-    disk->strType = "TD0";
+    disk->strType() = "TD0";
     return true;
 }
 

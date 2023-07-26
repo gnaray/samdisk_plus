@@ -216,8 +216,8 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         }, !opt_normal_disk);
 
         // Copy any metadata not already present in the target (emplace doesn't replace)
-        for (const auto& m : src_disk->metadata)
-            dst_disk->metadata.emplace(m);
+        for (const auto& m : src_disk->metadata())
+            dst_disk->metadata().emplace(m);
 
         // Write the new/merged target image
         // When merge or repair mode is requested, a new tmp file is written and then renamed as final file.

@@ -21,13 +21,13 @@ bool ImageInfo(const std::string& path)
 
     auto disk = std::make_shared<Disk>();
     ReadImage(opt_szSource, disk);
-    const Format& fmt = disk->fmt;
+    const Format& fmt = disk->fmt();
     auto cyls = disk->cyls();
     auto heads = disk->heads();
-    auto sectors = disk->fmt.sectors;
+    auto sectors = fmt.sectors;
 
-    util::cout << colour::cyan << " Type:   " << colour::none << disk->strType << "\n";
-    assert(disk->strType != "<unknown>");
+    util::cout << colour::cyan << " Type:   " << colour::none << disk->strType() << "\n";
+    assert(disk->strType() != Disk::TYPE_UNKNOWN);
 
     if (sectors == 0)
         util::cout << colour::cyan << " Size:   " << colour::none <<
@@ -40,15 +40,15 @@ bool ImageInfo(const std::string& path)
                 disk->cyls(), disk->heads(), fmt.sectors, fmt.sector_size());
     }
 
-    if (!disk->metadata.empty())
+    if (!disk->metadata().empty())
     {
         auto sep = "\n";
 
         size_t max_key_len{ 0 };
-        for (const auto& p : disk->metadata)
             max_key_len = std::max(p.first.size(), max_key_len);
+        for (const auto& p : disk->metadata())
 
-        for (const auto& field : disk->metadata)
+        for (const auto& field : disk->metadata())
         {
             if (field.first != "comment" && !field.second.empty())
             {
@@ -60,8 +60,8 @@ bool ImageInfo(const std::string& path)
             }
         }
 
-        auto it = disk->metadata.find("comment");
-        if (it != disk->metadata.end() && !it->second.empty())
+        auto it = disk->metadata().find("comment");
+        if (it != disk->metadata().end() && !it->second.empty())
             util::cout << sep << util::trim(it->second) << "\n";
     }
 

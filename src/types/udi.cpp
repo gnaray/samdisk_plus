@@ -140,6 +140,6 @@ bool ReadUDI(MemFile& file, std::shared_ptr<Disk>& disk)
         }
     }
 
-    disk->strType = "UDI";
+    disk->strType() = "UDI";
     return true;
 }
