@@ -406,11 +406,15 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.size = 1;
         break;
 
+    case RegularFormat::None:
+        break;
+
     default:
         assert(false);
         break;
     }
 
+    fmt.regular_format = reg_fmt;
     return fmt;
 }
 
@@ -552,7 +556,7 @@ void Format::Override(bool full_control/*=false*/)
     {
         if (opt_range.cyls()) cyls = opt_range.cyls();
         if (opt_range.heads()) heads = opt_range.heads();
-        if (opt_sectors != -1) sectors = opt_sectors;
+        if (opt_sectors != -1) sectors = lossless_static_cast<int>(opt_sectors);
         if (opt_size >= 0 && opt_size <= 7) size = opt_size;
 
         if (datarate == DataRate::Unknown) datarate = DataRate::_250K;
