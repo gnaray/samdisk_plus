@@ -12,11 +12,6 @@ static auto& opt_mt = getOpt<int>("mt");
 //////////////////////////////////////////////////////////////////////////////
 
 const std::string Disk::TYPE_UNKNOWN{"<unknown>"};
-Disk::Disk(Format& fmt_)
-    : fmt(fmt_)
-{
-    format(fmt);
-}
 
 Range Disk::range() const
 {

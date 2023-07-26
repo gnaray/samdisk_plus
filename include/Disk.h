@@ -24,8 +24,6 @@ public:
     Disk() = default;
     virtual ~Disk() = default;
 
-    explicit Disk(Format& format);
-
     virtual bool preload(const Range& range, int cyl_step);
     virtual void clear();
 
