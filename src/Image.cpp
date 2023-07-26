@@ -8,6 +8,7 @@
 //#include "BlockDevice.h"
 #if 0
 #include "types/record.h"
+#include "types/sdf.h"
 #endif
 
 static auto& opt_cpm = getOpt<int>("cpm");
@@ -17,8 +18,6 @@ static auto& opt_head0 = getOpt<int>("head0");
 static auto& opt_head1 = getOpt<int>("head1");
 static auto& opt_nozip = getOpt<int>("nozip");
 static auto& opt_range = getOpt<Range>("range");
-
-bool UnwrapSDF(std::shared_ptr<Disk>& src_disk, std::shared_ptr<Disk>& disk);
 
 void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normalise)
 {

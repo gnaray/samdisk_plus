@@ -1,5 +1,6 @@
 // Temporary SAM Disk File format, replaced by EDSK for custom format SAM disks
 
+#include "types/sdf.h"
 #include "Options.h"
 #include "Disk.h"
 #include "MemFile.h"
