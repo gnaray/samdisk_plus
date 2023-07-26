@@ -11,6 +11,9 @@
 #include <cstring>
 #include <numeric>
 
+const std::string BAD_SECTOR_SIGN{"BADS"};
+const std::string MISSING_SECTOR_SIGN{"MISS"};
+
 constexpr int MIN_DIFF_BLOCK = 16;
 constexpr int DEFAULT_MAX_SPLICE = 72;   // limit of bits treated as splice noise between recognised gap patterns
 
