@@ -16,8 +16,8 @@ enum class RegularFormat {
 
 struct Format
 {
-    constexpr static int DefaultTracks = 80;
-    constexpr static int DefaultSides = 2;
+    static constexpr int DefaultTracks = 80;
+    static constexpr int DefaultSides = 2;
 
     Format() = default;
     Format(RegularFormat reg_fmt);

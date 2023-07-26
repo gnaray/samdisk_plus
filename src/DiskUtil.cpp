@@ -11,8 +11,8 @@
 #include <cstring>
 #include <numeric>
 
-static constexpr int MIN_DIFF_BLOCK = 16;
-static constexpr int DEFAULT_MAX_SPLICE = 72;   // limit of bits treated as splice noise between recognised gap patterns
+constexpr int MIN_DIFF_BLOCK = 16;
+constexpr int DEFAULT_MAX_SPLICE = 72;   // limit of bits treated as splice noise between recognised gap patterns
 
 static auto& opt_absoffsets = getOpt<int>("absoffsets");
 static auto& opt_align = getOpt<int>("align");

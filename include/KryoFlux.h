@@ -71,7 +71,7 @@ private:
     static const int REQ_T_BYPASS_OFF = 0x22;           // (default=8)
     static const int REQ_T_BYPASS_ON = 0x23;            // (default=8)
 
-    constexpr static int REQ_GET = 0x80;                // read modifier for requests above
+    static constexpr int REQ_GET = 0x80;                // read modifier for requests above
 
 
     void SamBaCommand(const std::string& cmd, const std::string& end = "");

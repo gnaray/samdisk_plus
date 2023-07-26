@@ -8,8 +8,8 @@
 class DemandDisk : public Disk
 {
 public:
-    constexpr static int FIRST_READ_REVS = 2;
-    constexpr static int REMAIN_READ_REVS = 5;
+    static constexpr int FIRST_READ_REVS = 2;
+    static constexpr int REMAIN_READ_REVS = 5;
 
     const TrackData& read(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1, const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) override;
     const TrackData& write(TrackData&& trackdata) override;

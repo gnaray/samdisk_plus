@@ -3,10 +3,6 @@
 #include "Format.h"
 #include "Sector.h"
 
-// Storage for class statics.
-constexpr int Format::DefaultTracks;
-constexpr int Format::DefaultSides;
-
 static auto& opt_base = getOpt<int>("base");
 static auto& opt_cylsfirst = getOpt<int>("cylsfirst");
 static auto& opt_datarate = getOpt<DataRate>("datarate");
