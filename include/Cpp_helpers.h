@@ -272,7 +272,9 @@ inline T ceil_AS(U x)
 
 
 
-#define longsizeof(x) (lossless_static_cast<long>(sizeof(x)))
-#define intsizeof(x) (lossless_static_cast<int>(sizeof(x)))
+#define longsizeof(x) (static_cast<long>(sizeof(x)))
+#define intsizeof(x) (static_cast<int>(sizeof(x)))
+#define checkedlongsizeof(x) (lossless_static_cast<long>(sizeof(x)))
+#define checkedintsizeof(x) (lossless_static_cast<int>(sizeof(x)))
 
 #endif // CPP_HELPERS_H
