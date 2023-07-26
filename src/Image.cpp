@@ -2,11 +2,13 @@
 
 #include "Image.h"
 #include "Options.h"
-//#include "record.h"
 #include "SpectrumPlus3.h"
 #include "Util.h"
 #include "types.h"
 //#include "BlockDevice.h"
+#if 0
+#include "types/record.h"
+#endif
 
 static auto& opt_cpm = getOpt<int>("cpm");
 static auto& opt_fix = getOpt<int>("fix");

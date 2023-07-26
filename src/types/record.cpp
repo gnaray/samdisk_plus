@@ -1,9 +1,9 @@
 // BDOS record for Atom/Atom Lite HDD interface for SAM Coupe:
 //   http://www.samcoupe-pro-dos.co.uk/edwin/software/bdos/bdos.htm
 
+#include "types/record.h"
 #include "types.h"
 #include "Options.h"
-#include "record.h"
 #include "SAMCoupe.h"
 
 #include <cstring>

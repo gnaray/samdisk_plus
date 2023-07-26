@@ -2,7 +2,9 @@
 
 #include "PlatformConfig.h"
 #include "Options.h"
-//#include "record.h"
+#if 0
+#include "types/record.h"
+#endif
 #include "Image.h"
 #include "DiskUtil.h"
 #include "SAMCoupe.h"
