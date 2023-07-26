@@ -21,11 +21,14 @@ public:
     bool has_flux() const;
     bool has_normalised_flux() const;
 
-private:
+protected:
     Track& trackNC(); // NC signs that result is not const.
 public:
     const Track& track();
     /*const*/ BitBuffer& bitstream();
+protected:
+    FluxData& fluxNC(); // NC signs that result is not const.
+public:
     const FluxData& flux();
     TrackData preferred();
 

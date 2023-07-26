@@ -92,7 +92,7 @@ const Track& TrackData::track()
     return m_bitstream;
 }
 
-const FluxData& TrackData::flux()
+FluxData& TrackData::fluxNC()
 {
     if (!has_flux())
     {
@@ -107,6 +107,11 @@ const FluxData& TrackData::flux()
     }
 
     return m_flux;
+}
+
+const FluxData& TrackData::flux()
+{
+    return fluxNC();
 }
 
 TrackData TrackData::preferred()
