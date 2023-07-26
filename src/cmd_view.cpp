@@ -67,7 +67,7 @@ void ViewTrack(const CylHead& cylhead, const Track& track)
                 else
                 {
                     std::vector<colour> colours;
-                    colours.reserve(sector.data_size());
+                    colours.reserve(static_cast<std::vector<colour>::size_type>(sector.data_size()));
 
                     for (auto& diff : DiffSectorCopies(sector))
                     {
@@ -109,8 +109,8 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
 
     Data track_data;
     std::vector<colour> colours;
-    track_data.reserve(max_size);
-    colours.reserve(max_size);
+    track_data.reserve(static_cast<DataST>(max_size));
+    colours.reserve(static_cast<std::vector<colour>::size_type>(max_size));
 
     uint32_t dword = 0;
     int bits = 0, a1 = 0, am_dist = 0xffff, data_size = 0;

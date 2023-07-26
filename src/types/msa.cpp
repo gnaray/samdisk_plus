@@ -59,8 +59,8 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
     fmt.Override();
 
     auto track_size = fmt.track_size();
-    Data mem(track_size);
-    Data mem2(track_size);
+    Data mem(static_cast<DataST>(track_size));
+    Data mem2(static_cast<DataST>(track_size));
 
     for (uint8_t cyl = bStartTrack; cyl <= bEndTrack; ++cyl)
     {
@@ -72,7 +72,7 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
             if (!file.read(&dt, sizeof(dt)))
                 throw util::exception("short file reading ", cylhead, " header");
 
-            uint16_t wLength = (dt.abLength[0] << 8) | dt.abLength[1];
+            auto wLength = (dt.abLength[0] << 8) | dt.abLength[1];
             if (!wLength || wLength > track_size)
                 throw util::exception("invalid track length (", wLength, ") on ", cylhead);
             else if (wLength == track_size)

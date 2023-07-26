@@ -91,7 +91,7 @@ bool ReadBlockDevice(const std::string& path, std::shared_ptr<Disk>& disk)
     if (opt_sectors > fmt.sectors)
         throw util::exception("sector count must be <= ", fmt.sectors);
     else if (opt_sectors > 0)
-        fmt.sectors = opt_sectors;
+        fmt.sectors = lossless_static_cast<int>(opt_sectors);
 
     auto blk_dev_disk = std::make_shared<BlockFloppyDisk>(std::move(blockdev));
     blk_dev_disk->extend(CylHead(fmt.cyls - 1, fmt.heads - 1));

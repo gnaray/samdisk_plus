@@ -65,7 +65,7 @@ bool ReadRecord(HDD& hdd, int record, std::shared_ptr<Disk>& disk)
     else if (memcmp(pdir->abBDOS, "BDOS", sizeof(pdir->abBDOS)) && !opt_nosig)
         throw util::exception("record ", record, " is not formatted");
 
-    Data data(mem.size);
+    Data data(lossless_static_cast<DataST>(mem.size));
     std::copy(mem.pb, mem.pb + mem.size, data.begin());
     disk->format(Format(RegularFormat::MGT), data);
     /* TODO?

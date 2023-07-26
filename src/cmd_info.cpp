@@ -44,9 +44,9 @@ bool ImageInfo(const std::string& path)
     {
         auto sep = "\n";
 
-        size_t max_key_len{ 0 };
-            max_key_len = std::max(p.first.size(), max_key_len);
+        int max_key_len{ 0 };
         for (const auto& p : disk->metadata())
+            max_key_len = std::max(static_cast<int>(p.first.size()), max_key_len);
 
         for (const auto& field : disk->metadata())
         {

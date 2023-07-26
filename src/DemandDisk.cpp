@@ -30,7 +30,7 @@ void DemandDisk::disk_is_read()
 TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
                                   int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) /*override*/
 {
-    if (uncached || !m_loaded[cylhead])
+    if (uncached || !m_loaded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
         // Quick first read, plus sector-based conversion.
         auto trackdata = load(cylhead, true, with_head_seek_to, deviceReadingPolicy);
@@ -64,7 +64,7 @@ TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
         trackdata.fix_track_readstats();
         std::lock_guard<std::mutex> lock(GetTrackDataMutex());
         GetTrackData()[cylhead] = std::move(trackdata);
-        m_loaded[cylhead] = true;
+        m_loaded[lossless_static_cast<size_t>(cylhead.operator int())] = true;
     }
 
     return Disk::readNC(cylhead);
@@ -78,7 +78,7 @@ void DemandDisk::save(TrackData&/*trackdata*/)
 /*virtual*/ TrackData& DemandDisk::writeNC(TrackData&& trackdata)
 {
     save(trackdata);
-    m_loaded[trackdata.cylhead] = true;
+    m_loaded[lossless_static_cast<size_t>(trackdata.cylhead.operator int())] = true;
     return Disk::writeNC(std::move(trackdata));
 }
 
