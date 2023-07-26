@@ -143,6 +143,14 @@ bool Header::compare_crn(const Header& rhs) const
         size == rhs.size;
 }
 
+bool Header::compare_chr(const Header& rhs) const
+{
+    // Compare without size match. Useful when looking for boot sector not knowing its size.
+    return cyl == rhs.cyl &&
+        head == rhs.head &&
+        sector == rhs.sector;
+}
+
 int Header::sector_size() const
 {
     return Sector::SizeCodeToLength(size);
@@ -153,6 +161,23 @@ int Header::sector_size() const
 bool Headers::Contains(const Header& header) const
 {
     return std::find(cbegin(), cend(), header) != cend();
+}
+
+std::set<int> Headers::NotContainedIds(const Interval<int>& id_interval) const
+{
+    std::set<int> not_contained_ids;
+    if (id_interval.IsEmpty())
+        return not_contained_ids;
+    std::set<int> contained_ids;
+    std::for_each(begin(), end(), [&](const Header& header)
+    {
+        if (id_interval.Where(header.sector) == BaseInterval::Within)
+            contained_ids.emplace(header.sector);
+    });
+    for (int id = id_interval.Left(); id <= id_interval.Right() ; id++)
+        if (contained_ids.find(id) == contained_ids.end())
+            not_contained_ids.emplace(id);
+    return not_contained_ids;
 }
 
 std::string Headers::ToString(bool onlyRelevantData/* = true*/) const

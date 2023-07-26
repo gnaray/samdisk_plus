@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PlatformConfig.h"
+#include "Interval.h"
 #include "DiskConstants.h"
 #include "utils.h"
 
@@ -8,6 +8,7 @@
 #include <cassert>
 #include <string>
 #include <map>
+#include <set>
 
 enum class DataRate : int { Unknown = 0, _250K = 250'000, _300K = 300'000, _500K = 500'000, _1M = 1'000'000 };
 enum class Encoding { Unknown, MFM, FM, RX02, Amiga, GCR, Ace, MX, Agat, Apple, Victor, Vista };
@@ -66,7 +67,7 @@ inline bool are_offsets_tolerated_same(const int offset1, const int offset2, con
 inline std::ostream& operator<<(std::ostream& os, const DataRate dr) { return os << to_string(dr); }
 inline std::ostream& operator<<(std::ostream& os, const Encoding e) { return os << to_string(e); }
 
-
+//////////////////////////////////////////////////////////////////////////////
 
 struct CylHead
 {
@@ -103,6 +104,7 @@ struct CylHead
 CylHead operator * (const CylHead& cylhead, int cyl_step);
 inline std::ostream& operator<<(std::ostream& os, const CylHead& cylhead) { return os << cylhead.to_string(); }
 
+//////////////////////////////////////////////////////////////////////////////
 
 class Header
 {
@@ -118,6 +120,7 @@ public:
     int sector_size() const;
     bool compare_chrn(const Header& rhs) const;
     bool compare_crn(const Header& rhs) const;
+    bool compare_chr(const Header& rhs) const;
 
     inline bool empty() const
     {
@@ -127,12 +130,15 @@ public:
     int cyl = 0, head = 0, sector = 0, size = 0;
 };
 
+//////////////////////////////////////////////////////////////////////////////
+
 class Headers : public std::vector<Header>
 {
 public:
     Headers() = default;
 
     bool Contains(const Header& header) const;
+    std::set<int> NotContainedIds(const Interval<int>& id_interval) const;
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Headers& headers, bool onlyRelevantData = true)
     {
