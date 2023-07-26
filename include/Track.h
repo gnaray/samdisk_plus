@@ -49,6 +49,7 @@ public:
     std::vector<Sector>::iterator end() { return m_sectors.end(); }
     std::vector<Sector>::iterator find(const Sector& sector);
     std::vector<Sector>::iterator find(const Header& header);
+    std::vector<Sector>::iterator findIgnoringSize(const Header& header);
     std::vector<Sector>::iterator find(const Header& header, const DataRate datarate, const Encoding encoding);
 
     std::vector<Sector>::const_reverse_iterator rbegin() const { return m_sectors.rbegin(); }
@@ -56,6 +57,7 @@ public:
     std::vector<Sector>::const_iterator end() const { return m_sectors.end(); }
     std::vector<Sector>::const_iterator find(const Sector& sector) const;
     std::vector<Sector>::const_iterator find(const Header& header) const;
+    std::vector<Sector>::const_iterator findIgnoringSize(const Header& header) const;
     std::vector<Sector>::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
 
     int tracklen = 0;   // track length in MFM bits

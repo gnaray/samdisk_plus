@@ -390,6 +390,13 @@ std::vector<Sector>::iterator Track::find(const Header& header)
         });
 }
 
+std::vector<Sector>::iterator Track::findIgnoringSize(const Header& header)
+{
+    return std::find_if(begin(), end(), [&](const Sector& s) {
+        return header.compare_chr(s.header);
+    });
+}
+
 std::vector<Sector>::iterator Track::find(const Header& header, const DataRate datarate, const Encoding encoding)
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
@@ -409,6 +416,13 @@ std::vector<Sector>::const_iterator Track::find(const Header& header) const
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header == s.header;
         });
+}
+
+std::vector<Sector>::const_iterator Track::findIgnoringSize(const Header& header) const
+{
+    return std::find_if(begin(), end(), [&](const Sector& s) {
+        return header.compare_chr(s.header);
+    });
 }
 
 std::vector<Sector>::const_iterator Track::find(const Header& header, const DataRate datarate, const Encoding encoding) const
