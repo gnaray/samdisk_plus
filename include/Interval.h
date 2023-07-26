@@ -38,16 +38,14 @@ public:
             _empty = false;
             break;
         case LeftAndLength: // other is length.
-            assert(other >= 0);
             _left = left;
             _right = _left + other;
-            _empty = false;
+            _empty = other < 0;
             break;
         case LeftAndSize: // other is size.
-            assert(other >= 0);
             _left = left;
-            _empty = other == 0;
-            _right = _empty ? _left : _left + other - 1;
+            _empty = other <= 0;
+            _right = _left + other - 1;
             break;
         }
     }
