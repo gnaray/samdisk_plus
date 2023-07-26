@@ -101,7 +101,7 @@ struct DFS_DIR
     uint8_t bStartSector;               // File start sector b0-b7
 };
 
-enum MsgType { msgStatus, msgInfo, msgFix, msgWarning, msgError };
+enum MsgType { msgStatus, msgInfo, msgFix, msgWarning, msgError, msgInfoAlways, msgFixAlways, msgWarningAlways };
 
 
 const char* ValStr(int val, const char* pcszDec_, const char* pcszHex_, bool fForceDecimal_ = false);
@@ -131,7 +131,7 @@ void Message(MsgType type, const char* pcsz_, Args&& ...args)
     if (type == msgError)
         throw util::exception(msg);
 
-    if (type != msgStatus)
+    if (type == msgInfo || type == msgFix || type == msgWarning)
     {
         if (seen_messages.find(msg) != seen_messages.end())
             return;
@@ -141,10 +141,16 @@ void Message(MsgType type, const char* pcsz_, Args&& ...args)
 
     switch (type)
     {
-    case msgStatus:  break;
-    case msgInfo:    util::cout << "Info: "; break;
-    case msgFix:     util::cout << colour::GREEN << "Fixed: "; break;
-    case msgWarning: util::cout << colour::YELLOW << "Warning: "; break;
+    case msgStatus: break;
+    case msgInfo:
+    case msgInfoAlways:
+        util::cout << "Info: "; break;
+    case msgFix:
+    case msgFixAlways:
+        util::cout << colour::GREEN << "Fixed: "; break;
+    case msgWarning:
+    case msgWarningAlways:
+        util::cout << colour::YELLOW << "Warning: "; break;
     case msgError:   util::cout << colour::RED << "Error: "; break;
     }
 
