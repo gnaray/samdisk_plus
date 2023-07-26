@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cstdint>
 #include <fstream>
+#include <memory>
 #include <ostream>
 #include <sstream>
 #include <vector>
@@ -468,6 +469,12 @@ inline void str_range(const std::string& str, int& range_begin, int& range_end)
 
     throw util::exception(util::format("invalid range '", str, "'"));
 }
+
+struct FileHandleCloser
+{
+    void operator() (std::FILE* f) { std::fclose(f); }
+};
+using unique_FILE_t = std::unique_ptr<std::remove_pointer<std::FILE*>::type, FileHandleCloser>;
 
 class Version
 {
