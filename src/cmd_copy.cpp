@@ -71,7 +71,7 @@ int TransferTrack(std::shared_ptr<Disk>& src_disk,
                 // If repair mode and user specified skip_stable_sectors and no looking for possible sectors
                 // then do not repair tracks which already contain all wanted sector ids (not empty) (thus those are skippable).
                 if (!deviceReadingPolicy.LookForPossibleSectors() && !deviceReadingPolicy.WantedSectorHeaderIds().IsEmpty()
-                        && deviceReadingPolicy.SelectWantedSectorHeaderIdsUnskippable().empty())
+                        && deviceReadingPolicy.UnskippableWantedSectorHeaderIds().empty())
                     return 0;
                 if (opt_verbose && !deviceReadingPolicy.SkippableSectors().empty()) {
                     Message(msgInfo, "Ignoring already good sectors on %s: %s",
