@@ -226,6 +226,12 @@ auto le_value(const uint8_t(&arr)[N])
 }
 
 template <int N, std::enable_if_t<N == 2> * = nullptr>
+uint16_t le_value(const uint8_t* p)
+{
+    return static_cast<uint16_t>(p[1] << 8) | p[0];
+}
+
+template <int N, std::enable_if_t<N == 2> * = nullptr>
 uint16_t be_value(const uint8_t(&arr)[N])
 {
     return (arr[0] << 8) | arr[1];
