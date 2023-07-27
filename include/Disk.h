@@ -62,6 +62,9 @@ public:
     int cyls() const;
     int heads() const;
 
+    static int TransferTrack(Disk& src_disk, const CylHead& cylhead, Disk& dst_disk,
+                      const int disk_round, ScanContext& context, DeviceReadingPolicy& deviceReadingPolicy);
+
     virtual Format& fmt();
     virtual const Format& fmt() const;
     virtual std::map<std::string, std::string>& metadata();
