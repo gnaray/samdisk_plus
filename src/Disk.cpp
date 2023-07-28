@@ -37,7 +37,7 @@ int Disk::heads() const
 }
 
 
-bool Disk::preload(const Range& range_, int cyl_step)
+/*virtual*/ bool Disk::preload(const Range& range_, int cyl_step)
 {
     // No pre-loading if multi-threading disabled, or only a single core
     if (!opt_mt || ThreadPool::get_thread_count() <= 1)
@@ -58,18 +58,18 @@ bool Disk::preload(const Range& range_, int cyl_step)
     return true;
 }
 
-void Disk::clear()
+/*virtual*/ void Disk::clear()
 {
     GetTrackData().clear();
 }
 
 
-bool Disk::is_constant_disk() const
+/*virtual*/ bool Disk::is_constant_disk() const
 {
     return true;
 }
 
-void Disk::disk_is_read()
+/*virtual*/ void Disk::disk_is_read()
 {
     range().each([&](const CylHead& cylhead) {
         read_track(cylhead); // Ignoring returned track because it is const.
@@ -142,7 +142,7 @@ const FluxData& Disk::write(const CylHead& cylhead, FluxData&& flux_revs, bool n
 }
 
 
-void Disk::each(const std::function<void(const CylHead & cylhead, const Track & track)>& func, bool cyls_first /* = false*/)
+void Disk::each(const std::function<void(const CylHead& cylhead, const Track& track)>& func, bool cyls_first /* = false*/)
 {
     if (!GetTrackData().empty())
     {

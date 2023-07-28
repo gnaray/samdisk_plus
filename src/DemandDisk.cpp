@@ -17,15 +17,18 @@ void DemandDisk::extend(const CylHead& cylhead)
     GetTrackData()[cylhead].cylhead = cylhead;
 }
 
-bool DemandDisk::supports_retries() const
+/*virtual*/ bool DemandDisk::supports_retries() const
 {
     // We only support full track rescans rather than individual sector retries.
     return false;
 }
 
-void DemandDisk::disk_is_read()
-{ // Do nothing because this is demand disk and as such is not read completely when this trigger is fired.
-} // The goal of calling this method is to fix readstats which is done per track in read method in case of demand disk.
+void DemandDisk::disk_is_read() /*override*/
+{
+    // The goal of calling this method is to fix readstats of whole disk in case of not demand disks.
+    // Do nothing here because demand disk has not read any tracks at all when this trigger is fired.
+    // Instead the fixing of readstats is done per track in read method.
+}
 
 TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
                                   int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) /*override*/
@@ -70,7 +73,7 @@ TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
     return Disk::readNC(cylhead);
 }
 
-void DemandDisk::save(TrackData&/*trackdata*/)
+/*virtual*/ void DemandDisk::save(TrackData& /*trackdata*/)
 {
     throw util::exception("writing to this device is not currently supported");
 }
@@ -82,7 +85,7 @@ void DemandDisk::save(TrackData&/*trackdata*/)
     return Disk::writeNC(std::move(trackdata));
 }
 
-void DemandDisk::clear()
+void DemandDisk::clear() /*override*/
 {
     Disk::clear();
     m_loaded.reset();
