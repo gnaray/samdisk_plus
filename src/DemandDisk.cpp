@@ -23,6 +23,12 @@ void DemandDisk::extend(const CylHead& cylhead)
     return false;
 }
 
+/*virtual*/ bool DemandDisk::supports_rescans() const
+{
+    // We only support full track rescans rather than individual sector rescans.
+    return false;
+}
+
 void DemandDisk::disk_is_read() /*override*/
 {
     // The goal of calling this method is to fix readstats of whole disk in case of not demand disks.
@@ -41,7 +47,8 @@ TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
 
         // If the disk supports sector-level retries we won't duplicate them.
         auto retries = supports_retries() ? 0 : opt_retries;
-        auto rescans = opt_rescans;
+        // If the disk supports rescans we won't duplicate them.
+        auto rescans = supports_rescans() ? 0 : opt_rescans;
 
         // Consider rescans and error retries.
         while (rescans > 0 || retries > 0)

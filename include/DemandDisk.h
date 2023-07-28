@@ -20,6 +20,7 @@ public:
 
 protected:
     virtual bool supports_retries() const;
+    virtual bool supports_rescans() const;
     virtual TrackData load(const CylHead& cylhead, bool first_read = false,
         int with_head_seek_to = -1, const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) = 0;
     virtual void save(TrackData& trackdata);
