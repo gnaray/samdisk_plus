@@ -39,6 +39,7 @@ struct OPTIONS
 
     bool normal_disk = false;
     bool readstats = false, paranoia = false, skip_stable_sectors = false;
+    bool detect_devfs = false; // Detect device (floppy) filesystem thus use its format.
 
     int retries = 5, maxcopies = 3;
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
@@ -157,7 +158,8 @@ bool& getOpt(const char* key)
         {"normal_disk", Options::opt.normal_disk},
         {"paranoia", Options::opt.paranoia},
         {"readstats", Options::opt.readstats},
-        {"skip_stable_sectors", Options::opt.skip_stable_sectors}
+        {"skip_stable_sectors", Options::opt.skip_stable_sectors},
+        {"detect_devfs", Options::opt.detect_devfs}
     };
     return s_mapStringToBoolVariables.at(key);
 }
@@ -386,6 +388,7 @@ enum {
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
     OPT_TRACK_RETRIES, OPT_DISK_RETRIES, OPT_NORMAL_DISK,
     OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL,
+    OPT_DETECT_DEVFS,
     OPT_BYTE_TOLERANCE_OF_TIME
 };
 
@@ -499,6 +502,7 @@ static struct option long_options[] =
     { "skip-stable-sectors",no_argument, nullptr, OPT_SKIP_STABLE_SECTORS },      // undocumented. in repair mode skip those sectors which are already rescued in destination.
     { "track-retries",    required_argument, nullptr, OPT_TRACK_RETRIES }, // undocumented. Amount od track retries. Each retry move the floppy drive head a bit.
     { "disk-retries",     required_argument, nullptr, OPT_DISK_RETRIES },  // undocumented. Amount of disk retries. If auto then do it while data improved.
+    { "detect-devfs",                 no_argument, nullptr, OPT_DETECT_DEVFS }, // undocumented. Detect the device filesystem and if exists use its format.
     { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME},
 
     { nullptr, 0, nullptr, 0 }
@@ -736,6 +740,10 @@ bool ParseCommandLine(int argc_, char* argv_[])
 
         case OPT_READSTATS:
             Options::opt.readstats = true;
+            break;
+
+        case OPT_DETECT_DEVFS:
+            Options::opt.detect_devfs = true;
             break;
 
         case OPT_PARANOIA:
