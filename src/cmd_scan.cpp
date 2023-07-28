@@ -7,6 +7,7 @@
 #include "DiskUtil.h"
 #include "Util.h"
 
+static auto& opt_detect_devfs = getOpt<bool>("detect_devfs");
 static auto& opt_nodiff = getOpt<int>("nodiff");
 static auto& opt_offsets = getOpt<int>("offsets");
 static auto& opt_readstats = getOpt<bool>("readstats");
@@ -96,7 +97,7 @@ bool ScanImage(const std::string& path, Range range)
     util::cout.screen->flush();
 
     auto disk = std::make_shared<Disk>();
-    ReadImage(path, disk);
+    ReadImage(path, disk, opt_detect_devfs);
     const Format& fmt = disk->fmt();
 
     // Regular format and no range specified?

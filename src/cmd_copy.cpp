@@ -17,6 +17,7 @@
 #include <cstring>
 
 static auto& opt_base = getOpt<int>("base");
+static auto& opt_detect_devfs = getOpt<bool>("detect_devfs");
 static auto& opt_encoding = getOpt<Encoding>("encoding");
 static auto& opt_disk_retries = getOpt<int>("disk_retries");
 static auto& opt_fix = getOpt<int>("fix");
@@ -88,7 +89,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
             src_disk->clear(); // Required for determining stability of sectors.
         // Check the filesystems considering the priority of formats.
         if (!src_disk->GetFileSystem() && !src_disk->is_constant_disk() && formatPriority < FormatPriority::SrcDevFS
-                && fileSystemWrappers.FindAndSetApprover(*src_disk))
+                && opt_detect_devfs && fileSystemWrappers.FindAndSetApprover(*src_disk))
         {
             srcDiskFormat = src_disk->GetFileSystem()->GetFormat();
             formatPriority = FormatPriority::SrcDevFS;

@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <memory>
 
+static auto& opt_detect_devfs = getOpt<bool>("detect_devfs");
 static auto& opt_szSource = getOpt<charArrayMAX_PATH>("szSource");
 
 bool ImageInfo(const std::string& path)
@@ -20,7 +21,7 @@ bool ImageInfo(const std::string& path)
     util::cout.screen->flush();
 
     auto disk = std::make_shared<Disk>();
-    ReadImage(opt_szSource, disk, true);
+    ReadImage(opt_szSource, disk, opt_detect_devfs);
     if (disk->GetFileSystem())
         disk->fmt() = disk->GetFileSystem()->GetFormat();
     const Format& fmt = disk->fmt();
