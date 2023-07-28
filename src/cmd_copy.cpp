@@ -89,7 +89,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         int repair_track_changed_amount_per_disk = 0;
         const auto transferUniteMode = opt_merge ? RepairSummaryDisk::Merge : (opt_repair ? RepairSummaryDisk::Repair : RepairSummaryDisk::Copy);
         if (!src_disk->is_constant_disk()) // Clear cached tracks of interest of not constant disk.
-            src_disk->clear(); // Required for determining stability of sectors.
+            src_disk->clear(opt_range); // Required for determining stability of sectors in the requested range.
         // Check the filesystems considering the priority of formats.
         if (!src_disk->GetFileSystem() && !src_disk->is_constant_disk() && formatPriority < FormatPriority::SrcDevFS
                 && opt_detect_devfs && fileSystemWrappers.FindAndSetApprover(fileSystemDeterminerDisk))
