@@ -72,7 +72,7 @@ public:
     {
         if (!m_unskippableWantedSectorHeaderIdsValid)
         {
-            m_unskippableWantedSectorHeaderIds = m_skippableSectors.NotContaining(m_wantedSectorHeaderIds);
+            m_unskippableWantedSectorHeaderIds = m_skippableSectors.NotContainedIds(m_wantedSectorHeaderIds);
             m_unskippableWantedSectorHeaderIdsValid = true;
         }
         return m_unskippableWantedSectorHeaderIds;

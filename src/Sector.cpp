@@ -1,4 +1,3 @@
-#include "PlatformConfig.h"
 #include "Sector.h"
 #include "Cpp_helpers.h"
 #include "Options.h"
@@ -657,14 +656,20 @@ std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
 
 bool Sectors::HasIdSequence(const int first_id, const int length) const
 {
-    return this->Headers().HasIdSequence(first_id, length);
+    return GoodHeaders().HasIdSequence(first_id, length);
 }
 
-class Headers Sectors::Headers() const
+const std::set<int> Sectors::NotContainedIds(const Interval<int>& id_interval) const
+{
+    return GoodHeaders().NotContainedIds(id_interval);
+}
+
+class Headers Sectors::GoodHeaders() const
 {
     class Headers headers;
-    for_each(begin(), end(), [&](const Sector& sector) {
-        headers.push_back(sector.header);
+    std::for_each(begin(), end(), [&](const Sector& sector) {
+        if (!sector.has_badidcrc())
+            headers.push_back(sector.header);
     });
     return headers;
 }

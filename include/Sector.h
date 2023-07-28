@@ -2,6 +2,7 @@
 
 #include "Header.h"
 #include "Cpp_helpers.h"
+#include "Interval.h"
 
 class Data : public std::vector<uint8_t>
 {
@@ -19,7 +20,7 @@ typedef Data::size_type DataST;
 using DataList = std::vector<Data>;
 typedef DataList::size_type DataListST;
 
-
+//////////////////////////////////////////////////////////////////////////////
 
 class DataReadStats
 {
@@ -53,7 +54,7 @@ private:
 typedef std::vector<DataReadStats> DataReadStatsList;
 typedef DataReadStatsList::size_type DataReadStatsListST;
 
-
+//////////////////////////////////////////////////////////////////////////////
 
 class Sector
 {
@@ -192,7 +193,7 @@ private:
 
 inline std::ostream& operator<<(std::ostream& os, const Sector& sector) { return os << to_string(sector); }
 
-
+//////////////////////////////////////////////////////////////////////////////
 
 class Sectors : public std::vector<Sector>
 {
@@ -200,7 +201,8 @@ public:
     Sectors() = default;
 
     bool HasIdSequence(const int first_id, const int length) const;
-    class Headers Headers() const;
+    const std::set<int> NotContainedIds(const Interval<int> &id_interval) const;
+    class Headers GoodHeaders() const;
 
     bool Contains(const Sector& other_sector, const int other_tracklen) const;
     std::string SectorIdsToString() const;
