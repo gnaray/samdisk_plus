@@ -87,6 +87,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     for (auto disk_round = 0; disk_round <= disk_retries; disk_round++)
     {
         int repair_track_changed_amount_per_disk = 0;
+        const auto transferUniteMode = opt_merge ? RepairSummaryDisk::Merge : (opt_repair ? RepairSummaryDisk::Repair : RepairSummaryDisk::Copy);
         if (!src_disk->is_constant_disk()) // Clear cached tracks of interest of not constant disk.
             src_disk->clear(); // Required for determining stability of sectors.
         // Check the filesystems considering the priority of formats.
@@ -163,7 +164,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         // Transfer the range of tracks to the target image (i.e. copy, merge or repair).
         opt_range.each([&](const CylHead& cylhead)
         {
-            repair_track_changed_amount_per_disk += Disk::TransferTrack(*src_disk, cylhead, *dst_disk, disk_round, context, deviceReadingPolicy);
+            repair_track_changed_amount_per_disk += Disk::TransferTrack(*src_disk, cylhead, *dst_disk, context, transferUniteMode, false, deviceReadingPolicy);
         }, !opt_normal_disk);
 
         // Copy any metadata not already present in the target (emplace doesn't replace)

@@ -1,6 +1,8 @@
 #pragma once
 
 class FileSystem; // Can not include FileSystem.h because it includes Disk.h.
+struct ScanContext;// Can not include DiskUtil.h because it includes Disk.h.
+
 #include "TrackData.h"
 #include "Format.h"
 #include "DeviceReadingPolicy.h"
@@ -16,6 +18,8 @@ class Disk
 {
 public:
     static const std::string TYPE_UNKNOWN;
+
+    enum TransferMode { Copy, Merge, Repair };
 
     Disk() = default;
     virtual ~Disk() = default;
@@ -60,8 +64,10 @@ public:
     int cyls() const;
     int heads() const;
 
-    static int TransferTrack(Disk& src_disk, const CylHead& cylhead, Disk& dst_disk,
-                      const int disk_round, ScanContext& context, DeviceReadingPolicy& deviceReadingPolicy);
+    static int TransferTrack(Disk& src_disk, const CylHead& cylhead,
+                             Disk& dst_disk, ScanContext& context,
+                             TransferMode transferMode, bool uncached = false,
+                             const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{});
 
     bool WarnIfFileSystemFormatDiffers() const;
 
