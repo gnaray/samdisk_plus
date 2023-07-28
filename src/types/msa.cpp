@@ -4,6 +4,8 @@
 #include "Disk.h"
 #include "DiskUtil.h"
 #include "MemFile.h"
+#include "Util.h"
+#include "filesystems/StFat12FileSystem.h"
 
 #include <cstdint>
 #include <memory>
@@ -134,6 +136,17 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
 
     disk->fmt() = fmt;
     disk->strType() = "MSA";
+
+    auto stFat12FileSystem = std::make_shared<StFat12FileSystem>(*disk);
+    if (stFat12FileSystem->SetFormat())
+    {
+        if (!stFat12FileSystem->format.IsSameCylHeadSectorsSize(fmt))
+        {
+            Message(msgWarning, "ST filesystem found at path (%s) but its disk format differs from that of the file. Using file format.", file.path().c_str());
+            stFat12FileSystem->format = fmt; // TODO Should this change be reflected when writing the file?
+        }
+        disk->GetFileSystem() = stFat12FileSystem;
+    }
 
     return true;
 }

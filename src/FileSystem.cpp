@@ -1,12 +1,14 @@
 #include "FileSystem.h"
 #include "Util.h"
 #include "filesystems/Fat12FileSystem.h"
+#include "filesystems/StFat12FileSystem.h"
 
 #include <algorithm>
 
 FileSystemWrappers InitFileSystemWrappers()
 {
     FileSystemWrappers fileSystemWrappers;
+    fileSystemWrappers.emplace_back(new FileSystemWrapper<StFat12FileSystem>());
     fileSystemWrappers.emplace_back(new FileSystemWrapper<Fat12FileSystem>());
     // Add more filesystems here.
     return fileSystemWrappers;
