@@ -10,6 +10,7 @@
 #include <memory>
 #include <algorithm>
 
+static auto& opt_base = getOpt<int>("base");
 static auto& opt_range = getOpt<Range>("range");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_size = getOpt<int>("size");
@@ -80,6 +81,10 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
     return true;
 }
 
+/* Originally accepted the format when the ids of largest track are sequential
+ * and ids of all other tracks are part of those ids before overriding.
+ * The current solution does the same but after overriding.
+ */
 Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
 {
     auto range = opt_range;
@@ -128,37 +133,45 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
     if (fmt.datarate == DataRate::Unknown)
         throw util::exception("source disk is blank");
 
+    const auto fmtBaseDetected = fmt.base;
     // Allow user overrides for flexibility
     fmt.Override(true);
+    const bool fmtBaseOverriden = opt_base != -1;
+    const bool fmtSectorsOverriden = opt_sectors != -1; // Override(true) accepts it.
+    if (fmtBaseOverriden && !fmtSectorsOverriden) // Then sector_above remains the same.
+        fmt.sectors -= (fmt.base - fmtBaseDetected);
 
     int max_id = -1;
     const auto sector_above = fmt.base + fmt.sectors;
-    disk->each([&](const CylHead& cylhead, const Track& track) {
-        // Skip empty tracks
-        if (track.empty())
-            return;
+    if (fmt.sectors > 0)
+    {
+        disk->each([&](const CylHead& cylhead, const Track& track) {
+            // Skip empty tracks
+            if (track.empty())
+                return;
 
-        for (auto& s : track.sectors())
-        {
-            if (s.header.sector < fmt.base // Ignore sectors below sector range.
-                    || s.header.sector >= sector_above) // Ignore sectors above sequential sector range.
-                continue;
+            for (auto& s : track.sectors())
+            {
+                if ((fmtBaseOverriden && s.header.sector < fmt.base) // Ignore sectors below overriden sector range.
+                        || (fmtSectorsOverriden && s.header.sector >= sector_above)) // Ignore sectors above sequential overriden sector range.
+                    continue;
 
-            // Track the highest sector number
-            if (s.header.sector > max_id)
-                max_id = s.header.sector;
+                // Track the highest sector number
+                if (s.header.sector > max_id)
+                    max_id = s.header.sector;
 
-            if (s.datarate != fmt.datarate)
-                throw util::exception("mixed data rates are unsuitable for raw output");
-            else if (s.encoding != fmt.encoding)
-                throw util::exception("mixed data encodings are unsuitable for raw output");
-            else if (s.header.size != fmt.size)
-                throw util::exception("mixed sector sizes are unsuitable for raw output at "
-                    , cylhead, " sector id ", s.header.sector, ", header.size.id=", s.header.size,
-                    " (size=", s.header.sector_size(), ") <> track.format.id=", fmt.size,
-                    " (size=", fmt.sector_size(), ")");
-        }
-    });
+                if (s.datarate != fmt.datarate)
+                    throw util::exception("mixed data rates are unsuitable for raw output");
+                else if (s.encoding != fmt.encoding)
+                    throw util::exception("mixed data encodings are unsuitable for raw output");
+                else if (s.header.size != fmt.size)
+                    throw util::exception("mixed sector sizes are unsuitable for raw output at "
+                        , cylhead, " sector id ", s.header.sector, ", header.size.id=", s.header.size,
+                        " (size=", s.header.sector_size(), ") <> track.format.id=", fmt.size,
+                        " (size=", fmt.sector_size(), ")");
+            }
+        });
+    }
 
     if (max_id < fmt.base)
         throw util::exception("not found selected sectors");
