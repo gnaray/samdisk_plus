@@ -355,7 +355,7 @@ void ReportBuildOptions()
 #endif
     };
 
-    if (options.size())
+    if (!options.empty())
     {
         util::cout << "\nBuild features:\n";
         for (const auto& o : options)

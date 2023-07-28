@@ -75,7 +75,7 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
                 throw util::exception("short file reading ", cylhead, " header");
 
             auto wLength = (dt.abLength[0] << 8) | dt.abLength[1];
-            if (!wLength || wLength > track_size)
+            if (wLength == 0 || wLength > track_size)
                 throw util::exception("invalid track length (", wLength, ") on ", cylhead);
             else if (wLength == track_size)
             {
@@ -92,7 +92,7 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
 
                 uint8_t* pb = mem2.data();
 
-                while (wLength)
+                while (wLength != 0)
                 {
                     // Not run-byte?
                     if (*pb != MSA_RLESTART)
@@ -100,7 +100,7 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
                         mem.push_back(*pb++);
                         wLength--;
                     }
-                    else if (wLength < 4)
+                    else if (wLength < intsizeof(MSA_RLE))
                         throw util::exception("invalid RLE block on ", cylhead);
                     else
                     {
@@ -114,7 +114,7 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
                             throw util::exception("invalid RLE data on ", cylhead);
 
                         // Write the uncompressed block
-                        while (wLen--)
+                        while (wLen-- != 0)
                             mem.push_back(fill);
 
                         pb += sizeof(MSA_RLE);

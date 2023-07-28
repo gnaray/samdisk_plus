@@ -191,7 +191,7 @@ void Disk::flip_sides()
 
 void Disk::resize(int new_cyls, int new_heads)
 {
-    if (!new_cyls && !new_heads)
+    if (new_cyls <= 0 && new_heads <= 0)
     {
         GetTrackData().clear();
         return;
