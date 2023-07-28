@@ -61,8 +61,10 @@ TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
             auto& rescan_track = rescan_trackdata.track();
 
             // If the rescan found more sectors, use the new track data.
-            // If the rescan found more good sectors, also use the new track data.
-            if (rescan_track.size() > track.size() || rescan_track.good_sectors().size() > track.good_sectors().size())
+            // Else in case of same size if the rescan found more good sectors, use the new track data.
+            if (rescan_track.size() > track.size()
+                    || (rescan_track.size() == track.size() && (rescan_track.good_sectors().size() > track.good_sectors().size()
+                    || (rescan_track.good_sectors().size() == track.good_sectors().size() && rescan_track.stable_sectors().size() > track.stable_sectors().size()))))
                 std::swap(trackdata, rescan_trackdata);
 
             // Flux reads include 5 revolutions, others just 1
