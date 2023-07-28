@@ -225,6 +225,15 @@ const Sector* Disk::find(const Header& header)
     return nullptr;
 }
 
+const Sector* Disk::find_ignoring_size(const Header& header)
+{
+    auto& track = read_track(header);
+    auto it = track.findIgnoringSize(header);
+    if (it != track.end())
+        return &*it;
+    return nullptr;
+}
+
 /*virtual*/ Format& Disk::fmt()
 {
     return m_fmt;

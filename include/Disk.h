@@ -53,6 +53,7 @@ public:
 
     const Sector& get_sector(const Header& header);
     const Sector* find(const Header& header);
+    const Sector* find_ignoring_size(const Header& header);
 
     Range range() const;
     int cyls() const;

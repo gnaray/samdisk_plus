@@ -1,11 +1,15 @@
-// BIOS Parameter Block, for MS-DOS and compatible disks
+// BIOS Parameter Block (part of FAT filesystem), for MS-DOS and compatible disks
 
-#include "bpb.h"
+#include "filesystems/Fat12FileSystem.h"
 #include "Disk.h"
 #include "MemFile.h"
-#include "Util.h"
 
+#include <algorithm>
+#include <string>
 #include <memory>
+
+constexpr const char* DISK_TYPE_BPB = "BPB";
+constexpr const char* DISK_TYPE_BPB_DOS = "BPB (DOS signed)";
 
 bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
 {
@@ -13,40 +17,20 @@ bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
     if (!file.rewind() || !file.read(&bpb, sizeof(bpb)))
         return false;
 
-    // Check for a sensible media byte
-    if (bpb.bMedia != 0xf0 && bpb.bMedia < 0xf8)
+    const auto fat12FileSystem = std::make_shared<Fat12FileSystem>(*disk);
+    // Reject disks larger than geometry suggests, but accept space-saver truncated images.
+    if (!fat12FileSystem->SetFormatByBPB(bpb)
+            || fat12FileSystem->format.disk_size() < file.size())
         return false;
 
-    // Extract the full geometry
-    auto total_sectors = util::le_value(bpb.abSectors);
-    auto sector_size = util::le_value(bpb.abBytesPerSec);
-    auto sectors = util::le_value(bpb.abSecPerTrack);
-    auto heads = util::le_value(bpb.abHeads);
-    auto cyls = (sectors && heads) ? (total_sectors / (sectors * heads)) : 0;
-
-    Format fmt{ RegularFormat::PC720 };
-    fmt.cyls = static_cast<uint8_t>(cyls);
-    fmt.heads = static_cast<uint8_t>(heads);
-    fmt.sectors = static_cast<uint8_t>(sectors);
-    fmt.size = SizeToCode(sector_size);
-    fmt.gap3 = 0;   // auto
-    if (!fmt.TryValidate())
-        return false;
-
-    if (fmt.track_size() < 6000)
-        fmt.datarate = DataRate::_250K;
-    else if (fmt.track_size() < 12000)
-        fmt.datarate = DataRate::_500K;
-    else
-        fmt.datarate = DataRate::_1M;
-
-    // Reject disks larger than geometry suggests, but accept space-saver truncated images
-    if (file.size() > fmt.disk_size())
+    Data bootSectorData(static_cast<DataST>(fat12FileSystem->format.sector_size()));
+    if (!file.rewind() || !file.read(bootSectorData))
         return false;
 
     file.rewind();
-    disk->format(fmt, file.data());
-
-    disk->strType() = "BPB";
+    disk->format(fat12FileSystem->format, file.data());
+    disk->strType() = fat12FileSystem->IsBootSectorSigned(bootSectorData) ? DISK_TYPE_BPB_DOS : DISK_TYPE_BPB;
+    disk->GetFileSystem() = fat12FileSystem;
+    disk->GetTypeDomesticFileSystemNames().emplace(Fat12FileSystem::Name());
     return true;
 }
