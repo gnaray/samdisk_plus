@@ -8,6 +8,7 @@
 #include "MemFile.h"
 #include "SAMdisk.h"
 #include "SAMCoupe.h"
+#include "RepairSummaryDisk.h"
 #include "Trinity.h"
 #include "Util.h"
 #include "utils.h"
@@ -58,6 +59,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     if (opt_minimal)
         TrackUsedInit(*src_disk); // Valid only for MGT format.
 
+    RepairSummaryDisk fileSystemDeterminerDisk{*src_disk, context};
     // For merge or repair, read any existing target image, error if that fails.
     if (opt_merge || opt_repair)
     {
@@ -89,9 +91,9 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
             src_disk->clear(); // Required for determining stability of sectors.
         // Check the filesystems considering the priority of formats.
         if (!src_disk->GetFileSystem() && !src_disk->is_constant_disk() && formatPriority < FormatPriority::SrcDevFS
-                && opt_detect_devfs && fileSystemWrappers.FindAndSetApprover(*src_disk))
+                && opt_detect_devfs && fileSystemWrappers.FindAndSetApprover(fileSystemDeterminerDisk))
         {
-            srcDiskFormat = src_disk->GetFileSystem()->GetFormat();
+            srcDiskFormat = fileSystemDeterminerDisk.GetFileSystem()->GetFormat();
             formatPriority = FormatPriority::SrcDevFS;
             util::cout << "YEEHAAWW!! We have src filesystem in cmd_copy, its format=" << srcDiskFormat << "\n";
         }
