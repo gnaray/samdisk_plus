@@ -1,6 +1,5 @@
 // Format and unformat commands
 
-#include "PlatformConfig.h"
 #include "Options.h"
 #if 0
 #include "types/record.h"
