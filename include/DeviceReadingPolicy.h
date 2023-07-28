@@ -46,6 +46,12 @@ public:
         m_unskippableWantedSectorHeaderIdsValid = false;
     }
 
+    void AddSkippableSectors(const Sectors& skippableSectors)
+    {
+        m_skippableSectors.insert(m_skippableSectors.end(), skippableSectors.begin(), skippableSectors.end());
+        m_unskippableWantedSectorHeaderIdsValid = false;
+    }
+
     void ClearSkippableSectors()
     {
         m_skippableSectors.clear();
