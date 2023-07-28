@@ -255,6 +255,36 @@ const Sector* Disk::find(const Header& header)
     return m_strType;
 }
 
+/*virtual*/ std::shared_ptr<FileSystem>& Disk::GetFileSystem()
+{
+    return m_fileSystem;
+}
+
+/*virtual*/ const std::shared_ptr<FileSystem>& Disk::GetFileSystem() const
+{
+    return m_fileSystem;
+}
+
+/*virtual*/ std::set<std::string>& Disk::GetTypeDomesticFileSystemNames()
+{
+    return m_typeDomesticFileSystemNames;
+}
+
+/*virtual*/ const std::set<std::string>& Disk::GetTypeDomesticFileSystemNames() const
+{
+    return m_typeDomesticFileSystemNames;
+}
+
+/*virtual*/ std::string& Disk::GetPath()
+{
+    return m_path;
+}
+
+/*virtual*/ const std::string& Disk::GetPath() const
+{
+    return m_path;
+}
+
 /*virtual*/ std::map<CylHead, TrackData>& Disk::GetTrackData()
 {
     return m_trackdata;
@@ -367,4 +397,25 @@ const Sector* Disk::find(const Header& header)
         }
     }
     return repair_track_changed_amount_per_track;
+}
+
+bool Disk::WarnIfFileSystemFormatDiffers() const
+{
+    const auto fileSystem = GetFileSystem();
+    if (is_constant_disk() && fileSystem)
+    {
+        const auto fileSystemFormat = fileSystem->GetFormat();
+        const auto imageFormat = fmt();
+        if (!imageFormat.IsNone() && !fileSystemFormat.IsSameCylHeadSectorsSize(imageFormat))
+        {
+            Message(msgWarning, "%s filesystem format in image file (%s) differs from image file format",
+                    fileSystem->GetName().c_str(), GetPath().c_str());
+            const auto fileContainsFileSystem = fileSystemFormat.cyls <= imageFormat.cyls && fileSystemFormat.heads <= imageFormat.heads
+                    && fileSystemFormat.sectors <= imageFormat.sectors && fileSystemFormat.base >= imageFormat.base;
+            Message(fileContainsFileSystem ? msgInfo : msgWarning, "%s filesystem is %s the file boundaries in image file (%s)",
+                    fileSystem->GetName().c_str(), fileContainsFileSystem ? "within" : "outside", GetPath().c_str());
+            return true;
+        }
+    }
+    return false;
 }

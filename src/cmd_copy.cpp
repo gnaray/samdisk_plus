@@ -1,5 +1,6 @@
 // Copy command
 
+#include "FileSystem.h"
 #include "Interval.h"
 #include "Options.h"
 #include "DiskUtil.h"
@@ -47,12 +48,8 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         Message(msgInfo, "assuming --encoding=Ace due to .dti output image");
     }
 
-    // For merge or repair, read any existing target image, error if that fails.
-    if (opt_merge || opt_repair)
-        ReadImage(dst_path, dst_disk, false);
-
     // Read the source image
-    ReadImage(src_path, src_disk);
+    ReadImage(src_path, src_disk); // No determining filesystem here, doing it in disk_round loop.
 
     // Limit to our maximum geometry, and default to copy everything present in the source
     ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, opt_step, src_disk->cyls(), src_disk->heads());
@@ -60,51 +57,102 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     if (opt_minimal)
         TrackUsedInit(*src_disk); // Valid only for MGT format.
 
+    // For merge or repair, read any existing target image, error if that fails.
+    if (opt_merge || opt_repair)
+    {
+        ReadImage(dst_path, dst_disk, false, false); // The dst disk should be already normalised.
+        if (!dst_disk->is_constant_disk())
+            throw util::exception("copying to device disk with merge or repair option is not supported");
+        if (!dst_disk->GetFileSystem()) // Determining filesystem here separately so it does not affect device dst disk.
+            fileSystemWrappers.FindAndSetApprover(*dst_disk);
+        dst_disk->WarnIfFileSystemFormatDiffers();
+    }
+
     // tmp dst path in case of merge or repair mode.
     const std::string tmp_dst_path = util::prepend_extension(dst_path, "tmp.");
+    DeviceReadingPolicy deviceReadingPolicy;
+    // Priority of formats for srcDiskFormat (lowest first). The opt_base and opt_sectors can override anything.
+    enum class FormatPriority { Src, NormalDstImage, SrcDevFS, DstImageFS, SrcImageFS};
+    // Image file reader might have set the filesystem already.
+    Format srcDiskFormat{src_disk->GetFileSystem() ? src_disk->GetFileSystem()->GetFormat() : src_disk->fmt()};
+    FormatPriority formatPriority{src_disk->GetFileSystem() ? (src_disk->is_constant_disk() ? FormatPriority::SrcImageFS : FormatPriority::SrcDevFS) : FormatPriority::Src};
     bool result = false;
     // Do not retry disk when
-    // 1) merging because it overwrites previous data, wasting of time.
+    // 1) merging because it overwrites previous data, wasting of time. Copy would be the same but it becomes repair after first round.
     // 2) disk is constant because the constant disk image always provides the same data, wasting of time.
     const int disk_retries = !opt_merge && !src_disk->is_constant_disk() && opt_disk_retries >= 0 ? opt_disk_retries : 0;
     for (auto disk_round = 0; disk_round <= disk_retries; disk_round++)
     {
         int repair_track_changed_amount_per_disk = 0;
-
+        if (!src_disk->is_constant_disk()) // Clear cached tracks of interest of not constant disk.
+            src_disk->clear(); // Required for determining stability of sectors.
+        // Check the filesystems considering the priority of formats.
+        if (!src_disk->GetFileSystem() && !src_disk->is_constant_disk() && formatPriority < FormatPriority::SrcDevFS
+                && fileSystemWrappers.FindAndSetApprover(*src_disk))
         {
+            srcDiskFormat = src_disk->GetFileSystem()->GetFormat();
+            formatPriority = FormatPriority::SrcDevFS;
+            util::cout << "YEEHAAWW!! We have src filesystem in cmd_copy, its format=" << srcDiskFormat << "\n";
         }
-
-        // If repair mode and normal disk then determine normal track size by calculating the average track size.
-        int normal_track_size = 0;
-        int normal_first_sector_id = opt_base > 0 ? opt_base : 1;
-        if (opt_repair && opt_normal_disk)
+        if (!dst_disk->GetFileSystem() && dst_disk->is_constant_disk() && formatPriority < FormatPriority::DstImageFS
+                && fileSystemWrappers.FindAndSetApprover(*dst_disk))
         {
-            // If sectors is specified then the normal track size is the sectors plus first sector id 0-based.
-            if (opt_sectors > 0)
-            {
-                normal_track_size = lossless_static_cast<int>(opt_sectors) + normal_first_sector_id - 1;
-            }
-            else
+            srcDiskFormat = dst_disk->GetFileSystem()->GetFormat();
+            formatPriority = FormatPriority::DstImageFS;
+        }
+        if (opt_normal_disk)
+        {
+            const bool fmtBaseOverriden = opt_base != -1;
+            const bool fmtSectorsOverriden = opt_sectors != -1;
+            auto normalTrackSize = 0;
+            if (fmtSectorsOverriden)
+                normalTrackSize = lossless_static_cast<int>(opt_sectors);
+            // Format priority = NormalDstImage is allowed because dst disk can change in each disk round.
+            else if (opt_repair && dst_disk->is_constant_disk() && formatPriority <= FormatPriority::NormalDstImage)
             {
                 int dst_track_amount = 0;
                 int sum_dst_track_size = 0;
                 opt_range.each([&](const CylHead& cylhead) {
                     auto dst_track = dst_disk->read_track(cylhead);
                     NormaliseTrack(cylhead, dst_track);
-                    auto track_normal_probable_size = dst_track.normal_probable_size();
+                    const auto track_normal_probable_size = dst_track.normal_probable_size();
                     if (track_normal_probable_size > 0) {
                         sum_dst_track_size += track_normal_probable_size;
                         dst_track_amount++;
                     }
                 });
                 if (dst_track_amount > 0)
-                    normal_track_size = round_AS<int>(lossless_static_cast<double>(sum_dst_track_size) / dst_track_amount);
+                    normalTrackSize = round_AS<int>(lossless_static_cast<double>(sum_dst_track_size) / dst_track_amount);
+            }
+            if (normalTrackSize > 0)
+            {
+                srcDiskFormat.sectors = normalTrackSize - (srcDiskFormat.base - 1);
+                if (formatPriority < FormatPriority::NormalDstImage)
+                    formatPriority = FormatPriority::NormalDstImage;
+            }
+            if (fmtBaseOverriden)
+            {
+                const auto baseDiff = opt_base - srcDiskFormat.base;
+                if (baseDiff != 0)
+                {
+                    srcDiskFormat.base = opt_base;
+                    srcDiskFormat.sectors -= baseDiff;
+                }
+            }
+        }
+        if (formatPriority >= FormatPriority::NormalDstImage)
+        {
+            deviceReadingPolicy.SetLookForPossibleSectors(false);
+            deviceReadingPolicy.SetWantedSectorHeaderIds(Interval<int>{srcDiskFormat.base, srcDiskFormat.sectors, BaseInterval::LeftAndSize});
+            if (formatPriority >= FormatPriority::SrcDevFS)
+            {
+                opt_range.cyl_end = srcDiskFormat.cyls;
+                opt_range.head_end = srcDiskFormat.heads;
+                // Limit to the src disk tracks and heads (it is better than format in case of device).
+                ValidateRange(opt_range, src_disk->cyls(), src_disk->heads(), opt_step);
             }
         }
 
-        deviceReadingPolicy.SetWantedSectorHeaderIds(Interval<int>(normal_first_sector_id, normal_track_size, BaseInterval::LeftAndSize));
-        if (!opt_normal_disk)
-            deviceReadingPolicy.SetLookForPossibleSectors(true);
         bool is_disk_retry = disk_round > 0; // First reading is not retry.
         if (opt_verbose)
             Message(msgInfo, "%seading disk in %uth round", (is_disk_retry ? "Rer" : "R"), disk_round);
@@ -120,8 +168,10 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
             dst_disk->metadata().emplace(m);
 
         // Write the new/merged target image
-        // When merge or repair mode is requested, a new tmp file is written and then renamed as final file.
-        if (opt_merge || opt_repair) {
+        // When merge or repair mode is requested, a new tmp file is written and then renamed as final file
+        // which works well only if dst is a file (constant disk) but not device.
+        if (dst_disk->is_constant_disk() && (opt_merge || opt_repair))
+        {
             result = WriteImage(tmp_dst_path, dst_disk) && std::remove(dst_path.c_str()) == 0
                     && std::rename(tmp_dst_path.c_str(), dst_path.c_str()) == 0;
         }

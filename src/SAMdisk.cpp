@@ -1,6 +1,7 @@
 // Main entry point and command-line handler
 
 #include "SAMdisk.h"
+#include "FileSystem.h"
 #include "Options.h"
 #include "Util.h"
 #include "types.h"
@@ -307,6 +308,21 @@ void ReportTypes()
     util::cout << '\n';
 }
 
+void ReportFileSystems()
+{
+    std::ostringstream ss;
+    ss << "\nSupported filesystems:\n";
+    if (fileSystemWrappers.empty())
+        ss << "NONE";
+    else
+    {
+        for (const auto& fileSystemWrapper : fileSystemWrappers)
+            ss << ' ' << fileSystemWrapper.get();
+    }
+
+    util::cout << ss.str() << '\n';
+}
+
 void ReportBuildOptions()
 {
     static const std::vector<const char*> options{
@@ -352,6 +368,7 @@ void LongVersion()
 {
     Version();
     ReportTypes();
+    ReportFileSystems();
     ReportBuildOptions();
 #ifdef HAVE_FDRAWCMD_H
     ReportDriverVersion();

@@ -1,12 +1,12 @@
 // Info command
 
-#include "PlatformConfig.h"
 #include "Options.h"
 #include "SAMdisk.h"
 #include "Image.h"
 #include "HDD.h"
 #include "Disk.h"
 #include "Util.h"
+#include "FileSystem.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -20,7 +20,9 @@ bool ImageInfo(const std::string& path)
     util::cout.screen->flush();
 
     auto disk = std::make_shared<Disk>();
-    ReadImage(opt_szSource, disk);
+    ReadImage(opt_szSource, disk, true);
+    if (disk->GetFileSystem())
+        disk->fmt() = disk->GetFileSystem()->GetFormat();
     const Format& fmt = disk->fmt();
     auto cyls = disk->cyls();
     auto heads = disk->heads();

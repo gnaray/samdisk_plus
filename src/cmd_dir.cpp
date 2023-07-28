@@ -1,6 +1,7 @@
 // Dir command
 
 #include "DiskUtil.h"
+#include "FileSystem.h"
 #include "Image.h"
 #include "JupiterAce.h"
 #include "SAMCoupe.h"
@@ -989,9 +990,11 @@ bool DirMgt(Disk& disk)
 bool Dir(Disk& disk)
 {
     auto sector = IsDeepThoughtDisk(disk);
-
     if (sector != nullptr)
         return DirAce(disk);
+
+    if (disk.GetFileSystem())
+        return disk.GetFileSystem()->Dir();
 
     if ((sector = disk.find(Header(0, 0, 1, 2))) != nullptr)
     {
@@ -1022,6 +1025,6 @@ bool Dir(Disk& disk)
 bool DirImage(const std::string& path)
 {
     auto disk = std::make_shared<Disk>();
-    ReadImage(path, disk);
+    ReadImage(path, disk, true);
     return Dir(*disk);
 }

@@ -1,6 +1,7 @@
 // High-level disk image/device reading and writing
 
 #include "Image.h"
+#include "FileSystem.h"
 #include "Options.h"
 #include "SpectrumPlus3.h"
 #include "Util.h"
@@ -19,58 +20,62 @@ static auto& opt_head1 = getOpt<int>("head1");
 static auto& opt_nozip = getOpt<int>("nozip");
 static auto& opt_range = getOpt<Range>("range");
 
-void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normalise)
+void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool determineDeviceFileSystem/* = false*/, bool normalise/* = true*/)
 {
-    MemFile file;
-    bool f = false;
-
     if (path.empty())
         throw util::exception("invalid empty path");
+    disk->GetPath() = path;
 
-    // Try devices first as the path may use a custom syntax
-    for (auto p = aDeviceTypes; !f && p->pszType; ++p)
+    for (;;)
     {
-        if (p->pfnRead) f = p->pfnRead(path, disk);
-    }
+        // Try devices first as the path may use a custom syntax
+        for (auto p = aDeviceTypes; p->pszType; ++p)
+            if (p->pfnRead && p->pfnRead(path, disk))
+                goto diskRead;
 
-    if (!f && IsDir(path))
-        throw util::exception("path is a directory");
+        if (IsDir(path))
+            throw util::exception("path is a directory");
 
-    // Next try regular files (and archives)
-    if (!f)
-    {
+        MemFile file;
+        // Next try regular files (and archives)
         file.open(path, !opt_nozip);
 
         // Present the image to all types with read support
-        for (auto p = aImageTypes; !f && p->pszType; ++p)
-        {
-            if (p->pfnRead) f = p->pfnRead(file, disk);
-        }
-
-        // Store the archive type the image was found in, if any
-        if (f)
-        {
-            if (file.compression() != Compress::None)
-                disk->metadata()["archive"] = to_string(file.compression());
-            if (file.path().rfind(file.name()) + file.name().size() != file.path().size())
-                disk->metadata()["filename"] = file.name();
-        }
-    }
+        for (auto p = aImageTypes; p->pszType; ++p)
+            if (p->pfnRead && p->pfnRead(file, disk))
+            {
+                // Store the archive type the image was found in, if any
+                if (file.compression() != Compress::None)
+                    disk->metadata()["archive"] = to_string(file.compression());
+                if (file.path().rfind(file.name()) + file.name().size() != file.path().size())
+                    disk->metadata()["filename"] = file.name();
+                goto diskRead;
+            }
 
 #if 0
-    // Unwrap any sub-containers
-    if (!f) f = UnwrapSDF(olddisk, disk);   // MakeSDF image
-    if (!f) f = UnwrapCPM(olddisk, disk);   // BDOS CP/M record format
+        // Unwrap any sub-containers
+        if (UnwrapSDF(olddisk, disk)) goto diskRead;   // MakeSDF image
+        if (UnwrapCPM(olddisk, disk)) goto diskRead;   // BDOS CP/M record format
 #endif
 
-    if (!f)
         throw util::exception("unrecognised disk image format");
+    }
+diskRead:
+    // FileSystem might exist already by image file reader.
+    if (!disk->GetFileSystem() && (determineDeviceFileSystem || disk->is_constant_disk()))
+        fileSystemWrappers.FindAndSetApprover(*disk);
+    // FileSystem format should not differ from optional image file format. Safer to check.
+    if (disk->WarnIfFileSystemFormatDiffers())
+        Message(msgInfo, "Overriding disk format by %s filesystem format read from image file (%s)",
+                disk->GetFileSystem()->GetName().c_str(), path.c_str());
+    if (disk->GetFileSystem())
+        disk->fmt() = disk->GetFileSystem()->GetFormat();
 
     disk->disk_is_read();
 
     if (normalise)
     {
-        // ToDo: Make resize and flip optional?  replace fNormalise) and fLoadFilter_?
+        // ToDo: Make resize and flip optional?  replace fNormalise_ and fLoadFilter_?
 #if 0 // breaks with sub-ranges
         if (!opt_range.empty())
             disk->resize(opt_range.cyls(), opt_range.heads());
@@ -114,60 +119,64 @@ void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool normal
 }
 
 
-bool WriteImage(const std::string& path, std::shared_ptr<Disk>& disk)
-{
-    bool f = false;
 
+bool WriteImage(const std::string& path, std::shared_ptr<Disk>& disk, bool determineDeviceFileSystem/* = false*/)
+{
+    disk->GetPath() = path;
 #if 0
     // TODO: Wrap a CP/M image in a BDOS record container
     auto cpm_disk = std::make_shared<Disk>();
-    if (opt_cpm)
-        f = WrapCPM(disk, cpm_disk);
+    if (opt_cpm && WrapCPM(disk, cpm_disk))
+        return true;
 #endif
 
     // Try devices first as the path may use a custom syntax
-    for (auto p = aDeviceTypes; !f && p->pszType; ++p)
+    for (auto p = aDeviceTypes; p->pszType; ++p)
     {
-        if (p->pfnWrite) f = p->pfnWrite(path, disk);
+        if (p->pfnWrite && p->pfnWrite(path, disk))
+            return true;
     }
 
     // Normal image file
-    if (!f)
+    auto p = aImageTypes;
+
+    // Find the type matching the output file extension
+    for (; p->pszType; ++p)
     {
-        auto p = aImageTypes;
+        // Matching extension with write
+        if (IsFileExt(path, p->pszType))
+            break;
+    }
 
-        // Find the type matching the output file extension
-        for (; p->pszType; ++p)
-        {
-            // Matching extension with write
-            if (IsFileExt(path, p->pszType))
-                break;
-        }
+    if (!p->pszType)
+        throw util::exception("unknown output file type");
+    else if (!p->pfnWrite)
+        throw util::exception(util::format(p->pszType, " is not supported for output"));
 
-        if (!p->pszType)
-            throw util::exception("unknown output file type");
-        else if (!p->pfnWrite)
-            throw util::exception(util::format(p->pszType, " is not supported for output"));
+    util::unique_FILE_t file{fopen(path.c_str(), "wb")};
+    if (!file)
+        throw posix_error(errno, path.c_str());
 
-        FILE* file = fopen(path.c_str(), "wb");
-        if (!file)
-            throw posix_error(errno, path.c_str());
+    const auto fileSystemPrev = disk->GetFileSystem();
 
-        try
-        {
-            // Write the image
-            f = p->pfnWrite(file, disk);
-            if (!f)
-                throw util::exception("output type is unsuitable for source content");
-        }
-        catch (...)
-        {
-            fclose(file);
-            std::remove(path.c_str());
-            throw;
-        }
+    try
+    {
+        // Write the image
+        if (!p->pfnWrite(file.get(), disk))
+            throw util::exception("output type is unsuitable for source content");
+    }
+    catch (...)
+    {
+        std::remove(path.c_str());
+        throw;
+    }
 
-        fclose(file);
+    if (determineDeviceFileSystem || disk->is_constant_disk())
+    {
+        const bool isFileSystemApproved = fileSystemWrappers.FindAndSetApprover(*disk);
+        if (fileSystemPrev && (!isFileSystemApproved || !fileSystemPrev->IsSameNamed(*disk->GetFileSystem())))
+            Message(msgWarning, "%s filesystem of disk at path (%s) has been modified",
+                    fileSystemPrev->GetName().c_str(), path.c_str());
     }
 
     return true;

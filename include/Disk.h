@@ -1,20 +1,16 @@
 #pragma once
 
+class FileSystem; // Can not include FileSystem.h because it includes Disk.h.
 #include "TrackData.h"
 #include "Format.h"
 #include "DeviceReadingPolicy.h"
 
 #include <cstdint>
 #include <functional>
-#include <vector>
+#include <set>
 #include <map>
 #include <mutex>
-
-#include <cstdint>
-#include <functional>
-#include <vector>
-#include <map>
-#include <mutex>
+#include <memory>
 
 class Disk
 {
@@ -65,12 +61,20 @@ public:
     static int TransferTrack(Disk& src_disk, const CylHead& cylhead, Disk& dst_disk,
                       const int disk_round, ScanContext& context, DeviceReadingPolicy& deviceReadingPolicy);
 
+    bool WarnIfFileSystemFormatDiffers() const;
+
     virtual Format& fmt();
     virtual const Format& fmt() const;
     virtual std::map<std::string, std::string>& metadata();
     virtual const std::map<std::string, std::string>& metadata() const;
     virtual std::string& strType();
     virtual const std::string& strType() const;
+    virtual std::shared_ptr<FileSystem>& GetFileSystem();
+    virtual const std::shared_ptr<FileSystem>& GetFileSystem() const;
+    virtual std::set<std::string>& GetTypeDomesticFileSystemNames();
+    virtual const std::set<std::string>& GetTypeDomesticFileSystemNames() const;
+    virtual std::string& GetPath();
+    virtual const std::string& GetPath() const;
     virtual std::map<CylHead, TrackData>& GetTrackData();
     virtual const std::map<CylHead, TrackData>& GetTrackData() const;
     virtual std::mutex& GetTrackDataMutex();
@@ -79,6 +83,10 @@ protected:
     Format m_fmt{};
     std::map<std::string, std::string> m_metadata{};
     std::string m_strType = TYPE_UNKNOWN;
+    std::shared_ptr<FileSystem> m_fileSystem{};
+    std::set<std::string> m_typeDomesticFileSystemNames{};
+    std::string m_path{};
+
     std::map<CylHead, TrackData> m_trackdata{};
     std::mutex m_trackdata_mutex{};
 };
