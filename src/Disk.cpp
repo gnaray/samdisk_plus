@@ -152,6 +152,11 @@ void Disk::each(const std::function<void(const CylHead& cylhead, const Track& tr
     }
 }
 
+bool Disk::track_exists(const CylHead& cylhead) const
+{
+    return GetTrackData().find(cylhead) != GetTrackData().end();
+}
+
 void Disk::format(const RegularFormat& reg_fmt, const Data& data /* = Data()*/, bool cyls_first /* = false*/)
 {
     format(Format(reg_fmt), data, cyls_first);

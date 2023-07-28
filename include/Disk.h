@@ -46,6 +46,7 @@ public:
 
     void each(const std::function<void(const CylHead& cylhead, const Track& track)>& func, bool cyls_first = false);
 
+    bool track_exists(const CylHead& cylhead) const;
     void format(const RegularFormat& reg_fmt, const Data& data = Data(), bool cyls_first = false);
     void format(const Format& fmt, const Data& data = Data(), bool cyls_first = false);
     void flip_sides();
