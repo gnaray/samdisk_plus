@@ -26,12 +26,11 @@ bool ImageInfo(const std::string& path)
     const Format& fmt = disk->fmt();
     auto cyls = disk->cyls();
     auto heads = disk->heads();
-    auto sectors = fmt.sectors;
 
     util::cout << colour::cyan << " Type:   " << colour::none << disk->strType() << "\n";
     assert(disk->strType() != Disk::TYPE_UNKNOWN);
 
-    if (sectors == 0)
+    if (fmt.IsNone())
         util::cout << colour::cyan << " Size:   " << colour::none <<
         util::fmt("%u Cyl%s, %u Head%s\n", cyls, cyls == 1 ? "" : "s", heads, heads == 1 ? "" : "s");
     else

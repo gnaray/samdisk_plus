@@ -100,7 +100,7 @@ bool ScanImage(const std::string& path, Range range)
     const Format& fmt = disk->fmt();
 
     // Regular format and no range specified?
-    if (!opt_verbose && range.empty() && fmt.sectors > 0)
+    if (!opt_verbose && range.empty() && !fmt.IsNone())
     {
         util::cout << util::fmt("%s %s, %2u cyls, %u heads, %2u sectors, %4u bytes/sector\n",
             to_string(fmt.datarate).c_str(), to_string(fmt.encoding).c_str(),
