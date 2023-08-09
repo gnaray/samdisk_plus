@@ -543,12 +543,15 @@ void Fat12FileSystem::WriteBpbToDisk()
     disk.write(BOOT_SECTOR_CYLHEAD, std::move(track00));
 }
 
-std::string Fat12FileSystem::NameWithExt3(const msdos_dir_entry& dir_entry, bool accept_deleted/* = false*/) const
+std::string Fat12FileSystem::NameWithExt3(const msdos_dir_entry& dir_entry, bool accept_deleted/* = false*/, bool* p_is_name_valid/* = nullptr*/) const
 {
     std::string dirEntryName{dir_entry.name, dir_entry.name + sizeof(dir_entry.name)};
     const auto allowDeleted = accept_deleted && dir_entry.name[0] == DIR_ENTRY_DELETED_FLAG;
-    if (!IsValidShortName(dirEntryName.substr(allowDeleted ? 1 : 0)))
-        return "INVALIDNAME"; // Intentionally 11 long (it should not be longer).
+    bool is_name_valid_local;
+    auto pIsNameValidLocal = p_is_name_valid != nullptr ? p_is_name_valid : &is_name_valid_local;
+    *pIsNameValidLocal = !IsValidShortName(dirEntryName.substr(allowDeleted ? 1 : 0));
+    if (!*pIsNameValidLocal && p_is_name_valid == nullptr)
+        return "**INVALID**"; // Intentionally 11 long (it should not be longer).
     if (allowDeleted)
         dirEntryName[0] = '?';
     constexpr auto ext_len = 3;
@@ -563,6 +566,17 @@ std::string Fat12FileSystem::GetName() const /*override*/
     return Fat12FileSystem::Name();
 };
 
+void coutTextWithValidationError(const std::string& text, const bool isTextValid, const colour lineColor = colour::none)
+{
+    if (!isTextValid)
+        util::cout << '*' << colour::magenta;
+    util::cout << util::fmt("%-12.12s", text.c_str());
+    if (!isTextValid)
+        util::cout << lineColor << '*';
+    else
+        util::cout << "  ";
+}
+
 bool Fat12FileSystem::Dir() /*override*/
 {
     const auto fat1_sector_0 = util::le_value(bpb.abResSectors);
@@ -572,7 +586,8 @@ bool Fat12FileSystem::Dir() /*override*/
     const auto msdos_dir_entry_size = intsizeof(msdos_dir_entry);
     const auto max_dir_sectors = root_dir_ents * msdos_dir_entry_size / format.sector_size();
     std::string volume_label;
-    util::cout << "T  File Name      Clst     Size         Date     Time\n";
+    bool is_volume_label_valid = false;
+    util::cout << "T  File Name        Clst     Size         Date     Time\n";
     for (auto dir_sector_i = dir_sector_0; dir_sector_i < dir_sector_0 + max_dir_sectors; dir_sector_i++)
     {
         auto dir_sector = GetLogicalSector(dir_sector_i);
@@ -593,7 +608,7 @@ bool Fat12FileSystem::Dir() /*override*/
                     continue;
                 if (dir_entry.attr & DIR_ENTRY_ATTR_VOLUME_ID)
                 {   // TODO Can be a label deleted? Probably not.
-                    volume_label = NameWithExt3(dir_entry);
+                    volume_label = NameWithExt3(dir_entry, false, &is_volume_label_valid);
                     continue;
                 }
                 auto dir_entry_deleted = dir_entry.name[0] == DIR_ENTRY_DELETED_FLAG;
@@ -603,12 +618,20 @@ bool Fat12FileSystem::Dir() /*override*/
                 const auto dateTime = DateTimeString(util::le_value(dir_entry.date), util::le_value(dir_entry.time), DATE_MAX);
                 const auto file_size = util::le_value(dir_entry.size);
                 const auto fileSizeString = file_size > static_cast<uint32_t>(format.disk_size()) ? "INVALID" : util::fmt("%7u", file_size);
+                auto line_colour = colour::none;
                 // Show deleted entry in red, with first character of filename replaced by "?"
-                if (dir_entry_deleted) util::cout << colour::red;
-                else if (attr_hidden) util::cout << colour::cyan;
+                if (dir_entry_deleted)
+                    line_colour = colour::red;
+                else if (attr_hidden)
+                    line_colour = colour::cyan;
                 const auto typeLetter = dir_entry.attr & DIR_ENTRY_ATTR_DIRECTORY ? 'D' : 'F';
-                util::cout << util::fmt("%c  %-12.12s  %5hu  %s  %20s", typeLetter,
-                        NameWithExt3(dir_entry, true).c_str(),
+                if (line_colour != colour::none)
+                    util::cout << line_colour;
+                util::cout << util::fmt("%c  ", typeLetter);
+                bool is_name_valid = false;
+                const auto name = NameWithExt3(dir_entry, true, &is_name_valid);
+                coutTextWithValidationError(name, is_name_valid, line_colour);
+                util::cout << util::fmt("  %5hu  %s  %20s",
                         util::le_value(dir_entry.start), fileSizeString.c_str(),
                         dateTime.c_str());
                 std::stringstream ss;
@@ -619,14 +642,19 @@ bool Fat12FileSystem::Dir() /*override*/
                 if (writingStarted)
                     util::cout << " (" << ss.str() << ")";
 
-                if (dir_entry_deleted || attr_hidden) util::cout << colour::none;
+                if (line_colour != colour::none)
+                    util::cout << colour::none;
                 util::cout << "\n";
             }
         }
     }
 noMoreDirEntries:
     if (!volume_label.empty())
-        util::cout << "Volume label: " << volume_label << '\n';
+    {
+        util::cout << "Volume label: ";
+        coutTextWithValidationError(volume_label, is_volume_label_valid);
+        util::cout << '\n';
+    }
         //if (dir_entry.attr & DIR_ENTRY_ATTR_DIRECTORY)
 /*
         auto cluster_amount = GetFileClusterAmount(util::le_value(dir_entry.start));

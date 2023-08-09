@@ -124,7 +124,7 @@ public:
     void ReadBpbFromDisk();
     void WriteBpbToDisk();
 
-    std::string NameWithExt3(const msdos_dir_entry& dir_entry, bool accept_deleted = false) const;
+    std::string NameWithExt3(const msdos_dir_entry& dir_entry, bool accept_deleted = false, bool* p_is_name_valid = nullptr) const;
 
     std::string GetName() const override;
     bool Dir() override;
