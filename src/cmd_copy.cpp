@@ -114,8 +114,10 @@ void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDet
         deviceReadingPolicy.SetWantedSectorHeaderIds(Interval<int>{transferDiskFormat.base, transferDiskFormat.sectors, BaseInterval::LeftAndSize});
         if (transferDiskFormatPriority >= FormatPriority::SrcDevFS)
         {
-            transferDiskRange.cyl_end = transferDiskFormat.cyls;
-            transferDiskRange.head_end = transferDiskFormat.heads;
+            if (!diskRangeCylsOverriden)
+                transferDiskRange.cyl_end = transferDiskFormat.cyls;
+            if (!diskRangeHeadsOverriden)
+                transferDiskRange.head_end = transferDiskFormat.heads;
             // Limit to the src disk tracks and heads (it is better than src format in case of device).
             ValidateRange(transferDiskRange, src_disk.cyls(), src_disk.heads(), opt_step);
         }
