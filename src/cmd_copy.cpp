@@ -36,6 +36,93 @@ static auto& opt_step = getOpt<int>("step");
 static auto& opt_track_retries = getOpt<int>("track_retries");
 static auto& opt_verbose = getOpt<int>("verbose");
 
+// Priority of formats for srcDiskFormat (lowest first).
+enum class FormatPriority { None, Src, NormalDstImage, SrcDevFS, DstImageFS, SrcImageFS};
+
+void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDeterminerDisk,
+                          Format& transferDiskFormat, FormatPriority& transferDiskFormatPriority,
+                          DeviceReadingPolicy& deviceReadingPolicy, Range& transferDiskRange)
+{
+    // The opt_range, opt_base and opt_sectors are highest priority.
+    const bool fmtBaseOverriden = opt_base != -1;
+    const bool fmtSectorsOverriden = opt_sectors != -1;
+    const bool diskRangeCylsOverriden = opt_range.cyls() > 0;
+    const bool diskRangeHeadsOverriden = opt_range.heads() > 0;
+
+    if (transferDiskFormatPriority == FormatPriority::None)
+    {
+        transferDiskFormat = src_disk.GetFileSystem() ? src_disk.GetFileSystem()->GetFormat() : src_disk.fmt();
+        transferDiskFormatPriority = src_disk.GetFileSystem() ? (src_disk.is_constant_disk() ? FormatPriority::SrcImageFS : FormatPriority::SrcDevFS) : FormatPriority::Src;
+    }
+
+    // Check the filesystems considering the priority of formats.
+    if (!src_disk.GetFileSystem() && !src_disk.is_constant_disk() && transferDiskFormatPriority < FormatPriority::SrcDevFS
+            && opt_detect_devfs && fileSystemWrappers.FindAndSetApprover(srcFileSystemDeterminerDisk))
+    {
+        transferDiskFormat = srcFileSystemDeterminerDisk.GetFileSystem()->GetFormat();
+        transferDiskFormatPriority = FormatPriority::SrcDevFS;
+        util::cout << "YEEHAAWW!! We have src filesystem in cmd_copy, its format=" << transferDiskFormat << "\n";
+    }
+    if (!dst_disk.GetFileSystem() && dst_disk.is_constant_disk() && transferDiskFormatPriority < FormatPriority::DstImageFS
+            && fileSystemWrappers.FindAndSetApprover(dst_disk))
+    {
+        transferDiskFormat = dst_disk.GetFileSystem()->GetFormat();
+        transferDiskFormatPriority = FormatPriority::DstImageFS;
+        util::cout << "WOW!! We have dst filesystem in cmd_copy, its format=" << transferDiskFormat << "\n";
+    }
+    if (opt_normal_disk)
+    {
+        auto normalTrackSize = 0;
+        if (fmtSectorsOverriden)
+            normalTrackSize = lossless_static_cast<int>(opt_sectors);
+        // Format priority = NormalDstImage is allowed because dst disk can change in each disk round.
+        else if (opt_repair && dst_disk.is_constant_disk() && transferDiskFormatPriority <= FormatPriority::NormalDstImage)
+        {
+            int dst_track_amount = 0;
+            int sum_dst_track_size = 0;
+            transferDiskRange.each([&](const CylHead& cylhead) {
+                auto dst_track = dst_disk.read_track(cylhead);
+                NormaliseTrack(cylhead, dst_track);
+                const auto track_normal_probable_size = dst_track.normal_probable_size();
+                if (track_normal_probable_size > 0) {
+                    sum_dst_track_size += track_normal_probable_size;
+                    dst_track_amount++;
+                }
+            });
+            if (dst_track_amount > 0)
+                normalTrackSize = round_AS<int>(lossless_static_cast<double>(sum_dst_track_size) / dst_track_amount);
+        }
+        if (normalTrackSize > 0)
+        {
+            transferDiskFormat.sectors = normalTrackSize - (transferDiskFormat.base - 1);
+            if (transferDiskFormatPriority < FormatPriority::NormalDstImage)
+                transferDiskFormatPriority = FormatPriority::NormalDstImage;
+        }
+        if (fmtBaseOverriden)
+        {
+            const auto baseDiff = opt_base - transferDiskFormat.base;
+            if (baseDiff != 0)
+            {
+                transferDiskFormat.base = opt_base;
+                transferDiskFormat.sectors -= baseDiff;
+            }
+        }
+    }
+    if (transferDiskFormatPriority >= FormatPriority::NormalDstImage)
+    {
+        deviceReadingPolicy.SetLookForPossibleSectors(false); // TODO What should turn this on if user wants?
+        deviceReadingPolicy.SetWantedSectorHeaderIds(Interval<int>{transferDiskFormat.base, transferDiskFormat.sectors, BaseInterval::LeftAndSize});
+        if (transferDiskFormatPriority >= FormatPriority::SrcDevFS)
+        {
+            transferDiskRange.cyl_end = transferDiskFormat.cyls;
+            transferDiskRange.head_end = transferDiskFormat.heads;
+            // Limit to the src disk tracks and heads (it is better than src format in case of device).
+            ValidateRange(transferDiskRange, src_disk.cyls(), src_disk.heads(), opt_step);
+        }
+        util::cout << "deviceReadingPolicy = {" << deviceReadingPolicy << "}\n";
+    }
+}
+
 bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 {
     auto src_disk = std::make_shared<Disk>();
@@ -53,8 +140,9 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     // Read the source image
     ReadImage(src_path, src_disk); // No determining filesystem here, doing it in disk_round loop.
 
+    auto transferDiskRange = opt_range;
     // Limit to our maximum geometry, and default to copy everything present in the source
-    ValidateRange(opt_range, MAX_TRACKS, MAX_SIDES, opt_step, src_disk->cyls(), src_disk->heads());
+    ValidateRange(transferDiskRange, MAX_TRACKS, MAX_SIDES, opt_step, src_disk->cyls(), src_disk->heads());
 
     if (opt_minimal)
         TrackUsedInit(*src_disk); // Valid only for MGT format.
@@ -73,12 +161,10 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
     // tmp dst path in case of merge or repair mode.
     const std::string tmp_dst_path = util::prepend_extension(dst_path, "tmp.");
-    DeviceReadingPolicy deviceReadingPolicy;
-    // Priority of formats for srcDiskFormat (lowest first). The opt_base and opt_sectors can override anything.
-    enum class FormatPriority { Src, NormalDstImage, SrcDevFS, DstImageFS, SrcImageFS};
     // Image file reader might have set the filesystem already.
-    Format srcDiskFormat{src_disk->GetFileSystem() ? src_disk->GetFileSystem()->GetFormat() : src_disk->fmt()};
-    FormatPriority formatPriority{src_disk->GetFileSystem() ? (src_disk->is_constant_disk() ? FormatPriority::SrcImageFS : FormatPriority::SrcDevFS) : FormatPriority::Src};
+    Format transferDiskFormat;
+    FormatPriority transferDiskFormatPriority{FormatPriority::None};
+    DeviceReadingPolicy deviceReadingPolicy;
     bool result = false;
     // Do not retry disk when
     // 1) merging because it overwrites previous data, wasting of time. Copy would be the same but it becomes repair after first round.
@@ -89,80 +175,14 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         int repair_track_changed_amount_per_disk = 0;
         const auto transferUniteMode = opt_merge ? RepairSummaryDisk::Merge : (opt_repair ? RepairSummaryDisk::Repair : RepairSummaryDisk::Copy);
         if (!src_disk->is_constant_disk()) // Clear cached tracks of interest of not constant disk.
-            src_disk->clear(opt_range); // Required for determining stability of sectors in the requested range.
-        // Check the filesystems considering the priority of formats.
-        if (!src_disk->GetFileSystem() && !src_disk->is_constant_disk() && formatPriority < FormatPriority::SrcDevFS
-                && opt_detect_devfs && fileSystemWrappers.FindAndSetApprover(fileSystemDeterminerDisk))
-        {
-            srcDiskFormat = fileSystemDeterminerDisk.GetFileSystem()->GetFormat();
-            formatPriority = FormatPriority::SrcDevFS;
-            util::cout << "YEEHAAWW!! We have src filesystem in cmd_copy, its format=" << srcDiskFormat << "\n";
-        }
-        if (!dst_disk->GetFileSystem() && dst_disk->is_constant_disk() && formatPriority < FormatPriority::DstImageFS
-                && fileSystemWrappers.FindAndSetApprover(*dst_disk))
-        {
-            srcDiskFormat = dst_disk->GetFileSystem()->GetFormat();
-            formatPriority = FormatPriority::DstImageFS;
-        }
-        if (opt_normal_disk)
-        {
-            const bool fmtBaseOverriden = opt_base != -1;
-            const bool fmtSectorsOverriden = opt_sectors != -1;
-            auto normalTrackSize = 0;
-            if (fmtSectorsOverriden)
-                normalTrackSize = lossless_static_cast<int>(opt_sectors);
-            // Format priority = NormalDstImage is allowed because dst disk can change in each disk round.
-            else if (opt_repair && dst_disk->is_constant_disk() && formatPriority <= FormatPriority::NormalDstImage)
-            {
-                int dst_track_amount = 0;
-                int sum_dst_track_size = 0;
-                opt_range.each([&](const CylHead& cylhead) {
-                    auto dst_track = dst_disk->read_track(cylhead);
-                    NormaliseTrack(cylhead, dst_track);
-                    const auto track_normal_probable_size = dst_track.normal_probable_size();
-                    if (track_normal_probable_size > 0) {
-                        sum_dst_track_size += track_normal_probable_size;
-                        dst_track_amount++;
-                    }
-                });
-                if (dst_track_amount > 0)
-                    normalTrackSize = round_AS<int>(lossless_static_cast<double>(sum_dst_track_size) / dst_track_amount);
-            }
-            if (normalTrackSize > 0)
-            {
-                srcDiskFormat.sectors = normalTrackSize - (srcDiskFormat.base - 1);
-                if (formatPriority < FormatPriority::NormalDstImage)
-                    formatPriority = FormatPriority::NormalDstImage;
-            }
-            if (fmtBaseOverriden)
-            {
-                const auto baseDiff = opt_base - srcDiskFormat.base;
-                if (baseDiff != 0)
-                {
-                    srcDiskFormat.base = opt_base;
-                    srcDiskFormat.sectors -= baseDiff;
-                }
-            }
-        }
-        if (formatPriority >= FormatPriority::NormalDstImage)
-        {
-            deviceReadingPolicy.SetLookForPossibleSectors(false);
-            deviceReadingPolicy.SetWantedSectorHeaderIds(Interval<int>{srcDiskFormat.base, srcDiskFormat.sectors, BaseInterval::LeftAndSize});
-            if (formatPriority >= FormatPriority::SrcDevFS)
-            {
-                opt_range.cyl_end = srcDiskFormat.cyls;
-                opt_range.head_end = srcDiskFormat.heads;
-                // Limit to the src disk tracks and heads (it is better than format in case of device).
-                ValidateRange(opt_range, src_disk->cyls(), src_disk->heads(), opt_step);
-            }
-        }
-
+            src_disk->clear(transferDiskRange); // Required for determining stability of sectors in the requested range.
+        ReviewTransferPolicy(*src_disk, *dst_disk, fileSystemDeterminerDisk, transferDiskFormat, transferDiskFormatPriority, deviceReadingPolicy, transferDiskRange);
         bool is_disk_retry = disk_round > 0; // First reading is not retry.
         if (opt_verbose)
             Message(msgInfo, "%seading disk in %uth round", (is_disk_retry ? "Rer" : "R"), disk_round);
 
         // Transfer the range of tracks to the target image (i.e. copy, merge or repair).
-        opt_range.each([&](const CylHead& cylhead)
+        transferDiskRange.each([&](const CylHead& cylhead)
         {
             repair_track_changed_amount_per_disk += Disk::TransferTrack(*src_disk, cylhead, *dst_disk, context, transferUniteMode, false, deviceReadingPolicy);
         }, !opt_normal_disk);
