@@ -73,12 +73,8 @@ int Disk::heads() const
     GetTrackData().clear();
 }
 
-/*virtual*/ void Disk::clear(const Range& range)
+/*virtual*/ void Disk::clearCache(const Range& /*range*/)
 {
-    range.each([&](const CylHead& cylhead)
-    {
-        GetTrackData().erase(cylhead);
-    }, false);
 }
 
 

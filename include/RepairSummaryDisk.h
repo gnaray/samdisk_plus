@@ -16,7 +16,7 @@ public:
                           const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) override;
     TrackData& writeNC(TrackData&& trackdata) override;
     void clear() override;
-    void clear(const Range& range) override;
+    void clearCache(const Range& range) override;
     void disk_is_read() override;
 
     // Inherited Disk class members are not used, instead their related methods

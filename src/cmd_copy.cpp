@@ -177,7 +177,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         int repair_track_changed_amount_per_disk = 0;
         const auto transferUniteMode = opt_merge ? RepairSummaryDisk::Merge : (opt_repair ? RepairSummaryDisk::Repair : RepairSummaryDisk::Copy);
         if (!src_disk->is_constant_disk()) // Clear cached tracks of interest of not constant disk.
-            src_disk->clear(transferDiskRange); // Required for determining stability of sectors in the requested range.
+            src_disk->clearCache(transferDiskRange); // Required for determining stability of sectors in the requested range.
         ReviewTransferPolicy(*src_disk, *dst_disk, fileSystemDeterminerDisk, transferDiskFormat, transferDiskFormatPriority, deviceReadingPolicy, transferDiskRange);
         bool is_disk_retry = disk_round > 0; // First reading is not retry.
         if (opt_verbose)

@@ -36,10 +36,10 @@ void RepairSummaryDisk::clear() /*override*/
     m_WriteToDisk.clear();
 }
 
-void RepairSummaryDisk::clear(const Range& range) /*override*/
+void RepairSummaryDisk::clearCache(const Range& range) /*override*/
 {
-    m_ReadFromDisk.clear(range);
-    m_WriteToDisk.clear(range);
+    m_ReadFromDisk.clearCache(range);
+    m_WriteToDisk.clearCache(range);
 }
 
 void RepairSummaryDisk::disk_is_read() /*override*/

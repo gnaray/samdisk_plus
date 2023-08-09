@@ -14,6 +14,7 @@ public:
     TrackData& readNC(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1, const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) override;
     TrackData& writeNC(TrackData&& trackdata) override;
     void clear() override;
+    void clearCache(const Range& range) override;
     void disk_is_read() override;
 
     void extend(const CylHead& cylhead);

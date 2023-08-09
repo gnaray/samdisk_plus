@@ -99,3 +99,11 @@ void DemandDisk::clear() /*override*/
     Disk::clear();
     m_loaded.reset();
 }
+
+void DemandDisk::clearCache(const Range& range) /*override*/
+{
+    range.each([&](const CylHead& cylhead)
+    {
+        m_loaded[lossless_static_cast<size_t>(cylhead.operator int())] = false;
+    }, false);
+}
