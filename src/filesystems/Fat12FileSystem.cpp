@@ -549,7 +549,7 @@ std::string Fat12FileSystem::NameWithExt3(const msdos_dir_entry& dir_entry, bool
     const auto allowDeleted = accept_deleted && dir_entry.name[0] == DIR_ENTRY_DELETED_FLAG;
     bool is_name_valid_local;
     auto pIsNameValidLocal = p_is_name_valid != nullptr ? p_is_name_valid : &is_name_valid_local;
-    *pIsNameValidLocal = !IsValidShortName(dirEntryName.substr(allowDeleted ? 1 : 0));
+    *pIsNameValidLocal = IsValidShortName(dirEntryName.substr(allowDeleted ? 1 : 0));
     if (!*pIsNameValidLocal && p_is_name_valid == nullptr)
         return "**INVALID**"; // Intentionally 11 long (it should not be longer).
     if (allowDeleted)
