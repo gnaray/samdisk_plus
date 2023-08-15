@@ -6,7 +6,6 @@
 #include "DiskUtil.h"
 #include "Image.h"
 #include "MemFile.h"
-#include "SAMdisk.h"
 #include "SAMCoupe.h"
 #include "RepairSummaryDisk.h"
 #include "Trinity.h"

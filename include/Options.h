@@ -13,6 +13,8 @@ enum { GAPS_AUTO = -1, GAPS_NONE, GAPS_CLEAN, GAPS_ALL };
 
 typedef char charArrayMAX_PATH[MAX_PATH];
 
+constexpr int DISK_RETRY_AUTO = 987654321;
+
 constexpr const char* DETECT_FS_AUTO = "auto";
 
 template<typename T>

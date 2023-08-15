@@ -61,5 +61,3 @@ bool ViewBoot(const std::string& path, Range range);
 // fdrawcmd.sys driver functions
 bool CheckDriver();
 bool ReportDriverVersion();
-
-constexpr int DISK_RETRY_AUTO = 987654321;
