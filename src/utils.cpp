@@ -123,6 +123,15 @@ std::string lowercase(const std::string& str)
 }
 
 
+bool caseInSensCompare(const std::string& str1, const std::string& str2)
+{
+    return (str1.size() == str2.size() && std::equal(str1.begin(), str1.end(), str2.begin(), [](const char & c1, const char & c2)
+        {
+            return (c1 == c2 || std::tolower(c1) == std::tolower(c2));
+        }));
+}
+
+
 LogHelper& operator<<(LogHelper& h, colour c)
 {
     // Colours are screen only

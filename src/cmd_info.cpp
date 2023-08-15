@@ -12,7 +12,7 @@
 #include <iomanip>
 #include <memory>
 
-static auto& opt_detect_devfs = getOpt<bool>("detect_devfs");
+static auto& opt_detect_devfs = getOpt<std::string>("detect_devfs");
 static auto& opt_szSource = getOpt<charArrayMAX_PATH>("szSource");
 
 bool ImageInfo(const std::string& path)

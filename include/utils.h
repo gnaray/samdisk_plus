@@ -307,6 +307,7 @@ std::string prepend_extension(const std::string& s, const std::string& new_ext);
 std::string resource_dir();
 bool is_stdout_a_tty();
 std::string lowercase(const std::string& str);
+bool caseInSensCompare(const std::string& str1, const std::string& str2);
 
 inline std::string to_string(int64_t v) { std::stringstream ss; ss << v; return ss.str(); }
 inline std::string to_string(const std::string& s) { return s; }    // std:: lacks to_string to strings(!)

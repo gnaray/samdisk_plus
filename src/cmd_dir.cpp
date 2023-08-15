@@ -4,6 +4,7 @@
 #include "FileSystem.h"
 #include "Image.h"
 #include "JupiterAce.h"
+#include "Options.h"
 #include "SAMCoupe.h"
 #include "opd.h"
 #include "trd.h"
@@ -1025,6 +1026,6 @@ bool Dir(Disk& disk)
 bool DirImage(const std::string& path)
 {
     auto disk = std::make_shared<Disk>();
-    ReadImage(path, disk, true);
+    ReadImage(path, disk, DETECT_FS_AUTO);
     return Dir(*disk);
 }

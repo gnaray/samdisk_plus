@@ -17,11 +17,30 @@ FileSystemWrappers fileSystemWrappers = InitFileSystemWrappers();
 
 //////////////////////////////////////////////////////////////////////////////
 
-bool FileSystemWrappers::FindAndSetApprover(Disk& disk) const
+bool FileSystemWrappers::IsValidFSName(const std::string& detectFSHavingName) const
 {
+    if (detectFSHavingName.empty())
+        return false;
+    const bool detectFSAll = util::caseInSensCompare(detectFSHavingName, DETECT_FS_AUTO);
+    if (detectFSAll)
+        return true;
     for (auto&& fileSystemWrapperInterface : *this)
     {
-        if ((disk.GetFileSystem() = fileSystemWrapperInterface->ConstructByApprovingDisk(disk)))
+        if (util::caseInSensCompare(fileSystemWrapperInterface->Name(), detectFSHavingName))
+            return true;
+    }
+    return false;
+}
+
+bool FileSystemWrappers::FindAndSetApprover(Disk& disk, const std::string& detectFSHavingName/* = DETECT_FS_AUTO*/) const
+{
+    if (detectFSHavingName.empty())
+        return false;
+    const bool detectFSAll = util::caseInSensCompare(detectFSHavingName, DETECT_FS_AUTO);
+    for (auto&& fileSystemWrapperInterface : *this)
+    {
+        if ((detectFSAll || util::caseInSensCompare(fileSystemWrapperInterface->Name(), detectFSHavingName))
+                && (disk.GetFileSystem() = fileSystemWrapperInterface->ConstructByApprovingDisk(disk)))
         {
             if (!disk.GetTypeDomesticFileSystemNames().empty()
                     && disk.GetTypeDomesticFileSystemNames().find(disk.GetFileSystem()->GetName()) == disk.GetTypeDomesticFileSystemNames().end())

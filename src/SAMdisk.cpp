@@ -39,7 +39,7 @@ struct OPTIONS
 
     bool normal_disk = false;
     bool readstats = false, paranoia = false, skip_stable_sectors = false;
-    bool detect_devfs = false; // Detect device (floppy) filesystem thus use its format.
+    std::string detect_devfs{}; // Detect device (floppy) filesystem thus use its format.
 
     int retries = 5, maxcopies = 3;
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
@@ -159,7 +159,6 @@ bool& getOpt(const char* key)
         {"paranoia", Options::opt.paranoia},
         {"readstats", Options::opt.readstats},
         {"skip_stable_sectors", Options::opt.skip_stable_sectors},
-        {"detect_devfs", Options::opt.detect_devfs}
     };
     return s_mapStringToBoolVariables.at(key);
 }
@@ -226,6 +225,7 @@ std::string& getOpt(const char* key)
     {
         {"label", Options::opt.label},
         {"boot", Options::opt.boot},
+        {"detect_devfs", Options::opt.detect_devfs}
     };
 
     return s_mapStringToStringVariables.at(key);
@@ -501,7 +501,7 @@ static struct option long_options[] =
     { "stability-level",        required_argument, nullptr, OPT_STABILITY_LEVEL },  // undocumented.  // The count of samely read data of a sector which is considered stable. < 1 means only good data is stable (backward compatibility).
     { "skip-stable-sectors",          no_argument, nullptr, OPT_SKIP_STABLE_SECTORS }, // undocumented. in repair mode skip those sectors which are already rescued in destination.
     { "track-retries",          required_argument, nullptr, OPT_TRACK_RETRIES }, // undocumented. Amount od track retries. Each retry move the floppy drive head a bit.
-    { "detect-devfs",                 no_argument, nullptr, OPT_DETECT_DEVFS }, // undocumented. Detect the device filesystem and if exists use its format.
+    { "detect-devfs",           optional_argument, nullptr, OPT_DETECT_DEVFS }, // undocumented. Detect the device filesystem and if exists use its format.
     { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },  // undocumented. Amount of disk retries. If auto then do it while data improved.
     { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME},
 
@@ -743,7 +743,12 @@ bool ParseCommandLine(int argc_, char* argv_[])
             break;
 
         case OPT_DETECT_DEVFS:
-            Options::opt.detect_devfs = true;
+            if (OPTIONAL_ARGUMENT_IS_PRESENT)
+                Options::opt.detect_devfs = optarg;
+            else
+                Options::opt.detect_devfs = DETECT_FS_AUTO;
+            if (!fileSystemWrappers.IsValidFSName(Options::opt.detect_devfs))
+                throw util::exception("invalid detect-devfs value, it must be auto or the name of one of the supported filesystems");
             break;
 
         case OPT_PARANOIA:

@@ -2,6 +2,7 @@
 #define FILESYSTEM_H
 
 #include "Disk.h"
+#include "Options.h"
 #include "Sector.h"
 
 #include <memory>
@@ -86,7 +87,8 @@ class FileSystemWrappers : public std::vector<std::unique_ptr<FileSystemWrapperI
 public:
     using std::vector<std::unique_ptr<FileSystemWrapperInterface>>::vector;
 
-    bool FindAndSetApprover(Disk &disk) const;
+    bool IsValidFSName(const std::string& detectFSHavingName) const;
+    bool FindAndSetApprover(Disk &disk, const std::string& detectFSHavingName = DETECT_FS_AUTO) const;
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const FileSystemWrappers& fileSystems, bool onlyRelevantData = true)
     {

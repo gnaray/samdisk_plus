@@ -18,7 +18,7 @@
 #include <cstring>
 
 static auto& opt_base = getOpt<int>("base");
-static auto& opt_detect_devfs = getOpt<bool>("detect_devfs");
+static auto& opt_detect_devfs = getOpt<std::string>("detect_devfs");
 static auto& opt_encoding = getOpt<Encoding>("encoding");
 static auto& opt_disk_retries = getOpt<int>("disk_retries");
 static auto& opt_fix = getOpt<int>("fix");
@@ -57,7 +57,7 @@ void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDet
 
     // Check the filesystems considering the priority of formats.
     if (!src_disk.GetFileSystem() && !src_disk.is_constant_disk() && transferDiskFormatPriority < FormatPriority::SrcDevFS
-            && opt_detect_devfs && fileSystemWrappers.FindAndSetApprover(srcFileSystemDeterminerDisk))
+            && !opt_detect_devfs.empty() && fileSystemWrappers.FindAndSetApprover(srcFileSystemDeterminerDisk, opt_detect_devfs))
     {
         transferDiskFormat = srcFileSystemDeterminerDisk.GetFileSystem()->GetFormat();
         transferDiskFormatPriority = FormatPriority::SrcDevFS;
@@ -153,7 +153,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     // For merge or repair, read any existing target image, error if that fails.
     if (opt_merge || opt_repair)
     {
-        ReadImage(dst_path, dst_disk, false, false); // The dst disk should be already normalised.
+        ReadImage(dst_path, dst_disk, "", false); // The dst disk should be already normalised.
         if (!dst_disk->is_constant_disk())
             throw util::exception("copying to device disk with merge or repair option is not supported");
         if (!dst_disk->GetFileSystem()) // Determining filesystem here separately so it does not affect device dst disk.

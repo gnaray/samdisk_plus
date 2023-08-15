@@ -7,7 +7,7 @@
 #include "DiskUtil.h"
 #include "Util.h"
 
-static auto& opt_detect_devfs = getOpt<bool>("detect_devfs");
+static auto& opt_detect_devfs = getOpt<std::string>("detect_devfs");
 static auto& opt_nodiff = getOpt<int>("nodiff");
 static auto& opt_offsets = getOpt<int>("offsets");
 static auto& opt_readstats = getOpt<bool>("readstats");
