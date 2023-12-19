@@ -34,6 +34,7 @@
 #cmakedefine HAVE_SYSCONF @HAVE_SYSCONF@
 
 #cmakedefine HAVE_ZLIB @HAVE_ZLIB@
+#cmakedefine HAVE_MINIZIP @HAVE_MINIZIP@
 #cmakedefine HAVE_BZIP2 @HAVE_BZIP2@
 #cmakedefine HAVE_LZMA @HAVE_LZMA@
 #cmakedefine HAVE_WINUSB @HAVE_WINUSB@
