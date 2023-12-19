@@ -3,14 +3,17 @@
 #include "PlatformConfig.h"
 #include "MemFile.h"
 #include "Util.h"
-#include "config.h"
 #include "FileIO.h" // PATH_SEPARATOR_CHR
 
 #include <algorithm>
 
 #ifdef HAVE_ZLIB
-#include <zlib.h>
+#ifdef HAVE_MINIZIP
+#include <unzip.h>
+#else
 #include "unzip.h"
+#endif
+#include "Image.h"
 #endif
 
 #ifdef HAVE_BZIP2
