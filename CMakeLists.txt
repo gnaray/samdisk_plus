@@ -198,8 +198,9 @@ endif()
 if (WIN32)
   set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_TITLE})
   target_link_libraries(${PROJECT_NAME} setupapi ws2_32)
-  set(HAVE_FDRAWCMD_H 1)
 endif()
+# Setting HAVE_FDRAWCMD_H in all cases, not only for WIN32.
+set(HAVE_FDRAWCMD_H 1)
 
 if (APPLE)
   set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9)
