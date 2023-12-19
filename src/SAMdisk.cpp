@@ -379,7 +379,7 @@ void LongVersion()
 
 
 extern "C" {
-#include "getopt_long.h"
+#include "getopt.h"
 }
 
 enum {
