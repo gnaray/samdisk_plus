@@ -40,8 +40,6 @@
 
 */
 
-#ifdef HAVE_ZLIB
-
 #ifndef _unz64_H
 #define _unz64_H
 
@@ -437,5 +435,3 @@ extern "C" {
 #endif
 
 #endif /* _unz64_H */
-
-#endif // HAVE_ZLIB

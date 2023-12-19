@@ -63,13 +63,10 @@
 
 */
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "config.h"
-
-#ifdef HAVE_ZLIB
 
 #ifndef NOUNCRYPT
 #define NOUNCRYPT
@@ -2124,5 +2121,3 @@ extern int ZEXPORT unzSetOffset(unzFile file, uLong pos)
 {
     return unzSetOffset64(file, pos);
 }
-
-#endif // HAVE_ZLIB
