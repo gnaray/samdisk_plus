@@ -29,8 +29,6 @@ static auto& opt_retries = getOpt<int>("retries");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_steprate = getOpt<int>("steprate");
 
-constexpr uint32_t DriverVersion1_0_1_12 = 0x0100010c;
-
 class FdrawSysDevDisk final : public DemandDisk
 {
 public:

@@ -30,6 +30,8 @@ typedef struct _IOCTL_PARAMS
     DWORD returned = 0;
 } IOCTL_PARAMS;
 
+constexpr uint32_t DriverVersion1_0_1_12 = 0x0100010c;
+
 class FdrawcmdSys
 {
 public:

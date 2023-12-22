@@ -117,7 +117,7 @@ int FdrawcmdSys::GetMaxTransferSize()
     {
         GetVersion(); // Required for MaxTransferSize.
         GetFdcInfo(); // Required for MaxTransferSize.
-        const auto have_max_transfer_size = m_driver_version.value >= 0x0100010c && m_fdc_info_queried;
+        const auto have_max_transfer_size = m_driver_version.value >= DriverVersion1_0_1_12 && m_fdc_info_queried;
                       // Version 12 returns MaxTransferSize. In older version let it be IoBufferSize (32768).
         m_max_transfer_size = have_max_transfer_size ? m_fdc_info.MaxTransferSize : 32768;
     }
