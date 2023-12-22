@@ -7,7 +7,9 @@
 #include "types.h"
 #include "BlockDevice.h"
 #include "FluxDecoder.h"
+#ifdef _WIN32
 #include "CrashDump.h"
+#endif
 
 constexpr int STABILITY_LEVEL_DEFAULT = 3;
 
