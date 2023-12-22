@@ -2,6 +2,7 @@
 #define INTERVAL_H
 
 #include "utils.h"
+
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
