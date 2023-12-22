@@ -19,19 +19,18 @@ constexpr int GAP2_MFM_ED = 41;     // gap2 for MFM 1Mbps (ED)
 constexpr int GAP2_MFM_DDHD = 22;   // gap2 for MFM, except 1Mbps (ED)
 constexpr int GAP2_FM = 11;         // gap2 for FM (same bit size as MFM due to encoding)
 
-constexpr int TRACK_OVERHEAD_MFM = 80/*x0x4e=gap4a*/ + 12/*x0x00=sync*/ + 4/*3x0c2+0xfc=iam*/ + 50/*x0x4e=gap1*/;   // = 146
-constexpr int SECTOR_OVERHEAD_MFM = 12/*x0x00=sync*/ + 4/*3xa1+0xfe=idam*/ + 4/*CHRN*/ + 2/*crc*/ + 22/*x0x4e=gap2*/ +
-12/*x0x00=sync*/ + 4/*3x0xa1+0xfb*/ /*+ data_size*/ + 2/*crc*/ /*+ gap3*/;      // = 62
-constexpr int DATA_OVERHEAD_MFM = 4/*3x0xa1+0xfb*/;
 constexpr int SYNC_OVERHEAD_MFM = 12/*x0x00=sync*/;
+constexpr int TRACK_OVERHEAD_MFM = 80/*x0x4e=gap4a*/ + SYNC_OVERHEAD_MFM + 4/*3x0c2+0xfc=iam*/ + 50/*x0x4e=gap1*/;   // = 146
+constexpr int DATA_OVERHEAD_MFM = 4/*3x0xa1+0xfb*/;
+constexpr int SECTOR_OVERHEAD_MFM = SYNC_OVERHEAD_MFM + 4/*3xa1+0xfe=idam*/ + 4/*CHRN*/ + 2/*crc*/ + 22/*x0x4e=gap2*/ +
+    SYNC_OVERHEAD_MFM + DATA_OVERHEAD_MFM /*+ data_size*/ + 2/*crc*/ /*+ gap3*/;      // = 62
 constexpr int SECTOR_OVERHEAD_ED = GAP2_MFM_ED - GAP2_MFM_DDHD;
 
-constexpr int TRACK_OVERHEAD_FM = 40/*x0x00=gap4a*/ + 6/*x0x00=sync*/ + 1/*0xfc=iam*/ + 26/*x0x00=gap1*/;       // = 73
-
-constexpr int SECTOR_OVERHEAD_FM = 6/*x0x00=sync*/ + 1/*0xfe=idam*/ + 4/*CHRN*/ + 2/*crc*/ + 11/*x0x00=gap2*/ +
-6/*x0x00=sync*/ + 1/*0xfb*/ /*+ data_size*/ + 2/*crc*/ /*+ gap3*/;              // = 33
-constexpr int DATA_OVERHEAD_FM = 1/*0xfb*/;
 constexpr int SYNC_OVERHEAD_FM = 6/*x0x00=sync*/;
+constexpr int TRACK_OVERHEAD_FM = 40/*x0x00=gap4a*/ + SYNC_OVERHEAD_FM + 1/*0xfc=iam*/ + 26/*x0x00=gap1*/;       // = 73
+constexpr int DATA_OVERHEAD_FM = 1/*0xfb*/;
+constexpr int SECTOR_OVERHEAD_FM = SYNC_OVERHEAD_FM + 1/*0xfe=idam*/ + 4/*CHRN*/ + 2/*crc*/ + 11/*x0x00=gap2*/ +
+    SYNC_OVERHEAD_FM + DATA_OVERHEAD_FM /*+ data_size*/ + 2/*crc*/ /*+ gap3*/;              // = 33
 
 constexpr int MIN_GAP3 = 1;
 constexpr int MAX_GAP3 = 82;    // arbitrary size, to leave a bit more space at the track end
