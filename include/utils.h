@@ -416,7 +416,7 @@ void hex_dump(ForwardIter it, ForwardIter itEnd, int start_offset = 0, colour* p
 }
 
 template <typename T>
-T str_value(const std::string& str)
+T str_value(const std::string& str, const bool allowNegative = false)
 {
     static_assert(std::is_same<T, int>::value || std::is_same<T, long>::value, "int or long only");
     try
@@ -428,7 +428,7 @@ T str_value(const std::string& str)
             n = std::stoi(str, &idx_end, hex ? 16 : 10);
         else
             n = std::stol(str, &idx_end, hex ? 16 : 10);
-        if (idx_end == str.size() && n >= 0)
+        if (idx_end == str.size() && (allowNegative || n >= 0))
             return n;
     }
     catch (...)
