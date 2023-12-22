@@ -302,7 +302,7 @@ bool FdrawcmdSys::Seek(int cyl, int head /*= -1*/)
     IOCTL_PARAMS ioctl_params{};
     ioctl_params.code = IOCTL_FDCMD_SEEK;
     ioctl_params.inbuf = &sp;
-    ioctl_params.insize = sizeof(sp);
+    ioctl_params.insize = sp_size;
     RETURN_IOCTL(ioctl_params, util::format("FdrawcmdSys::Seek: cyl=", cyl, ", head=", head));
 }
 
