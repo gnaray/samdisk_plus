@@ -242,7 +242,7 @@ public:
         {
             pb = AllocMem(uSize);
             size = uSize;
-            // Invalidate the content so misbehaving FDCs can be identififed.
+            // Invalidate the content so misbehaving FDCs can be identified.
             fill();
         }
     }
