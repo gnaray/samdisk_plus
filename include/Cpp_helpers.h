@@ -54,11 +54,12 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
 constexpr approximately_equal(T x, T y)
 {
     const auto absDiff = std::fabs(x - y);
-    return absDiff <= std::max(std::fabs(x), std::fabs(y)) * std::numeric_limits<double>::epsilon()
+    return absDiff <= std::numeric_limits<double>::epsilon() * std::max(std::fabs(x), std::fabs(y))
             || absDiff < std::numeric_limits<T>::min();
 }
 
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+// QUESTION Will (+x, -x) return always false (except subnormal case) and is it the expected result?
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
 constexpr almost_equal(T x, T y, int ulp)
