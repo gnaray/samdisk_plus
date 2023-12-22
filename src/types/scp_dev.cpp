@@ -161,6 +161,14 @@ bool ReadSuperCardPro(const std::string& path, std::shared_ptr<Disk>& disk)
 
 bool WriteSuperCardPro(const std::string& path, std::shared_ptr<Disk>& disk)
 {
+    // TODO This method is wrong if transfering tracks from src to dst with
+    // merge or repair mode i.e. it works only if copy mode is selected.
+    // Why? Because in merge or repair mode the dst is opened by ReadImage
+    // before transferring anything which means the ReadSuperCardPro is called
+    // which opens the device. In addition each write (transfer) to the dst
+    // writes the track to the device. At the end of transferrings the disk is
+    // "closed" by WriteImage which calls this WriteSuperCardPro method which
+    // tries to open the device (again) and write the tracks (again). Error.
     if (util::lowercase(path) != "scp:")
         return false;
 
