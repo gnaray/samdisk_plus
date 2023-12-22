@@ -5,11 +5,11 @@
 
 std::string to_string(const Range& range)
 {
-    std::ostringstream ss;
-    auto separator = ", ";
-
     if (range.empty())
         return "All Tracks";
+
+    std::ostringstream ss;
+    auto separator = ", ";
 
     if (range.cyls() == 1)
         ss << "Cyl " << CylStr(range.cyl_begin);
