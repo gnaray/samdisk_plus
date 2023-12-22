@@ -119,7 +119,7 @@ int FdrawcmdSys::GetMaxTransferSize()
         GetFdcInfo(); // Required for MaxTransferSize.
         const auto have_max_transfer_size = m_driver_version.value >= DriverVersion1_0_1_12 && m_fdc_info_queried;
                       // Version 12 returns MaxTransferSize. In older version let it be IoBufferSize (32768).
-        m_max_transfer_size = have_max_transfer_size ? m_fdc_info.MaxTransferSize : 32768;
+        m_max_transfer_size = have_max_transfer_size ? static_cast<int>(m_fdc_info.MaxTransferSize) : 32768;
     }
     return m_max_transfer_size;
 }
@@ -374,12 +374,13 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
 
     FD_READ_WRITE_PARAMS rwp{};
     rwp.flags = m_encoding_flags;
-    rwp.phead = static_cast<uint8_t>(phead);
-    rwp.cyl = static_cast<uint8_t>(cyl);
-    rwp.head = static_cast<uint8_t>(head);
-    rwp.sector = static_cast<uint8_t>(sector);
-    rwp.size = static_cast<uint8_t>(size);
-    rwp.eot = limited_static_cast<uint8_t>(eot + 1); // +1 for 5) above.
+    rwp.phead = lossless_static_cast<uint8_t>(phead);
+    rwp.cyl = lossless_static_cast<uint8_t>(cyl);
+    rwp.head = lossless_static_cast<uint8_t>(head);
+    rwp.sector = lossless_static_cast<uint8_t>(sector);
+    rwp.size = lossless_static_cast<uint8_t>(size);
+    const auto eotChecked = lossless_static_cast<uint8_t>(eot);
+    rwp.eot = limited_static_cast<uint8_t>(eotChecked + 1); // +1 for 5) above.
     rwp.gap = RW_GAP;
     rwp.datalen = DtlFromSize(size);
 
@@ -409,7 +410,7 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
         "), phead=", phead, ", cyl=", cyl, ", head=", head, ", sector=", sector,
         ", size=", size, ", eot=", eot, ", (gap=", rwp.gap, "), bufferlen=", mem.size,
         ", output_size = ", output_size));
-    if (result && output_size != ioctl_params.returned)
+    if (result && output_size != static_cast<int>(ioctl_params.returned))
         util::cout << "Warning: CmdReadTrack reports reading " << ioctl_params.returned << " bytes instead of " << output_size << '\n';
     return result;
 }
