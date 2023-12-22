@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <set>
 
 #ifndef HIWORD
@@ -222,6 +223,11 @@ public:
 
     operator uint8_t* () { return pb; }
     //  uint8_t& operator[] (size_t u_) { return pb[u_]; }
+    inline void fill(int c = 0xee)
+    {
+        memset(pb, c, lossless_static_cast<size_t>(size));
+    }
+
     void resize(int uSize)
     {
         if (size == uSize)
@@ -236,6 +242,8 @@ public:
         {
             pb = AllocMem(uSize);
             size = uSize;
+            // Invalidate the content so misbehaving FDCs can be identififed.
+            fill();
         }
     }
 

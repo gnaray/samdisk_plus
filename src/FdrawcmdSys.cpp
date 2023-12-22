@@ -392,6 +392,8 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
             mem.resize((mem.size / sector_size) * sector_size); // Flooring to sector_size boundary for 5) above.
             output_size = mem.size;
         }
+        else
+            mem.fill();
     }
     else
         mem.resize(output_size);
