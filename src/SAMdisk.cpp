@@ -36,14 +36,15 @@ struct OPTIONS
     int nozip = 0, nodiff = 0, noformat = 0, nodups = 0, nowobble = 0, nottb = 0;
     int bdos = 0, atom = 0, hdf = 0, resize = 0, cpm = 0, minimal = 0, legacy = 0;
     int absoffsets = 0, datacopy = 0, align = 0, keepoverlap = 0, fmoverlap = 0;
-    int rescans = 0, flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
+    int flip = 0, multiformat = 0, rpm = 0, tty = 0, time = 0;
     int a1sync = 0;
 
     bool normal_disk = false;
     bool readstats = false, paranoia = false, skip_stable_sectors = false;
     std::string detect_devfs{}; // Detect device (floppy) filesystem thus use its format.
 
-    int retries = 5, maxcopies = 3;
+    RetryPolicy rescans = 0, retries = 5;
+    int maxcopies = 3;
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
     int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
     int track_retries = -1, disk_retries = -1;
@@ -133,9 +134,7 @@ int& getOpt(const char* key)
         {"pllphase", Options::opt.pllphase},
         {"quick", Options::opt.quick},
         {"repair", Options::opt.repair},
-        {"rescans", Options::opt.rescans},
         {"resize", Options::opt.resize},
-        {"retries", Options::opt.retries},
         {"rpm", Options::opt.rpm},
         {"scale", Options::opt.scale},
         {"size", Options::opt.size},
@@ -243,6 +242,18 @@ charArrayMAX_PATH& getOpt(const char* key)
     };
 
     return s_mapStringToCharArrayVariables.at(key);
+}
+
+template<>
+RetryPolicy& getOpt(const char* key)
+{
+    static const std::map<std::string, RetryPolicy&> s_mapStringToRetryPolicyVariables =
+    {
+        {"rescans", Options::opt.rescans},
+        {"retries", Options::opt.retries},
+    };
+
+    return s_mapStringToRetryPolicyVariables.at(key);
 }
 
 // The options and its publishers. [END]
@@ -563,11 +574,11 @@ bool ParseCommandLine(int argc_, char* argv_[])
             break;
 
         case 'r':
-            Options::opt.retries = util::str_value<int>(optarg);
+            Options::opt.retries = RetryPolicy(util::str_value<int>(optarg, true));
             break;
 
         case 'R':
-            Options::opt.rescans = util::str_value<int>(optarg);
+            Options::opt.rescans = RetryPolicy(util::str_value<int>(optarg, true));
             break;
 
         case 'n':   Options::opt.noformat = 1; break;

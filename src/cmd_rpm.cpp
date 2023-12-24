@@ -10,8 +10,8 @@
 
 static auto& opt_force = getOpt<int>("force");
 static auto& opt_range = getOpt<Range>("range");
-static auto& opt_rescans = getOpt<int>("rescans");
-static auto& opt_retries = getOpt<int>("retries");
+static auto& opt_rescans = getOpt<RetryPolicy>("rescans");
+static auto& opt_retries = getOpt<RetryPolicy>("retries");
 
 bool DiskRpm(const std::string& path)
 {

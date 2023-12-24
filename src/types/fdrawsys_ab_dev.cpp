@@ -39,7 +39,7 @@
 #define RAW_READ_SIZE_CODE          7       // 16K
 
 static auto& opt_newdrive = getOpt<int>("newdrive");
-static auto& opt_retries = getOpt<int>("retries");
+static auto& opt_retries = getOpt<RetryPolicy>("retries");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_steprate = getOpt<int>("steprate");
 
@@ -69,7 +69,7 @@ protected:
         m_fdrawcmd->SetEncRate(Encoding::MFM, DataRate::_500K);
         Track track;
 
-        auto total_scans = 1 + opt_retries;
+        auto total_scans = opt_retries + 1;
         if (total_scans <= 0)
             total_scans = RAW_READ_ATTEMPTS;
 

@@ -4,6 +4,7 @@
 #include "Header.h"
 #include "Range.h"
 #include "FileIO.h" // MAX_PATH
+#include "RetryPolicy.h"
 
 #include <string>
 
@@ -52,5 +53,8 @@ std::string& getOpt(const char* key);
 
 template<>
 charArrayMAX_PATH& getOpt(const char* key);
+
+template<>
+RetryPolicy& getOpt(const char* key);
 
 #endif // OPTIONS_H

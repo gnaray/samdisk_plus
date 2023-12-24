@@ -25,7 +25,7 @@ static auto& opt_encoding = getOpt<Encoding>("encoding");
 static auto& opt_gaps = getOpt<int>("gaps");
 static auto& opt_newdrive = getOpt<int>("newdrive");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
-static auto& opt_retries = getOpt<int>("retries");
+static auto& opt_retries = getOpt<RetryPolicy>("retries");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_steprate = getOpt<int>("steprate");
 

@@ -7,8 +7,8 @@
 constexpr int DemandDisk::FIRST_READ_REVS;
 constexpr int DemandDisk::REMAIN_READ_REVS;
 
-static auto& opt_rescans = getOpt<int>("rescans");
-static auto& opt_retries = getOpt<int>("retries");
+static auto& opt_rescans = getOpt<RetryPolicy>("rescans");
+static auto& opt_retries = getOpt<RetryPolicy>("retries");
 
 
 void DemandDisk::extend(const CylHead& cylhead)
