@@ -113,12 +113,16 @@ public:
     Header(int cyl, int head, int sector, int size);
     Header(const CylHead& cylhead, int sector, int size);
 
-    bool operator== (const Header& rhs) const;
-    bool operator!= (const Header& rhs) const;
     operator CylHead() const;
 
     int sector_size() const;
-    bool compare_chrn(const Header& rhs) const;
+    constexpr bool compare_chrn(const Header& rhs) const
+    {
+        return cyl == rhs.cyl &&
+            head == rhs.head &&
+            sector == rhs.sector &&
+            size == rhs.size;
+    }
     bool compare_crn(const Header& rhs) const;
     bool compare_chr(const Header& rhs) const;
 
@@ -129,6 +133,35 @@ public:
 
     int cyl = 0, head = 0, sector = 0, size = 0;
 };
+
+constexpr bool operator== (const Header& lhs, const Header& rhs)
+{
+    return lhs.compare_chrn(rhs); // NOTE This was compare_crn originally but TODO questioned if use compare_chrn?
+}
+
+constexpr bool operator <(const Header& lhs, const Header& rhs)
+{
+    return lhs.cyl < rhs.cyl || (lhs.cyl == rhs.cyl && (lhs.head < rhs.head
+        || (lhs.head == rhs.head && (lhs.sector < rhs.sector
+            || (lhs.sector == rhs.sector && lhs.size < rhs.size)))));
+}
+
+constexpr bool operator !=(const Header& lhs, const Header& rhs)
+{
+    return !(lhs == rhs);
+}
+constexpr bool operator >=(const Header& lhs, const Header& rhs)
+{
+    return !(lhs < rhs);
+}
+constexpr bool operator >(const Header& lhs, const Header& rhs)
+{
+    return rhs < lhs;
+}
+constexpr bool operator <=(const Header& lhs, const Header& rhs)
+{
+    return !(lhs > rhs);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
