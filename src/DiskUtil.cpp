@@ -285,7 +285,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
             for (int j = i + 1; j < track.size(); ++j)
             {
                 auto& s = track[j];
-                if (s.header.compare_chrn(sector.header) && s.encoding == sector.encoding)
+                if (s.header == sector.header && s.encoding == sector.encoding) // Full header compare.
                 {
                     track.remove(j--);
                     changed = true;
