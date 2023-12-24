@@ -69,9 +69,7 @@ protected:
         m_fdrawcmd->SetEncRate(Encoding::MFM, DataRate::_500K);
         Track track;
 
-        auto total_scans = opt_retries + 1;
-        if (total_scans <= 0)
-            total_scans = RAW_READ_ATTEMPTS;
+        auto total_scans = opt_retries < 0 ? RAW_READ_ATTEMPTS : opt_retries + 1; // TODO opt_retries can not be negative.
 
         for (auto scan = 0; scan < total_scans; )
         {
