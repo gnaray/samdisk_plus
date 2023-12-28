@@ -3,7 +3,7 @@
 #include "Options.h"
 #include "SAMdisk.h"
 #include "Image.h"
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 #include "DiskUtil.h"
 #include "Util.h"
 

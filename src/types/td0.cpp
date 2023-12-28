@@ -4,7 +4,7 @@
 //
 // Dave Dunfield notes: http://www.classiccmp.org/dunfield/img54306/td0notes.txt
 
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 #include "Options.h"
 #include "Disk.h"
 #include "MemFile.h"

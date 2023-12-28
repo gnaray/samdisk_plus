@@ -9,7 +9,7 @@
 #include "FluxDecoder.h"
 #include "BitBuffer.h"
 //#include "TrackDataParser.h"
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 #include "JupiterAce.h"
 //#include "SpecialFormat.h"
 

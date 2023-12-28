@@ -1,7 +1,7 @@
 ﻿// Built-in disk images used for testing
 
 #include "Disk.h"
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 #include "BitstreamTrackBuilder.h"
 //#include "BitstreamDecoder.h"
 #include "FluxTrackBuilder.h"

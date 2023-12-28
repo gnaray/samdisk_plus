@@ -6,7 +6,7 @@
 
 #include "SpecialFormat.h"
 #include "Options.h"
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 #include "BitstreamTrackBuilder.h"
 #include "FluxTrackBuilder.h"
 #include "TrackData.h"

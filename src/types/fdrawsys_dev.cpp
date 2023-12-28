@@ -10,7 +10,7 @@
 #include "DiskUtil.h"
 #include "Options.h"
 #include "DemandDisk.h"
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 #include "FdrawcmdSys.h"
 #include "Disk.h"
 #include "Util.h"

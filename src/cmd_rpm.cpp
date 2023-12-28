@@ -1,7 +1,7 @@
 // RPM command
 
 #include "Disk.h"
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 #include "Image.h"
 #include "Options.h"
 

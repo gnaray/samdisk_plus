@@ -4,7 +4,6 @@
 #include "DiskUtil.h"
 #include "FileSystem.h"
 #include "Options.h"
-//#include "IBMPC.h"
 #include "SAMdisk.h"
 #include "ThreadPool.h"
 #include "Util.h"

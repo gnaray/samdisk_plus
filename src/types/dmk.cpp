@@ -2,7 +2,7 @@
 //  http://www.classiccmp.org/cpmarchives/trs80/mirrors/trs-80.com/early/www.trs-80.com/trs80-dm.htm
 
 #include "Options.h"
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 #include "BitstreamTrackBuilder.h"
 #include "Disk.h"
 #include "MemFile.h"

@@ -2,7 +2,7 @@
 #include "Track.h"
 #include "Options.h"
 //#include "DiskUtil.h"
-#include "IBMPC.h"
+#include "IBMPCBase.h"
 
 #include <algorithm>
 #include <cmath>
