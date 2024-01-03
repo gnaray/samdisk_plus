@@ -69,13 +69,13 @@ const std::vector<Sector>& Track::sectors_view_ordered_by_id() const
 const Sector& Track::operator [] (int index) const
 {
     assert(index < static_cast<int>(m_sectors.size()));
-    return m_sectors[index];
+    return m_sectors[lossless_static_cast<std::vector<Sector>::size_type>(index)];
 }
 
 Sector& Track::operator [] (int index)
 {
     assert(index < static_cast<int>(m_sectors.size()));
-    return m_sectors[index];
+    return m_sectors[lossless_static_cast<std::vector<Sector>::size_type>(index)];
 }
 
 int Track::index_of(const Sector& sector) const
