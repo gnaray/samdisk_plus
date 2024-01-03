@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <dirent.h>
 #include <set>
 
 #ifndef HIWORD
@@ -193,6 +194,11 @@ std::string FileExt(const std::string& path);
 bool IsFileExt(const std::string& path, const std::string& ext);
 int64_t FileSize(const std::string& path);
 int GetFileType(const char* pcsz_);
+std::vector<std::string> FindFiles(const std::string& fileNamePart, const std::string& dirName);
+std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName);
+std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr);
+std::string FindNextFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr);
+void CloseFindFile(DIR*& dir_ptr);
 void ByteSwap(void* pv, size_t nSize_);
 int TPeek(const uint8_t* buf, int offset = 0);
 void TrackUsedInit(Disk& disk);

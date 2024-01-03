@@ -412,6 +412,87 @@ int GetFileType(const char* pcsz_)
     return ftUnknown;
 }
 
+std::vector<std::string> FindFiles(const std::string& fileNamePart, const std::string& dirName)
+{
+    std::vector<std::string> result;
+    DIR *dir_ptr;
+    if ((dir_ptr = opendir(dirName.c_str())) != nullptr)
+    {
+        struct dirent *diread;
+        while ((diread = readdir(dir_ptr)) != nullptr)
+        {
+            const auto fileName = std::string(diread->d_name);
+            if (fileName.find(fileNamePart) != std::string::npos)
+                result.push_back(dirName + '/' + fileName);
+        }
+        closedir(dir_ptr);
+        dir_ptr = nullptr;
+    }
+    return result;
+}
+
+std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName)
+{
+    DIR *dir_ptr;
+    return FindFirstFile(fileNamePart, dirName, dir_ptr);
+}
+
+std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr)
+{
+    std::string result;
+    dir_ptr = nullptr;
+    if ((dir_ptr = opendir(dirName.c_str())) != nullptr)
+    {
+        struct dirent *diread;
+        while ((diread = readdir(dir_ptr)) != nullptr)
+        {
+            const auto fileName = std::string(diread->d_name);
+            if (fileName.find(fileNamePart) != std::string::npos)
+            {
+                result = dirName + '/' + fileName;
+                break;
+            }
+        }
+        if (result.empty())
+        {
+            closedir(dir_ptr);
+            dir_ptr = nullptr;
+        }
+    }
+    return result;
+}
+
+std::string FindNextFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr)
+{
+    std::string result;
+    if (dir_ptr != nullptr)
+    {
+        struct dirent *diread;
+        while ((diread = readdir(dir_ptr)) != nullptr)
+        {
+            const auto fileName = std::string(diread->d_name);
+            if (fileName.find(fileNamePart) != std::string::npos)
+            {
+                result = dirName + '/' + fileName;
+                break;
+            }
+        }
+        if (result.empty())
+        {
+            closedir(dir_ptr);
+            dir_ptr = nullptr;
+        }
+    }
+    return result;
+}
+
+void CloseFindFile(DIR*& dir_ptr)
+{
+    if (dir_ptr != nullptr)
+        closedir(dir_ptr);
+    dir_ptr = nullptr;
+}
+
 void ByteSwap(void* pv, size_t len)
 {
     assert((len & 1) == 0);
