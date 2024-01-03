@@ -24,8 +24,13 @@ constexpr bool are_interchangeably_equal_datarates(const DataRate& datarate1, co
             && (datarate2 == DataRate::_250K || datarate2 == DataRate::_300K));
 }
 
+/* bitcell_ns = ns/bitcell = tracktime / tracklen.bit = (tracklen.bit * mfmbit_us) / tracklen.bit = mfmbit_us.
+ * mfmbit_us = GetFmOrMfmDataBitTime(m_lastDataRate, m_lastEncoding).
+ * Thus there is a contradict because the encoding is not used here but in GetFmOrMfmDataBitTime.
+ * Probably 1 FM bit is 2 bitcells and 1 MFM bit is 1 bitcell, however bitcell time is same for FM and MFM.
+ */
 inline int bitcell_ns(DataRate datarate)
-{
+{   // The result is 1000000000 / datarate / 2 = 500000000 / datarate.
     switch (datarate)
     {
     case DataRate::Unknown: break;
