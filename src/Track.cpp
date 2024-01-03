@@ -247,9 +247,13 @@ int Track::normal_probable_size() const
     return std::accumulate(begin(), end(), 0, sector_id_counter);
 }
 
+/* Implementation changed. Now it removes only the sectors and keeps other properties (e.g. tracklen, tracktime).
+ * This way the behavour is more reasonable.
+ */
 void Track::clear()
 {
-    *this = Track();
+    m_sectors.clear();
+    m_sectors_view_ordered_by_id.clear();
 }
 
 void Track::add(Track&& track)
