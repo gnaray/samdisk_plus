@@ -554,8 +554,8 @@ void Format::Override(bool full_control/*=false*/)
 {
     if (full_control)
     {
-        if (opt_range.cyls()) cyls = opt_range.cyls();
-        if (opt_range.heads()) heads = opt_range.heads();
+        if (opt_range.cyls() > 0) cyls = opt_range.cyls();
+        if (opt_range.heads() > 0) heads = opt_range.heads();
         if (opt_sectors != -1) sectors = lossless_static_cast<int>(opt_sectors);
         if (opt_size >= 0 && opt_size <= 7) size = opt_size;
 
