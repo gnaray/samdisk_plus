@@ -155,7 +155,8 @@ constexpr uint8_t reverse_byte(uint8_t byte)
     return reverse_byte_table[byte];
 }
 
-inline void bit_reverse(uint8_t* pb, size_t len)
+template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+void bit_reverse(uint8_t* pb, T len)
 {
     while (len-- > 0)
     {
