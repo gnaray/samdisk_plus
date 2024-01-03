@@ -72,48 +72,49 @@ class FdrawcmdSys
 {
 public:
     FdrawcmdSys(HANDLE hdev);
+    virtual ~FdrawcmdSys() {}
     static std::unique_ptr<FdrawcmdSys> Open(int device);
-    util::Version& GetVersion();
-    FD_FDC_INFO* GetFdcInfo();
-    int GetMaxTransferSize();
+    virtual util::Version& GetVersion();
+    virtual FD_FDC_INFO* GetFdcInfo();
+    virtual int GetMaxTransferSize();
 
 public:
-    bool GetVersion(util::Version& version);
-    bool GetResult(FD_CMD_RESULT& result);
+    virtual bool GetVersion(util::Version& version);
+    virtual bool GetResult(FD_CMD_RESULT& result);
 protected:
-    bool SetPerpendicularMode(int ow_ds_gap_wgate);
+    virtual bool SetPerpendicularMode(int ow_ds_gap_wgate);
 public:
-    bool SetEncRate(Encoding encoding, DataRate datarate);
-    bool SetHeadSettleTime(int ms);
-    bool SetMotorTimeout(int seconds);
-    bool SetMotorOff();
-    bool SetDiskCheck(bool enable);
-    bool GetFdcInfo(FD_FDC_INFO& info);
-    bool CmdPartId(uint8_t& part_id);
-    bool Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk);
-    bool Specify(int step_rate, int head_unload_time, int head_load_time);
-    bool Recalibrate();
-    bool Seek(int cyl, int head = -1);
-    bool RelativeSeek(int head, int offset);
-    bool CmdVerify(int cyl, int head, int start, int size, int eot);
-    bool CmdVerify(int phead, int cyl, int head, int sector, int size, int eot);
-    bool CmdReadTrack(int phead, int cyl, int head, int sector, int size, int eot, MEMORY& mem);
-    bool CmdRead(int phead, int cyl, int head, int sector, int size, int count, MEMORY& mem, size_t uOffset_ = 0, bool fDeleted_ = false);
-    bool CmdWrite(int phead, int cyl, int head, int sector, int size, int count, MEMORY& mem, bool fDeleted_ = false);
-    bool CmdFormat(FD_FORMAT_PARAMS* params, int size);
-    bool CmdFormatAndWrite(FD_FORMAT_PARAMS* params, int size);
-    bool CmdScan(int head, FD_SCAN_RESULT* scan, int size);
-    bool CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int size);
-    bool CmdTimedMultiScan(int head, int track_retries, FD_TIMED_MULTI_SCAN_RESULT *timed_multi_scan, int size, int byte_tolerance_of_time = -1);
-    bool CmdReadId(int head, FD_CMD_RESULT& result);
-    bool FdRawReadTrack(int head, int size, MEMORY& mem);
-    bool FdSetSectorOffset(int index);
-    bool FdSetShortWrite(int length, int finetune);
-    bool FdGetRemainCount(int& remain);
-    bool FdCheckDisk();
-    bool FdGetTrackTime(int& microseconds);
-    bool FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& time_tolerance, uint8_t revolutions = 10);
-    bool FdReset();
+    virtual bool SetEncRate(Encoding encoding, DataRate datarate);
+    virtual bool SetHeadSettleTime(int ms);
+    virtual bool SetMotorTimeout(int seconds);
+    virtual bool SetMotorOff();
+    virtual bool SetDiskCheck(bool enable);
+    virtual bool GetFdcInfo(FD_FDC_INFO& info);
+    virtual bool CmdPartId(uint8_t& part_id);
+    virtual bool Configure(uint8_t eis_efifo_poll_fifothr, uint8_t pretrk);
+    virtual bool Specify(int step_rate, int head_unload_time, int head_load_time);
+    virtual bool Recalibrate();
+    virtual bool Seek(int cyl, int head = -1);
+    virtual bool RelativeSeek(int head, int offset);
+    virtual bool CmdVerify(int cyl, int head, int start, int size, int eot);
+    virtual bool CmdVerify(int phead, int cyl, int head, int sector, int size, int eot);
+    virtual bool CmdReadTrack(int phead, int cyl, int head, int sector, int size, int eot, MEMORY& mem);
+    virtual bool CmdRead(int phead, int cyl, int head, int sector, int size, int count, MEMORY& mem, size_t uOffset_ = 0, bool fDeleted_ = false);
+    virtual bool CmdWrite(int phead, int cyl, int head, int sector, int size, int count, MEMORY& mem, bool fDeleted_ = false);
+    virtual bool CmdFormat(FD_FORMAT_PARAMS* params, int size);
+    virtual bool CmdFormatAndWrite(FD_FORMAT_PARAMS* params, int size);
+    virtual bool CmdScan(int head, FD_SCAN_RESULT* scan, int size);
+    virtual bool CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int size);
+    virtual bool CmdTimedMultiScan(int head, int track_retries, FD_TIMED_MULTI_SCAN_RESULT *timed_multi_scan, int size, int byte_tolerance_of_time = -1);
+    virtual bool CmdReadId(int head, FD_CMD_RESULT& result);
+    virtual bool FdRawReadTrack(int head, int size, MEMORY& mem);
+    virtual bool FdSetSectorOffset(int index);
+    virtual bool FdSetShortWrite(int length, int finetune);
+    virtual bool FdGetRemainCount(int& remain);
+    virtual bool FdCheckDisk();
+    virtual bool FdGetTrackTime(int& microseconds);
+    virtual bool FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& time_tolerance, uint8_t revolutions = 10);
+    virtual bool FdReset();
 
 private:
     static constexpr int RW_GAP = 0x0a;
@@ -126,12 +127,13 @@ private:
             ioctl_params.outbuf, ioctl_params.outsize, &ioctl_params.returned);
     }
 
-    uint8_t m_encoding_flags{ FD_OPTION_MFM };  // FD_OPTION_FM or FD_OPTION_MFM only.
+protected:
     Win32Handle m_hdev{};
     util::Version m_driver_version{};
     FD_FDC_INFO m_fdc_info{};
     bool m_fdc_info_queried = false;
     int m_max_transfer_size = 0;
+    uint8_t m_encoding_flags{ FD_OPTION_MFM };  // FD_OPTION_FM or FD_OPTION_MFM only.
 };
 
 #endif // HAVE_FDRAWCMD_H
