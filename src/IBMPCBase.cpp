@@ -45,7 +45,7 @@ int GetSectorOverhead(Encoding encoding)
 
 int GetDataOverhead(Encoding encoding)
 {
-    return (encoding == Encoding::MFM) ? DATA_OVERHEAD_MFM : DATA_OVERHEAD_FM;
+    return (encoding == Encoding::MFM) ? DAM_OVERHEAD_MFM : DAM_OVERHEAD_FM;
 }
 
 int GetSyncOverhead(Encoding encoding)
