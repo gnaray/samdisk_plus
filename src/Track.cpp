@@ -390,6 +390,22 @@ std::vector<Sector>::iterator Track::find(const Header& header)
         });
 }
 
+std::vector<Sector>::iterator Track::findNext(const Header& header, const std::vector<Sector>::iterator& itPrev)
+{
+    if (itPrev == end())
+        return end();
+    return std::find_if(std::next(itPrev), end(), [&](const Sector& s) {
+        return header == s.header;
+        });
+}
+
+std::vector<Sector>::iterator Track::findFirstFromOffset(const int offset)
+{
+    return std::find_if(begin(), end(), [&](const Sector& s) {
+        return offset <= s.offset;
+        });
+}
+
 std::vector<Sector>::iterator Track::findIgnoringSize(const Header& header)
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
@@ -415,6 +431,22 @@ std::vector<Sector>::const_iterator Track::find(const Header& header) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header == s.header;
+        });
+}
+
+std::vector<Sector>::const_iterator Track::findNext(const Header& header, const std::vector<Sector>::const_iterator& itPrev) const
+{
+    if (itPrev == end())
+        return end();
+    return std::find_if(std::next(itPrev), end(), [&](const Sector& s) {
+        return header == s.header;
+        });
+}
+
+std::vector<Sector>::const_iterator Track::findFirstFromOffset(const int offset) const
+{
+    return std::find_if(begin(), end(), [&](const Sector& s) {
+        return offset <= s.offset;
         });
 }
 

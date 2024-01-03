@@ -49,6 +49,8 @@ public:
     std::vector<Sector>::iterator end() { return m_sectors.end(); }
     std::vector<Sector>::iterator find(const Sector& sector);
     std::vector<Sector>::iterator find(const Header& header);
+    std::vector<Sector>::iterator findNext(const Header& header, const std::vector<Sector>::iterator& itPrev);
+    std::vector<Sector>::iterator findFirstFromOffset(const int offset);
     std::vector<Sector>::iterator findIgnoringSize(const Header& header);
     std::vector<Sector>::iterator find(const Header& header, const DataRate datarate, const Encoding encoding);
 
@@ -57,6 +59,8 @@ public:
     std::vector<Sector>::const_iterator end() const { return m_sectors.end(); }
     std::vector<Sector>::const_iterator find(const Sector& sector) const;
     std::vector<Sector>::const_iterator find(const Header& header) const;
+    std::vector<Sector>::const_iterator findNext(const Header& header, const std::vector<Sector>::const_iterator& itPrev) const;
+    std::vector<Sector>::const_iterator findFirstFromOffset(const int offset) const;
     std::vector<Sector>::const_iterator findIgnoringSize(const Header& header) const;
     std::vector<Sector>::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
 
