@@ -6,6 +6,10 @@
 #include <sstream>
 #include <vector>
 
+#ifndef _WIN32
+uint32_t lastError = 0;
+#endif
+
 std::string GetWin32ErrorStr(uint32_t error_code = 0, bool english = false)
 {
     if (!error_code)
