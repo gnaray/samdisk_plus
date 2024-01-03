@@ -100,6 +100,10 @@ int Track::data_extent_bits(const Sector& sector) const
     return gap_bits;
 }
 
+/* The extent bytes of a sector are the bytes between offset of next sector
+ * and offset of this sector without the overhead bytes, i.e. the bytes from
+ * DATA until offset of next sector minus the crc bytes.
+ */
 int Track::data_extent_bytes(const Sector& sector) const
 {
     // We only support real data extent for MFM and FM sectors.
