@@ -2,6 +2,7 @@
 #define PLATFORM_H
 
 #include "PlatformConfig.h"
+#include "win32_error.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -42,6 +43,13 @@ typedef int LONG; // Originally long which is 32 bits except in Unix-like system
 typedef __int64 LONGLONG;
 
 typedef int BOOL;
+
+// https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
+typedef DWORD *LPDWORD;
+typedef void *LPVOID;
+typedef struct _OVERLAPPED
+{
+} *LPOVERLAPPED;
 
 typedef void *LPSECURITY_ATTRIBUTES;
 
@@ -99,7 +107,14 @@ typedef struct _DISK_GEOMETRY {
 // WinIoCtl.h (WinIoCtl.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/WinIoCtl.h
 #define FILE_DEVICE_UNKNOWN             0x00000022 // [used by win32_error.cpp]
 
-#define DeviceIoControl(a,b,c,d,e,f,g,h)    (*g = 0) // [used by fdrawcmd.h]
+// DeviceIoControl used by fdrawcmd.h.
+inline BOOL DeviceIoControl(HANDLE /*hDevice*/, DWORD /*dwIoControlCode*/, LPVOID /*lpInBuffer*/, DWORD /*nInBufferSize*/,
+    LPVOID /*lpOutBuffer*/, DWORD /*nOutBufferSize*/, LPDWORD lpBytesReturned, LPOVERLAPPED /*lpOverlapped*/)
+{
+    *lpBytesReturned = 0;
+    SetLastError_MP(ERROR_FLOPPY_ID_MARK_NOT_FOUND);
+    return false;
+}
 
 // https://www.codeproject.com/script/Content/ViewAssociatedFile.aspx?rzp=%2FKB%2Fasp%2Fuseraccesscheck%2Fuseraccesscheck_demo.zip&zep=ASPDev%2FMasks.txt&obid=1881&obtid=2&ovid=1
 #define FILE_READ_DATA            ( 0x0001 )    // file & pipe [used by fdrawcmd.h]
@@ -147,6 +162,20 @@ typedef struct _DISK_GEOMETRY {
 #define FILE_READ_ACCESS          ( 0x0001 )    // file & pipe
 #define FILE_WRITE_ACCESS         ( 0x0002 )    // file & pipe
 
+
+// https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/WinIoCtl.h
+#define FILE_DEVICE_MASS_STORAGE        0x0000002d
+//
+// IoControlCode values for storage devices
+//
+#define IOCTL_STORAGE_BASE FILE_DEVICE_MASS_STORAGE
+#define IOCTL_STORAGE_GET_MEDIA_TYPES         CTL_CODE(IOCTL_STORAGE_BASE, 0x0300, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+
+
+typedef uint32_t NTSTATUS;
+#define STATUS_BUFFER_TOO_SMALL			static_cast<NTSTATUS>(0xC0000023L)
+#define STATUS_INVALID_PARAMETER		static_cast<DWORD>(0xC000000DL)
 
 inline HANDLE CreateFile(LPCSTR lpFileName,DWORD dwDesiredAccess,
         DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes,
