@@ -218,6 +218,18 @@ class MEMORY
 public:
     MEMORY() : size(0), pb(nullptr) {}
     explicit MEMORY(int uSize_) : size(uSize_), pb(AllocMem(size)) {}
+    void copyFrom(const std::vector<uint8_t>& src, int copySize = 0, int thisOffset = 0)
+    {
+        if (pb == nullptr)
+            throw util::exception("MEMORY is not allocated");
+        if (copySize == 0)
+            copySize = lossless_static_cast<int>(src.size());
+        if (size < copySize + thisOffset)
+            throw util::exception("MEMORY is smaller than the src copying from");
+        auto p = pb + thisOffset;
+        for (int i = 0; i < copySize; i++)
+            *(p++) = src[static_cast<std::vector<uint8_t>::size_type>(i)];
+    }
     MEMORY(const MEMORY&) = delete;
     virtual ~MEMORY() { if (size > 0) FreeMem(pb); }
 
