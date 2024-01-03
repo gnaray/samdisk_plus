@@ -158,24 +158,11 @@ bool FdrawcmdSys::SetPerpendicularMode(int ow_ds_gap_wgate)
 
 bool FdrawcmdSys::SetEncRate(Encoding encoding, DataRate datarate)
 {
-    if (encoding != Encoding::MFM && encoding != Encoding::FM)
-        throw util::exception("unsupported encoding (", encoding, ") for fdrawcmd.sys");
+    uint8_t rate = datarateToFdRate(datarate);
+    m_encoding_flags = encodingToFdEncoding(encoding);
 
     // Set perpendicular mode and write-enable for 1M data rate
     SetPerpendicularMode((datarate == DataRate::_1M) ? 0xbc : 0x00);
-
-    uint8_t rate;
-    switch (datarate)
-    {
-    case DataRate::_250K:   rate = FD_RATE_250K; break;
-    case DataRate::_300K:   rate = FD_RATE_300K; break;
-    case DataRate::_500K:   rate = FD_RATE_500K; break;
-    case DataRate::_1M:     rate = FD_RATE_1M; break;
-    default:
-        throw util::exception("unsupported datarate (", datarate, ")");
-    }
-
-    m_encoding_flags = encoding == Encoding::MFM ? FD_OPTION_MFM : FD_OPTION_FM;
 
     IOCTL_PARAMS ioctl_params{};
     ioctl_params.code = IOCTL_FD_SET_DATA_RATE;
