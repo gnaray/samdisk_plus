@@ -118,7 +118,7 @@ bool ReadIMD(MemFile& file, std::shared_ptr<Disk>& disk)
 
                 bool deleted_data = (b & 2) != 0;
                 bool bad_data = (b & 4) != 0;
-                uint8_t dam = deleted_data ? 0xf8 : 0xfb;
+                uint8_t dam = deleted_data ? IBM_DAM_DELETED : IBM_DAM;
 
                 // Compressed?
                 if (b & 1)

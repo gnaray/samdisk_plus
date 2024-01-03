@@ -92,7 +92,7 @@ bool ReadFDI(MemFile& file, std::shared_ptr<Disk>& disk)
                 bool deleted_data = (fs.bFlags & 0x80) != 0;
                 bool no_data = (fs.bFlags & 0x40) != 0;
                 bool bad_data = true;   // until we learn otherwise
-                uint8_t dam = deleted_data ? 0xf8 : 0xfb;
+                uint8_t dam = deleted_data ? IBM_DAM_DELETED : IBM_DAM;
 
                 auto old_pos = file.tell();
                 auto sector_pos = track_pos + ((fs.bSectorOffset[1] << 8) | fs.bSectorOffset[0]);

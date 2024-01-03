@@ -169,7 +169,7 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
             }
             else
             {
-                if (am == 0xfe && am_dist == 4)
+                if (am == IBM_IDAM && am_dist == 4)
                     data_size = Sector::SizeCodeToLength(b);
 
                 if (a1 == 3) // MFM address mark.
@@ -184,16 +184,16 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
                     am = b;
                     am_dist = 0;
                 }
-                else if (am == 0xfe && am_dist >= 1 && am_dist <= 4) // Sector CHRN.
+                else if (am == IBM_IDAM && am_dist >= 1 && am_dist <= 4) // Sector CHRN.
                 {
                     colours.push_back((am_dist == 3) ? colour::GREEN : colour::green);
                 }
-                else if (am == 0xfb && am_dist >= 1 && am_dist <= data_size) // Sector data.
+                else if (am == IBM_DAM && am_dist >= 1 && am_dist <= data_size) // Sector data.
                 {
                     colours.push_back(colour::white);
                 }
-                else if ((am == 0xfe && am_dist > 4 && am_dist <= 6) ||
-                    (am == 0xfb && am_dist > data_size && am_dist <= (data_size + 2))) // Block CRC.
+                else if ((am == IBM_IDAM && am_dist > 4 && am_dist <= 6) ||
+                    (am == IBM_DAM && am_dist > data_size && am_dist <= (data_size + 2))) // Block CRC.
                 {
                     colours.push_back(colour::MAGENTA);
                 }

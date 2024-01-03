@@ -198,7 +198,7 @@ void Sector::set_read_stats(int instance, DataReadStats&& data_read_stats)
     m_data_read_stats[u_instance] = std::move(data_read_stats);
 }
 
-Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_dam/*=0xfb*/, int* affected_data_index/*=nullptr*/,
+Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/, int* affected_data_index/*=nullptr*/,
     DataReadStats* improved_data_read_stats/*=nullptr*/)
 {
     Merge ret = Merge::NewData;
@@ -309,7 +309,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
         // Damage can cause us to see different DAM values for a sector.
         // Favour normal over deleted, and deleted over anything else.
         if (dam != new_dam &&
-            (dam == 0xfb || (dam == 0xf8 && new_dam != 0xfb)))
+            (dam == IBM_DAM || (dam == IBM_DAM_DELETED && new_dam != IBM_DAM)))
         {
             return Merge::Unchanged;
         }
@@ -351,7 +351,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
     return ret;
 }
 
-Sector::Merge Sector::add_with_readstats(Data&& new_data, bool new_bad_crc/*=false*/, uint8_t new_dam/*=0xfb*/,
+Sector::Merge Sector::add_with_readstats(Data&& new_data, bool new_bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/,
     int new_read_attempts/*=1*/, const DataReadStats& new_data_read_stats/*=DataReadStats(1)*/,
     bool readstats_counter_mode/*= true*/, bool update_this_read_attempts/*=true*/)
 {
@@ -569,7 +569,7 @@ void Sector::remove_data()
     m_data.clear();
     m_data_read_stats.clear();
     m_bad_data_crc = false;
-    dam = 0xfb;
+    dam = IBM_DAM;
 }
 
 bool Sector::are_copies_full(int max_copies) const

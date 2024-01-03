@@ -1,6 +1,7 @@
 // Fuzzy parser for raw track data
 
 #include "TrackDataParser.h"
+#include "IBMPCBase.h"
 
 // This class attempts to make sense of decoded bitstream data, as returned
 // by FDCs from gap areas of the track. It allows for mis-synced data being
@@ -187,14 +188,14 @@ uint8_t TrackDataParser::FindAM(int limit)
                 if (b == 0xa1)
                 {
                     // IDAM, DAM, or DDAM?
-                    if (am == 0xfe || am == 0xfb || am == 0xf8)
+                    if (am == IBM_IDAM || am == IBM_DAM || am == IBM_DAM_DELETED)
                         return am;
                 }
                 // Possible IAM sync?
                 else if (b == 0xc2)
                 {
                     // IAM?
-                    if (am == 0xfc)
+                    if (am == IBM_IAM)
                         return am;
                 }
                 // Clock?

@@ -464,7 +464,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                         Message(msgWarning, "ignoring stored data on %s, which has no data field", CHSR(cyl, head, sec, sector.header.sector));
                     else
                     {
-                        auto res = sector.add(std::move(data), data_crc_error, deleted_dam ? 0xf8 : 0xfb);
+                        auto res = sector.add(std::move(data), data_crc_error, deleted_dam ? IBM_DAM_DELETED : IBM_DAM);
                         if (res == Sector::Merge::Unchanged)
                             Message(msgInfo, "ignored identical data copy of %s", CHSR(cyl, head, sec, sector.header.sector));
                     }
@@ -730,7 +730,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
 
                     // Accept only normal and deleted DAMs, removing the data field for other types.
                     // Hercule II (CPC) has a non-standard DAM (0xFD), and expects it to be unreadable.
-                    if (sector.dam != 0xfb && sector.dam != 0xf8)
+                    if (sector.dam != IBM_DAM && sector.dam != IBM_DAM_DELETED)
                     {
                         Message(msgWarning, "discarding data from %s due to non-standard DAM %02x",
                             CHR(cyl, head, sector.header.sector), sector.dam);

@@ -155,14 +155,14 @@ void TrackBuilder::addIAM()
 
     if (m_encoding == Encoding::FM)
     {
-        addByteWithClock(0xfc, 0xd7);   // FM IAM uses D7 clock pattern
+        addByteWithClock(IBM_IAM, 0xd7);   // FM IAM uses D7 clock pattern
     }
     else
     {
         addByteWithClock(0xc2, 0x14);   // C2 with missing clock bit
         addByteWithClock(0xc2, 0x14);   // clock: 0 0 0 1 X 1 0 0
         addByteWithClock(0xc2, 0x14);   // data:   1 1 0 0 0 0 1 0
-        addByte(0xfc);
+        addByte(IBM_IAM);
     }
 }
 
@@ -211,7 +211,7 @@ void TrackBuilder::addTrackStart(bool short_mfm_gap)
 
 void TrackBuilder::addSectorHeader(const Header& header, bool crc_error)
 {
-    addAM(0xfe);
+    addAM(IBM_IDAM);
     addByteUpdateCrc(header.cyl);
     addByteUpdateCrc(header.head);
     addByteUpdateCrc(header.sector);
@@ -384,7 +384,7 @@ void TrackBuilder::addRX02Sector(const Header& header, const Data& data, int gap
 
     addSectorHeader(header);
     addGap2();
-    addAM(0xfd);    // RX02 DAM
+    addAM(IBM_DAM_RX02);    // RX02 DAM
 
     setEncoding(Encoding::MFM);
 

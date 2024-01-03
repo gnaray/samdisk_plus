@@ -288,7 +288,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
                         throw util::exception("CRC bad for %s", CHSR(cylhead.cyl, cylhead.head, i, sector.header.sector));
                 }
 
-                sector.add(std::move(data), bad_data, deleted_data ? 0xf8 : 0xfb);
+                sector.add(std::move(data), bad_data, deleted_data ? IBM_DAM_DELETED : IBM_DAM);
             }
 
             // If the first sector on the track shows as no-id, ignore it due to suspected Teledisk bug

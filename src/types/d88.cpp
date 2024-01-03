@@ -193,7 +193,7 @@ bool ReadD88(MemFile& file, std::shared_ptr<Disk>& disk)
 
                     Data data(length);
                     file.read(data);
-                    sector.add(std::move(data), data_crc_error, deleted_dam ? 0xf8 : 0xfb);
+                    sector.add(std::move(data), data_crc_error, deleted_dam ? IBM_DAM_DELETED : IBM_DAM);
                 }
 
                 track.add(std::move(sector));

@@ -485,7 +485,7 @@ void scan_bitstream_apple(TrackData& trackdata)
             }
             bool bad_crc = (0 != cksum);
 
-            sector.add(std::move(outdata), bad_crc, invalid ? 0xf8 : 0xfb);
+            sector.add(std::move(outdata), bad_crc, invalid ? IBM_DAM_DELETED : IBM_DAM);
 
             // If the data is good there's no need to search for more data fields
             if (!bad_crc)
@@ -696,7 +696,7 @@ void scan_bitstream_gcr(TrackData& trackdata)
 
             bool bad_crc = std::accumulate(data.begin(), data.end(), static_cast<uint8_t>(0), std::bit_xor<uint8_t>()) != stored_cksum;
 
-            sector.add(std::move(data), bad_crc, 0xfb);
+            sector.add(std::move(data), bad_crc, IBM_DAM);
 
             // If the data is good there's no need to search for more data fields
             if (!bad_crc)
@@ -1205,7 +1205,7 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
 
         switch (am)
         {
-        case 0xfe:  // IDAM
+        case IBM_IDAM:  // IDAM
         {
             std::array<uint8_t, 6> id;  // CHRN + 16-bit CRC
             bitbuf.read(id);
@@ -1236,15 +1236,15 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
             break;
         }
 
-        case 0xfb: case 0xfa:   // normal data (+alt)
-        case 0xf8: case 0xf9:   // deleted data (+alt)
-        case 0xfd:              // RX02
+        case IBM_DAM: case IBM_DAM_ALT:   // normal data (+alt)
+        case IBM_DAM_DELETED: case IBM_DAM_DELETED_ALT:   // deleted data (+alt)
+        case IBM_DAM_RX02:              // RX02
         {
             // FM address marks are short, so false positives are likely.
             if (bitbuf.encoding == Encoding::FM)
             {
                 // Require a valid FM IDAM before we accept an FM DAM.
-                if (last_fm_am != 0xfe)
+                if (last_fm_am != IBM_IDAM)
                     break;
 
                 last_fm_am = am;
@@ -1256,7 +1256,7 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
             break;
         }
 
-        case 0xfc:  // IAM
+        case IBM_IAM:  // IAM
             if (opt_debug)
                 util::cout << "s_b_mfm_fm " << bitbuf.encoding << " IAM at offset " << am_offset << " (" << bitbuf.track_offset(am_offset) << ")\n";
             break;
@@ -1312,7 +1312,7 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
             crc.add(dam);
 
             // RX02 modified MFM uses an FM DAM followed by MFM data and CRC.
-            if (data_encoding == Encoding::FM && dam == 0xfd)
+            if (data_encoding == Encoding::FM && dam == IBM_DAM_RX02)
             {
                 // Convert the sector to RX02, its size to match the data.
                 sector.encoding = Encoding::RX02;
@@ -1386,7 +1386,7 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
 
             // Check IDAM bit alignment and value, as AnglaisCollege\track00.0.raw has rogue FE junk on cyls 22+26
             if (has_gap2)
-                remove_gap2 = next_idam_align != 0 || data[next_idam_bytes] != 0xfe || test_remove_gap2(data, gap2_offset);
+                remove_gap2 = next_idam_align != 0 || data[next_idam_bytes] != IBM_IDAM || test_remove_gap2(data, gap2_offset);
 
             if (has_gap3_4b)
             {
@@ -1954,7 +1954,7 @@ void scan_bitstream_victor(TrackData& trackdata)
             if (opt_debug)
                 util::cout << util::fmt("  s_b_victor cksum s %2d disk:calc %04x:%04x\n", sector.header.sector, stored_cksum, cksum);
 
-            sector.add(std::move(data), bad_crc, 0xfb);
+            sector.add(std::move(data), bad_crc, IBM_DAM);
 
             // If the data is good there's no need to search for more data fields
             if (!bad_crc)

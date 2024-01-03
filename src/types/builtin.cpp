@@ -198,7 +198,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
                 Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 1 + i, 2));
 
                 if (i >= 2 && i <= 7)
-                    sector.add(Data(sector.size(), i), false, 0xf8);
+                    sector.add(Data(sector.size(), i), false, IBM_DAM_DELETED);
 
                 track.add(std::move(sector));
             }
@@ -230,7 +230,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
                 Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 1 + i, 2));
 
                 if (i >= 2 && i <= 7)
-                    sector.add(Data(sector.size(), i), false, 0xf8);
+                    sector.add(Data(sector.size(), i), false, IBM_DAM_DELETED);
 
                 track.add(std::move(sector));
             }
@@ -403,7 +403,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             Data data0(512, 0x01);
 
             CRC16 crc("\xa1\xa1\xa1", 3);
-            crc.add(0xfb);
+            crc.add(IBM_DAM);
             crc.add(data0.data(), 512);
             data0.insert(data0.end(), crc.msb());
             data0.insert(data0.end(), crc.lsb());
@@ -427,7 +427,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             std::copy(sig.begin(), sig.end(), std::prev(data0.end(), sig.size()));
 
             CRC16 crc("\xa1\xa1\xa1", 3);
-            crc.add(0xfb);
+            crc.add(IBM_DAM);
             crc.add(data0.data(), sector.size());
             data0[sector.size() + 0] = crc >> 8;
             data0[sector.size() + 1] = crc & 0xff;
@@ -446,7 +446,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
                 Header header((i == 1) ? 1 : cylhead.cyl, (i == 1) ? 4 : cylhead.head, ids[i], i ? 2 : 1);
                 Sector sector(DataRate::_250K, Encoding::MFM, header);
                 if (i == 0) sector.add(Data(512, 0xf7), true);
-                if (i == 1) sector.add(Data(sector.size(), i), false, 0xf8);
+                if (i == 1) sector.add(Data(sector.size(), i), false, IBM_DAM_DELETED);
                 track.add(std::move(sector));
             }
 
@@ -505,7 +505,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             for (i = 0; i < 9; ++i)
             {
                 Sector sector(DataRate::_250K, Encoding::MFM, Header(0, 0, 0, 2));
-                sector.add(Data(sector.size(), i), false, 0xf8);
+                sector.add(Data(sector.size(), i), false, IBM_DAM_DELETED);
                 track.add(std::move(sector));
             }
 
@@ -517,7 +517,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             Track track(1);
 
             Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 193, 6));
-            sector.add(Data(sector.size(), i), true, 0xf8);
+            sector.add(Data(sector.size(), i), true, IBM_DAM_DELETED);
             track.add(std::move(sector));
 
             disk->write(cylhead.next_cyl(), std::move(complete(track)));
@@ -783,7 +783,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             for (i = 0; i < 6; ++i)
             {
                 Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, i, (i < 5) ? 3 : 1));
-                if (i == 3 || i == 4) sector.add(Data(sector.size(), i), false, 0xf8);
+                if (i == 3 || i == 4) sector.add(Data(sector.size(), i), false, IBM_DAM_DELETED);
                 track.add(std::move(sector));
             }
 
@@ -1119,7 +1119,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
                 Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 1 + i, 2));
 
                 if (i >= 2 && i <= 7)
-                    sector.add(Data(sector.size(), i), false, 0xf8);
+                    sector.add(Data(sector.size(), i), false, IBM_DAM_DELETED);
 
                 track.add(std::move(sector));
             }
@@ -1274,7 +1274,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             Track track(1);
 
             Sector sector(DataRate::_250K, Encoding::MFM, Header(cylhead, 193, 6));
-            sector.add(Data(sector.size(), i), true, 0xf8);
+            sector.add(Data(sector.size(), i), true, IBM_DAM_DELETED);
             track.add(std::move(sector));
 
             disk->write(Generate8KSectorTrack(cylhead.next_cyl(), complete(track)));

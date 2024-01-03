@@ -2,6 +2,7 @@
 
 #include "Header.h"
 #include "Cpp_helpers.h"
+#include "IBMPCBase.h"
 #include "Interval.h"
 
 class Data : public std::vector<uint8_t>
@@ -89,17 +90,17 @@ public:
 
     inline bool is_deleted() const
     {
-        return dam == 0xf8 || dam == 0xf9;
+        return dam == IBM_DAM_DELETED || dam == IBM_DAM_DELETED_ALT;
     }
 
     inline bool is_altdam() const
     {
-        return dam == 0xfa;
+        return dam == IBM_DAM_ALT;
     }
 
     inline bool is_rx02dam() const
     {
-        return dam == 0xfd;
+        return dam == IBM_DAM_RX02;
     }
 
     bool is_8k_sector() const;
@@ -139,8 +140,8 @@ public:
     void set_constant_disk(bool constant_disk);
     void fix_readstats();
 
-    Merge add(Data&& data, bool bad_crc = false, uint8_t dam = 0xfb, int* affected_data_index = nullptr, DataReadStats* improved_data_read_stats = nullptr);
-    Merge add_with_readstats(Data&& new_data, bool new_bad_crc = false, uint8_t new_dam = 0xfb,
+    Merge add(Data&& data, bool bad_crc = false, uint8_t dam = IBM_DAM, int* affected_data_index = nullptr, DataReadStats* improved_data_read_stats = nullptr);
+    Merge add_with_readstats(Data&& new_data, bool new_bad_crc = false, uint8_t new_dam = IBM_DAM,
         int new_read_attempts = 1, const DataReadStats& new_data_read_stats = DataReadStats(1), bool readstats_counter_mode = true, bool update_this_read_attempts = true);
     int copies() const;
     void add_read_stats(int instance, DataReadStats&& data_read_stats);
@@ -180,7 +181,7 @@ public:
     Encoding encoding = Encoding::Unknown;  // MFM
     int offset = 0;                         // bitstream offset from index, in bits
     int gap3 = 0;                           // inter-sector gap size
-    uint8_t dam = 0xfb;                     // data address mark
+    uint8_t dam = IBM_DAM;                  // data address mark
 
 private:
     bool m_bad_id_crc = false;

@@ -69,7 +69,7 @@ bool ReadSDF(MemFile& file, std::shared_ptr<Disk>& disk)
             else if (!data_not_found)
             {
                 Data data(pd, pd + sector.size());
-                sector.add(std::move(data), data_crc_error, deleted_dam ? 0xf8 : 0xfb);
+                sector.add(std::move(data), data_crc_error, deleted_dam ? IBM_DAM_DELETED : IBM_DAM);
             }
 
             ps = reinterpret_cast<const SDF_SECTOR*>(pd + sector.size());

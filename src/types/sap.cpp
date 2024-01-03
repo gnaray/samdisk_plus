@@ -168,7 +168,7 @@ bool ReadSAP(MemFile& file, std::shared_ptr<Disk>& disk)
 
                 bitbuf.addSectorHeader(Header(ss.track, head, ss.sector, size_code));
                 bitbuf.addGap((encoding == Encoding::MFM ? 22 : 11), gap_fill);
-                bitbuf.addAM(0xfb);
+                bitbuf.addAM(IBM_DAM);
                 bitbuf.addBlock(data);
 
                 if (bad_crc)

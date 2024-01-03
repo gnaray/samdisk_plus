@@ -32,10 +32,10 @@ public:
 
     void addTrackStart(bool short_mfm_gap = false);
     void addSectorHeader(const Header& header, bool crc_error = false);
-    void addSectorData(const Data& data, int size, uint8_t dam = 0xfb, bool crc_error = false);
     void addSector(const Sector& sector, int gap3_bytes = 0);
-    void addSector(const Header& header, const Data& data, int gap3_bytes = 0, uint8_t dam = 0xfb, bool crc_error = false);
-    void addSectorUpToData(const Header& header, uint8_t dam = 0xfb);
+    void addSectorData(const Data& data, int size, uint8_t dam = IBM_DAM, bool crc_error = false);
+    void addSector(const Header& header, const Data& data, int gap3_bytes = 0, uint8_t dam = IBM_DAM, bool crc_error = false);
+    void addSectorUpToData(const Header& header, uint8_t dam = IBM_DAM);
 
     void addAmigaTrackStart();
     std::vector<uint32_t> splitAmigaBits(const void* buf, int len, uint32_t& checksum);

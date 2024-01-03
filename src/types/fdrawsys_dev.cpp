@@ -406,7 +406,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         }
 
         bool data_crc_error{ (result.st2 & STREG2_DATA_ERROR_IN_DATA_FIELD) != 0 };
-        uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? 0xf8 : 0xfb;
+        uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? IBM_DAM_DELETED : IBM_DAM;
 
         Data data(mem.pb, mem.pb + mem.size);
         sector.add_with_readstats(std::move(data), data_crc_error, dam);

@@ -126,7 +126,7 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
 
                     is_am = found_iam = true;
                 }
-                else if (!found_dam && b >= 0xf8 && b <= 0xfd)
+                else if (!found_dam && b >= IBM_DAM_DELETED && b <= IBM_DAM_RX02)
                 {
                     auto min_distance = ((current_idam_encoding == Encoding::MFM) ? 14 : 7) * step;
                     auto max_distance = min_distance + ((current_idam_encoding == Encoding::MFM) ? 43 : 30) * step;

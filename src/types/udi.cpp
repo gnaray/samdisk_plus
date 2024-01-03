@@ -120,8 +120,8 @@ bool ReadUDI(MemFile& file, std::shared_ptr<Disk>& disk)
                     bitbuf.addByte(data[u]);
                 else if (encoding == Encoding::FM)
                 {
-                    if (data[u] == 0xfc)
-                        bitbuf.addByteWithClock(0xfc, 0xd7);
+                    if (data[u] == IBM_IAM)
+                        bitbuf.addByteWithClock(IBM_IAM, 0xd7);
                     else
                         bitbuf.addByteWithClock(data[u], 0xc7);
                 }
