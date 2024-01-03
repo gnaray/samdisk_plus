@@ -21,7 +21,7 @@
 
 inline uint16_t tobe16(uint16_t u16)
 {
-    return ((u16 & 0x00ff) << 8) | (u16 >> 8);
+    return (static_cast<uint16_t>((u16 & 0x00ff) << 8)) | (u16 >> 8);
 }
 
 inline uint16_t frombe16(uint16_t be16)
