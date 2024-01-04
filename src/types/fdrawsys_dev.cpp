@@ -237,7 +237,7 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
 
                 // Fail for any reason except a CRC error
                 if (GetLastError_MP() != ERROR_CRC)
-                    throw win32_error(GetLastError_MP(), "READ_ID");
+                    throw win32_error(GetLastError_MP(), "ReadId");
             }
         }
     }
@@ -267,7 +267,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
     for (scanAttempt = 3; scanAttempt > 0; scanAttempt--) // The scanAttempt start value could be opt parameter but not so important.
     {
         if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
-            throw win32_error(GetLastError_MP(), "scan");
+            throw win32_error(GetLastError_MP(), "Scan");
 
         // If we have valid older settings ...
         if (!areEncodingAndDataRateNewlyDetermined)
@@ -278,7 +278,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
                     return track;
 
                 if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
-                    throw win32_error(GetLastError_MP(), "scan");
+                    throw win32_error(GetLastError_MP(), "Scan");
             }
             areEncodingAndDataRateNewlyDetermined = true; // True if anything is read by detector or scanner.
         }
@@ -365,14 +365,14 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
                 error != ERROR_SECTOR_NOT_FOUND &&
                 error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
             {
-                throw win32_error(error, "read");
+                throw win32_error(error, "Read");
             }
         }
 
         // Get the controller result for the read to find out more
         FD_CMD_RESULT result{};
         if (!m_fdrawcmd->GetResult(result))
-            throw win32_error(GetLastError_MP(), "result");
+            throw win32_error(GetLastError_MP(), "Result");
 
         // Try again if header or data field are missing.
         if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_NO_DATA))
@@ -453,13 +453,13 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
                 error != ERROR_SECTOR_NOT_FOUND &&
                 error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
             {
-                throw win32_error(error, "read_track");
+                throw win32_error(error, "ReadTrack");
             }
         }
 
         FD_CMD_RESULT result{};
         if (!m_fdrawcmd->GetResult(result))
-            throw win32_error(GetLastError_MP(), "result");
+            throw win32_error(GetLastError_MP(), "Result");
 
         if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_END_OF_CYLINDER))
             continue;
