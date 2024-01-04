@@ -16,6 +16,7 @@
 #include <cctype>
 
 static auto& opt_debug = getOpt<int>("debug");
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -769,19 +770,31 @@ TrackData GeneratePrehistorikTrack(const CylHead& cylhead, const Track& track)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Detecting 11 sector track (each size 512 bytes) with 250 Kbps datarate and MFM encoding.
+ * That kind of floppy disk could handle 11 sectors by omitting IAM at the beginning of track.
+ * This is indeed a very special case and is detected also specially.
+ */
 bool Is11SectorTrack(const Track& track)
 {
-    if (track.size() != 11)
-        return false;
+    if (track.empty())
+        return false; // No sector, it means false.
+    auto header11 = track[0].header;
+    header11.sector = 11;
+    if (track.size() < 11 && track.find(header11) == track.end())
+        return false; // There are no at least 11 sectors and there is no sector with ID=11, it means false.
 
+    auto goodDataCount = 0;
     for (auto& s : track)
     {
         if (s.datarate != DataRate::_250K || s.encoding != Encoding::MFM ||
-            s.size() != 512 || !s.has_good_data())
-        {
+            s.size() != 512 ||
+            (opt_normal_disk && s.header.sector > 11 && s.has_good_data()))
             return false;
-        }
+        if (s.has_good_data())
+            goodDataCount++;
     }
+    if (goodDataCount > 11)
+        return false; // There are more than 11 sectors with data, it means false.
 
     if (opt_debug) util::cout << "detected 11-sector tight track\n";
     return true;
