@@ -68,7 +68,7 @@ protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
             int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override;
 
-    bool preload(const Range&/*range*/, int /*cyl_step*/) override
+    bool preload(const Range& /*range*/, int /*cyl_step*/) override
     {
         return false;
     }
