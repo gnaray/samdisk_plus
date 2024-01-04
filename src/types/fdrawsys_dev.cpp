@@ -111,7 +111,7 @@ void FdrawSysDevDisk::SetMetadata(const std::string& path)
     }
 
     const auto info = m_fdrawcmd->GetFdcInfo();
-    if (m_fdrawcmd->GetFdcInfo() != nullptr)
+    if (info != nullptr)
     {
         static const std::vector<std::string> fdc_types{
             "Unknown", "Unknown1", "Normal", "Enhanced", "82077", "82077AA", "82078_44", "82078_64", "National" };
@@ -153,14 +153,13 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     // 1) its index is 0 and read first gap is requested, its data is used there for sanity checking.
     // 2) its id is not in specfied headers of good sectors, else it is wasting time.
     // If sector has bad id or has good data, then ReadSector will skip reading it.
-    int i;
-    for (i = 0; i < track.size(); i += 2) {
+    for (int i = 0; i < track.size(); i += 2) {
         auto& sector = track[i];
         if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
             && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
             ReadSector(cylhead, track, i, firstSectorSeen);
     }
-    for (i = 1; i < track.size(); i += 2) {
+    for (int i = 1; i < track.size(); i += 2) {
         auto& sector = track[i];
         if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
             && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
