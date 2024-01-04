@@ -103,7 +103,7 @@ TrackData GenerateKBI19Track(const CylHead& cylhead, const Track& track)
         {
             if (s.header.sector == 0)
             {
-                data.resize(s.size());
+                data.resize(lossless_static_cast<DataST>(s.size()));
                 bitbuf.addBlock(data);
                 bitbuf.addCrc(3 + 1 + 512);
             }
@@ -191,7 +191,7 @@ bool IsSpectrumSpeedlockTrack(const Track& track, int& weak_offset, int& weak_si
 
     // If there's no common block at the start, assume fully random
     // Buggy Boy has only 255, so don't check the full first half!
-    if (memcmp(data1.data(), data1.data() + 1, (sector1.size() / 2) - 1))
+    if (memcmp(data1.data(), data1.data() + 1, lossless_static_cast<size_t>(sector1.size() / 2) - 1))
     {
         // -512
         weak_offset = 0;
@@ -289,7 +289,7 @@ bool IsCpcSpeedlockTrack(const Track& track, int& weak_offset, int& weak_size)
 
     // If there's no common block at the start, assume fully random
     // Buggy Boy has only 255, so don't check the full first half!
-    if (memcmp(data7.data(), data7.data() + 1, (sector7.size() / 2) - 1))
+    if (memcmp(data7.data(), data7.data() + 1, lossless_static_cast<size_t>(sector7.size() / 2) - 1))
     {
         // -512
         weak_offset = 0;
