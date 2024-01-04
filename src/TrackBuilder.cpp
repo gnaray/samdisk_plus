@@ -62,7 +62,7 @@ void TrackBuilder::addByte(int byte)
 void TrackBuilder::addByteUpdateCrc(int byte)
 {
     addByte(byte);
-    m_crc.add(byte);
+    m_crc.add(lossless_static_cast<uint8_t>(byte));
 }
 
 void TrackBuilder::addByteWithClock(int data, int clock)
@@ -136,7 +136,7 @@ void TrackBuilder::addAM(int type, bool omit_sync)
         addByteWithClock(type, 0xc7);   // FM AM uses C7 clock pattern
 
         m_crc.init();
-        m_crc.add(type);
+        m_crc.add(lossless_static_cast<uint8_t>(type));
     }
     else
     {
@@ -243,7 +243,7 @@ void TrackBuilder::addSectorData(const Data& data, int size, uint8_t dam, bool c
     {
         // Short data padded to full size, and an appropriate CRC.
         addBlockUpdateCrc(data);
-        Data data_pad(len_bytes - data.size(), 0x00);
+        Data data_pad(lossless_static_cast<DataST>(len_bytes - data.size()), 0x00);
         addBlockUpdateCrc(data_pad);
         addCrcBytes(crc_error);
     }
@@ -324,7 +324,7 @@ std::vector<uint32_t> TrackBuilder::splitAmigaBits(const void* buf, int len, uin
     auto dwords = len / static_cast<int>(sizeof(uint32_t));
     const uint32_t* pdw = reinterpret_cast<const uint32_t*>(buf);
     std::vector<uint32_t> odddata;
-    odddata.reserve(dwords * 2);
+    odddata.reserve(lossless_static_cast<std::vector<uint32_t>::size_type>(dwords * 2));
 
     // Even then odd passes over the data
     for (auto i = 0; i < 2; ++i)
@@ -360,8 +360,8 @@ void TrackBuilder::addAmigaSector(const CylHead& cylhead, int sector, const void
     auto remain = sectors - sector;
 
     uint32_t checksum = 0;
-    uint32_t info = (0xff << 24) | (((cylhead.cyl << 1) | cylhead.head) << 16) |
-        (sector << 8) | remain;
+    uint32_t info = static_cast<uint32_t>(static_cast<int>(0xffu << 24) |
+        (((cylhead.cyl << 1) | cylhead.head) << 16) | (sector << 8) | remain);
     addAmigaDword(info, checksum);
 
     uint32_t sector_label[4] = {};
