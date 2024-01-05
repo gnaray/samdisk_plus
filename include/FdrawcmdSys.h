@@ -72,7 +72,7 @@ class FdrawcmdSys
 {
 public:
     FdrawcmdSys(HANDLE hdev);
-    virtual ~FdrawcmdSys() {}
+    virtual ~FdrawcmdSys() = default;
     static std::unique_ptr<FdrawcmdSys> Open(int device);
     virtual util::Version& GetVersion();
     virtual FD_FDC_INFO* GetFdcInfo();
