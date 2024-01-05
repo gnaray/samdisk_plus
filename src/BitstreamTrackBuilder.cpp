@@ -55,6 +55,26 @@ void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(int sectorOffset, int gap
     }
 }
 
+int BitstreamTrackBuilder::gapPreIDAMBits(bool short_mfm_gap/* = false*/) const
+{
+    return (getSyncLength(short_mfm_gap) + IDAM_OVERHEAD_MFM - 1) * 8 * 2; // The IDAM byte has the offset.
+}
+
+
+void BitstreamTrackBuilder::addIAM()
+{
+    TrackBuilder::addIAM();
+    const auto bitRawBits{ (m_buffer.encoding == Encoding::FM) ? 2 : 1 };
+    m_iamOffset = m_buffer.tell() * bitRawBits - 8;
+}
+
+int BitstreamTrackBuilder::getIAMPosition() const
+{
+    const auto bitRawBits{ (m_buffer.encoding == Encoding::FM) ? 2 : 1 };
+    // m_iamOffset is not always set, for example in case of short mfm gap or amiga encoding.
+    return m_iamOffset > 0 ? m_iamOffset : m_buffer.tell() * bitRawBits;
+}
+
 void BitstreamTrackBuilder::addCrc(int size)
 {
     auto old_bitpos{ m_buffer.tell() };

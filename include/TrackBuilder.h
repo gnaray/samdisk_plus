@@ -28,8 +28,8 @@ public:
     void addGap2(int fill = -1);
     int getSyncLength(bool short_mfm_gap = false) const;
     void addSync(bool short_mfm_gap = false);
-    void addIAM();
     void addAM(int type, bool omit_sync = false, bool short_mfm_gap = false);
+    virtual void addIAM();
     void addCrcBytes(bool bad_crc = false);
 
     void addTrackStart(bool short_mfm_gap = false);

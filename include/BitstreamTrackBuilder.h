@@ -12,6 +12,9 @@ public:
     void setEncoding(Encoding encoding) override;
     void addRawBit(bool bit) override;
     void adjustDataBitsBeforeOffset(int sectorOffset, int gap3_bytes = 0, bool short_mfm_gap = false) override;
+    int gapPreIDAMBits(bool short_mfm_gap = false) const;
+    void addIAM() override;
+    int getIAMPosition() const;
     void addCrc(int size);
 
     BitBuffer& buffer();
@@ -20,5 +23,6 @@ public:
 
 private:
     BitBuffer m_buffer;
+    int m_iamOffset = 0;
     int m_prevSectorOffset = 0; // Always must be >= 0.
 };
