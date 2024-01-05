@@ -212,7 +212,7 @@ constexpr double lossless_static_cast(int x)
 template<>
 inline int lossless_static_cast(double x)
 {
-    double xIntegralPart {};
+    double xIntegralPart;
     if (std::modf(x, &xIntegralPart) != 0)
         throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
     is_value_in_type_range<int, true>(xIntegralPart);
@@ -222,7 +222,7 @@ inline int lossless_static_cast(double x)
 template<>
 inline long lossless_static_cast(double x)
 {
-    double xIntegralPart {};
+    double xIntegralPart;
     if (std::modf(x, &xIntegralPart) != 0)
         throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
     is_value_in_type_range<long, true>(xIntegralPart);
