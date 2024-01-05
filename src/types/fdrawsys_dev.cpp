@@ -12,6 +12,7 @@
 #include "DemandDisk.h"
 #include "IBMPCBase.h"
 #include "FdrawcmdSys.h"
+#include "VfdrawcmdSys.h"
 #include "Disk.h"
 #include "Util.h"
 #include "win32_error.h"
@@ -484,18 +485,19 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
 
 bool ReadFdrawcmdSys(const std::string& path, std::shared_ptr<Disk>& disk)
 {
-    if (!IsFloppyDevice(path))
+    const auto devidx = (util::lowercase(path) == "b:") ? 1 : 0;
+    const auto virtualDevicePath = path.substr(4);
+    const bool virtualFloppyDevice = IsVfd(path);
+    if (!virtualFloppyDevice && !IsFloppyDevice(path))
         return false;
-
-    auto devidx = (util::lowercase(path) == "b:") ? 1 : 0;
-    auto fdrawcmd = FdrawcmdSys::Open(devidx);
+    auto fdrawcmd = virtualFloppyDevice ? VfdrawcmdSys::Open(virtualDevicePath) : FdrawcmdSys::Open(devidx);
+    const auto fdrawcmdSysName = std::string(virtualFloppyDevice ? "v": "") + "fdrawcmd.sys";
     if (!fdrawcmd)
-        throw util::exception("failed to open fdrawcmd.sys device");
-
+        throw util::exception("failed to open ", fdrawcmdSysName, " device");
     auto fdrawcmd_dev_disk = std::make_shared<FdrawSysDevDisk>(path, std::move(fdrawcmd));
     fdrawcmd_dev_disk->extend(CylHead(83 - 1, 2 - 1));
 
-    fdrawcmd_dev_disk->strType() = "fdrawcmd.sys";
+    fdrawcmd_dev_disk->strType() = fdrawcmdSysName;
     disk = fdrawcmd_dev_disk;
 
     return true;
