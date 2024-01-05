@@ -8,6 +8,7 @@ public:
     FluxTrackBuilder(const CylHead& cylhead, DataRate datarate, Encoding encoding);
 
     void addRawBit(bool one) override;
+    void adjustDataBitsBeforeOffset(int sectorOffset, int gap3_bytes = 0, bool short_mfm_gap = false) override;
     void addWeakBlock(int length);
 
     std::vector<uint32_t>& buffer();

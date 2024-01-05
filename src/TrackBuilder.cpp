@@ -263,6 +263,7 @@ void TrackBuilder::addSector(const Sector& sector, int gap3_bytes, bool short_mf
     case Encoding::MFM:
     case Encoding::FM:
     {
+        adjustDataBitsBeforeOffset(sector.offset, gap3_bytes, short_mfm_gap);
         addSectorHeader(sector.header, false, short_mfm_gap);
         addGap2(); // Post ID.
         if (sector.has_data())
