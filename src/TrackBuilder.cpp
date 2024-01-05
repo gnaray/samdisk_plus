@@ -120,16 +120,21 @@ void TrackBuilder::addGap2(int fill)
     addGap(gap2_bytes, fill);
 }
 
-void TrackBuilder::addSync()
+int TrackBuilder::getSyncLength(bool short_mfm_gap/* = false*/) const
 {
-    auto sync{ 0x00 };
-    addBlock(sync, (m_encoding == Encoding::FM) ? 6 : 12);
+    return (m_encoding == Encoding::FM) ? 6 : (short_mfm_gap ? 3 : 12);
 }
 
-void TrackBuilder::addAM(int type, bool omit_sync)
+void TrackBuilder::addSync(bool short_mfm_gap/* = false*/)
+{
+    auto sync = 0x00;
+    addBlock(sync, getSyncLength(short_mfm_gap));
+}
+
+void TrackBuilder::addAM(int type, bool omit_sync/* = false*/, bool short_mfm_gap/* = false*/)
 {
     if (!omit_sync)
-        addSync();
+        addSync(short_mfm_gap);
 
     if (m_encoding == Encoding::FM)
     {
@@ -173,7 +178,7 @@ void TrackBuilder::addCrcBytes(bool bad_crc)
     addByte((m_crc ^ adjust) & 0xff);
 }
 
-void TrackBuilder::addTrackStart(bool short_mfm_gap)
+void TrackBuilder::addTrackStart(bool short_mfm_gap/* = false*/)
 {
     switch (m_encoding)
     {
@@ -209,9 +214,9 @@ void TrackBuilder::addTrackStart(bool short_mfm_gap)
     }
 }
 
-void TrackBuilder::addSectorHeader(const Header& header, bool crc_error)
+void TrackBuilder::addSectorHeader(const Header& header, bool crc_error, bool short_mfm_gap/* = false*/)
 {
-    addAM(IBM_IDAM);
+    addAM(IBM_IDAM, false, short_mfm_gap);
     addByteUpdateCrc(header.cyl);
     addByteUpdateCrc(header.head);
     addByteUpdateCrc(header.sector);
@@ -249,7 +254,7 @@ void TrackBuilder::addSectorData(const Data& data, int size, uint8_t dam, bool c
     }
 }
 
-void TrackBuilder::addSector(const Sector& sector, int gap3_bytes)
+void TrackBuilder::addSector(const Sector& sector, int gap3_bytes, bool short_mfm_gap/* = false*/)
 {
     setEncoding(sector.encoding);
 
@@ -258,12 +263,12 @@ void TrackBuilder::addSector(const Sector& sector, int gap3_bytes)
     case Encoding::MFM:
     case Encoding::FM:
     {
-        addSectorHeader(sector.header);
-        addGap2();
+        addSectorHeader(sector.header, false, short_mfm_gap);
+        addGap2(); // Post ID.
         if (sector.has_data())
             addSectorData(sector.data_copy(), sector.header.size, sector.dam, sector.has_baddatacrc());
         if (!sector.has_gapdata())
-            addGap(gap3_bytes);
+            addGap(gap3_bytes); // Post DATA.
         break;
     }
     case Encoding::Amiga:

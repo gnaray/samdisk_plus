@@ -25,15 +25,16 @@ public:
 
     void addGap(int count, int fill = -1);
     void addGap2(int fill = -1);
-    void addSync();
-    void addAM(int type, bool omit_sync = false);
+    int getSyncLength(bool short_mfm_gap = false) const;
+    void addSync(bool short_mfm_gap = false);
     void addIAM();
+    void addAM(int type, bool omit_sync = false, bool short_mfm_gap = false);
     void addCrcBytes(bool bad_crc = false);
 
     void addTrackStart(bool short_mfm_gap = false);
-    void addSectorHeader(const Header& header, bool crc_error = false);
-    void addSector(const Sector& sector, int gap3_bytes = 0);
+    void addSectorHeader(const Header& header, bool crc_error = false, bool short_mfm_gap = false);
     void addSectorData(const Data& data, int size, uint8_t dam = IBM_DAM, bool crc_error = false);
+    void addSector(const Sector& sector, int gap3_bytes = 0, bool short_mfm_gap = false);
     void addSector(const Header& header, const Data& data, int gap3_bytes = 0, uint8_t dam = IBM_DAM, bool crc_error = false);
     void addSectorUpToData(const Header& header, uint8_t dam = IBM_DAM);
 

@@ -808,7 +808,7 @@ TrackData Generate11SectorTrack(const CylHead& cylhead, const Track& track)
     bitbuf.addTrackStart(true);
 
     for (auto& sector : track)
-        bitbuf.addSector(sector, 1);
+        bitbuf.addSector(sector, 1, true);
 
     return TrackData(cylhead, std::move(bitbuf.buffer()));
 }
