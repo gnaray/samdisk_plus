@@ -119,16 +119,19 @@ inline double GetFmOrMfmDataBytesTime(DataRate datarate, Encoding encoding, int 
 
 // Return the number of microseconds for given (default 1) mfmbits (halfbits) at the given rate.
 inline double GetFmOrMfmDataBitsTime(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
-// Return the number of bytes for given microseconds at the given rate.
-inline int GetFmOrMfmBitTimeDataBytes(DataRate datarate, Encoding encoding, int time)
 {
     return GetFmOrMfmDataBytesTime(datarate, encoding, len_fmormfmbits, add_drain_time) / 16;
-    return round_AS<int>(time / GetFmOrMfmDataBytesTime(datarate, encoding));
 }
 
 {
 }
 
+// Return the number of bytes as rounded integer for given microseconds at the given rate.
+// Carefully using this method because it returns a rounded result which can be much rounded at low datarate and two digits time.
+inline int GetFmOrMfmTimeDataBytesAsRounded(DataRate datarate, Encoding encoding, int time)
+{
+    return round_AS<int>(time / GetFmOrMfmDataBytesTime(datarate, encoding));
+}
 // Return the number of mfmbits (halfbits) for given microseconds at the given rate.
 inline int GetFmOrMfmBitTimeDataBits(DataRate datarate, Encoding encoding, int time)
 {
