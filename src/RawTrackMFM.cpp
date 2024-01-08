@@ -111,7 +111,7 @@ void SectorDataFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapab
 }
 // ====================================
 
-const Encoding RawTrackMFM::m_lastEncoding{ Encoding::MFM }; // Obvious value for RawTrackMFM class.
+const Encoding RawTrackMFM::encoding{ Encoding::MFM }; // Obvious value for RawTrackMFM class.
 
 void RawTrackMFM::Rewind()
 {
@@ -159,7 +159,7 @@ BitBuffer RawTrackMFM::AsBitstream()
     util::bit_reverse(rawTrackContentForBitBuffer.Bytes().data(), rawTrackContentForBitBuffer.BytesByteSize());
 
     // Luckily BitBuffer's default encoding is MFM so no need to set it.
-    return BitBuffer(m_lastDataRate, rawTrackContentForBitBuffer.Bytes().data(), lossless_static_cast<int>(rawTrackContentForBitBuffer.BytesBitSize()));
+    return BitBuffer(dataRate, rawTrackContentForBitBuffer.Bytes().data(), lossless_static_cast<int>(rawTrackContentForBitBuffer.BytesBitSize()));
 }
 
 // ====================================
@@ -289,7 +289,7 @@ The a1syncmask removes the 2nd clocksign from the byte 89.
 OrphanDataCapableTrack RawTrackMFM::DecodeTrack(const CylHead& cylHead)
 {
     OrphanDataCapableTrack orphanDataCapableTrack;
-    RawTrackContext rawTrackContext{cylHead, m_lastDataRate, m_lastEncoding};
+    RawTrackContext rawTrackContext{cylHead, dataRate, encoding};
 
 	do
 	{

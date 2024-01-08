@@ -373,12 +373,12 @@ public:
     RawTrackMFM() = default;
 
     RawTrackMFM(const std::vector<uint8_t>& rawTrackContent, const DataRate& dataRate)
-        : m_rawTrackContent(rawTrackContent), m_lastDataRate(dataRate)
+        : m_rawTrackContent(rawTrackContent), dataRate(dataRate)
     {
     }
 
     RawTrackMFM(const MEMORY& rawTrackContent, const DataRate& dataRate)
-        : m_rawTrackContent(rawTrackContent.pb, lossless_static_cast<size_t>(rawTrackContent.size)), m_lastDataRate(dataRate)
+        : m_rawTrackContent(rawTrackContent.pb, lossless_static_cast<size_t>(rawTrackContent.size)), dataRate(dataRate)
     {
     }
 
@@ -390,8 +390,8 @@ public:
 
     BitPositionableByteVector m_rawTrackContent{};
 
-    DataRate m_lastDataRate = DataRate::Unknown;
-    static const Encoding m_lastEncoding;
+    DataRate dataRate = DataRate::Unknown;
+    static const Encoding encoding;
 };
 
 #endif
