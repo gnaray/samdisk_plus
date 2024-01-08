@@ -123,7 +123,11 @@ inline double GetFmOrMfmDataBitsTime(DataRate datarate, Encoding encoding, int l
     return GetFmOrMfmDataBytesTime(datarate, encoding, len_fmormfmbits, add_drain_time) / 16;
 }
 
+// Return the number of microseconds as rounded integer for given (default 1) mfmbits (halfbits) at the given rate.
+inline int GetFmOrMfmDataBitsTimeAsRounded(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
 {
+    // Rounding happens if encoding is MFM and datarate is 1 Mbps and len_fmormfmbits is odd, or if datarate is 300 Kbps and len_fmormfmbits mod 3 is not 0.
+    return round_AS<int>(GetFmOrMfmDataBitsTime(datarate, encoding, len_fmormfmbits, add_drain_time));
 }
 
 // Return the number of bytes as rounded integer for given microseconds at the given rate.
