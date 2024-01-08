@@ -87,6 +87,7 @@ void OrphanDataCapableTrack::set(OrphanDataCapableTrack&& orphanDataCapableTrack
 /*static*/ int OrphanDataCapableTrack::findMostPopularDiff(std::vector<int>& diffs)
 {
     assert(diffs.size() > 0);
+
     std::sort(diffs.begin(), diffs.end());
     typedef std::pair<int, int> ParticipantsAndAverage;
     std::vector<ParticipantsAndAverage> participantsAndAveragedOffsetDiffs;
@@ -188,7 +189,7 @@ int OrphanDataCapableTrack::determineBestTrackLen(const int timedTrackLen) const
     std::vector<int> offsetDiffs;
     auto sectorsOrderedByHeader = track.sectors();
     std::sort(sectorsOrderedByHeader.begin(), sectorsOrderedByHeader.end(),
-              [](const Sector& a, const Sector& b) { return a.header < b.header || (a.header == b.header && a.offset < b.offset); });
+              [](const Sector& s1, const Sector& s2) { return s1.header < s2.header || (s1.header == s2.header && s1.offset < s2.offset); });
     const auto sectorsOrderedByHeaderEnd = sectorsOrderedByHeader.end();
     for (auto it = sectorsOrderedByHeader.begin(); it != sectorsOrderedByHeaderEnd; it++)
     {
