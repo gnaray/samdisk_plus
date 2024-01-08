@@ -501,8 +501,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         for (int i = 0; i < iSup; i++)
         {
             auto sector = Sector(orphanDataCapableTrack.track[i]);
-            const auto rawTimeOffseted = orphanDataCapableTrack.getTimeOfOffset(sector.offset);
-            sector.offset = rawTimeOffseted % trackTempSingle.tracktime; // Demultid offset.
+            sector.offset %= trackTempSingle.tracklen; // Demultid offset.
             trackTempSingle.add(std::move(sector));
         }
 
