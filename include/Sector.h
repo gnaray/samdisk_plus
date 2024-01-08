@@ -180,6 +180,7 @@ public:
     DataRate datarate = DataRate::Unknown;  // 250Kbps
     Encoding encoding = Encoding::Unknown;  // MFM
     int offset = 0;                         // bitstream offset from index, in bits
+    int revolution = 0;                     // the nth floppy disk spin when this sector was read (i.e. multioffset / tracklen), usually 0
     int gap3 = 0;                           // inter-sector gap size
     uint8_t dam = IBM_DAM;                  // data address mark
 
