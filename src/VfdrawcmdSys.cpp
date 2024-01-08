@@ -492,10 +492,9 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     timed_multi_scan->count = lossless_static_cast<WORD>(orphanDataCapableTrack.track.size());
     if (timed_multi_scan->count > 0)
     {
-        const auto trackTime = static_cast<int>(timed_multi_scan->tracktime);
         Track trackTempSingle;
-        trackTempSingle.tracktime = trackTime;
-        trackTempSingle.tracklen = orphanDataCapableTrack.getOffsetOfTime(trackTime);
+        trackTempSingle.tracktime = static_cast<int>(timed_multi_scan->tracktime);
+        trackTempSingle.tracklen = orphanDataCapableTrack.getOffsetOfTime(trackTempSingle.tracktime);
 
         // Demulti the temporary track so we can check how many sectors it has.
         const auto iSup = lossless_static_cast<int>(timed_multi_scan->count);
@@ -503,7 +502,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         {
             auto sector = Sector(orphanDataCapableTrack.track[i]);
             const auto rawTimeOffseted = orphanDataCapableTrack.getTimeOfOffset(sector.offset);
-            sector.offset = rawTimeOffseted % trackTime; // Demultid offset.
+            sector.offset = rawTimeOffseted % trackTempSingle.tracktime; // Demultid offset.
             trackTempSingle.add(std::move(sector));
         }
 
