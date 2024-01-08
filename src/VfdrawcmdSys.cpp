@@ -467,7 +467,7 @@ bool VfdrawcmdSys::CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int 
 
 bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
                                     FD_TIMED_MULTI_SCAN_RESULT* timed_multi_scan, int size,
-                                    int byte_tolerance_of_time /* = -1 */)
+                                    int byte_tolerance_of_time/* = -1*/)
 {
     if (head < 0 || head > 1)
         throw util::exception("unsupported head (", head, ")");
