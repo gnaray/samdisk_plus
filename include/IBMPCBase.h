@@ -117,22 +117,22 @@ inline double GetFmOrMfmDataBytesTime(DataRate datarate, Encoding encoding, int 
     return uTime * len_bytes + (add_drain_time ? (uTime * 69 / 100) : 0);     // 0.69 250Kbps bytes @300rpm = 86us = FDC data drain time
 }
 
+// Return the number of microseconds for given (default 1) mfmbits (halfbits) at the given rate.
+inline double GetFmOrMfmDataBitsTime(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
 // Return the number of bytes for given microseconds at the given rate.
 inline int GetFmOrMfmBitTimeDataBytes(DataRate datarate, Encoding encoding, int time)
 {
+    return GetFmOrMfmDataBytesTime(datarate, encoding, len_fmormfmbits, add_drain_time) / 16;
     return round_AS<int>(time / GetFmOrMfmDataBytesTime(datarate, encoding));
 }
 
-// Return the number of microseconds for 1 mfmbit (halfbit) at the given rate.
-inline double GetFmOrMfmDataBitTime(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
 {
-    return GetFmOrMfmDataBytesTime(datarate, encoding, len_fmormfmbits, add_drain_time) / 16;
 }
 
 // Return the number of mfmbits (halfbits) for given microseconds at the given rate.
 inline int GetFmOrMfmBitTimeDataBits(DataRate datarate, Encoding encoding, int time)
 {
-    return round_AS<int>(time / GetFmOrMfmDataBitTime(datarate, encoding));
+    return round_AS<int>(time / GetFmOrMfmDataBitsTime(datarate, encoding));
 }
 
 int GetTrackOverhead(Encoding encoding);

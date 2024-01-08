@@ -309,7 +309,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 
     if (scan_result->count > 0)
     {
-        const auto mfmbit_us = GetFmOrMfmDataBitTime(m_lastDataRate, m_lastEncoding);
+        const auto mfmbit_us = GetFmOrMfmDataBitsTime(m_lastDataRate, m_lastEncoding);
         track.tracktime = tracktime;
         track.tracklen = round_AS<int>(track.tracktime / mfmbit_us);
 

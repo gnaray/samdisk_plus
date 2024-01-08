@@ -12,14 +12,14 @@ bool OrphanDataCapableTrack::empty() const
 int OrphanDataCapableTrack::getTimeOfOffset(const int offset) const
 {
     assert(!track.empty());
-    const auto mfmbit_us = GetFmOrMfmDataBitTime(track.begin()->datarate, track.begin()->encoding); // microsec/mfmbits
+    const auto mfmbit_us = GetFmOrMfmDataBitsTime(track.begin()->datarate, track.begin()->encoding); // microsec/mfmbits
     return round_AS<int>(offset * mfmbit_us);
 }
 
 int OrphanDataCapableTrack::getOffsetOfTime(const int time) const
 {
     assert(!track.empty());
-    const auto mfmbit_us = GetFmOrMfmDataBitTime(track.begin()->datarate, track.begin()->encoding); // microsec/mfmbits
+    const auto mfmbit_us = GetFmOrMfmDataBitsTime(track.begin()->datarate, track.begin()->encoding); // microsec/mfmbits
     return round_AS<int>(time / mfmbit_us);
 }
 
