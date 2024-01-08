@@ -100,9 +100,11 @@ void OrphanDataCapableTrack::set(OrphanDataCapableTrack&& orphanDataCapableTrack
         participantsAndAveragedOffsetDiffs.push_back(std::make_pair(it - it0, s / (it - it0)));
         it--;
     }
-    std::sort(participantsAndAveragedOffsetDiffs.begin(), participantsAndAveragedOffsetDiffs.end(),
-              [](const ParticipantsAndAverage& a, const ParticipantsAndAverage& b) { return a.first > b.first || (a.first == b.first && a.second < b.second); });
-    return participantsAndAveragedOffsetDiffs[0].second;
+    const auto it = std::max_element(participantsAndAveragedOffsetDiffs.begin(), participantsAndAveragedOffsetDiffs.end(),
+                                     [] (const ParticipantsAndAverage &a, const ParticipantsAndAverage &b) {
+        return a.first < b.first || (a.first == b.first && a.second > b.second); // Go for more participants and less averaged offset diff.
+    });
+    return it->second;
 }
 
 void OrphanDataCapableTrack::mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack)
