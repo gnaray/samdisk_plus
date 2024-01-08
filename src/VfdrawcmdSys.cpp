@@ -474,8 +474,8 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     if (track_retries == 0)
         throw util::exception("unsupported track_retries (", track_retries, ")");
 
-    const auto sectors = static_cast<int>((lossless_static_cast<size_t>(size) - sizeof(FD_TIMED_MULTI_SCAN_RESULT)) / sizeof(FD_TIMED_MULTI_ID_HEADER));
-    if (sectors == 0)
+    const auto sectorsMax = static_cast<int>((lossless_static_cast<size_t>(size) - sizeof(FD_TIMED_MULTI_SCAN_RESULT)) / sizeof(FD_TIMED_MULTI_ID_HEADER));
+    if (sectorsMax == 0)
     {
         SetLastError_MP(ERROR_NOT_ENOUGH_MEMORY);
         return false; // The timed_multi_scan can not hold the found headers.
@@ -493,9 +493,9 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     if (timed_multi_scan->count > 0)
     {
         const auto trackTime = static_cast<int>(timed_multi_scan->tracktime);
-        Track trackTemp;
-        trackTemp.tracktime = trackTime;
-        trackTemp.tracklen = orphanDataCapableTrack.getOffsetOfTime(trackTime);
+        Track trackTempSingle;
+        trackTempSingle.tracktime = trackTime;
+        trackTempSingle.tracklen = orphanDataCapableTrack.getOffsetOfTime(trackTime);
 
         // Demulti the temporary track so we can check how many sectors it has.
         const auto iSup = lossless_static_cast<int>(timed_multi_scan->count);
@@ -504,10 +504,10 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
             auto sector = Sector(orphanDataCapableTrack.track[i]);
             const auto rawTimeOffseted = orphanDataCapableTrack.getTimeOfOffset(sector.offset);
             sector.offset = rawTimeOffseted % trackTime; // Demultid offset.
-            trackTemp.add(std::move(sector));
+            trackTempSingle.add(std::move(sector));
         }
 
-        const auto short_mfm_gap = Is11SectorTrack(trackTemp);
+        const auto short_mfm_gap = Is11SectorTrack(trackTempSingle);
         BitstreamTrackBuilder bitbuf(orphanDataCapableTrack.getDataRate(), orphanDataCapableTrack.getEncoding());
         bitbuf.addTrackStart(short_mfm_gap); // Depends on if track is special with 11 sectors MFM 250 Kbps.
 
@@ -531,7 +531,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         // Demulti the ODC track so we can produce the result array.
         orphanDataCapableTrack.syncAndDemultiThisTrackToOffset(trackStartOffset, trackTempSingle.tracklen);
 
-        if (orphanDataCapableTrack.track.size() > sectors)
+        if (orphanDataCapableTrack.track.size() > sectorsMax)
         {
             SetLastError_MP(ERROR_NOT_ENOUGH_MEMORY);
             return false; // The timed_multi_scan can not hold the found headers.
