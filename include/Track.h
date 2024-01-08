@@ -41,6 +41,8 @@ public:
     Sector remove(int index);
     const Sector& get_sector(const Header& header) const;
 
+    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
+
     Track& format(const CylHead& cylhead, const Format& format);
     Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);
 

@@ -323,6 +323,40 @@ Track::AddResult Track::add(Sector&& sector)
     }
 }
 
+void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
+{
+    assert(tracklen > 0);
+    assert(syncOffset < tracklen);
+    assert(trackLenSingle > 0);
+
+    Track trackTempSingle;
+    trackTempSingle.tracklen = trackLenSingle;
+    trackTempSingle.tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / tracklen);
+    if (!empty())
+    {
+        const auto tracklenCeilToSingle = trackLenSingle * ceil_AS<int>(static_cast<double>(tracklen) / trackLenSingle);
+        auto it = begin();
+        while (it < end())
+        {
+            Sector sector(*it);
+            sector.offset = (sector.offset - syncOffset + tracklenCeilToSingle) % trackLenSingle; // Synced and demultid offset.
+            const auto addResult = trackTempSingle.add(std::move(sector));
+            if (addResult == Track::AddResult::Append || addResult == Track::AddResult::Insert)
+            {
+                it->revolution = it->offset / trackTempSingle.tracklen;
+                it->offset = sector.offset;
+                it++;
+            }
+            else
+                it = sectors().erase(it);
+        }
+        std::sort(begin(), end(),
+                  [](const Sector& s1, const Sector& s2) { return s1.offset < s2.offset; });
+    }
+    tracklen = trackTempSingle.tracklen;
+    tracktime = trackTempSingle.tracktime;
+}
+
 Track& Track::format(const CylHead& cylhead, const Format& fmt)
 {
     assert(fmt.sectors != 0);
