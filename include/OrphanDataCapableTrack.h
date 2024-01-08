@@ -30,7 +30,7 @@ protected:
 public:
     void mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack);
     void mergeRawTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
-    void sync(int offsetDiffBest, OrphanDataCapableTrack& targetTrack);
+    void syncThisToOtherAsMulti(int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
     int determineBestTrackTime(const int timedTrackTime) const;
 
     static constexpr int ORPHAN_SECTOR_ID = 256;
