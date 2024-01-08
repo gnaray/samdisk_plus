@@ -172,13 +172,15 @@ void OrphanDataCapableTrack::syncThisToOtherAsMulti(int offsetDiff, OrphanDataCa
 }
 
 void OrphanDataCapableTrack::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
-int OrphanDataCapableTrack::determineBestTrackTime(const int timedTrackTime) const
 {
     track.syncAndDemultiThisTrackToOffset(syncOffset, trackLenSingle);
     orphanDataTrack.syncAndDemultiThisTrackToOffset(syncOffset, trackLenSingle);
 }
 
-    assert(timedTrackTime > 0);
+int OrphanDataCapableTrack::determineBestTrackLen(const int timedTrackLen) const
+{
+    assert(timedTrackLen > 0);
+
     if (track.empty())
         return 0;
     std::vector<int> offsetDiffs;
@@ -197,23 +199,21 @@ int OrphanDataCapableTrack::determineBestTrackTime(const int timedTrackTime) con
     }
     if (offsetDiffs.empty())
         return 0;
-    const auto offsetDiffBest = findMostPopularDiff(offsetDiffs); // This can be multiple tracktime. It must be reduced.
-    const auto timeDiffBest = getTimeOfOffset(offsetDiffBest);
-    const auto multi = static_cast<int>(std::round(static_cast<double>(timeDiffBest) / timedTrackTime));
+    const auto offsetDiffBest = findMostPopularDiff(offsetDiffs); // This can be multiple tracklen. It must be reduced.
+    const auto multi = round_AS<int>(static_cast<double>(offsetDiffBest) / timedTrackLen);
     if (multi == 0)
     {
         if (opt_debug)
-            util::cout << "determineBestTrackTime found timeDiffBest " << timeDiffBest << " to be too low compared to timedTrackTime " << timedTrackTime << "\n";
+            util::cout << "determineBestTrackLen found offsetDiffBest " << offsetDiffBest << " to be too low compared to timedTrackLen " << timedTrackLen << "\n";
         return 0;
     }
-    const auto trackTimeBest = static_cast<int>(timeDiffBest / multi);
+    const auto trackLenBest = round_AS<int>(static_cast<double>(offsetDiffBest) / multi);
     if (opt_debug)
     {
-        const auto allowedTimeTolerance = getTimeOfOffset(Track::COMPARE_TOLERANCE_BITS);
-        if (trackTimeBest - timedTrackTime > allowedTimeTolerance || timedTrackTime - trackTimeBest > allowedTimeTolerance)
-            util::cout << "determineBestTrackTime found trackTimeBest " << trackTimeBest << " to be outside of tolerated timedTrackTime " << timedTrackTime << "\n";
+        if (std::abs(trackLenBest - timedTrackLen) > Track::COMPARE_TOLERANCE_BITS)
+            util::cout << "determineBestTrackLen found trackLenBest " << trackLenBest << " to be outside of tolerated timedTrackLen " << timedTrackLen << "\n";
     }
     if (opt_debug)
-        util::cout << "determineBestTrackTime found trackTimeBest " << trackTimeBest << "\n";
-    return trackTimeBest;
+        util::cout << "determineBestTrackTime found trackLenBest " << trackLenBest << "\n";
+    return trackLenBest;
 }

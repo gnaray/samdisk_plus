@@ -110,9 +110,9 @@ void VfdrawcmdSys::WaitIndex(int head/* = -1*/, const bool calcSpinTime/* = fals
     if (calcSpinTime)
     {
         const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, lossless_static_cast<uint8_t>(head)));
-        const auto bestTrackTime = !orphanDataCapableTrack.track.empty() && m_trackTime > 0 ?
-                   orphanDataCapableTrack.determineBestTrackTime(m_trackTime) : 0;
-        m_trackTime = bestTrackTime > 0 ? bestTrackTime : DEFAULT_TRACKTIMES[m_fdrate];
+        const auto bestTrackLen = !orphanDataCapableTrack.track.empty() && m_trackTime > 0 ?
+                   orphanDataCapableTrack.determineBestTrackLen(orphanDataCapableTrack.getOffsetOfTime(m_trackTime)) : 0;
+        m_trackTime = bestTrackLen > 0 ? orphanDataCapableTrack.getTimeOfOffset(bestTrackLen) : DEFAULT_TRACKTIMES[m_fdrate];
     }
 }
 

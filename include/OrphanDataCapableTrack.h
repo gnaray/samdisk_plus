@@ -32,7 +32,7 @@ public:
     void mergeRawTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
     void syncThisToOtherAsMulti(int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
-    int determineBestTrackTime(const int timedTrackTime) const;
+    int determineBestTrackLen(const int timedTrackTime) const;
 
     static constexpr int ORPHAN_SECTOR_ID = 256;
     Track track{};
