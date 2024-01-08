@@ -112,6 +112,7 @@ std::string to_string(const MEDIA_TYPE& type);
 // The calculation for add_drain_time is incomprehensible, luckily that parameter is never used.
 inline double GetFmOrMfmDataBytesTime(DataRate datarate, Encoding encoding, int len_bytes = 1, bool add_drain_time = false)
 {
+    // Ignoring add_drain_time and considering len_bytes=1, the result is one of {8, 16, 26.666, 53.333, 32, 64}.
     assert(datarate != DataRate::Unknown);
     const auto uTime = 1'000'000 * (encoding == Encoding::FM ? 2 : 1) / (bits_per_second(datarate) / 8.);
     return uTime * len_bytes + (add_drain_time ? (uTime * 69 / 100) : 0);     // 0.69 250Kbps bytes @300rpm = 86us = FDC data drain time
