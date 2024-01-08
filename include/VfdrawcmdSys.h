@@ -112,12 +112,12 @@ public:
 
 private:
     static constexpr int MAX_TRANSFER_SIZE = 65536 * 64;
-    static const uint32_t DEFAULT_TRACKTIMES[4];
+    static const int DEFAULT_TRACKTIMES[4];
     std::string m_path {};
     int m_cyl{ 0 };
     FD_CMD_RESULT m_result{ 0, 0, 0, 0, 0, 0, 0 };
     uint8_t m_fdrate{ FD_RATE_250K };
-    uint32_t m_trackTime{ DEFAULT_TRACKTIMES[FD_RATE_250K] };
+    int m_trackTime{ DEFAULT_TRACKTIMES[FD_RATE_250K] };
     uint8_t m_waitSectorCount{ 0 }; // The number of sector to wait before these operations: ReadId, ReadData, ReadDeletedData, WriteData, WriteDeletedData, Verify.
     bool m_waitSector{ false };
     uint8_t m_currentSectorIndex{ 0 };

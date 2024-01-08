@@ -23,7 +23,7 @@ static auto& opt_debug = getOpt<int>("debug");
     return std::unique_ptr<VfdrawcmdSys>();
 }
 
-const uint32_t VfdrawcmdSys::DEFAULT_TRACKTIMES[4]{200000, 166666, 200000, 200000}; // Tracktimes for FDRates.
+const int VfdrawcmdSys::DEFAULT_TRACKTIMES[4]{200000, 166666, 200000, 200000}; // Tracktimes for FDRates.
 
 VfdrawcmdSys::VfdrawcmdSys(const std::string& path)
     : FdrawcmdSys(INVALID_HANDLE_VALUE)
@@ -81,7 +81,7 @@ bool VfdrawcmdSys::AdvanceSectorIndexByFindingSectorIds(const OrphanDataCapableT
     const auto trackSectorCount = orphanDataCapableTrack.track.size();
     if (trackSectorCount <= 0)
         return false;
-    const auto trackLen = orphanDataCapableTrack.getOffsetOfTime(static_cast<int>(m_trackTime));
+    const auto trackLen = orphanDataCapableTrack.getOffsetOfTime(m_trackTime);
     while ((static_cast<int>(m_currentSectorIndex) + count) >= trackSectorCount)
     {
         count -= trackSectorCount - (static_cast<int>(m_currentSectorIndex));
@@ -111,8 +111,8 @@ void VfdrawcmdSys::WaitIndex(int head/* = -1*/, const bool calcSpinTime/* = fals
     {
         const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, lossless_static_cast<uint8_t>(head)));
         const auto bestTrackTime = !orphanDataCapableTrack.track.empty() && m_trackTime > 0 ?
-                   orphanDataCapableTrack.determineBestTrackTime(static_cast<int>(m_trackTime)) : 0;
-        m_trackTime = bestTrackTime > 0 ? static_cast<uint32_t>(bestTrackTime): DEFAULT_TRACKTIMES[m_fdrate];
+                   orphanDataCapableTrack.determineBestTrackTime(m_trackTime) : 0;
+        m_trackTime = bestTrackTime > 0 ? bestTrackTime : DEFAULT_TRACKTIMES[m_fdrate];
     }
 }
 
@@ -484,7 +484,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     WaitIndex(head, true);
 
     timed_multi_scan->byte_tolerance_of_time = byte_tolerance_of_time < 0 ? Track::COMPARE_TOLERANCE_BYTES : lossless_static_cast<uint8_t>(byte_tolerance_of_time);
-    timed_multi_scan->tracktime = m_trackTime;
+    timed_multi_scan->tracktime = lossless_static_cast<uint32_t>(m_trackTime);
     timed_multi_scan->track_retries = lossless_static_cast<uint8_t>(std::abs(track_retries));
 
     const CylHead cylHead{m_cyl, lossless_static_cast<uint8_t>(head)};
@@ -633,7 +633,7 @@ bool VfdrawcmdSys::FdGetTrackTime(int& microseconds)
 {
     WaitIndex(0, true);
 
-    microseconds = static_cast<int>(m_trackTime);
+    microseconds = m_trackTime;
     return true;
 }
 
@@ -641,7 +641,7 @@ bool VfdrawcmdSys::FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& track_time, u
 {
     WaitIndex(0, true);
 
-    track_time.spintime = m_trackTime;
+    track_time.spintime = lossless_static_cast<uint32_t>(m_trackTime);
     return true;
 }
 
