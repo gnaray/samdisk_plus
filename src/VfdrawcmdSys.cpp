@@ -488,7 +488,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     timed_multi_scan->track_retries = lossless_static_cast<uint8_t>(std::abs(track_retries));
 
     const CylHead cylHead{m_cyl, lossless_static_cast<uint8_t>(head)};
-    const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(cylHead);
+    auto orphanDataCapableTrack = ReadTrackFromRowTrack(cylHead);
     timed_multi_scan->count = lossless_static_cast<WORD>(orphanDataCapableTrack.track.size());
     if (timed_multi_scan->count > 0)
     {
@@ -528,42 +528,26 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         }
 
         const auto trackStartOffset = trackIndexOffset - bitbuf.getIAMPosition(); // Syncs so the track start matches here and in BitstreamTrackBuilder.
+        // Demulti the ODC track so we can produce the result array.
+        orphanDataCapableTrack.syncAndDemultiThisTrackToOffset(trackStartOffset, trackTempSingle.tracklen);
 
-        // Demulti the temporary track so we can produce the result array adding each unique sector exactly once.
-        trackTemp.clear();
-        int j = 0;
-        for (int i = 0; i < iSup; i++)
+        if (orphanDataCapableTrack.track.size() > sectors)
         {
-            auto sector = Sector(orphanDataCapableTrack.track[i]);
-            const auto rawTimeOffseted = orphanDataCapableTrack.getTimeOfOffset(sector.offset - trackStartOffset + trackTemp.tracklen);
-            sector.offset = rawTimeOffseted % trackTime; // Demultid offset.
-            const auto addResult = trackTemp.add(std::move(sector));
-            if (addResult == Track::AddResult::Append || addResult == Track::AddResult::Insert)
-            {
-                if (j == sectors)
-                {
-                    SetLastError_MP(ERROR_NOT_ENOUGH_MEMORY);
-                    return false; // The timed_multi_scan can not hold the found headers.
-                }
-                timed_multi_scan->HeaderArray(j).cyl = lossless_static_cast<BYTE>(sector.header.cyl);
-                timed_multi_scan->HeaderArray(j).head = lossless_static_cast<BYTE>(sector.header.head);
-                timed_multi_scan->HeaderArray(j).sector = lossless_static_cast<BYTE>(sector.header.sector);
-                timed_multi_scan->HeaderArray(j).size = lossless_static_cast<BYTE>(sector.header.size);
-                timed_multi_scan->HeaderArray(j).reltime = lossless_static_cast<DWORD>(sector.offset);
-                timed_multi_scan->HeaderArray(j).revolution = lossless_static_cast<BYTE>(orphanDataCapableTrack.getTimeOfOffset(sector.offset) / trackTime);
-                j++;
-            }
+            SetLastError_MP(ERROR_NOT_ENOUGH_MEMORY);
+            return false; // The timed_multi_scan can not hold the found headers.
+        }
+        auto j = 0;
+        for (auto& sector : orphanDataCapableTrack.track.sectors())
+        {
+            auto& header = timed_multi_scan->HeaderArray(j++);
+            header.cyl = lossless_static_cast<BYTE>(sector.header.cyl);
+            header.head = lossless_static_cast<BYTE>(sector.header.head);
+            header.sector = lossless_static_cast<BYTE>(sector.header.sector);
+            header.size = lossless_static_cast<BYTE>(sector.header.size);
+            header.reltime = lossless_static_cast<DWORD>(orphanDataCapableTrack.getTimeOfOffset(sector.offset));
+            header.revolution = lossless_static_cast<BYTE>(sector.revolution);
         }
         timed_multi_scan->count = lossless_static_cast<WORD>(j);
-
-        // The timed_multi_scan must be sorted. The PFD_TIMED_MULTI_ID_HEADER_EXT type is used which
-        // is same data as PFD_TIMED_MULTI_ID_HEADER. The comparison operators' code is taken from
-        // MultiScan.h of fdrawcmd project.
-        std::sort(static_cast<PFD_TIMED_MULTI_ID_HEADER_EXT>(&timed_multi_scan->HeaderArray(0)),
-                  static_cast<PFD_TIMED_MULTI_ID_HEADER_EXT>(&timed_multi_scan->HeaderArray(j)),
-                  [](const FD_TIMED_MULTI_ID_HEADER_EXT& lhs, const FD_TIMED_MULTI_ID_HEADER_EXT& rhs) {
-            return lhs < rhs;
-        });
     }
     return true;
 }
