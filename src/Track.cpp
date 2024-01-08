@@ -323,6 +323,37 @@ Track::AddResult Track::add(Sector&& sector)
     }
 }
 
+void Track::insert(int index, Sector&& sector)
+{
+    assert(index <= static_cast<int>(m_sectors.size()));
+
+    if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
+        throw util::exception("can't mix datarates on a track");
+
+    auto it = m_sectors.begin() + index;
+    m_sectors.insert(it, std::move(sector));
+}
+
+Sector Track::remove(int index)
+{
+    assert(index < static_cast<int>(m_sectors.size()));
+
+    auto it = m_sectors.begin() + index;
+    auto sector = std::move(*it);
+    m_sectors.erase(it);
+    return sector;
+}
+
+
+const Sector& Track::get_sector(const Header& header) const
+{
+    auto it = find(header);
+    if (it == end() || it->data_size() < header.sector_size())
+        throw util::exception(CylHead(header.cyl, header.head), " sector ", header.sector, " not found");
+
+    return *it;
+}
+
 void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
 {
     assert(tracklen > 0);
@@ -395,27 +426,6 @@ Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterat
     }
 
     return it;
-}
-
-void Track::insert(int index, Sector&& sector)
-{
-    assert(index <= static_cast<int>(m_sectors.size()));
-
-    if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
-        throw util::exception("can't mix datarates on a track");
-
-    auto it = m_sectors.begin() + index;
-    m_sectors.insert(it, std::move(sector));
-}
-
-Sector Track::remove(int index)
-{
-    assert(index < static_cast<int>(m_sectors.size()));
-
-    auto it = m_sectors.begin() + index;
-    auto sector = std::move(*it);
-    m_sectors.erase(it);
-    return sector;
 }
 
 std::vector<Sector>::iterator Track::find(const Sector& sector)
@@ -504,13 +514,4 @@ std::vector<Sector>::const_iterator Track::find(const Header& header, const Data
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header == s.header && datarate == s.datarate && encoding == s.encoding;
         });
-}
-
-const Sector& Track::get_sector(const Header& header) const
-{
-    auto it = find(header);
-    if (it == end() || it->data_size() < header.sector_size())
-        throw util::exception(CylHead(header.cyl, header.head), " sector ", header.sector, " not found");
-
-    return *it;
 }
