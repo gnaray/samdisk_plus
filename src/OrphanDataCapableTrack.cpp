@@ -26,15 +26,15 @@ Encoding OrphanDataCapableTrack::getEncoding() const
 int OrphanDataCapableTrack::getTimeOfOffset(const int offset) const
 {
     assert(!track.empty());
-    const auto mfmbit_us = GetFmOrMfmDataBitsTime(track.begin()->datarate, track.begin()->encoding); // microsec/mfmbits
-    return round_AS<int>(offset * mfmbit_us);
+
+    return GetFmOrMfmDataBitsTimeAsRounded(getDataRate(), getEncoding(), offset); // microsec
 }
 
 int OrphanDataCapableTrack::getOffsetOfTime(const int time) const
 {
     assert(!track.empty());
-    const auto mfmbit_us = GetFmOrMfmDataBitsTime(track.begin()->datarate, track.begin()->encoding); // microsec/mfmbits
-    return round_AS<int>(time / mfmbit_us);
+
+    return GetFmOrMfmTimeDataBitsAsRounded(getDataRate(), getEncoding(), time); // mfmbits
 }
 
 int OrphanDataCapableTrack::getTrackLen() const
