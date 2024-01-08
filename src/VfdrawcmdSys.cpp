@@ -471,8 +471,6 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
 {
     if (head < 0 || head > 1)
         throw util::exception("unsupported head (", head, ")");
-    if (track_retries == 0)
-        throw util::exception("unsupported track_retries (", track_retries, ")");
 
     const auto sectorsMax = static_cast<int>((lossless_static_cast<size_t>(size) - sizeof(FD_TIMED_MULTI_SCAN_RESULT)) / sizeof(FD_TIMED_MULTI_ID_HEADER));
     if (sectorsMax == 0)

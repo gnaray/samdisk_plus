@@ -514,8 +514,6 @@ bool FdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
 {
     if (head < 0 || head > 1)
         throw util::exception("unsupported head (", head, ")");
-    if (track_retries == 0)
-        throw util::exception("unsupported track_retries (", track_retries, ")");
     FD_MULTI_SCAN_PARAMS msp{};
     msp.flags = m_encoding_flags;
     msp.head = lossless_static_cast<uint8_t>(head);
