@@ -13,6 +13,8 @@ public:
     OrphanDataCapableTrack() = default;
 
     bool empty() const;
+    DataRate getDataRate() const;
+    Encoding getEncoding() const;
     int getTimeOfOffset(const int offset) const;
     int getOffsetOfTime(const int time) const;
     int getTrackLen() const;

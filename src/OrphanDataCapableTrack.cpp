@@ -9,6 +9,20 @@ bool OrphanDataCapableTrack::empty() const
     return track.empty() && orphanDataTrack.empty();
 }
 
+DataRate OrphanDataCapableTrack::getDataRate() const
+{
+    assert(!track.empty());
+
+    return track[0].datarate;
+}
+
+Encoding OrphanDataCapableTrack::getEncoding() const
+{
+    assert(!track.empty());
+
+    return track[0].encoding;
+}
+
 int OrphanDataCapableTrack::getTimeOfOffset(const int offset) const
 {
     assert(!track.empty());
