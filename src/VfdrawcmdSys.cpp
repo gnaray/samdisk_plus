@@ -508,7 +508,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         }
 
         const auto short_mfm_gap = Is11SectorTrack(trackTemp);
-        BitstreamTrackBuilder bitbuf(orphanDataCapableTrack.track[0].datarate, orphanDataCapableTrack.track[0].encoding);
+        BitstreamTrackBuilder bitbuf(orphanDataCapableTrack.getDataRate(), orphanDataCapableTrack.getEncoding());
         bitbuf.addTrackStart(short_mfm_gap); // Depends on if track is special with 11 sectors MFM 250 Kbps.
 
         // Finding track index offset.
