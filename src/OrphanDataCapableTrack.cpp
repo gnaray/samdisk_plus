@@ -111,20 +111,20 @@ void OrphanDataCapableTrack::mergeRawTrack(const CylHead& cylhead, const RawTrac
     mergeRawTrack(std::move(orphanDataCapableTrack));
 }
 
-void OrphanDataCapableTrack::mergeRawTrack(OrphanDataCapableTrack&& toBeMergedTrack)
+void OrphanDataCapableTrack::mergeRawTrack(OrphanDataCapableTrack&& toBeMergedODCTrack)
 {
-    if (toBeMergedTrack.empty())
+    if (toBeMergedODCTrack.empty())
         return;
     if (empty())
     {
-        *this = toBeMergedTrack;
+        *this = toBeMergedODCTrack;
         return;
     }
     /* Sync the two tracks then add the to be merged track with synced sector offsets to the merged track (this). */
     // Firstly find the best sync (offset diff).
     std::vector<int> offsetDiffs;
     const auto trackEnd = track.end();
-    for (auto& s : toBeMergedTrack.track.sectors())
+    for (auto& s : toBeMergedODCTrack.track.sectors())
     {
         auto itMerged = track.find(s.header);
         while (itMerged != trackEnd)
@@ -135,19 +135,19 @@ void OrphanDataCapableTrack::mergeRawTrack(OrphanDataCapableTrack&& toBeMergedTr
     }
     if (offsetDiffs.empty())
     {
-        if (toBeMergedTrack.track.size() <= track.size()) // Can not sync and to be merged track is worse.
+        if (toBeMergedODCTrack.track.size() <= track.size()) // Can not sync and to be merged track is worse.
             return;
-        set(std::move(toBeMergedTrack));
+        set(std::move(toBeMergedODCTrack));
         return;
     }
     const auto offsetDiffBest = findMostPopularDiff(offsetDiffs);
     // Secondly apply the sync preferably on to be merged track (if the offsets can remain positive).
-    toBeMergedTrack.sync(offsetDiffBest, *this);
+    toBeMergedODCTrack.sync(offsetDiffBest, *this);
     // Thirdly merge the track thus its sectors.
-    add(std::move(toBeMergedTrack));
+    add(std::move(toBeMergedODCTrack));
     // Merge the tracklen. In real it should be calculated from this tracklen
     // plus the added sectors at the beginning or at the end. It is not so important.
-    setTrackLen(std::max(getTrackLen(), toBeMergedTrack.getTrackLen()));
+    setTrackLen(std::max(getTrackLen(), toBeMergedODCTrack.getTrackLen()));
 }
 
 // Apply the sync preferably on this track. However the offsets must be positive, thus sync the targetTrack if have to.

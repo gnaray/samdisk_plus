@@ -29,7 +29,7 @@ protected:
 
 public:
     void mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack);
-    void mergeRawTrack(OrphanDataCapableTrack&& toBeMergedTrack);
+    void mergeRawTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
     void sync(int offsetDiffBest, OrphanDataCapableTrack& targetTrack);
     int determineBestTrackTime(const int timedTrackTime) const;
 
