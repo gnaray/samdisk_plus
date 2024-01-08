@@ -13,47 +13,6 @@
 #include <bitset>
 #include <memory>
 
-/*
- * Ordered by reltime, revolution, cyl, head, sector, size incremented.
- */
-typedef struct tagFD_TIMED_MULTI_ID_HEADER_EXT : tagFD_TIMED_MULTI_ID_HEADER
-{
-}
-FD_TIMED_MULTI_ID_HEADER_EXT, *PFD_TIMED_MULTI_ID_HEADER_EXT;
-
-static_assert(sizeof(FD_TIMED_MULTI_ID_HEADER_EXT) == sizeof(FD_TIMED_MULTI_ID_HEADER), "FD_TIMED_MULTI_ID_HEADER_EXT must not declare variables");
-
-constexpr bool operator ==(const tagFD_TIMED_MULTI_ID_HEADER_EXT& lhs, const tagFD_TIMED_MULTI_ID_HEADER_EXT& rhs)
-{
-    return lhs.reltime == rhs.reltime && lhs.cyl == rhs.cyl && lhs.head == rhs.head && lhs.sector == rhs.sector && lhs.size == rhs.size && lhs.revolution == rhs.revolution;
-}
-
-constexpr bool operator <(const tagFD_TIMED_MULTI_ID_HEADER_EXT& lhs, const tagFD_TIMED_MULTI_ID_HEADER_EXT& rhs)
-{
-    return lhs.reltime < rhs.reltime || (lhs.reltime == rhs.reltime
-        && (lhs.revolution < rhs.revolution || (lhs.revolution == rhs.revolution
-            && (lhs.cyl < rhs.cyl || (lhs.cyl == rhs.cyl && (lhs.head < rhs.head
-                || (lhs.head == rhs.head && (lhs.sector < rhs.sector
-                    || (lhs.sector == rhs.sector && lhs.size < rhs.size)))))))));
-}
-
-constexpr bool operator !=(const tagFD_TIMED_MULTI_ID_HEADER_EXT& lhs, const tagFD_TIMED_MULTI_ID_HEADER_EXT& rhs)
-{
-    return !(lhs == rhs);
-}
-constexpr bool operator >=(const tagFD_TIMED_MULTI_ID_HEADER_EXT& lhs, const tagFD_TIMED_MULTI_ID_HEADER_EXT& rhs)
-{
-    return !(lhs < rhs);
-}
-constexpr bool operator >(const tagFD_TIMED_MULTI_ID_HEADER_EXT& lhs, const tagFD_TIMED_MULTI_ID_HEADER_EXT& rhs)
-{
-    return rhs < lhs;
-}
-constexpr bool operator <=(const tagFD_TIMED_MULTI_ID_HEADER_EXT& lhs, const tagFD_TIMED_MULTI_ID_HEADER_EXT& rhs)
-{
-    return !(lhs > rhs);
-}
-
 
 
 class VfdrawcmdSys : public FdrawcmdSys
