@@ -14,6 +14,7 @@ public:
     int gapPreIDAMBits(const bool short_mfm_gap = false) const;
     void adjustDataBitsBeforeOffset(const int sectorOffset, const int gap3_bytes = 0, const bool short_mfm_gap = false) override;
     void justAddedImportantBits() override;
+    void cutExcessUnimportantDataBitsAtTheEnd(const int trackLen);
     void addIAM() override;
     int getIAMPosition() const;
     void addCrc(int size);

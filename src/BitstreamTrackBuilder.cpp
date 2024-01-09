@@ -64,6 +64,22 @@ void BitstreamTrackBuilder::justAddedImportantBits()
     m_afterLastImportantRawBitPosition = m_buffer.tell();
 }
 
+void BitstreamTrackBuilder::cutExcessUnimportantDataBitsAtTheEnd(const int trackLen)
+{
+    const auto bitRawBits = (m_buffer.encoding == Encoding::FM) ? 2 : 1;
+    const auto currentRawBitpos = m_buffer.tell();
+    auto excessBits = currentRawBitpos / bitRawBits - trackLen;
+    if (excessBits > 0)
+    {
+        const auto protectedBitpos = m_afterLastImportantRawBitPosition / bitRawBits;
+        if (protectedBitpos < currentRawBitpos / bitRawBits)
+        {
+            if (protectedBitpos > trackLen)
+                excessBits -= protectedBitpos - trackLen;
+            m_buffer.remove(excessBits * bitRawBits);
+        }
+    }
+}
 
 void BitstreamTrackBuilder::addIAM()
 {
