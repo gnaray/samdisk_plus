@@ -13,28 +13,28 @@ DataRate OrphanDataCapableTrack::getDataRate() const
 {
     assert(!track.empty());
 
-    return track[0].datarate;
+    return track.getDataRate();
 }
 
 Encoding OrphanDataCapableTrack::getEncoding() const
 {
     assert(!track.empty());
 
-    return track[0].encoding;
+    return track.getEncoding();
 }
 
 int OrphanDataCapableTrack::getTimeOfOffset(const int offset) const
 {
     assert(!track.empty());
 
-    return GetFmOrMfmDataBitsTimeAsRounded(getDataRate(), getEncoding(), offset); // microsec
+    return track.getTimeOfOffset(offset); // microsec
 }
 
 int OrphanDataCapableTrack::getOffsetOfTime(const int time) const
 {
     assert(!track.empty());
 
-    return GetFmOrMfmTimeDataBitsAsRounded(getDataRate(), getEncoding(), time); // mfmbits
+    return track.getOffsetOfTime(time); // mfmbits
 }
 
 int OrphanDataCapableTrack::getTrackLen() const
