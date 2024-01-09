@@ -40,6 +40,10 @@ void FluxTrackBuilder::adjustDataBitsBeforeOffset(const int /*sectorOffset*/, co
 { // TODO Implement this method if it has sense.
 }
 
+void FluxTrackBuilder::justAddedImportantBits()
+{ // TODO Implement this method if it has sense.
+}
+
 void FluxTrackBuilder::addWeakBlock(int length)
 {
     // Flush out previous constant block.

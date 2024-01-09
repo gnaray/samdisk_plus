@@ -152,6 +152,7 @@ void TrackBuilder::addAM(int type, bool omit_sync/* = false*/, bool short_mfm_ga
         m_crc.init(0xcdb4);             // A1A1A1
         addByteUpdateCrc(type);
     }
+    justAddedImportantBits();
 }
 
 void TrackBuilder::addIAM()
@@ -169,6 +170,7 @@ void TrackBuilder::addIAM()
         addByteWithClock(0xc2, 0x14);   // data:   1 1 0 0 0 0 1 0
         addByte(IBM_IAM);
     }
+    justAddedImportantBits();
 }
 
 void TrackBuilder::addCrcBytes(bool bad_crc)
@@ -176,6 +178,7 @@ void TrackBuilder::addCrcBytes(bool bad_crc)
     uint16_t adjust = bad_crc ? 0x5555 : 0;
     addByte((m_crc ^ adjust) >> 8);
     addByte((m_crc ^ adjust) & 0xff);
+    justAddedImportantBits();
 }
 
 void TrackBuilder::addTrackStart(bool short_mfm_gap/* = false*/)
@@ -243,6 +246,7 @@ void TrackBuilder::addSectorData(const Data& data, int size, uint8_t dam, bool c
     {
         // Data plus gap, which will include data CRC.
         addBlockUpdateCrc(data);
+        justAddedImportantBits();
     }
     else
     {
@@ -379,6 +383,7 @@ void TrackBuilder::addAmigaSector(const CylHead& cylhead, int sector, const void
     bits = splitAmigaBits(buf, 512, checksum);
     addAmigaDword(checksum, checksum);
     addAmigaBits(bits);
+    justAddedImportantBits();
 
     addByte(0x00);
 }

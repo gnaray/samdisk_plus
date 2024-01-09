@@ -13,6 +13,7 @@ public:
     virtual void setEncoding(Encoding encoding);
     virtual void addRawBit(bool one) = 0;
     virtual void adjustDataBitsBeforeOffset(const int sectorOffset, const int gap3_bytes = 0, const bool short_mfm_gap = false) = 0;
+    virtual void justAddedImportantBits() = 0;
 
     void addBit(bool bit);
     void addDataBit(bool bit);

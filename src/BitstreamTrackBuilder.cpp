@@ -59,6 +59,11 @@ void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, c
     }
 }
 
+void BitstreamTrackBuilder::justAddedImportantBits()
+{
+    m_afterLastImportantRawBitPosition = m_buffer.tell();
+}
+
 
 void BitstreamTrackBuilder::addIAM()
 {

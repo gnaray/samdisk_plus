@@ -13,6 +13,7 @@ public:
     void addRawBit(bool bit) override;
     int gapPreIDAMBits(const bool short_mfm_gap = false) const;
     void adjustDataBitsBeforeOffset(const int sectorOffset, const int gap3_bytes = 0, const bool short_mfm_gap = false) override;
+    void justAddedImportantBits() override;
     void addIAM() override;
     int getIAMPosition() const;
     void addCrc(int size);
@@ -25,4 +26,5 @@ private:
     BitBuffer m_buffer;
     int m_iamOffset = 0;
     int m_prevSectorOffset = 0; // Always must be >= 0.
+    int m_afterLastImportantRawBitPosition = 0;
 };
