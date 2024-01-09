@@ -36,8 +36,7 @@ void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, c
     {
         const auto bitRawBits = (m_buffer.encoding == Encoding::FM) ? 2 : 1;
         const auto currentRawBitpos = m_buffer.tell();
-        const auto gapPreIDAMBits = (getSyncLength(short_mfm_gap) + IDAM_OVERHEAD_MFM - 1) * 8 * 2; // The IDAM byte has the offset.
-        const auto sectorBitpos = sectorOffset - gapPreIDAMBits;
+        const auto sectorBitpos = sectorOffset - gapPreIDAMBits(short_mfm_gap);
         auto missingBitsToAdd = sectorBitpos - currentRawBitpos / bitRawBits;
         if (missingBitsToAdd > 0)
         {
