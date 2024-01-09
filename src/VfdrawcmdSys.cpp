@@ -628,8 +628,11 @@ bool VfdrawcmdSys::FdGetTrackTime(int& microseconds)
     return true;
 }
 
-bool VfdrawcmdSys::FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& track_time, uint8_t /*revolutions*//* = 10*/)
+bool VfdrawcmdSys::FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& track_time, uint8_t revolutions/* = 10*/)
 {
+    if (revolutions == 0)
+        throw util::exception("unsupported revolutions (", revolutions, ")");
+
     WaitIndex(0, true);
 
     track_time.spintime = lossless_static_cast<uint32_t>(m_trackTime);

@@ -615,6 +615,8 @@ bool FdrawcmdSys::FdGetTrackTime(int& microseconds)
 
 bool FdrawcmdSys::FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& track_time, uint8_t revolutions /* = 10*/)
 {
+    if (revolutions == 0)
+        throw util::exception("unsupported revolutions (", revolutions, ")");
     IOCTL_PARAMS ioctl_params{};
     ioctl_params.code = IOCTL_FD_GET_MULTI_TRACK_TIME;
     ioctl_params.inbuf = &revolutions;
