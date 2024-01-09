@@ -354,6 +354,34 @@ const Sector& Track::get_sector(const Header& header) const
     return *it;
 }
 
+DataRate Track::getDataRate() const
+{
+    assert(!empty());
+
+    return (*this)[0].datarate;
+}
+
+Encoding Track::getEncoding() const
+{
+    assert(!empty());
+
+    return (*this)[0].encoding;
+}
+
+int Track::getTimeOfOffset(const int offset) const
+{
+    assert(!empty());
+
+    return GetFmOrMfmDataBitsTimeAsRounded(getDataRate(), getEncoding(), offset); // microsec
+}
+
+int Track::getOffsetOfTime(const int time) const
+{
+    assert(!empty());
+
+    return GetFmOrMfmTimeDataBitsAsRounded(getDataRate(), getEncoding(), time); // mfmbits
+}
+
 void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
 {
     assert(tracklen > 0);

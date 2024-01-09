@@ -41,6 +41,10 @@ public:
     Sector remove(int index);
     const Sector& get_sector(const Header& header) const;
 
+    DataRate getDataRate() const;
+    Encoding getEncoding() const;
+    int getTimeOfOffset(const int offset) const;
+    int getOffsetOfTime(const int time) const;
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
 
     Track& format(const CylHead& cylhead, const Format& format);
