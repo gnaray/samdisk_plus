@@ -146,11 +146,9 @@ void OrphanDataCapableTrack::mergeRawTrack(OrphanDataCapableTrack&& toBeMergedOD
     const auto offsetDiffBest = findMostPopularDiff(offsetDiffs);
     // Secondly apply the sync preferably on to be merged track (if the offsets can remain positive).
     toBeMergedODCTrack.syncThisToOtherAsMulti(offsetDiffBest, *this);
-    // Thirdly merge the track thus its sectors.
+    // Thirdly merge the track thus its sectors. Plus merge the tracklen and tracktime,
+    // which could be be calculated from this tracklen plus the added sectors at the beginning or at the end. Unimportant.
     add(std::move(toBeMergedODCTrack));
-    // Merge the tracklen. In real it should be calculated from this tracklen
-    // plus the added sectors at the beginning or at the end. It is not so important.
-    setTrackLen(std::max(getTrackLen(), toBeMergedODCTrack.getTrackLen()));
 }
 
 // Apply the sync preferably on this track. However the offsets must be positive, thus sync the targetTrack if have to.
