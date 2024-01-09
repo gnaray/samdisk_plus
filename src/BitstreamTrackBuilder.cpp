@@ -25,6 +25,11 @@ void BitstreamTrackBuilder::addRawBit(bool bit)
     m_buffer.add(bit);
 }
 
+int BitstreamTrackBuilder::gapPreIDAMBits(const bool short_mfm_gap/* = false*/) const
+{
+    return (getSyncLength(short_mfm_gap) + IDAM_OVERHEAD_MFM - 1) * 8 * 2; // The IDAM byte has the offset.
+}
+
 void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, const int gap3_bytes/* = 0*/, const bool short_mfm_gap/* = false*/)
 {
     if (sectorOffset > m_prevSectorOffset)
@@ -53,11 +58,6 @@ void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, c
         }
         m_prevSectorOffset = sectorOffset;
     }
-}
-
-int BitstreamTrackBuilder::gapPreIDAMBits(const bool short_mfm_gap/* = false*/) const
-{
-    return (getSyncLength(short_mfm_gap) + IDAM_OVERHEAD_MFM - 1) * 8 * 2; // The IDAM byte has the offset.
 }
 
 
