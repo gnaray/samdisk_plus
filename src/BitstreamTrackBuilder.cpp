@@ -36,7 +36,7 @@ void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(int sectorOffset, int gap
         auto missingBitsToAdd = sectorBitpos - currentRawBitpos / bitRawBits;
         if (missingBitsToAdd > 0)
         {
-            const auto gap3Bits = std::min(missingBitsToAdd, gap3_bytes * 8 * 2);
+            const auto gap3Bits = std::min(missingBitsToAdd / 8 / 2, gap3_bytes) * 8 * 2;
             while (missingBitsToAdd > gap3Bits)
             {
                 addBit(true);
