@@ -36,7 +36,7 @@ void FluxTrackBuilder::addRawBit(bool next_bit)
     m_curr_bit = next_bit;
 }
 
-void FluxTrackBuilder::adjustDataBitsBeforeOffset(int sectorOffset, int gap3_bytes/* = 0*/, bool short_mfm_gap/* = false*/)
+void FluxTrackBuilder::adjustDataBitsBeforeOffset(const int /*sectorOffset*/, const int /*gap3_bytes*//* = 0*/, const bool /*short_mfm_gap*//* = false*/)
 { // TODO Implement this method if it has sense.
 }
 
