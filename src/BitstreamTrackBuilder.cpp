@@ -34,10 +34,9 @@ void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, c
 {
     if (sectorOffset > m_prevSectorOffset)
     {
-        const auto bitRawBits = (m_buffer.encoding == Encoding::FM) ? 2 : 1;
-        const auto currentRawBitpos = m_buffer.tell();
+        const auto currentBitpos = rawOffsetToOffset(m_buffer.tell());
         const auto sectorBitpos = sectorOffset - gapPreIDAMBits(short_mfm_gap);
-        auto missingBitsToAdd = sectorBitpos - currentRawBitpos / bitRawBits;
+        auto missingBitsToAdd = sectorBitpos - currentBitpos;
         if (missingBitsToAdd > 0)
         {
             const auto gap3Bits = std::min(missingBitsToAdd / 8 / 2, gap3_bytes) * 8 * 2;
@@ -53,7 +52,7 @@ void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, c
         {
             const auto idWithGap3Bits = (ID_OVERHEAD_MFM - (IDAM_OVERHEAD_MFM - 1) + gap3_bytes) * 8 * 2;
             const auto protectedBitpos = m_prevSectorOffset + idWithGap3Bits;
-            m_buffer.seek(std::max(sectorBitpos, protectedBitpos) * bitRawBits);
+            m_buffer.seek(offsetToRawOffset(std::max(sectorBitpos, protectedBitpos)));
         }
         m_prevSectorOffset = sectorOffset;
     }
@@ -66,17 +65,16 @@ void BitstreamTrackBuilder::justAddedImportantBits()
 
 void BitstreamTrackBuilder::cutExcessUnimportantDataBitsAtTheEnd(const int trackLen)
 {
-    const auto bitRawBits = (m_buffer.encoding == Encoding::FM) ? 2 : 1;
-    const auto currentRawBitpos = m_buffer.tell();
-    auto excessBits = currentRawBitpos / bitRawBits - trackLen;
+    const auto currentBitpos = rawOffsetToOffset(m_buffer.tell());
+    auto excessBits = currentBitpos - trackLen;
     if (excessBits > 0)
     {
-        const auto protectedBitpos = m_afterLastImportantRawBitPosition / bitRawBits;
-        if (protectedBitpos < currentRawBitpos / bitRawBits)
+        const auto protectedBitpos = rawOffsetToOffset(m_afterLastImportantRawBitPosition);
+        if (protectedBitpos < currentBitpos)
         {
             if (protectedBitpos > trackLen)
                 excessBits -= protectedBitpos - trackLen;
-            m_buffer.remove(excessBits * bitRawBits);
+            m_buffer.remove(offsetToRawOffset(excessBits));
         }
     }
 }
@@ -84,21 +82,19 @@ void BitstreamTrackBuilder::cutExcessUnimportantDataBitsAtTheEnd(const int track
 void BitstreamTrackBuilder::addIAM()
 {
     TrackBuilder::addIAM();
-    const auto bitRawBits{ (m_buffer.encoding == Encoding::FM) ? 2 : 1 };
-    m_iamOffset = m_buffer.tell() * bitRawBits - 8;
+    m_iamOffset = rawOffsetToOffset(m_buffer.tell()) - 8;
 }
 
 int BitstreamTrackBuilder::getIAMPosition() const
 {
-    const auto bitRawBits{ (m_buffer.encoding == Encoding::FM) ? 2 : 1 };
     // m_iamOffset is not always set, for example in case of short mfm gap or amiga encoding.
-    return m_iamOffset > 0 ? m_iamOffset : m_buffer.tell() * bitRawBits;
+    return m_iamOffset > 0 ? m_iamOffset : rawOffsetToOffset(m_buffer.tell());
 }
 
 void BitstreamTrackBuilder::addCrc(int size)
 {
     auto old_bitpos{ m_buffer.tell() };
-    auto byte_bits{ (m_buffer.encoding == Encoding::FM) ? 32 : 16 };
+    auto byte_bits = bitRawBits() * 16;
     assert(old_bitpos >= size * byte_bits);
     m_buffer.seek(old_bitpos - size * byte_bits);
 
