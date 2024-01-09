@@ -421,13 +421,13 @@ Track& Track::format(const CylHead& cylhead, const Format& fmt)
     assert(fmt.sectors != 0);
 
     m_sectors.clear();
-    m_sectors.reserve(fmt.sectors);
+    m_sectors.reserve(lossless_static_cast<std::vector<Sector>::size_type>(fmt.sectors));
 
     for (auto id : fmt.get_ids(cylhead))
     {
         Header header(cylhead.cyl, cylhead.head ? fmt.head1 : fmt.head0, id, fmt.size);
         Sector sector(fmt.datarate, fmt.encoding, header, fmt.gap3);
-        Data data(fmt.sector_size(), fmt.fill);
+        Data data(lossless_static_cast<DataST>(fmt.sector_size()), fmt.fill);
 
         sector.add(std::move(data));
         add(std::move(sector));
