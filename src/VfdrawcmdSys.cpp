@@ -523,9 +523,20 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
                 trackIndexOffset = it->offset - bitstreamTrackBuilder.gapPreIDAMBits(short_mfm_gap);
         }
 
-        const auto trackStartOffset = trackIndexOffset - bitstreamTrackBuilder.getIAMPosition(); // Syncs so the track start matches here and in BitstreamTrackBuilder.
+        auto trackStartOffset = trackIndexOffset - bitstreamTrackBuilder.getIAMPosition(); // Syncs so the track start matches here and in BitstreamTrackBuilder.
         // Demulti the ODC track so we can produce the result array.
         orphanDataCapableTrack.syncAndDemultiThisTrackToOffset(trackStartOffset, trackTempSingle.tracklen);
+        // If there are excess bits then fine sync so the important bits fit the tracklen.
+        TrackData trackData(cylHead, std::move(orphanDataCapableTrack.track));
+        orphanDataCapableTrack.track = trackData.track(); // Copy the moved track back.
+        const auto bitstream = trackData.bitstream();
+        const auto overhangingBits = bitstreamTrackBuilder.rawOffsetToOffset(bitstream.tell()) - orphanDataCapableTrack.track.tracklen;
+        if (overhangingBits > 0)
+        {
+            trackStartOffset = std::min(overhangingBits, bitstreamTrackBuilder.getIAMPosition());
+            // Fine sync the ODC track (demulti does not happen here).
+            orphanDataCapableTrack.syncAndDemultiThisTrackToOffset(trackStartOffset, trackTempSingle.tracklen);
+        }
 
         if (orphanDataCapableTrack.track.size() > sectorsMax)
         {
