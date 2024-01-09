@@ -810,6 +810,8 @@ TrackData Generate11SectorTrack(const CylHead& cylhead, const Track& track)
     for (auto& sector : track)
         bitbuf.addSector(sector, 1, true);
 
+    bitbuf.cutExcessUnimportantDataBitsAtTheEnd(track.tracklen);
+
     return TrackData(cylhead, std::move(bitbuf.buffer()));
 }
 
