@@ -201,8 +201,7 @@ void TrackBuilder::addTrackStart(bool short_mfm_gap/* = false*/)
         break;
     case Encoding::Amiga:
     {
-        auto fill{ 0x00 };
-        addBlock(fill, 60);
+        addAmigaTrackStart();
         break;
     }
     case Encoding::RX02:
