@@ -504,8 +504,8 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         }
 
         const auto short_mfm_gap = Is11SectorTrack(trackTempSingle);
-        BitstreamTrackBuilder bitbuf(orphanDataCapableTrack.getDataRate(), orphanDataCapableTrack.getEncoding());
-        bitbuf.addTrackStart(short_mfm_gap); // Depends on if track is special with 11 sectors MFM 250 Kbps.
+        BitstreamTrackBuilder bitstreamTrackBuilder(orphanDataCapableTrack.getDataRate(), orphanDataCapableTrack.getEncoding());
+        bitstreamTrackBuilder.addTrackStart(short_mfm_gap); // Depends on if track is special with 11 sectors MFM 250 Kbps.
 
         // Finding track index offset.
         int trackIndexOffset = orphanDataCapableTrack.trackIndexOffset;
@@ -520,10 +520,10 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
                 return true;
             }
             else
-                trackIndexOffset = it->offset - bitbuf.gapPreIDAMBits(short_mfm_gap);
+                trackIndexOffset = it->offset - bitstreamTrackBuilder.gapPreIDAMBits(short_mfm_gap);
         }
 
-        const auto trackStartOffset = trackIndexOffset - bitbuf.getIAMPosition(); // Syncs so the track start matches here and in BitstreamTrackBuilder.
+        const auto trackStartOffset = trackIndexOffset - bitstreamTrackBuilder.getIAMPosition(); // Syncs so the track start matches here and in BitstreamTrackBuilder.
         // Demulti the ODC track so we can produce the result array.
         orphanDataCapableTrack.syncAndDemultiThisTrackToOffset(trackStartOffset, trackTempSingle.tracklen);
 
