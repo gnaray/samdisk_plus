@@ -19,8 +19,10 @@ public:
     int getOffsetOfTime(const int time) const;
     int getTrackLen() const;
     void setTrackLen(const int trackLen);
+    void addTrackLen(const int trackLen);
     int getTrackTime() const;
     void setTrackTime(const int trackTime);
+    void addTrackTime(const int trackTime);
     void add(OrphanDataCapableTrack&& orphanDataCapableTrack);
     void set(OrphanDataCapableTrack&& orphanDataCapableTrack);
 

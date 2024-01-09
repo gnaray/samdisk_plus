@@ -54,6 +54,11 @@ void OrphanDataCapableTrack::setTrackLen(const int trackLen)
     }
 }
 
+void OrphanDataCapableTrack::addTrackLen(const int trackLen)
+{
+    setTrackLen(getTrackLen() + trackLen);
+}
+
 int OrphanDataCapableTrack::getTrackTime() const
 {
     return track.tracktime;
@@ -68,6 +73,11 @@ void OrphanDataCapableTrack::setTrackTime(const int trackTime)
         track.tracklen = getOffsetOfTime(trackTime);
         orphanDataTrack.tracklen = track.tracktime;
     }
+}
+
+void OrphanDataCapableTrack::addTrackTime(const int trackTime)
+{
+    setTrackTime(getTrackTime() + trackTime);
 }
 
 void OrphanDataCapableTrack::add(OrphanDataCapableTrack&& orphanDataCapableTrack)
@@ -162,6 +172,7 @@ void OrphanDataCapableTrack::syncThisToOtherAsMulti(int offsetDiff, OrphanDataCa
             s.offset -= offsetDiff;
         for (auto& s : targetODCTrack.orphanDataTrack.sectors())
             s.offset -= offsetDiff;
+        targetODCTrack.addTrackLen(-offsetDiff);
     }
     else
     {
@@ -169,6 +180,7 @@ void OrphanDataCapableTrack::syncThisToOtherAsMulti(int offsetDiff, OrphanDataCa
             s.offset += offsetDiff;
         for (auto& s : orphanDataTrack.sectors())
             s.offset += offsetDiff;
+        addTrackLen(offsetDiff);
     }
 }
 
