@@ -545,18 +545,21 @@ bool Format::TryValidate() const
 
 /*static*/ std::vector<int> Format::GetIds(const CylHead& cylhead, const int sectors, const int interleave/* = 0*/, const int skew/* = 0*/, const int offset/* = 0*/, const int base/* = 1*/)
 {
-    std::vector<bool> used(sectors);
-    std::vector<int> ids(sectors);
+    const auto u_sectors = lossless_static_cast<size_t>(sectors);
+    std::vector<int> ids(u_sectors);
+    if (sectors == 0)
+        return ids;
+    std::vector<bool> used(u_sectors);
 
-    auto base_id = base;
+    const auto base_id = base;
 
     for (auto s = 0; s < sectors; ++s)
     {
         // Calculate the expected sector index using the interleave and skew
-        auto index = (offset + s * interleave + skew * (cylhead.cyl)) % sectors;
+        auto index = static_cast<size_t>((offset + s * interleave + skew * (cylhead.cyl)) % sectors);
 
         // Find a free slot starting from the expected position
-        for (; used[index]; index = (index + 1) % sectors);
+        for (; used[index]; index = (index + 1) % u_sectors) ;
         used[index] = 1;
 
         // Assign the sector number, with offset adjustments
