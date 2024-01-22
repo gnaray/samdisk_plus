@@ -71,6 +71,7 @@ struct Format
     static bool FromSize(int64_t size, Format& fmt);
     static void Validate(int cyls, int heads, int sectors = 1, int sector_size = 512, int max_size = 0);
     static bool TryValidate(int cyls, int heads, int sectors = 1, int sector_size = 512, int max_size = 0);
+    static std::vector<int> GetIds(const CylHead& cylhead, const int sectors, const int interleave = 0, const int skew = 0, const int offset = 0, const int base = 1);
 
     std::string ToString(bool onlyRelevantData = true) const
     {

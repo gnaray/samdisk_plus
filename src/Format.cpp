@@ -70,25 +70,7 @@ Range Format::range() const
 
 std::vector<int> Format::get_ids(const CylHead& cylhead) const
 {
-    std::vector<bool> used(sectors);
-    std::vector<int> ids(sectors);
-
-    auto base_id = base;
-
-    for (auto s = 0; s < sectors; ++s)
-    {
-        // Calculate the expected sector index using the interleave and skew
-        auto index = (offset + s * interleave + skew * (cylhead.cyl)) % sectors;
-
-        // Find a free slot starting from the expected position
-        for (; used[index]; index = (index + 1) % sectors);
-        used[index] = 1;
-
-        // Assign the sector number, with offset adjustments
-        ids[index] = base_id + s;
-    }
-
-    return ids;
+    return GetIds(cylhead, sectors, interleave, skew, offset, base);
 }
 
 
@@ -559,6 +541,29 @@ bool Format::TryValidate() const
         heads_ > 0 && heads_ <= MAX_SIDES &&
         sectors_ > 0 && sectors_ <= MAX_SECTORS &&
         (max_sector_size == 0 || sector_size <= max_sector_size);
+}
+
+/*static*/ std::vector<int> Format::GetIds(const CylHead& cylhead, const int sectors, const int interleave/* = 0*/, const int skew/* = 0*/, const int offset/* = 0*/, const int base/* = 1*/)
+{
+    std::vector<bool> used(sectors);
+    std::vector<int> ids(sectors);
+
+    auto base_id = base;
+
+    for (auto s = 0; s < sectors; ++s)
+    {
+        // Calculate the expected sector index using the interleave and skew
+        auto index = (offset + s * interleave + skew * (cylhead.cyl)) % sectors;
+
+        // Find a free slot starting from the expected position
+        for (; used[index]; index = (index + 1) % sectors);
+        used[index] = 1;
+
+        // Assign the sector number, with offset adjustments
+        ids[index] = base_id + s;
+    }
+
+    return ids;
 }
 
 void Format::Override(bool full_control/*=false*/)
