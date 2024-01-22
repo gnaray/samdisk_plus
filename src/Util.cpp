@@ -698,3 +698,9 @@ bool DiskHasMBR(const HDD& hdd)
 {
     return CheckSig(hdd, 0, 510, "\x55\xaa");
 }
+
+MEMORY::~MEMORY()
+{
+    if (size > 0)
+        FreeMem(pb);
+}

@@ -238,7 +238,8 @@ public:
             *(p++) = src[static_cast<std::vector<uint8_t>::size_type>(i)];
     }
     MEMORY(const MEMORY&) = delete;
-    virtual ~MEMORY() { if (size > 0) FreeMem(pb); }
+    void operator= (const MEMORY& ref_) = delete;
+    virtual ~MEMORY();
 
     operator uint8_t* () { return pb; }
     //  uint8_t& operator[] (size_t u_) { return pb[u_]; }
@@ -268,9 +269,6 @@ public:
 
     int size = 0;
     uint8_t* pb = nullptr;
-
-private:
-    void operator= (const MEMORY& ref_) = delete;
 };
 typedef MEMORY* PMEMORY;
 
