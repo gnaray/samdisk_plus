@@ -19,6 +19,17 @@ static auto& opt_skew = getOpt<int>("skew");
 static auto& opt_step = getOpt<int>("step");
 
 
+std::vector<int> IdAndOffsetVector::GetSectorIds() const
+{
+    std::vector<int> sectorIds;
+    std::transform(begin(), end(), std::back_inserter(sectorIds),
+                   [](const IdAndOffset& idAndOffset)
+    { return idAndOffset.id; });
+    return sectorIds;
+}
+
+
+
 Format::Format(RegularFormat reg_fmt)
     : Format(GetFormat(reg_fmt))
 {

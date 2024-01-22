@@ -2,6 +2,30 @@
 
 #include "Range.h"
 
+class IdAndOffset
+{
+public:
+    IdAndOffset() = default;
+    IdAndOffset(int id, int offset) : id(id), offset(offset)
+    {
+    }
+
+    int id = -1;
+    int offset = -1;
+};
+
+class IdAndOffsetVector : public std::vector<IdAndOffset>
+{
+public:
+    using std::vector<IdAndOffset>::vector;
+
+    std::vector<int> GetSectorIds() const;
+};
+
+typedef IdAndOffsetVector::size_type IdAndOffsetVectorST;
+
+
+
 enum class FdcType { None, PC, WD, Amiga, Apple };
 enum class RegularFormat {
     None,
