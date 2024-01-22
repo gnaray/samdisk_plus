@@ -654,6 +654,12 @@ std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
 
 //////////////////////////////////////////////////////////////////////////////
 
+void Sectors::push_more_back(const Sectors& sectors)
+{
+    for (auto& sector : sectors)
+        std::vector<Sector>::push_back(sector);
+}
+
 bool Sectors::HasIdSequence(const int first_id, const int length) const
 {
     return GoodHeaders().HasIdSequence(first_id, length);

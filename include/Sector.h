@@ -200,8 +200,9 @@ inline std::ostream& operator<<(std::ostream& os, const Sector& sector) { return
 class Sectors : public std::vector<Sector>
 {
 public:
-    Sectors() = default;
+    using std::vector<Sector>::vector;
 
+    void push_more_back(const Sectors& sectors);
     bool HasIdSequence(const int first_id, const int length) const;
     const std::set<int> NotContainedIds(const Interval<int> &id_interval) const;
     class Headers GoodHeaders() const;
