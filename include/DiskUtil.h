@@ -8,11 +8,11 @@
 
 #include <set>
 
-const int MAX_SIDES = 2;
-const int MAX_TRACKS = 128;         // Internal format maximum, needed for 1MB TRD
-const int MAX_SECTORS = 144;
+constexpr int MAX_SIDES = 2;
+constexpr int MAX_TRACKS = 128;         // Internal format maximum, needed for 1MB TRD
+constexpr int MAX_SECTORS = 144;
 
-const int MIN_SECTOR_SIZE = 128;
+constexpr int MIN_SECTOR_SIZE = 128;
 
 
 struct ScanContext
@@ -27,9 +27,9 @@ struct ScanContext
 };
 
 
-const int DUMP_OFFSETS = 1;
-const int DUMP_DIFF = 2;
-const int DUMP_READSTATS = 4;
+constexpr int DUMP_OFFSETS = 1;
+constexpr int DUMP_DIFF = 2;
+constexpr int DUMP_READSTATS = 4;
 
 void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags = 0, const Sectors& ignored_sectors = Sectors{});
 bool NormaliseTrack(const CylHead& cylhead, Track& track);
