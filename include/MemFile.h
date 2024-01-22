@@ -37,7 +37,7 @@ public:
         if (remaining() < total_size)
             return false;
 
-        std::memcpy(buf.data(), &*m_it, total_size);
+        std::memcpy(buf.data(), &*m_it, static_cast<size_t>(total_size));
         //  std::copy(m_it, m_it + size, buf.data());
         m_it += total_size;
         return true;
