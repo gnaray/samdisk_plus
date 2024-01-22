@@ -78,6 +78,13 @@ public:
         return m_unskippableWantedSectorHeaderIds;
     }
 
+    bool WantMoreSectors() const
+    {
+        return (LookForPossibleSectors()
+                || WantedSectorHeaderIds().IsEmpty()
+                || !UnskippableWantedSectorHeaderIds().empty());
+    }
+
     friend std::string to_string(const DeviceReadingPolicy& deviceReadingPolicy, bool onlyRelevantData = true)
     {
         std::ostringstream ss;
