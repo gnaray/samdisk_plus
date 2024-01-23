@@ -37,6 +37,7 @@ public:
 
     void clear();
     void add(Track&& track);
+    void add(Sectors&& sectors);
     AddResult add(Sector&& sector);
     void insert(int index, Sector&& sector);
     Sector remove(int index);

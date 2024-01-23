@@ -280,11 +280,20 @@ void Track::add(Track&& track)
     tracklen = std::max(tracklen, track.tracklen);
     tracktime = std::max(tracktime, track.tracktime);
 
-    // Merge supplied sectors into existing track
-    for (auto& s : track.sectors())
+    add(std::move(track.sectors()));
+}
+
+void Track::add(Sectors&& sectors)
+{
+    // Ignore if no sectors to add.
+    if (sectors.empty())
+        return;
+
+    // Merge supplied sectors into existing track.
+    for (auto& sector : sectors)
     {
-        assert(s.offset != 0);
-        add(std::move(s));
+        assert(sector.offset != 0);
+        add(std::move(sector));
     }
 }
 
