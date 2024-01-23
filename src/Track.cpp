@@ -87,6 +87,9 @@ int Track::index_of(const Sector& sector) const
     return (it == end()) ? -1 : static_cast<int>(std::distance(begin(), it));
 }
 
+/* The data extent bits of a sector are the bits between offset of next sector
+ * (if exists otherwise tracklen) and offset of this sector.
+ */
 int Track::data_extent_bits(const Sector& sector) const
 {
     auto it = find(sector);
@@ -100,9 +103,11 @@ int Track::data_extent_bits(const Sector& sector) const
     return gap_bits;
 }
 
-/* The extent bytes of a sector are the bytes between offset of next sector
- * and offset of this sector without the overhead bytes, i.e. the bytes from
- * DATA until offset of next sector minus the crc bytes.
+/* The data extent bytes of a sector are the bytes between offset of next sector
+ * (if exists otherwise tracklen) and offset of this sector without the parts
+ * before data bytes and without idam overhead of next sector, i.e. they are
+ * the bytes from the first data byte until idam overhead of next sector,
+ * i.e. data bytes + data crc + gap3 + sync.
  */
 int Track::data_extent_bytes(const Sector& sector) const
 {
@@ -110,10 +115,10 @@ int Track::data_extent_bytes(const Sector& sector) const
     if (sector.encoding != Encoding::MFM && sector.encoding != Encoding::FM)
         return sector.size();
 
-    auto encoding_shift = (sector.encoding == Encoding::FM) ? 5 : 4;
-    auto gap_bytes = data_extent_bits(sector) >> encoding_shift;
-    auto overhead_bytes = GetSectorOverhead(sector.encoding) - GetSyncOverhead(sector.encoding);
-    auto extent_bytes = (gap_bytes > overhead_bytes) ? gap_bytes - overhead_bytes : 0;
+    const auto encoding_shift = (sector.encoding == Encoding::FM) ? 5 : 4;
+    const auto gap_bytes = data_extent_bits(sector) >> encoding_shift;
+    const auto overhead_bytes = GetSectorOverhead(sector.encoding) - GetSyncOverhead(sector.encoding);
+    const auto extent_bytes = (gap_bytes > overhead_bytes) ? gap_bytes - overhead_bytes : 0;
     return extent_bytes;
 }
 
