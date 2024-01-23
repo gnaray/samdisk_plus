@@ -14,7 +14,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 Track::Track(int num_sectors/*=0*/)
 {
-    m_sectors.reserve(num_sectors);
+    m_sectors.reserve(lossless_static_cast<SectorsST>(num_sectors));
 }
 
 bool Track::empty() const
