@@ -2,30 +2,6 @@
 
 #include "Range.h"
 
-class IdAndOffset
-{
-public:
-    IdAndOffset() = default;
-    IdAndOffset(int id, int offset) : id(id), offset(offset)
-    {
-    }
-
-    int id = -1;
-    int offset = -1;
-};
-
-class IdAndOffsetVector : public std::vector<IdAndOffset>
-{
-public:
-    using std::vector<IdAndOffset>::vector;
-
-    std::vector<int> GetSectorIds() const;
-};
-
-typedef IdAndOffsetVector::size_type IdAndOffsetVectorST;
-
-
-
 enum class FdcType { None, PC, WD, Amiga, Apple };
 enum class RegularFormat {
     None,
@@ -71,7 +47,6 @@ struct Format
     static bool FromSize(int64_t size, Format& fmt);
     static void Validate(int cyls, int heads, int sectors = 1, int sector_size = 512, int max_size = 0);
     static bool TryValidate(int cyls, int heads, int sectors = 1, int sector_size = 512, int max_size = 0);
-    static std::vector<int> GetIds(const CylHead& cylhead, const int sectors, const int interleave = 0, const int skew = 0, const int offset = 0, const int base = 1);
 
     std::string ToString(bool onlyRelevantData = true) const
     {
