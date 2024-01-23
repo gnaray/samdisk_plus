@@ -14,7 +14,7 @@ public:
     bool empty() const;
     int size() const;
     const Sectors& sectors() const;
-    Sectors &sectors();
+    Sectors& sectors();
     const Sectors& sectors_view_ordered_by_id() const;
     const Sector& operator [] (int index) const;
     Sector& operator [] (int index);

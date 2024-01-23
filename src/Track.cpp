@@ -46,7 +46,7 @@ return it->first;
 }
 */
 
-const Sectors &Track::sectors() const
+const Sectors& Track::sectors() const
 {
     return m_sectors;
 }
@@ -56,7 +56,7 @@ Sectors& Track::sectors()
     return m_sectors;
 }
 
-const Sectors &Track::sectors_view_ordered_by_id() const
+const Sectors& Track::sectors_view_ordered_by_id() const
 {
     m_sectors_view_ordered_by_id = m_sectors;
     std::sort(m_sectors_view_ordered_by_id.begin(), m_sectors_view_ordered_by_id.end(),
