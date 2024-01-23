@@ -25,7 +25,7 @@ constexpr int ID_OVERHEAD_MFM = IDAM_OVERHEAD_MFM + 4/*CHRN*/ + AM_CRC/*crc*/;
 constexpr int D_OVERHEAD_MFM = DAM_OVERHEAD_MFM /*+ data_size*/ + AM_CRC/*crc*/;
 constexpr int SECTOR_OVERHEAD_MFM = SYNC_OVERHEAD_MFM + ID_OVERHEAD_MFM + GAP2_MFM_DDHD/*x0x4e=gap2*/ +
                                     SYNC_OVERHEAD_MFM + D_OVERHEAD_MFM /*+ gap3*/; // = 62
-constexpr int SECTOR_OVERHEAD_ED = GAP2_MFM_ED - GAP2_MFM_DDHD;
+constexpr int SECTOR_OVERHEAD_ED = SECTOR_OVERHEAD_MFM - GAP2_MFM_DDHD + GAP2_MFM_ED;
 
 constexpr int SYNC_OVERHEAD_FM = 6/*x0x00=sync*/;
 constexpr int TRACK_OVERHEAD_FM = 40/*x0x00=gap4a*/ + SYNC_OVERHEAD_FM + 1/*0xfc=iam*/ + 26/*x0x00=gap1*/;       // = 73
