@@ -87,13 +87,6 @@ void OrphanDataCapableTrack::add(OrphanDataCapableTrack&& orphanDataCapableTrack
     cylheadMismatch |= orphanDataCapableTrack.cylheadMismatch;
 }
 
-void OrphanDataCapableTrack::set(OrphanDataCapableTrack&& orphanDataCapableTrack)
-{
-    const auto cylheadMismatchTemp = cylheadMismatch;
-    *this = orphanDataCapableTrack;
-    cylheadMismatch |= cylheadMismatchTemp;
-}
-
 void OrphanDataCapableTrack::mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack)
 {
     auto orphanDataCapableTrack = toBeMergedRawTrack.DecodeTrack(cylhead);
@@ -126,7 +119,7 @@ void OrphanDataCapableTrack::mergeRawTrack(OrphanDataCapableTrack&& toBeMergedOD
     {
         if (toBeMergedODCTrack.track.size() <= track.size()) // Can not sync and to be merged track is worse.
             return;
-        set(std::move(toBeMergedODCTrack));
+        *this = toBeMergedODCTrack;
         return;
     }
     const auto offsetDiffBest = findMostPopularDiff(offsetDiffs);

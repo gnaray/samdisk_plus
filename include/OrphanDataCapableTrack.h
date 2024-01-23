@@ -24,7 +24,6 @@ public:
     void setTrackTime(const int trackTime);
     void addTrackTime(const int trackTime);
     void add(OrphanDataCapableTrack&& orphanDataCapableTrack);
-    void set(OrphanDataCapableTrack&& orphanDataCapableTrack);
 
 protected:
 
