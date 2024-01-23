@@ -63,12 +63,36 @@ public:
     Sectors::reverse_iterator rbegin() { return m_sectors.rbegin(); }
     Sectors::iterator begin() { return m_sectors.begin(); }
     Sectors::iterator end() { return m_sectors.end(); }
-    Sectors::iterator find(const Sector& sector);
-    Sectors::iterator find(const Header& header);
-    Sectors::iterator findNext(const Header& header, const Sectors::iterator& itPrev);
-    Sectors::iterator findFirstFromOffset(const int offset);
-    Sectors::iterator findIgnoringSize(const Header& header);
-    Sectors::iterator find(const Header& header, const DataRate datarate, const Encoding encoding);
+    Sectors::iterator find(const Sector& sector)
+    {
+        auto it = static_cast<const Track&>(*this).find(sector);
+        return m_sectors.erase(it, it);
+    }
+    Sectors::iterator find(const Header& header)
+    {
+        auto it = static_cast<const Track&>(*this).find(header);
+        return m_sectors.erase(it, it);
+    }
+    Sectors::iterator findNext(const Header& header, const Sectors::iterator& itPrev)
+    {
+        auto it = static_cast<const Track&>(*this).findNext(header, itPrev);
+        return m_sectors.erase(it, it);
+    }
+    Sectors::iterator findFirstFromOffset(const int offset)
+    {
+        auto it = static_cast<const Track&>(*this).findFirstFromOffset(offset);
+        return m_sectors.erase(it, it);
+    }
+    Sectors::iterator findIgnoringSize(const Header& header)
+    {
+        auto it = static_cast<const Track&>(*this).findIgnoringSize(header);
+        return m_sectors.erase(it, it);
+    }
+    Sectors::iterator find(const Header& header, const DataRate datarate, const Encoding encoding)
+    {
+        auto it = static_cast<const Track&>(*this).find(header, datarate, encoding);
+        return m_sectors.erase(it, it);
+    }
 
     Sectors::const_reverse_iterator rbegin() const { return m_sectors.rbegin(); }
     Sectors::const_iterator begin() const { return m_sectors.begin(); }

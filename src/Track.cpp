@@ -696,50 +696,6 @@ Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterat
     return it;
 }
 
-Sectors::iterator Track::find(const Sector& sector)
-{
-    return std::find_if(begin(), end(), [&](const Sector& s) {
-        return &s == &sector;
-        });
-}
-
-Sectors::iterator Track::find(const Header& header)
-{
-    return std::find_if(begin(), end(), [&](const Sector& s) {
-        return header == s.header;
-        });
-}
-
-Sectors::iterator Track::findNext(const Header& header, const Sectors::iterator& itPrev)
-{
-    if (itPrev == end())
-        return end();
-    return std::find_if(std::next(itPrev), end(), [&](const Sector& s) {
-        return header == s.header;
-        });
-}
-
-Sectors::iterator Track::findFirstFromOffset(const int offset)
-{
-    return std::find_if(begin(), end(), [&](const Sector& s) {
-        return offset <= s.offset;
-        });
-}
-
-Sectors::iterator Track::findIgnoringSize(const Header& header)
-{
-    return std::find_if(begin(), end(), [&](const Sector& s) {
-        return header.compare_chr(s.header);
-    });
-}
-
-Sectors::iterator Track::find(const Header& header, const DataRate datarate, const Encoding encoding)
-{
-    return std::find_if(begin(), end(), [&](const Sector& s) {
-        return header == s.header && datarate == s.datarate && encoding == s.encoding;
-        });
-}
-
 Sectors::const_iterator Track::find(const Sector& sector) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
