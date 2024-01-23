@@ -270,7 +270,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
     for (scanAttempt = 3; scanAttempt > 0; scanAttempt--) // The scanAttempt start value could be opt parameter but not so important.
     {
         if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
-            throw win32_error(GetLastError_MP(), "Scan");
+            throw win32_error(GetLastError_MP(), "TimedScan");
 
         // If we have valid older settings ...
         if (!areEncodingAndDataRateNewlyDetermined)
@@ -281,7 +281,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
                     return track;
 
                 if (!m_fdrawcmd->CmdTimedScan(cylhead.head, scan_result, scan_size))
-                    throw win32_error(GetLastError_MP(), "Scan");
+                    throw win32_error(GetLastError_MP(), "TimedScan");
             }
             areEncodingAndDataRateNewlyDetermined = true; // True if anything is read by detector or scanner.
         }
