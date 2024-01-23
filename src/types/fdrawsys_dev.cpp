@@ -486,12 +486,12 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
 bool ReadFdrawcmdSys(const std::string& path, std::shared_ptr<Disk>& disk)
 {
     const auto devidx = (util::lowercase(path) == "b:") ? 1 : 0;
-    const auto virtualDevicePath = path.substr(4);
-    const bool virtualFloppyDevice = IsVfd(path);
+    const auto virtualFloppyDevice = IsVfd(path);
+    const auto virtualFloppyDevicePath = path.substr(4);
     if (!virtualFloppyDevice && !IsFloppyDevice(path))
         return false;
-    auto fdrawcmd = virtualFloppyDevice ? VfdrawcmdSys::Open(virtualDevicePath) : FdrawcmdSys::Open(devidx);
     const auto fdrawcmdSysName = std::string(virtualFloppyDevice ? "v": "") + "fdrawcmd.sys";
+    auto fdrawcmd = virtualFloppyDevice ? VfdrawcmdSys::Open(virtualFloppyDevicePath) : FdrawcmdSys::Open(devidx);
     if (!fdrawcmd)
         throw util::exception("failed to open ", fdrawcmdSysName, " device");
     auto fdrawcmd_dev_disk = std::make_shared<FdrawSysDevDisk>(path, std::move(fdrawcmd));
