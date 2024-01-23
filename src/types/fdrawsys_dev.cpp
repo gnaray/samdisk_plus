@@ -180,17 +180,15 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     // 1) its index is 0 and read first gap is requested, its data is used there for sanity checking.
     // 2) its id is not in specfied headers of good sectors, else it is wasting time.
     // If sector has bad id or has good data, then ReadSector will skip reading it.
-    for (int i = 0; i < track.size(); i += 2) {
-        auto& sector = track[i];
-        if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
-            && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
-            ReadSector(cylhead, track, i, firstSectorSeen);
-    }
-    for (int i = 1; i < track.size(); i += 2) {
-        auto& sector = track[i];
-        if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
-            && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
-            ReadSector(cylhead, track, i, firstSectorSeen);
+    for (int j = 0; j < 2; j++)
+    {
+        for (int i = j; i < track.size(); i += 2)
+        {
+            const auto& sector = track[i];
+            if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
+                                                         && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
+                ReadSector(cylhead, track, i, firstSectorSeen);
+        }
     }
 
     if (read_first_gap_requested)
