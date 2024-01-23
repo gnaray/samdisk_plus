@@ -79,7 +79,9 @@ protected:
         return true;
     }
 
+    bool supports_rescans() const override
     {
+        return m_fdrawcmd->GetVersion().value >= DriverVersion1_0_1_12; // Since new version can rescan.
     }
 
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
@@ -171,23 +173,42 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
         m_fdrawcmd->Seek(with_head_seek_to);
     m_fdrawcmd->Seek(cylhead.cyl);
 
+    auto firstSectorSeen = 0;
+    const bool read_first_gap_requested = opt_gaps >= GAPS_CLEAN;
+    TimedRawDualTrack timedRawDualTrack;
+    Track trackBefore112;
+    TrackData bitstreamTrackData;
+    bool usingScanner112 = m_fdrawcmd->GetVersion().value >= DriverVersion1_0_1_12;
+    if (usingScanner112)
+        timedRawDualTrack = BlindReadHeaders112(cylhead, deviceReadingPolicy);
+    usingScanner112 &= m_lastEncoding == Encoding::MFM; // Currently it supports only MFM encoding.
+    if (!usingScanner112)
+        trackBefore112 = BlindReadHeaders(cylhead, firstSectorSeen);
+    auto& track = usingScanner112 ? timedRawDualTrack.finalTimedAndRawTrack : trackBefore112;
 
-    auto firstSectorSeen{ 0 };
-    auto track = BlindReadHeaders(cylhead, firstSectorSeen);
+    if (opt_debug)
+        for (int i = 0; i < track.size(); i++)
+            util::cout << "load: track " << i << ". sector having ID " << track[i].header.sector << " and offset " << track[i].offset << "\n";
 
-    bool read_first_gap_requested = opt_gaps >= GAPS_CLEAN;
-    // Read sector if either
-    // 1) its index is 0 and read first gap is requested, its data is used there for sanity checking.
-    // 2) its id is not in specfied headers of good sectors, else it is wasting time.
-    // If sector has bad id or has good data, then ReadSector will skip reading it.
-    for (int j = 0; j < 2; j++)
+    if (!usingScanner112)
     {
-        for (int i = j; i < track.size(); i += 2)
+        // Read sector if either
+        // 1) its index is 0 and read first gap is requested, its data is used there for sanity checking.
+        // 2) its id is not in specfied headers of good sectors, else it is wasting time.
+        // If sector has bad id or has good data, then ReadSector will skip reading it.
+        for (int j = 0; j < 2; j++)
         {
-            const auto& sector = track[i];
-            if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
-                                                         && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
-                ReadSector(cylhead, track, i, firstSectorSeen);
+            for (int i = j; i < track.size(); i += 2)
+            {
+                const auto& sector = track[i];
+                if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
+                                                             && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
+                {
+                    ReadSector(cylhead, track, i, firstSectorSeen);
+                    if (usingScanner112)
+                        GetSectorDataFromRawTrack(timedRawDualTrack, i);
+                }
+            }
         }
     }
 
