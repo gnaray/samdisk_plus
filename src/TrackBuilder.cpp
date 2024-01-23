@@ -115,14 +115,13 @@ void TrackBuilder::addGap(int count, int fill)
 
 void TrackBuilder::addGap2(int fill)
 {
-    int gap2_bytes = (m_encoding == Encoding::FM) ? 11 :
-        (m_datarate == DataRate::_1M) ? 41 : 22;
+    int gap2_bytes = GetFmOrMfmGap2Length(m_datarate, m_encoding);
     addGap(gap2_bytes, fill);
 }
 
 int TrackBuilder::getSyncLength(bool short_mfm_gap/* = false*/) const
 {
-    return (m_encoding == Encoding::FM) ? 6 : (short_mfm_gap ? 3 : 12);
+    return ::GetFmOrMfmSyncLength(m_encoding, short_mfm_gap);
 }
 
 void TrackBuilder::addSync(bool short_mfm_gap/* = false*/)
