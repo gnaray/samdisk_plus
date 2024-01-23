@@ -29,6 +29,7 @@ public:
     bool has_all_good_data() const;
     bool has_any_good_data() const;
 
+    const Sectors good_idcrc_sectors() const;
     const Sectors good_sectors() const;
     const Sectors stable_sectors() const;
     bool has_all_stable_data(const Sectors &stable_sectors) const;

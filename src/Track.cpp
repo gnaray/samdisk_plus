@@ -188,6 +188,16 @@ bool Track::has_any_good_data() const
     return it != end();
 }
 
+const Sectors Track::good_idcrc_sectors() const
+{
+    Sectors good_idcrc_sectors;
+    std::copy_if(begin(), end(), std::back_inserter(good_idcrc_sectors), [&](const Sector& sector) {
+        return !sector.has_badidcrc();
+    });
+
+    return good_idcrc_sectors;
+}
+
 const Sectors Track::good_sectors() const
 {
     Sectors good_sectors;
