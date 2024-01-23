@@ -22,6 +22,7 @@ public:
     void setTrackTime(const int trackTime);
     void addTrackTime(const int trackTime);
     void add(OrphanDataCapableTrack&& orphanDataCapableTrack);
+    int size() const;
 
 public:
     void mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack);

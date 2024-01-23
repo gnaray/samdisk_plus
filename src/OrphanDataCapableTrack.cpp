@@ -87,6 +87,11 @@ void OrphanDataCapableTrack::add(OrphanDataCapableTrack&& orphanDataCapableTrack
     cylheadMismatch |= orphanDataCapableTrack.cylheadMismatch;
 }
 
+int OrphanDataCapableTrack::size() const
+{
+    return track.size() + orphanDataTrack.size();
+}
+
 void OrphanDataCapableTrack::mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack)
 {
     auto orphanDataCapableTrack = toBeMergedRawTrack.DecodeTrack(cylhead);
