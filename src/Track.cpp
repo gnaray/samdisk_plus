@@ -45,17 +45,17 @@ return it->first;
 }
 */
 
-const std::vector<Sector>& Track::sectors() const
+const Sectors &Track::sectors() const
 {
     return m_sectors;
 }
 
-std::vector<Sector>& Track::sectors()
+Sectors& Track::sectors()
 {
     return m_sectors;
 }
 
-const std::vector<Sector>& Track::sectors_view_ordered_by_id() const
+const Sectors &Track::sectors_view_ordered_by_id() const
 {
     m_sectors_view_ordered_by_id = m_sectors;
     std::sort(m_sectors_view_ordered_by_id.begin(), m_sectors_view_ordered_by_id.end(),
@@ -69,13 +69,13 @@ const std::vector<Sector>& Track::sectors_view_ordered_by_id() const
 const Sector& Track::operator [] (int index) const
 {
     assert(index < static_cast<int>(m_sectors.size()));
-    return m_sectors[lossless_static_cast<std::vector<Sector>::size_type>(index)];
+    return m_sectors[lossless_static_cast<Sectors::size_type>(index)];
 }
 
 Sector& Track::operator [] (int index)
 {
     assert(index < static_cast<int>(m_sectors.size()));
-    return m_sectors[lossless_static_cast<std::vector<Sector>::size_type>(index)];
+    return m_sectors[lossless_static_cast<Sectors::size_type>(index)];
 }
 
 int Track::index_of(const Sector& sector) const
@@ -421,7 +421,7 @@ Track& Track::format(const CylHead& cylhead, const Format& fmt)
     assert(fmt.sectors != 0);
 
     m_sectors.clear();
-    m_sectors.reserve(lossless_static_cast<std::vector<Sector>::size_type>(fmt.sectors));
+    m_sectors.reserve(lossless_static_cast<Sectors::size_type>(fmt.sectors));
 
     for (auto id : fmt.get_ids(cylhead))
     {
@@ -456,21 +456,21 @@ Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterat
     return it;
 }
 
-std::vector<Sector>::iterator Track::find(const Sector& sector)
+Sectors::iterator Track::find(const Sector& sector)
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return &s == &sector;
         });
 }
 
-std::vector<Sector>::iterator Track::find(const Header& header)
+Sectors::iterator Track::find(const Header& header)
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header == s.header;
         });
 }
 
-std::vector<Sector>::iterator Track::findNext(const Header& header, const std::vector<Sector>::iterator& itPrev)
+Sectors::iterator Track::findNext(const Header& header, const Sectors::iterator& itPrev)
 {
     if (itPrev == end())
         return end();
@@ -479,42 +479,42 @@ std::vector<Sector>::iterator Track::findNext(const Header& header, const std::v
         });
 }
 
-std::vector<Sector>::iterator Track::findFirstFromOffset(const int offset)
+Sectors::iterator Track::findFirstFromOffset(const int offset)
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return offset <= s.offset;
         });
 }
 
-std::vector<Sector>::iterator Track::findIgnoringSize(const Header& header)
+Sectors::iterator Track::findIgnoringSize(const Header& header)
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header.compare_chr(s.header);
     });
 }
 
-std::vector<Sector>::iterator Track::find(const Header& header, const DataRate datarate, const Encoding encoding)
+Sectors::iterator Track::find(const Header& header, const DataRate datarate, const Encoding encoding)
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header == s.header && datarate == s.datarate && encoding == s.encoding;
         });
 }
 
-std::vector<Sector>::const_iterator Track::find(const Sector& sector) const
+Sectors::const_iterator Track::find(const Sector& sector) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return &s == &sector;
         });
 }
 
-std::vector<Sector>::const_iterator Track::find(const Header& header) const
+Sectors::const_iterator Track::find(const Header& header) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header == s.header;
         });
 }
 
-std::vector<Sector>::const_iterator Track::findNext(const Header& header, const std::vector<Sector>::const_iterator& itPrev) const
+Sectors::const_iterator Track::findNext(const Header& header, const Sectors::const_iterator& itPrev) const
 {
     if (itPrev == end())
         return end();
@@ -523,21 +523,21 @@ std::vector<Sector>::const_iterator Track::findNext(const Header& header, const 
         });
 }
 
-std::vector<Sector>::const_iterator Track::findFirstFromOffset(const int offset) const
+Sectors::const_iterator Track::findFirstFromOffset(const int offset) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return offset <= s.offset;
         });
 }
 
-std::vector<Sector>::const_iterator Track::findIgnoringSize(const Header& header) const
+Sectors::const_iterator Track::findIgnoringSize(const Header& header) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header.compare_chr(s.header);
     });
 }
 
-std::vector<Sector>::const_iterator Track::find(const Header& header, const DataRate datarate, const Encoding encoding) const
+Sectors::const_iterator Track::find(const Header& header, const DataRate datarate, const Encoding encoding) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return header == s.header && datarate == s.datarate && encoding == s.encoding;

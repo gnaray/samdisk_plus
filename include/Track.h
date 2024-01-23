@@ -13,9 +13,9 @@ public:
 
     bool empty() const;
     int size() const;
-    const std::vector<Sector>& sectors() const;
-    std::vector<Sector>& sectors();
-    const std::vector<Sector>& sectors_view_ordered_by_id() const;
+    const Sectors& sectors() const;
+    Sectors &sectors();
+    const Sectors& sectors_view_ordered_by_id() const;
     const Sector& operator [] (int index) const;
     Sector& operator [] (int index);
     int index_of(const Sector& sector) const;
@@ -50,32 +50,32 @@ public:
     Track& format(const CylHead& cylhead, const Format& format);
     Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);
 
-    std::vector<Sector>::reverse_iterator rbegin() { return m_sectors.rbegin(); }
-    std::vector<Sector>::iterator begin() { return m_sectors.begin(); }
-    std::vector<Sector>::iterator end() { return m_sectors.end(); }
-    std::vector<Sector>::iterator find(const Sector& sector);
-    std::vector<Sector>::iterator find(const Header& header);
-    std::vector<Sector>::iterator findNext(const Header& header, const std::vector<Sector>::iterator& itPrev);
-    std::vector<Sector>::iterator findFirstFromOffset(const int offset);
-    std::vector<Sector>::iterator findIgnoringSize(const Header& header);
-    std::vector<Sector>::iterator find(const Header& header, const DataRate datarate, const Encoding encoding);
+    Sectors::reverse_iterator rbegin() { return m_sectors.rbegin(); }
+    Sectors::iterator begin() { return m_sectors.begin(); }
+    Sectors::iterator end() { return m_sectors.end(); }
+    Sectors::iterator find(const Sector& sector);
+    Sectors::iterator find(const Header& header);
+    Sectors::iterator findNext(const Header& header, const Sectors::iterator& itPrev);
+    Sectors::iterator findFirstFromOffset(const int offset);
+    Sectors::iterator findIgnoringSize(const Header& header);
+    Sectors::iterator find(const Header& header, const DataRate datarate, const Encoding encoding);
 
-    std::vector<Sector>::const_reverse_iterator rbegin() const { return m_sectors.rbegin(); }
-    std::vector<Sector>::const_iterator begin() const { return m_sectors.begin(); }
-    std::vector<Sector>::const_iterator end() const { return m_sectors.end(); }
-    std::vector<Sector>::const_iterator find(const Sector& sector) const;
-    std::vector<Sector>::const_iterator find(const Header& header) const;
-    std::vector<Sector>::const_iterator findNext(const Header& header, const std::vector<Sector>::const_iterator& itPrev) const;
-    std::vector<Sector>::const_iterator findFirstFromOffset(const int offset) const;
-    std::vector<Sector>::const_iterator findIgnoringSize(const Header& header) const;
-    std::vector<Sector>::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
+    Sectors::const_reverse_iterator rbegin() const { return m_sectors.rbegin(); }
+    Sectors::const_iterator begin() const { return m_sectors.begin(); }
+    Sectors::const_iterator end() const { return m_sectors.end(); }
+    Sectors::const_iterator find(const Sector& sector) const;
+    Sectors::const_iterator find(const Header& header) const;
+    Sectors::const_iterator findNext(const Header& header, const Sectors::const_iterator& itPrev) const;
+    Sectors::const_iterator findFirstFromOffset(const int offset) const;
+    Sectors::const_iterator findIgnoringSize(const Header& header) const;
+    Sectors::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
 
     int tracklen = 0;   // track length in MFM bits
     int tracktime = 0;  // track time in us
 
 private:
-    std::vector<Sector> m_sectors{};
-    mutable std::vector<Sector> m_sectors_view_ordered_by_id{};
+    Sectors m_sectors{};
+    mutable Sectors m_sectors_view_ordered_by_id{};
 
 public:
     // Max bitstream position difference for sectors to be considered the same.

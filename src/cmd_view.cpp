@@ -34,7 +34,7 @@ void ViewTrack(const CylHead& cylhead, const Track& track)
     if (opt_verbose)
         return;
 
-    const std::vector<Sector>& sectors = opt_normal_disk ? track.sectors_view_ordered_by_id() : track.sectors();
+    const Sectors& sectors = opt_normal_disk ? track.sectors_view_ordered_by_id() : track.sectors();
     for (const auto& sector : sectors)
     {
         // If a specific sector/size is required, skip non-matching ones
