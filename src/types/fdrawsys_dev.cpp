@@ -138,8 +138,8 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
         int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/)
 {
     // Limiting sector reading as specified in case of normal disk request.
-    auto normal_sector_id_begin = opt_base > 0 ? opt_base : 1;
-    auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
+    const auto normal_sector_id_begin = opt_base > 0 ? opt_base : 1;
+    const auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
 
     if (with_head_seek_to >= 0)
         m_fdrawcmd->Seek(with_head_seek_to);
