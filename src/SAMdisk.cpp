@@ -392,7 +392,7 @@ void LongVersion()
 
 
 extern "C" {
-#include "getopt.h"
+#include "getopt.h" // IWYU pragma: keep
 }
 
 enum {
