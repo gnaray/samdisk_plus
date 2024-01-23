@@ -315,7 +315,7 @@ bool VfdrawcmdSys::CmdReadTrack(int phead, int cyl, int /*head*/, int /*sector*/
         mem.resize(output_size);
     // mem.size >= output_size now.
 
-    const auto currentRawTrack = ReadRawTrack(CylHead(lossless_static_cast<uint8_t>(cyl), lossless_static_cast<uint8_t>(phead)));
+    const auto currentRawTrack = ReadRawTrack(CylHead(lossless_static_cast<uint8_t>(m_cyl), lossless_static_cast<uint8_t>(phead)));
     const auto availSize = std::min(lossless_static_cast<int>(currentRawTrack.m_rawTrackContent.Bytes().size()), output_size);
     mem.copyFrom(currentRawTrack.m_rawTrackContent.Bytes(), availSize);
     return true;
