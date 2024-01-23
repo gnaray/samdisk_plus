@@ -221,4 +221,6 @@ public:
     }
 };
 
+typedef Sectors::size_type SectorsST;
+
 inline std::ostream& operator<<(std::ostream& os, const Sectors& sectors) { return os << to_string(sectors); }
