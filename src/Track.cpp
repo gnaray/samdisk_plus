@@ -543,7 +543,7 @@ void Track::setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen)
 
 int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 {
-    const auto offsetDiff = GetFmOrMfmIamAndAmDistance(getDataRate(), getEncoding()) * 8 * 2;
+    const auto offsetDiff = GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) * 8 * 2;
     // We could check if the sector overlaps something existing but unimportant now.
     return (dataOffset - offsetDiff + tracklen) % tracklen;
 }

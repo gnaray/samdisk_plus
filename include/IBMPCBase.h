@@ -234,7 +234,7 @@ inline int GetFmOrMfmSectorOverheadFromOffsetToDataCrcEnd(const DataRate& datara
     return GetFmOrMfmSectorOverheadWithoutSync(datarate, encoding, dataSize) - GetIdamOverheadSyncOverhead(encoding);
 }
 
-inline int GetFmOrMfmIamAndAmDistance(const DataRate& datarate, const Encoding& encoding)
+inline int GetFmOrMfmIdamAndAmDistance(const DataRate& datarate, const Encoding& encoding)
 {
     return GetIdOverhead(encoding) - GetIdamOverheadSyncOverhead(encoding)
             + GetFmOrMfmGap2PlusSyncLength(datarate, encoding) + GetDamOverheadSyncOverhead(encoding);
