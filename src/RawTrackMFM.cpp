@@ -216,7 +216,7 @@ std::shared_ptr<SomethingFromRawTrack> RawTrackMFM::FindNextSomething(const RawT
                     if (sectorDataInRawTrackSizes[dataSizeCode] > remainingByteLength)
                         break;
                 }
-                if (dataSizeCode == dataSizeCodeBegin)
+                if (dataSizeCode == dataSizeCodeBegin) // There are not enough remaining bytes.
                     break;
                 dataSizeCodeEnd = dataSizeCode--; // The dataSizeCode is not suitable but its decremented value is suitable.
                 const size_t maxSectorDataSize = sectorDataInRawTrackSizes[dataSizeCode];
