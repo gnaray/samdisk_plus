@@ -642,6 +642,20 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
     }
 }
 
+int Sector::FindParentSectorIdByOffset(const IdAndOffsetVector& sectorIdsAndOffsets) const
+{
+    const auto optByteToleranceBits = opt_byte_tolerance_of_time * 8 * 2;
+    for (const auto& idAndOffset : sectorIdsAndOffsets)
+    {
+        if (idAndOffset.offset >= offset)
+            break;
+        if (offset - idAndOffset.offset <= optByteToleranceBits)
+            return idAndOffset.id;
+    }
+
+    return -1;
+}
+
 std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
 {
     std::ostringstream ss;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "TrackSectorIds.h"
 #include "Header.h"
 #include "Cpp_helpers.h"
 #include "IBMPCBase.h"
@@ -166,6 +167,8 @@ public:
     {
         return SizeCodeToLength(SizeCodeToRealSizeCode(size));
     }
+
+    int FindParentSectorIdByOffset(const IdAndOffsetVector& sectorIdsAndOffsets) const;
 
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Sector& sector, bool onlyRelevantData = true)
