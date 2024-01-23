@@ -375,11 +375,12 @@ bool VfdrawcmdSys::CmdRead(int phead, int cyl, int head, int sector, int size, i
             } while(count > 0 && (!loopedOnceAtLeast || m_currentSectorIndex < sectorIndexStart));
         }
     }
-    if (count == 0)
-        return true;
-    m_result.st1 = STREG1_MISSING_ADDRESS_MARK;
-    SetLastError_MP(ERROR_FLOPPY_ID_MARK_NOT_FOUND);
-    return false;
+    if (count != 0)
+    {
+        m_result.st1 = STREG1_MISSING_ADDRESS_MARK;
+        SetLastError_MP(ERROR_FLOPPY_ID_MARK_NOT_FOUND);
+    }
+    return true;
 }
 
 bool VfdrawcmdSys::CmdWrite(int /*phead*/, int cyl, int head, int sector, int size, int /*count*/, MEMORY& /*mem*/, bool /*deleted*/)
