@@ -47,13 +47,13 @@ public:
     constexpr friend bool operator==(const ByteBitPosition& lhs, const ByteBitPosition& rhs)
     {
         return std::tie(lhs.m_byte_position, lhs.m_byte_position)
-            == std::tie(rhs.m_byte_position, rhs.m_byte_position); // keep the same order;
+            == std::tie(rhs.m_byte_position, rhs.m_byte_position); // keep the same order.
     }
 
     constexpr friend bool operator<(const ByteBitPosition& lhs, const ByteBitPosition& rhs)
     {
         return std::tie(lhs.m_byte_position, lhs.m_byte_position)
-            < std::tie(rhs.m_byte_position, rhs.m_byte_position); // keep the same order;
+            < std::tie(rhs.m_byte_position, rhs.m_byte_position); // keep the same order.
     }
 
     constexpr ByteBitPosition& operator=(size_t totalBitPosition)
