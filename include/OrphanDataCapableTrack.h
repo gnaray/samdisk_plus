@@ -10,8 +10,6 @@ class OrphanDataCapableTrack; // Required because this and RawTrackMFM includes 
 class OrphanDataCapableTrack
 {
 public:
-    OrphanDataCapableTrack() = default;
-
     bool empty() const;
     DataRate getDataRate() const;
     Encoding getEncoding() const;
