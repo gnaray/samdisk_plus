@@ -23,15 +23,14 @@ constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
         return false;
     // This code is taken from Samdisk/BitstreamDecoder where every databit is
     // stored as two bits (in addition every FM encoded bit is stored as two rawbits).
-    const size_t shift = encoding == Encoding::FM ? 5 : 4;
-    const size_t gap2_size = dataRate == DataRate::_1M ? GAP2_MFM_ED : GAP2_MFM_DDHD; // gap2 size in MFM bytes (FM is half size but double encoding overhead)
-    const size_t min_distance = (static_cast<size_t>((1 + 6) << shift) + (gap2_size << 4)); // AM, ID, gap2 (fixed shift as FM is half size)
-    const size_t max_distance = (static_cast<size_t>((1 + 6) << shift) + ((23 + gap2_size) << 4)); // 1=AM, 6=ID, 21+gap2=max WD177x offset (gap2 may be longer when formatted by different type of controller)
+    // We calculate with databits here thus the code is slightly modified.
+    const auto gap2_size_min = GetFmOrMfmGap2Length(dataRate, encoding);
+    const auto idam_am_distance = GetFmOrMfmIdamAndAmDistance(dataRate, encoding);
+    const auto min_distance = (1 + 6 + gap2_size_min) * 8; // IDAM, ID, gap2 (without sync and DAM.a1sync, why?)
+    const auto max_distance = (idam_am_distance + 8) * 8; // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
 
-    const auto sectorIdAndDataPositionsDistance = dataByteBitPosition - sectorIdByteBitPosition;
-    // Positions have databit unit, *_distance have rawbit units, thus adjusting the values of latters.
-    const auto adjuster = 2 * (encoding == Encoding::FM ? 2u : 1u);
-    return sectorIdAndDataPositionsDistance >= min_distance / adjuster && sectorIdAndDataPositionsDistance <= max_distance / adjuster;
+    const auto sectorIdAndDataPositionDistance = static_cast<int>((dataByteBitPosition - sectorIdByteBitPosition).TotalBitPosition());
+    return sectorIdAndDataPositionDistance >= min_distance && sectorIdAndDataPositionDistance <= max_distance;
 }
 // ====================================
 
