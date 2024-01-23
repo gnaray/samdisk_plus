@@ -47,6 +47,8 @@ public:
     Encoding getEncoding() const;
     int getTimeOfOffset(const int offset) const;
     int getOffsetOfTime(const int time) const;
+
+    static int findMostPopularToleratedDiff(std::vector<int>& diffs);
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
 
     Track& format(const CylHead& cylhead, const Format& format);

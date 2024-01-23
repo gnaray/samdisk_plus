@@ -27,7 +27,6 @@ public:
     void set(OrphanDataCapableTrack&& orphanDataCapableTrack);
 
 protected:
-    static int findMostPopularDiff(std::vector<int>& diffs);
 
 public:
     void mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack);

@@ -406,6 +406,30 @@ int Track::getOffsetOfTime(const int time) const
     return GetFmOrMfmTimeDataBitsAsRounded(getDataRate(), getEncoding(), time); // mfmbits
 }
 
+/*static*/ int Track::findMostPopularToleratedDiff(std::vector<int>& diffs)
+{
+    assert(diffs.size() > 0);
+
+    std::sort(diffs.begin(), diffs.end());
+    typedef std::pair<int, int> ParticipantsAndAverage;
+    std::vector<ParticipantsAndAverage> participantsAndAveragedOffsetDiffs;
+    const auto diffsEnd = diffs.end();
+    for (auto it = diffs.begin(); it != diffsEnd; it++)
+    {
+        const auto it0 = it;
+        auto s = *(it++);
+        while (it != diffsEnd && *it < *it0 + Track::COMPARE_TOLERANCE_BITS)
+            s += *(it++);
+        participantsAndAveragedOffsetDiffs.push_back(std::make_pair(it - it0, s / (it - it0)));
+        it--;
+    }
+    const auto it = std::max_element(participantsAndAveragedOffsetDiffs.begin(), participantsAndAveragedOffsetDiffs.end(),
+                                     [] (const ParticipantsAndAverage &a, const ParticipantsAndAverage &b) {
+        return a.first < b.first || (a.first == b.first && a.second > b.second); // Go for more participants and less averaged offset diff.
+    });
+    return it->second;
+}
+
 void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
 {
     assert(trackLenSingle > 0);
