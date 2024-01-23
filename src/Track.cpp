@@ -117,7 +117,7 @@ int Track::data_extent_bytes(const Sector& sector) const
 
     const auto encoding_shift = (sector.encoding == Encoding::FM) ? 5 : 4;
     const auto gap_bytes = data_extent_bits(sector) >> encoding_shift;
-    const auto overhead_bytes = GetSectorOverhead(sector.encoding) - GetSyncOverhead(sector.encoding);
+    const auto overhead_bytes = GetFmOrMfmSectorOverheadWithoutSyncAndDataCrc(sector.datarate, sector.encoding);
     const auto extent_bytes = (gap_bytes > overhead_bytes) ? gap_bytes - overhead_bytes : 0;
     return extent_bytes;
 }
