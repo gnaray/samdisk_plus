@@ -341,7 +341,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
 {
     auto& sector = track[index];
 
-    if (sector.has_badidcrc() || sector.has_good_data())
+    if (sector.has_badidcrc() || sector.has_good_data(false, opt_normal_disk))
         return;
 
     auto size = Sector::SizeCodeToRealLength(sector.header.size);
