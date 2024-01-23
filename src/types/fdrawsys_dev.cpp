@@ -173,8 +173,11 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     return TrackData(cylhead, std::move(track));
 }
 
-// Detect encoding and data rate of the track under the given drive head.
-// Do not change encoding and data rate if nothing is detected, it is probably empty track.
+/* Detect encoding and data rate of the track under the given drive head.
+ * If nothing is detected (the track looks like an empty track) then return false.
+ * Return true on detection success and m_lastEncoding, m_lastDataRate are valid,
+ * otherwise return false and m_lastEncoding, m_lastDataRate are unchanged.
+ */
 bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
 {
     FD_CMD_RESULT result{};
