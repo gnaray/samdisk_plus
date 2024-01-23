@@ -408,21 +408,21 @@ int Track::getOffsetOfTime(const int time) const
 
 void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
 {
+    assert(trackLenSingle > 0);
     assert(tracklen > 0);
     assert(syncOffset < tracklen);
-    assert(trackLenSingle > 0);
 
     Track trackTempSingle;
     trackTempSingle.tracklen = trackLenSingle;
     trackTempSingle.tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / tracklen);
     if (!empty())
     {
-        const auto tracklenCeilToSingle = trackLenSingle * ceil_AS<int>(static_cast<double>(tracklen) / trackLenSingle);
+        const auto tracklenCeilToMultiSingle = trackLenSingle * ceil_AS<int>(static_cast<double>(tracklen) / trackLenSingle);
         auto it = begin();
         while (it < end())
         {
             Sector sector(*it);
-            sector.offset = (sector.offset - syncOffset + tracklenCeilToSingle) % trackLenSingle; // Synced and demultid offset.
+            sector.offset = (sector.offset - syncOffset + tracklenCeilToMultiSingle) % trackLenSingle; // Synced and demultid offset.
             const auto addResult = trackTempSingle.add(std::move(sector));
             if (addResult == Track::AddResult::Append || addResult == Track::AddResult::Insert)
             {
