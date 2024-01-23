@@ -168,39 +168,5 @@ int OrphanDataCapableTrack::determineBestTrackLen(const int timedTrackLen) const
 {
     assert(timedTrackLen > 0);
 
-    if (track.empty())
-        return 0;
-    std::vector<int> offsetDiffs;
-    auto sectorsOrderedByHeader = track.sectors();
-    std::sort(sectorsOrderedByHeader.begin(), sectorsOrderedByHeader.end(),
-              [](const Sector& s1, const Sector& s2) { return s1.header < s2.header || (s1.header == s2.header && s1.offset < s2.offset); });
-    const auto sectorsOrderedByHeaderEnd = sectorsOrderedByHeader.end();
-    for (auto it = sectorsOrderedByHeader.begin(); it != sectorsOrderedByHeaderEnd; it++)
-    {
-        const auto it0 = it;
-        while (++it != sectorsOrderedByHeaderEnd && it->header == it0->header)
-        {
-            offsetDiffs.push_back(it->offset - it0->offset);
-        }
-        it = it0;
-    }
-    if (offsetDiffs.empty())
-        return 0;
-    const auto offsetDiffBest = findMostPopularDiff(offsetDiffs); // This can be multiple tracklen. It must be reduced.
-    const auto multi = round_AS<int>(static_cast<double>(offsetDiffBest) / timedTrackLen);
-    if (multi == 0)
-    {
-        if (opt_debug)
-            util::cout << "determineBestTrackLen found offsetDiffBest " << offsetDiffBest << " to be too low compared to timedTrackLen " << timedTrackLen << "\n";
-        return 0;
-    }
-    const auto trackLenBest = round_AS<int>(static_cast<double>(offsetDiffBest) / multi);
-    if (opt_debug)
-    {
-        if (std::abs(trackLenBest - timedTrackLen) > Track::COMPARE_TOLERANCE_BITS)
-            util::cout << "determineBestTrackLen found trackLenBest " << trackLenBest << " to be outside of tolerated timedTrackLen " << timedTrackLen << "\n";
-    }
-    if (opt_debug)
-        util::cout << "determineBestTrackTime found trackLenBest " << trackLenBest << "\n";
-    return trackLenBest;
+    return track.determineBestTrackLen(timedTrackLen);
 }

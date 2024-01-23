@@ -50,6 +50,7 @@ public:
 
     static int findMostPopularToleratedDiff(std::vector<int>& diffs);
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
+    int determineBestTrackLen(const int timedTrackLen) const;
 
     Track& format(const CylHead& cylhead, const Format& format);
     Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);
