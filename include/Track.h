@@ -93,6 +93,16 @@ public:
         auto it = static_cast<const Track&>(*this).find(header, datarate, encoding);
         return m_sectors.erase(it, it);
     }
+    inline Sectors::iterator findForDataFmOrMfm(const int dataOffset, const int dataSize)
+    {
+        auto it = static_cast<const Track&>(*this).findForDataFmOrMfm(dataOffset, dataSize);
+        return m_sectors.erase(it, it);
+    }
+    Sectors::iterator findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int dataSize)
+    {
+        auto it = static_cast<const Track&>(*this).findDataForSectorIdFmOrMfm(sectorIdOffset, dataSize);
+        return m_sectors.erase(it, it);
+    }
 
     Sectors::const_reverse_iterator rbegin() const { return m_sectors.rbegin(); }
     Sectors::const_iterator begin() const { return m_sectors.begin(); }
@@ -103,6 +113,8 @@ public:
     Sectors::const_iterator findFirstFromOffset(const int offset) const;
     Sectors::const_iterator findIgnoringSize(const Header& header) const;
     Sectors::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
+    Sectors::const_iterator findForDataFmOrMfm(const int dataOffset, const int dataSize) const;
+    Sectors::const_iterator findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int dataSize) const;
 
     int tracklen = 0;   // track length in MFM bits
     int tracktime = 0;  // track time in us

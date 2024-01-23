@@ -739,3 +739,30 @@ Sectors::const_iterator Track::find(const Header& header, const DataRate datarat
         return header == s.header && datarate == s.datarate && encoding == s.encoding;
         });
 }
+Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const int dataSize) const
+{
+    if (empty())
+        return end();
+    assert(dataOffset > 0);
+
+    const auto offsetDiffMaxTolerated = (GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time) * 16;
+    // Find a sector close enough to the data offset to be the same one.
+    auto it = std::find_if(begin(), end(), [&](const Sector& s) {
+        return (dataOffset - s.offset + tracklen) % tracklen <= offsetDiffMaxTolerated && s.size() == dataSize;
+        });
+    return it;
+}
+
+Sectors::const_iterator Track::findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int dataSize) const
+{
+    if (empty())
+        return end();
+    assert(sectorIdOffset > 0);
+
+    const auto offsetDiffMaxTolerated = (GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time) * 16;
+    // Find data close enough to the sector id offset to be the same one.
+    auto it = std::find_if(begin(), end(), [&](const Sector& s) {
+        return (s.offset - sectorIdOffset + tracklen) % tracklen <= offsetDiffMaxTolerated && s.data_size() == dataSize;
+        });
+    return it;
+}
