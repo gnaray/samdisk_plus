@@ -15,13 +15,15 @@ constexpr int GAP2_MFM_ED = 41;     // gap2 for MFM 1Mbps (ED)
 constexpr int GAP2_MFM_DDHD = 22;   // gap2 for MFM, except 1Mbps (ED)
 constexpr int GAP2_FM = 11;         // gap2 for FM (same bit size as MFM due to encoding)
 
+constexpr int AM_CRC = 2;
+
 constexpr int SYNC_OVERHEAD_MFM = 12/*x0x00=sync*/; // gap before *am
 constexpr int TRACK_OVERHEAD_MFM = 80/*x0x4e=gap4a*/ + SYNC_OVERHEAD_MFM + 4/*3x0c2+0xfc=iam*/ + 50/*x0x4e=gap1*/;   // = 146
 constexpr int IDAM_OVERHEAD_MFM = 4/*3xa1+0xfe=idam*/;
 constexpr int DAM_OVERHEAD_MFM = 4/*3x0xa1+0xfb=dam*/;
-constexpr int ID_OVERHEAD_MFM = IDAM_OVERHEAD_MFM + 4/*CHRN*/ + 2/*crc*/;
-constexpr int D_OVERHEAD_MFM = DAM_OVERHEAD_MFM /*+ data_size*/ + 2/*crc*/;
-constexpr int SECTOR_OVERHEAD_MFM = SYNC_OVERHEAD_MFM + ID_OVERHEAD_MFM + 22/*x0x4e=gap2*/ +
+constexpr int ID_OVERHEAD_MFM = IDAM_OVERHEAD_MFM + 4/*CHRN*/ + AM_CRC/*crc*/;
+constexpr int D_OVERHEAD_MFM = DAM_OVERHEAD_MFM /*+ data_size*/ + AM_CRC/*crc*/;
+constexpr int SECTOR_OVERHEAD_MFM = SYNC_OVERHEAD_MFM + ID_OVERHEAD_MFM + GAP2_MFM_DDHD/*x0x4e=gap2*/ +
                                     SYNC_OVERHEAD_MFM + D_OVERHEAD_MFM /*+ gap3*/; // = 62
 constexpr int SECTOR_OVERHEAD_ED = GAP2_MFM_ED - GAP2_MFM_DDHD;
 
@@ -29,9 +31,9 @@ constexpr int SYNC_OVERHEAD_FM = 6/*x0x00=sync*/;
 constexpr int TRACK_OVERHEAD_FM = 40/*x0x00=gap4a*/ + SYNC_OVERHEAD_FM + 1/*0xfc=iam*/ + 26/*x0x00=gap1*/;       // = 73
 constexpr int IDAM_OVERHEAD_FM = 1/*0xfe=idam*/;
 constexpr int DAM_OVERHEAD_FM = 1/*0xfb*/;
-constexpr int ID_OVERHEAD_FM = IDAM_OVERHEAD_FM + 4/*CHRN*/ + 2/*crc*/;
-constexpr int D_OVERHEAD_FM = DAM_OVERHEAD_FM /*+ data_size*/ + 2/*crc*/;
-constexpr int SECTOR_OVERHEAD_FM = SYNC_OVERHEAD_FM + ID_OVERHEAD_FM + 11/*x0x00=gap2*/ +
+constexpr int ID_OVERHEAD_FM = IDAM_OVERHEAD_FM + 4/*CHRN*/ + AM_CRC/*crc*/;
+constexpr int D_OVERHEAD_FM = DAM_OVERHEAD_FM /*+ data_size*/ + AM_CRC/*crc*/;
+constexpr int SECTOR_OVERHEAD_FM = SYNC_OVERHEAD_FM + ID_OVERHEAD_FM + GAP2_FM/*x0x00=gap2*/ +
                                    SYNC_OVERHEAD_FM + D_OVERHEAD_FM /*+ gap3*/; // = 33
 
 constexpr int MIN_GAP3 = 1;
@@ -151,3 +153,99 @@ int GetDataOverhead(Encoding encoding);
 int GetSyncOverhead(Encoding encoding);
 int GetRawTrackCapacity(int drive_speed, DataRate datarate, Encoding encoding);
 int GetTrackCapacity(int drive_speed, DataRate datarate, Encoding encoding);
+
+inline int GetIdamOverhead(const Encoding& encoding)
+{
+    return encoding == Encoding::FM ? IDAM_OVERHEAD_FM : IDAM_OVERHEAD_MFM;
+}
+
+inline int GetIdamOverheadSyncOverhead(const Encoding& encoding)
+{
+    return encoding == Encoding::FM ? IDAM_OVERHEAD_FM - 1 : IDAM_OVERHEAD_MFM - 1;
+}
+
+inline int GetDamOverhead(const Encoding& encoding)
+{
+    return encoding == Encoding::FM ? DAM_OVERHEAD_FM : DAM_OVERHEAD_MFM;
+}
+
+inline int GetDamOverheadSyncOverhead(const Encoding& encoding)
+{
+    return encoding == Encoding::FM ? DAM_OVERHEAD_FM - 1 : DAM_OVERHEAD_MFM - 1;
+}
+
+inline int GetIdOverhead(const Encoding& encoding)
+{
+    return encoding == Encoding::FM ? ID_OVERHEAD_FM : ID_OVERHEAD_MFM;
+}
+
+inline int GetDOverhead(const Encoding& encoding, const int dataSize = 0)
+{
+    return (encoding == Encoding::FM ? D_OVERHEAD_FM : D_OVERHEAD_MFM) + dataSize;
+}
+
+inline int GetFmOrMfmSyncLength(const Encoding& encoding, bool short_mfm_gap = false) // short_mfm_gap is about gap3 (after data crc) and sync (before IDAM overhead).
+{
+    return (encoding == Encoding::FM) ? SYNC_OVERHEAD_FM : (short_mfm_gap ? 3 : SYNC_OVERHEAD_MFM);
+}
+
+inline int GetFmOrMfmGap2Length(const DataRate& datarate, const Encoding& encoding)
+{
+    return (encoding == Encoding::FM) ? GAP2_FM : (datarate == DataRate::_1M) ? GAP2_MFM_ED : GAP2_MFM_DDHD;
+}
+
+inline int GetFmOrMfmGap3Length(bool short_mfm_gap = false)
+{
+    return short_mfm_gap ? MIN_GAP3 : 25; // Why 25? Usually min 24, sometimes 40. Using 25 as in IBMPC/FitTrackIBMPC.
+}
+
+inline int GetFmOrMfmGap3LengthMax()
+{
+    return 40; // 40 is based on docs. It can be increased if needed but not above MAX_GAP3.
+}
+
+inline int GetFmOrMfmGap2PlusSyncLength(const DataRate& datarate, const Encoding& encoding)
+{
+    return GetFmOrMfmGap2Length(datarate, encoding) + GetFmOrMfmSyncLength(encoding); // Gap2 not to be shorted.
+}
+
+inline int GetFmOrMfmGap3PlusSyncLength(const Encoding& encoding, bool short_mfm_gap = false)
+{
+    return GetFmOrMfmGap3Length(short_mfm_gap) + GetFmOrMfmSyncLength(encoding, short_mfm_gap);
+}
+
+inline int GetFmOrMfmGap3PlusSyncLengthMax(const Encoding& encoding)
+{
+    return GetFmOrMfmGap3LengthMax() + GetFmOrMfmSyncLength(encoding);
+}
+
+inline int GetFmOrMfmSectorOverheadWithoutSync(const DataRate& datarate, const Encoding& encoding, const int dataSize = 0)
+{
+    return GetIdOverhead(encoding) + GetFmOrMfmGap2PlusSyncLength(datarate, encoding) + GetDOverhead(encoding) + dataSize;
+}
+
+inline int GetFmOrMfmSectorOverheadWithoutSyncAndDataCrc(const DataRate& datarate, const Encoding& encoding, const int dataSize = 0)
+{
+    return GetFmOrMfmSectorOverheadWithoutSync(datarate, encoding, dataSize) - AM_CRC;
+}
+
+inline int GetFmOrMfmSectorOverheadFromOffsetToDataCrcEnd(const DataRate& datarate, const Encoding& encoding, const int dataSize = 0)
+{
+    return GetFmOrMfmSectorOverheadWithoutSync(datarate, encoding, dataSize) - GetIdamOverheadSyncOverhead(encoding);
+}
+
+inline int GetFmOrMfmIamAndAmDistance(const DataRate& datarate, const Encoding& encoding)
+{
+    return GetIdOverhead(encoding) - GetIdamOverheadSyncOverhead(encoding)
+            + GetFmOrMfmGap2PlusSyncLength(datarate, encoding) + GetDamOverheadSyncOverhead(encoding);
+}
+
+inline int GetFmOrMfmSectorOverhead(const DataRate& datarate, const Encoding& encoding, const int dataSize = 0, bool short_mfm_gap = false)
+{
+    return GetFmOrMfmSyncLength(encoding, short_mfm_gap) + GetFmOrMfmSectorOverheadWithoutSync(datarate, encoding, dataSize);
+}
+
+inline int GetFmOrMfmSectorOverheadWithGap3(const DataRate& datarate, const Encoding& encoding, const int dataSize = 0, bool short_mfm_gap = false)
+{
+    return GetFmOrMfmSectorOverhead(datarate, encoding, dataSize, short_mfm_gap) + GetFmOrMfmGap3Length(short_mfm_gap);
+}
