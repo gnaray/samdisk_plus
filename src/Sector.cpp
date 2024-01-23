@@ -471,7 +471,7 @@ bool Sector::has_data() const
 }
 
 // consider_normal_disk inhibits consider_checksummable_8K because checksummable_8K is not normal.
-bool Sector::has_good_data(bool consider_checksummable_8K, bool consider_normal_disk) const
+bool Sector::has_good_data(bool consider_checksummable_8K/* = false*/, bool consider_normal_disk/* = false*/) const
 {
     return consider_normal_disk ? has_good_normaldata()
             : ((consider_checksummable_8K && is_checksummable_8k_sector())
