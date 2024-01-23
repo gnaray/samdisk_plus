@@ -508,15 +508,15 @@ static struct option long_options[] =
     { "pll-adjust", required_argument, nullptr, OPT_PLLADJUST },
     { "pll-phase",  required_argument, nullptr, OPT_PLLPHASE },
 
-    { "normal-disk",                  no_argument, nullptr, OPT_NORMAL_DISK },   // undocumented. Expects disk as normal: all units (sectors, tracks, sides) have same size, sector ids form a sequence starting by 1.
-    { "readstats",                    no_argument, nullptr, OPT_READSTATS },     // undocumented. Looking for good data by the reading statistics. Requires RDSK format image.
-    { "paranoia",                     no_argument, nullptr, OPT_PARANOIA },      // undocumented. (Multi good data). Rescues floppy image assuming that a good CRC does not necessarily mean good data. It implies readstats thus requires using RDSK format image. It also sets stability_level as 5 if not specified.
-    { "stability-level",        required_argument, nullptr, OPT_STABILITY_LEVEL },  // undocumented.  // The count of samely read data of a sector which is considered stable. < 1 means only good data is stable (backward compatibility).
+    { "normal-disk",                  no_argument, nullptr, OPT_NORMAL_DISK },     // undocumented. Expects disk as normal: all units (sectors, tracks, sides) have same size, sector ids form a sequence starting by 1.
+    { "readstats",                    no_argument, nullptr, OPT_READSTATS },       // undocumented. Looking for good data by the reading statistics. Requires RDSK format image.
+    { "paranoia",                     no_argument, nullptr, OPT_PARANOIA },        // undocumented. (Multi good data). Rescues floppy image assuming that a good CRC does not necessarily mean good data. It implies readstats thus requires using RDSK format image. It also sets stability_level as 5 if not specified.
+    { "stability-level",        required_argument, nullptr, OPT_STABILITY_LEVEL }, // undocumented.  // The count of samely read data of a sector which is considered stable. < 1 means only good data is stable (backward compatibility).
     { "skip-stable-sectors",          no_argument, nullptr, OPT_SKIP_STABLE_SECTORS }, // undocumented. in repair mode skip those sectors which are already rescued in destination.
-    { "track-retries",          required_argument, nullptr, OPT_TRACK_RETRIES }, // undocumented. Amount od track retries. Each retry move the floppy drive head a bit.
-    { "detect-devfs",           optional_argument, nullptr, OPT_DETECT_DEVFS }, // undocumented. Detect the device filesystem and if exists use its format.
-    { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },  // undocumented. Amount of disk retries. If auto then do it while data improved.
-    { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME},
+    { "track-retries",          required_argument, nullptr, OPT_TRACK_RETRIES },   // undocumented. Amount od track retries. Each retry move the floppy drive head a bit.
+    { "detect-devfs",           optional_argument, nullptr, OPT_DETECT_DEVFS },    // undocumented. Detect the device filesystem and if exists use its format.
+    { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },    // undocumented. Amount of disk retries. If auto then do it while data improved.
+    { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME}, // undocumented. Two things are considered at same location if their location differs <= this value. Default is 64.
 
     { nullptr, 0, nullptr, 0 }
 };
