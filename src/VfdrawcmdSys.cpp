@@ -488,6 +488,14 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         return false; // The timed_multi_scan can not hold the found headers.
     }
 
+     // Only MFM encoding and 250 Kbps datarate floppy disk is supported.
+    if (m_encoding_flags != FD_OPTION_MFM || m_fdrate != FD_RATE_250K)
+    {   // Set the same error as CmdReadId because it would be called more times in real.
+        m_result.st1 = STREG1_MISSING_ADDRESS_MARK;
+        SetLastError_MP(ERROR_FLOPPY_ID_MARK_NOT_FOUND);
+        return true;
+    }
+
     WaitIndex(head, true);
 
     timed_multi_scan->byte_tolerance_of_time = byte_tolerance_of_time < 0 ? Track::COMPARE_TOLERANCE_BYTES : lossless_static_cast<uint8_t>(byte_tolerance_of_time);
