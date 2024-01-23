@@ -70,7 +70,6 @@ public:
     bool FdReset() override;
 
 private:
-    static constexpr int MAX_TRANSFER_SIZE = 65536 * 64;
     static const int DEFAULT_TRACKTIMES[4];
     std::string m_path {};
     int m_cyl{ 0 };

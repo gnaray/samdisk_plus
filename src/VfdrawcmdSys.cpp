@@ -52,7 +52,15 @@ FD_FDC_INFO* VfdrawcmdSys::GetFdcInfo()
 
 int VfdrawcmdSys::GetMaxTransferSize()
 {
-    return MAX_TRANSFER_SIZE;
+    /* TODO Ideally we should check more if not all tracks insteadof (0, 0)
+     * to determine their size which becomes the max transfer size.
+     * Now if track (0, 0) does not exist then the max transfer size is 0
+     * which disallows reading anything from this virtual floppy drive.
+     */
+    constexpr int cyl = 0;
+    constexpr int phead = 0;
+    const auto currentRawTrack = ReadRawTrack(CylHead(lossless_static_cast<uint8_t>(cyl), lossless_static_cast<uint8_t>(phead)));
+    return lossless_static_cast<int>(currentRawTrack.m_rawTrackContent.Bytes().size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +228,7 @@ bool VfdrawcmdSys::SetDiskCheck(bool /*enable*/)
 bool VfdrawcmdSys::GetFdcInfo(FD_FDC_INFO& info)
 {
     info.SpeedsAvailable = FDC_SPEED_250K;
-    info.MaxTransferSize = MAX_TRANSFER_SIZE;
+    info.MaxTransferSize = lossless_static_cast<uint32_t>(GetMaxTransferSize());
     return true;
 }
 
@@ -291,7 +299,8 @@ bool VfdrawcmdSys::CmdReadTrack(int phead, int cyl, int /*head*/, int /*sector*/
     const auto eotChecked = lossless_static_cast<uint8_t>(eot);
 
     const auto sector_size = Sector::SizeCodeToRealLength(sizeChecked);
-    auto output_size = std::min(eotChecked * sector_size, (GetMaxTransferSize() / sector_size + 1) * sector_size);
+    // The 16 KB overreading hack is not allowed here, we can not overread from file.
+    auto output_size = std::min(eotChecked * sector_size, GetMaxTransferSize());
     if (mem.size > 0)
     {
         if (mem.size < output_size)
