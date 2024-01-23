@@ -385,6 +385,8 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index, int firstSectorSeen)
 {
     auto& sector = track[index];
+    if (opt_debug)
+        util::cout << "ReadSector: reading " << index << ". sector having ID " << sector.header.sector << "\n";
 
     if (sector.has_badidcrc() || sector.has_good_data(false, opt_normal_disk))
         return;
