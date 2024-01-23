@@ -143,6 +143,7 @@ ADD_DEVICE(BlockDevice)
 ADD_DEVICE(FdrawcmdSys)
 ADD_DEVICE(FdrawcmdSysAB)
 #endif
+ADD_DEVICE(Vfdrawtrack)
 
 
 #ifdef DEFINITIONS_FOR_CPP

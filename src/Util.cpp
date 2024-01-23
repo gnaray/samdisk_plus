@@ -301,6 +301,12 @@ bool IsVfd(const std::string& path)
     return str.substr(0, 4) == "vfd:";
 }
 
+bool IsVfdrt(const std::string& path)
+{
+    const std::string str = util::lowercase(path);
+    return str.substr(0, 6) == "vfdrt:";
+}
+
 
 bool IsConsoleWindow()
 {

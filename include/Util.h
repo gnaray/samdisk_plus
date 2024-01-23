@@ -185,6 +185,7 @@ bool IsRecord(const std::string& path, int* pRecord = nullptr);
 bool IsTrinity(const std::string& path);
 bool IsBuiltIn(const std::string& path);
 bool IsVfd(const std::string& path);
+bool IsVfdrt(const std::string& path);
 
 bool IsConsoleWindow();
 
