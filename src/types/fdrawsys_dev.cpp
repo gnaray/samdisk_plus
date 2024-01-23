@@ -117,7 +117,7 @@ private:
     Encoding m_lastEncoding{ Encoding::Unknown };
     DataRate m_lastDataRate{ DataRate::Unknown };
     TrackInfo m_trackInfo[MAX_DISK_CYLS * MAX_DISK_HEADS];
-    bool m_warnedMFM128{ false };
+    bool m_warnedMFM128 = false;
 };
 
 
