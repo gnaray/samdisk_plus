@@ -23,8 +23,6 @@ public:
     void addTrackTime(const int trackTime);
     void add(OrphanDataCapableTrack&& orphanDataCapableTrack);
 
-protected:
-
 public:
     void mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack);
     void mergeRawTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
