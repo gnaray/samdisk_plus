@@ -10,6 +10,7 @@
 #include <numeric>
 
 static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
+static auto& opt_debug = getOpt<int>("debug");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 Track::Track(int num_sectors/*=0*/)
@@ -430,6 +431,28 @@ int Track::getOffsetOfTime(const int time) const
     return it->second;
 }
 
+bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const
+{
+    if (referenceTrack.empty() || empty())
+        return false;
+    // Find the best sync (offset diff).
+    std::vector<int> offsetDiffs;
+    const auto trackEnd = end();
+    for (auto& s : referenceTrack.sectors())
+    {
+        auto it = find(s.header);
+        while (it != trackEnd)
+        {
+            offsetDiffs.push_back(it->offset - s.offset);
+            it = findNext(s.header, it);
+        }
+    }
+    if (offsetDiffs.empty())
+        return false;
+    syncOffset = findMostPopularToleratedDiff(offsetDiffs);
+    return true;
+}
+
 void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
 {
     assert(trackLenSingle > 0);
@@ -503,6 +526,134 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
     if (opt_debug)
         util::cout << "determineBestTrackTime found trackLenBest " << trackLenBest << "\n";
     return trackLenBest;
+}
+
+void Track::setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen)
+{
+    assert(tracklen > 0);
+    if (tracklen == trackLen)
+        return;
+    const double rate = static_cast<double>(trackLen) / tracklen;
+    for (auto& sector : m_sectors)
+        sector.offset = round_AS<int>(sector.offset * rate);
+    tracklen = trackLen;
+    if (!empty())
+        tracktime = getTimeOfOffset(tracklen);
+}
+
+int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
+{
+    const auto offsetDiff = GetFmOrMfmIamAndAmDistance(getDataRate(), getEncoding()) * 8 * 2;
+    // We could check if the sector overlaps something existing but unimportant now.
+    return (dataOffset - offsetDiff + tracklen) % tracklen;
+}
+
+// Guess sector ids based on discovered gap3s and format scheme recognition.
+IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
+{
+    IdAndOffsetVector sectorIdsAndOffsets;
+    if (empty())
+        return sectorIdsAndOffsets;
+    if (!opt_normal_disk) // There can be different sector sizes and can not tell if one big or more small sectors fill in a hole.
+        util::cout << "DiscoverTrackSectorScheme is called but normal disk option is not set. This method supports normal disk so setting that option is recommended.\n";
+    typedef std::vector<int>::size_type SectorIdsST;
+    sectorIdsAndOffsets.reserve(static_cast<SectorIdsST>(size())); // Size will be more if holes are found at the track end.
+
+    const auto optByteToleranceBits = opt_byte_tolerance_of_time * 8 * 2;
+    const auto sectorSize = m_sectors[0].size();
+    const auto encoding = getEncoding();
+    const auto predictedOverheadedSectorWithoutSyncAndDataBits = GetFmOrMfmSectorOverheadWithoutSync(getDataRate(), encoding) * 8 * 2;
+    const auto predictedOverheadedSectorWithGap3AndDataBits = (GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding) + sectorSize) * 8 * 2;
+    auto overheadedSectorWithGap3AndDataBits = 0;
+    auto overheadedSectorWithGap3AndDataBitsParticipants = 0;
+    auto overheadedSectorWithGap3AndDataBitsAbout = predictedOverheadedSectorWithGap3AndDataBits;
+    const auto iSup = size();
+    for (int i = 0; i < iSup; i++)
+    {
+        const auto& sector = m_sectors[static_cast<Sectors::size_type>(i)];
+        if (sector.size() != sectorSize) // Only same sized sectors are supported.
+            return sectorIdsAndOffsets;
+        if (opt_debug)
+            util::cout << "DiscoverTrackSectorScheme: processing sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
+        if (i < iSup - 1)
+        {
+            const auto offsetDiff = m_sectors[static_cast<Sectors::size_type>(i + 1)].offset - sector.offset;
+            if (offsetDiff <= overheadedSectorWithGap3AndDataBitsAbout + optByteToleranceBits) // Next sector is close enough so there is no hole.
+            {
+                overheadedSectorWithGap3AndDataBits += offsetDiff;
+                overheadedSectorWithGap3AndDataBitsParticipants++;
+                overheadedSectorWithGap3AndDataBitsAbout = overheadedSectorWithGap3AndDataBits / overheadedSectorWithGap3AndDataBitsParticipants;
+            }
+        }
+    }
+    overheadedSectorWithGap3AndDataBits = overheadedSectorWithGap3AndDataBitsAbout;
+    const auto gap3PlusSyncBits = overheadedSectorWithGap3AndDataBits - predictedOverheadedSectorWithoutSyncAndDataBits - sectorSize * 8 * 2;
+    const auto sectorOverheadTolerance = 1 * 8 * 2;
+
+    // Determine and add holes between track start and first sector.
+    const auto overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits =
+            overheadedSectorWithGap3AndDataBitsAbout + gap3PlusSyncBits + GetIdamOverheadSyncOverhead(encoding) * 8 * 2; // gap3 should be gap4a but good enough now.
+    auto remainingStartOffset = m_sectors[0].offset;
+    while (remainingStartOffset - 0 >= overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits) // Could subtract a minimal gap4a instead of 0.
+    {
+        remainingStartOffset -= overheadedSectorWithGap3AndDataBitsAbout;
+        sectorIdsAndOffsets.push_back(IdAndOffset(-1, remainingStartOffset));
+        if (opt_debug)
+            util::cout << "DiscoverTrackSectorScheme: pushed hole sector, offset=" << remainingStartOffset << "\n";
+    }
+
+    // Determine and add holes between sectors.
+    for (int i = 0; i < iSup; i++)
+    {
+        const auto& sector = m_sectors[static_cast<Sectors::size_type>(i)];
+        sectorIdsAndOffsets.push_back(IdAndOffset(sector.header.sector, sector.offset));
+        if (opt_debug)
+            util::cout << "DiscoverTrackSectorScheme: pushed sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
+        if (i < iSup - 1)
+        {
+            const auto offsetDiff = m_sectors[static_cast<Sectors::size_type>(i + 1)].offset - sector.offset;
+            if (offsetDiff > overheadedSectorWithGap3AndDataBitsAbout + optByteToleranceBits) // Next sector is not close enough so there is hole.
+            {
+                const auto remainingoffsetDiff = offsetDiff - overheadedSectorWithGap3AndDataBits; // Subtracting this sector from hole.
+                const auto sectorsFittingHoleAbout = round_AS<int>(static_cast<double>(remainingoffsetDiff) / overheadedSectorWithGap3AndDataBits);
+                const auto sectorsFittingHole = floor_AS<int>(static_cast<double>(remainingoffsetDiff + sectorOverheadTolerance * sectorsFittingHoleAbout) / overheadedSectorWithGap3AndDataBits);
+                auto holeOffset = sector.offset + overheadedSectorWithGap3AndDataBits;
+                for (int j = 0; j < sectorsFittingHole; j++)
+                {
+                    sectorIdsAndOffsets.push_back(IdAndOffset(-1, holeOffset));
+                    if (opt_debug)
+                        util::cout << "DiscoverTrackSectorScheme: pushed hole sector, offset=" << holeOffset << "\n";
+                    holeOffset += overheadedSectorWithGap3AndDataBits;
+                }
+            }
+        }
+    }
+
+    // Determine and add holes between last sector and track end.
+    const auto overheadedSectorFromOffsetToDataCrcEndBits = overheadedSectorWithGap3AndDataBitsAbout - gap3PlusSyncBits - GetIdamOverheadSyncOverhead(encoding) * 8 * 2;
+    auto remainingEndOffset = m_sectors[static_cast<Sectors::size_type>(iSup - 1)].offset + overheadedSectorWithGap3AndDataBits;
+    while (tracklen - remainingEndOffset >= overheadedSectorFromOffsetToDataCrcEndBits)
+    {
+        sectorIdsAndOffsets.push_back(IdAndOffset(-1, remainingEndOffset));
+        if (opt_debug)
+            util::cout << "DiscoverTrackSectorScheme: pushed hole sector, offset=" << remainingEndOffset << "\n";
+        remainingEndOffset += overheadedSectorWithGap3AndDataBitsAbout;
+    }
+    if (sectorIdsAndOffsets.ReplaceMissingIdsByFindingTrackSectorIds())
+    {
+        if (opt_debug)
+        {
+            const auto iSup = static_cast<int>(sectorIdsAndOffsets.size());
+            for (int i = 0; i < iSup; i++)
+            {
+                    util::cout << "DiscoverTrackSectorScheme: sectorIdsAndOffsets[" << i << "] has id=" <<
+                                  sectorIdsAndOffsets[static_cast<IdAndOffsetVectorST>(i)].id << ", offset=" <<
+                                  sectorIdsAndOffsets[static_cast<IdAndOffsetVectorST>(i)].offset << "\n";
+            }
+        }
+        return sectorIdsAndOffsets;
+    }
+    return IdAndOffsetVector();
 }
 
 Track& Track::format(const CylHead& cylhead, const Format& fmt)

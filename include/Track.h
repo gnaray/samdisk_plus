@@ -49,8 +49,13 @@ public:
     int getOffsetOfTime(const int time) const;
 
     static int findMostPopularToleratedDiff(std::vector<int>& diffs);
+
+    bool findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const;
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
     int determineBestTrackLen(const int timedTrackLen) const;
+    void setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen);
+    int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;
+    IdAndOffsetVector DiscoverTrackSectorScheme() const;
 
     Track& format(const CylHead& cylhead, const Format& format);
     Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);
