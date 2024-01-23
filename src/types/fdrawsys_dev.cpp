@@ -223,7 +223,7 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
             m_fdrawcmd->SetEncRate(encoding, datarate);
 
             // Retry in case of spurious header CRC errors.
-            for (auto i = 0; i <= 3; ++i) // TODO opt_retries replacable with opt_encratedetect_retries
+            for (auto i = 0; i <= opt_retries; ++i) // TODO originally opt_retries(=5), could be replacable with opt_encratedetect_retries?
             {
                 if (m_fdrawcmd->CmdReadId(head, result))
                 {
