@@ -2,12 +2,12 @@
 
 /*static*/ TrackSectorIds TrackSectorIds::GetIds(const CylHead& cylhead, const int sectors, const int interleave/* = 0*/, const int skew/* = 0*/, const int offset/* = 0*/, const int base/* = 1*/)
 {
-    const auto u_sectors = lossless_static_cast<size_t>(sectors);
     TrackSectorIds ids;
     if (sectors == 0)
         return ids;
-    ids.resize(u_sectors);
-    std::vector<bool> used(u_sectors);
+    assert(sectors > 0 && interleave >= 0 && base >= 0);
+    ids.resize(sectors);
+    VectorX<bool> used(sectors);
 
     const auto base_id = base;
 
@@ -17,7 +17,7 @@
         auto index = static_cast<size_t>((offset + s * interleave + skew * (cylhead.cyl)) % sectors);
 
         // Find a free slot starting from the expected position
-        for (; used[index]; index = (index + 1) % u_sectors) ;
+        for (; used[index]; index = (index + 1) % sectors) ;
         used[index] = 1;
 
         // Assign the sector number, with offset adjustments
@@ -29,17 +29,15 @@
 
 /*static*/ const TrackSectorIds& TrackSectorIds::GetTrackSectorIds(int sectors, int interleave)
 {
-    static std::vector<std::vector<TrackSectorIds>> TrackSectorIdsCache;
+    static VectorX<VectorX<TrackSectorIds>> TrackSectorIdsCache;
 
-    const auto u_sectors = lossless_static_cast<size_t>(sectors);
-    const auto u_interleave = lossless_static_cast<size_t>(interleave);
-    if (u_sectors >= TrackSectorIdsCache.size())
-        TrackSectorIdsCache.resize(u_sectors + 1);
-    if (u_interleave >= TrackSectorIdsCache[u_sectors].size())
-        TrackSectorIdsCache[u_sectors].resize(u_interleave + 1);
-    if (TrackSectorIdsCache[u_sectors][u_interleave].empty())
-        TrackSectorIdsCache[u_sectors][u_interleave] = GetIds(CylHead(0, 0), sectors, interleave);
-    return TrackSectorIdsCache[u_sectors][u_interleave];
+    if (sectors >= TrackSectorIdsCache.size())
+        TrackSectorIdsCache.resize(sectors + 1);
+    if (interleave >= TrackSectorIdsCache[sectors].size())
+        TrackSectorIdsCache[sectors].resize(interleave + 1);
+    if (TrackSectorIdsCache[sectors][interleave].empty())
+        TrackSectorIdsCache[sectors][interleave] = GetIds(CylHead(0, 0), sectors, interleave);
+    return TrackSectorIdsCache[sectors][interleave];
 }
 
 /*static*/ const TrackSectorIds TrackSectorIds::FindCompleteTrackSectorIdsFor(const TrackSectorIds& incompleteSectorIds, const int sectorsMin/* = 0*/)
@@ -76,28 +74,25 @@
 
 int TrackSectorIds::MatchSectorIds(const TrackSectorIds& incompleteSectorIds) const
 {
-    typedef std::vector<int>::size_type SectorIdsST;
     constexpr int resultNoOffset = -1; // Return value if no match.
-    const int sectorsSup = static_cast<int>(incompleteSectorIds.size());
-    const int thisSectorsSup = static_cast<int>(size());
+    const int idIndexSup = static_cast<int>(incompleteSectorIds.size());
+    const int thisIdIndexSup = static_cast<int>(size());
     // Find a valid sector ID in track sector ids, it must exist there.
-    for (int sector = 0; sector < sectorsSup; sector++)
+    for (int idIndex = 0; idIndex < idIndexSup; idIndex++)
     {
-        const auto u_sector = static_cast<SectorIdsST>(sector);
-        const auto id = incompleteSectorIds[u_sector];
+        const auto id = incompleteSectorIds[idIndex];
         if (id >= 0)
         {
-            for (int thisSector = 0; thisSector < thisSectorsSup; thisSector++)
+            for (int thisIdIndex = 0; thisIdIndex < thisIdIndexSup; thisIdIndex++)
             {
-                if (data()[static_cast<SectorIdsST>(thisSector)] == id)
+                if (operator[](thisIdIndex) == id)
                 {
                     // Now sector ID is found in track sector ids, determine the offset and compare the rest.
-                    const auto offset = (sector - thisSector + thisSectorsSup) % thisSectorsSup;
-                    for (++sector; sector < sectorsSup; sector++)
+                    const auto offset = (idIndex - thisIdIndex + thisIdIndexSup) % thisIdIndexSup;
+                    for (++idIndex; idIndex < idIndexSup; idIndex++)
                     {
-                        const auto u_sector = static_cast<SectorIdsST>(sector);
-                        if (incompleteSectorIds[u_sector] >= 0 && incompleteSectorIds[u_sector] !=
-                                data()[static_cast<SectorIdsST>((sector - offset + thisSectorsSup) % thisSectorsSup)])
+                        if (incompleteSectorIds[idIndex] >= 0 && incompleteSectorIds[idIndex] !=
+                                data()[static_cast<SectorIdsST>((idIndex - offset + thisIdIndexSup) % thisIdIndexSup)])
                             return resultNoOffset;
                     }
                     return offset; // Match!
@@ -127,9 +122,8 @@ void IdAndOffsetVector::ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackS
     const auto iSup = static_cast<int>(trackSectorIds.size());
     for (int i = 0; i < iSup; i++)
     {
-        const auto u_i = static_cast<IdAndOffsetVectorST>(i);
-        if (data()[u_i].id < 0)
-            data()[u_i].id = trackSectorIds[u_i];
+        if (data()[i].id < 0)
+            data()[i].id = trackSectorIds[i];
     }
 }
 

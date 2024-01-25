@@ -2,12 +2,10 @@
 
 #include "Header.h"
 
-#include <vector>
-
-class TrackSectorIds : public std::vector<int>
+class TrackSectorIds : public VectorX<int>
 {
 public:
-    using std::vector<int>::vector;
+    using VectorX<int>::vector;
 
     static TrackSectorIds GetIds(const CylHead& cylhead, const int sectors, const int interleave = 0, const int skew = 0, const int offset = 0, const int base = 1);
     static const TrackSectorIds& GetTrackSectorIds(int sectors, int interleave);
@@ -59,14 +57,12 @@ public:
     int offset = -1;
 };
 
-class IdAndOffsetVector : public std::vector<IdAndOffset>
+class IdAndOffsetVector : public VectorX<IdAndOffset>
 {
 public:
-    using std::vector<IdAndOffset>::vector;
+    using VectorX<IdAndOffset>::vector;
 
     TrackSectorIds GetSectorIds() const;
     void ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackSectorIds);
     bool ReplaceMissingIdsByFindingTrackSectorIds(const int sectorsMin = 0);
 };
-
-typedef IdAndOffsetVector::size_type IdAndOffsetVectorST;
