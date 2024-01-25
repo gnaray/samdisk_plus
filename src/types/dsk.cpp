@@ -166,7 +166,7 @@ public:
 
     void TransferFromSector(const CylHead& cylhead, const Sector& sector, int numCopies = -1)
     {
-        readAttempts = util::htole(sector.read_attempts());
+        readAttempts = lossless_static_cast<uint16_t>(util::htole(sector.read_attempts()));
         int numDatas = numCopies < 0 ? sector.copies() : numCopies;
         dataReadCount.resize(0);
         dataReadCount.reserve(numDatas);
@@ -230,7 +230,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
 
     auto pbIndex = reinterpret_cast<const uint8_t*>(peh + 1);
     auto pbIndex32 = reinterpret_cast<const uint32_t*>(pbIndex); // For RDSK.
-    auto max_cyls = (ab.size() - sizeof(EDSK_HEADER)) / MAX_SIDES;
+    auto max_cyls = (ab.size() - intsizeof(EDSK_HEADER)) / MAX_SIDES;
     bool fEDSK = peh->szSignature[0] == EDSK_SIGNATURE[0] || peh->szSignature[0] == RDSK_SIGNATURE[0];
 
     // Warn if the deprecated 'random data errors' flag is set
@@ -267,7 +267,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
             auto uTrackSize = fEDSK ? (*pbIndex++ << 8) : ((peh->abTrackSize[1] << 8) | peh->abTrackSize[0]);
             if (edsk_version >= 2)
             {
-                uTrackSize = util::letoh(*(pbIndex32++));
+                uTrackSize = lossless_static_cast<int>(util::letoh(*(pbIndex32++)));
             }
 
             // EDSK doesn't store blank tracks, as indicated by zero size in the index
@@ -318,7 +318,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
 
             // Determine the track header size, and the start of the data beyond it
             // Round the header size to the next 256-byte boundary
-            int uSectorHeaders = (sizeof(EDSK_TRACK) + th.sectors * sizeof(EDSK_SECTOR) + 0xff) & ~0xff;
+            int uSectorHeaders = (intsizeof(EDSK_TRACK) + th.sectors * intsizeof(EDSK_SECTOR) + 0xff) & ~0xff;
             uSectorHeaders -= sizeof(EDSK_TRACK);
             int uMinimum = th.sectors * sizeof(EDSK_SECTOR);
 
@@ -530,7 +530,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
         else
         {
             // Undo non-matching read
-            file.seek(file.tell() - sizeof(eo));
+            file.seek(file.tell() - intsizeof(eo));
         }
     }
 
@@ -555,7 +555,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
         if (!file_has_readstats)
         {
             // Undo non-matching read
-            file.seek(file.tell() - sizeof(ersh));
+            file.seek(file.tell() - intsizeof(ersh));
         }
     }
 
@@ -579,12 +579,12 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
         }
     }
 
-    size_t uTail = file.size() - file.tell();
-    if (uTail)
+    const auto uTail = file.size() - file.tell();
+    if (uTail > 0)
     {
         auto pbTail = file.data().data() + file.tell();
 
-        if (!memcmp(pbTail, pbTail + 1, uTail - 1))
+        if (!memcmp(pbTail, pbTail + 1, static_cast<size_t>(uTail - 1)))
         {
             // Example: Compilation Disk 048 (19xx)(-).zip  (TOSEC CPC Compilations)
             Message(msgWarning, "file ends with %u bytes of %02X filler", uTail, *pbTail);
@@ -665,7 +665,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
 
             // The standard track header is 256 bytes, but to allow more than 29 sectors we'll
             // round up the required size to the next 256-byte boundary
-            uint32_t track_header_size = (sizeof(EDSK_TRACK) + track.size() * sizeof(EDSK_SECTOR) + 0xff) & ~0xff;
+            uint32_t track_header_size = static_cast<uint32_t>((sizeof(EDSK_TRACK) + static_cast<unsigned>(track.size()) * sizeof(EDSK_SECTOR) + 0xff) & static_cast<unsigned>(~0xff));
 
             memset(mem, 0, track_header_size);
             memcpy(pt->signature, EDSK_TRACK_SIG, sizeof(pt->signature));
@@ -807,12 +807,12 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                         if (static_cast<int>(track_size) + data_size < mem.size)
                         {
                             if (data.size() >= data_size)
-                                memcpy(pb, data.data(), data_size);
+                                memcpy(pb, data.data(), static_cast<size_t>(data_size));
                             else
                             {
                                 // Extend 8K sectors to full size to preserve multiple copies
-                                memcpy(pb, data.data(), data.size());
-                                memset(pb + data.size(), 0, data_size - data.size());
+                                memcpy(pb, data.data(), static_cast<size_t>(data.size()));
+                                memset(pb + data.size(), 0, static_cast<size_t>(data_size - data.size()));
                             }
 
                             // Single copy, data CRC error and size that conflicts with multiple copies extension?
@@ -825,7 +825,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                         }
 
                         pb += data_size;
-                        track_size += data_size;
+                        track_size += static_cast<size_t>(data_size);
                     }
                     const auto new_num_copies = copy;
                     if (opt_add_readstats_block)
@@ -847,7 +847,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                 if (static_cast<int>(track_size) <= mem.size)
                 {
                     // Clear any unused space, then break out to save it
-                    memset(mem + track_size, 0, mem.size - track_size);
+                    memset(mem + track_size, 0, static_cast<size_t>(mem.size) - track_size);
                     // Add the track readstats to final readstats
                     readstats_vector.insert(readstats_vector.end(), track_readstats_vector.begin(), track_readstats_vector.end());
                     break;
@@ -867,7 +867,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
             }
 
             // Round the size up to the next 256-byte boundary, and store the MSB in the index
-            track_size = (track_size + 0xff) & ~0xff;
+            track_size = (track_size + 0xff) & static_cast<unsigned>(~0xff);
 
             if (edsk_version >= 2)
             {
@@ -888,7 +888,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
         EDSK_OFFSETS eo = { EDSK_OFFSETS_SIG, 0 };
         if (fwrite(&eo, sizeof(eo), 1, f_) != 1)
             throw util::exception("write error (offsets)");
-        if (fwrite(offsets.data(), sizeof(uint16_t), offsets.size(), f_) != offsets.size())
+        if (fwrite(offsets.data(), sizeof(uint16_t), static_cast<size_t>(offsets.size()), f_) != static_cast<size_t>(offsets.size()))
             throw util::exception("write error (offsets)");
     }
 
