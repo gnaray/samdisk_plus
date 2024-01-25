@@ -33,7 +33,7 @@ void CRC16::init_crc_table()
             for (int j = 0; j < 8; ++j)
                 crc = static_cast<uint16_t>(crc << 1) ^ ((crc & 0x8000) ? POLYNOMIAL : 0);
 
-            s_crc_lookup[lossless_static_cast<Uint16Array256ST>(i)] = crc;
+            s_crc_lookup[static_cast<Uint16Array256ST>(i)] = crc;
         }
     }
 }
@@ -58,7 +58,7 @@ uint16_t CRC16::add(uint8_t byte, int len)
 {
     if (len <= 0)
         return m_crc;
-    return add(byte, lossless_static_cast<size_t>(len));
+    return add(byte, static_cast<size_t>(len));
 }
 
 uint16_t CRC16::add(uint8_t byte, size_t len)
@@ -73,7 +73,7 @@ uint16_t CRC16::add(const void* buf, int len)
 {
     if (len <= 0)
         return m_crc;
-    return add(buf, lossless_static_cast<size_t>(len));
+    return add(buf, static_cast<size_t>(len));
 }
 
 uint16_t CRC16::add(const void* buf, size_t len)

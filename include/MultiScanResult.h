@@ -27,7 +27,7 @@ public:
     }
     inline int trackTime() const
     {
-        return lossless_static_cast<int>(this->operator const FD_TIMED_MULTI_SCAN_RESULT*()->tracktime);
+        return static_cast<int>(this->operator const FD_TIMED_MULTI_SCAN_RESULT*()->tracktime);
     }
     inline int byteToleranceOfTime() const
     {

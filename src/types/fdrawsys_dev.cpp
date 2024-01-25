@@ -331,7 +331,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             areEncodingAndDataRateNewlyDetermined = true; // True if anything is read by detector or scanner.
         }
 
-        tracktime = lossless_static_cast<int>(scan_result->tracktime);
+        tracktime = static_cast<int>(scan_result->tracktime);
         if (m_fdrawcmd->GetVersion().value < DriverVersion1_0_1_12)
         {
             int tracktimeCorrect;
@@ -404,7 +404,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         }
 
         // Invalidate the content so misbehaving FDCs can be identififed.
-        memset(mem.pb, 0xee, lossless_static_cast<size_t>(mem.size));
+        memset(mem.pb, 0xee, static_cast<size_t>(mem.size));
 
         const Header& header = sector.header;
         if (!m_fdrawcmd->CmdRead(cylhead.head, header.cyl, header.head, header.sector, header.size, 1, mem))
@@ -493,7 +493,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
     for (int i = 0; i <= opt_retries; ++i)
     {
         // Invalidate the content so misbehaving FDCs can be identififed.
-        memset(mem.pb, 0xee, lossless_static_cast<size_t>(mem.size));
+        memset(mem.pb, 0xee, static_cast<size_t>(mem.size));
 
         if (!m_fdrawcmd->CmdReadTrack(cylhead.head, 0, 0, 0, size_code, 1, mem))
         {
@@ -520,7 +520,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
         if (sector.has_good_data())
         {
             const auto data = sector.data_copy();
-            if (std::memcmp(data.data(), mem.pb, lossless_static_cast<size_t>(data.size())))
+            if (std::memcmp(data.data(), mem.pb, static_cast<size_t>(data.size())))
             {
                 Message(msgWarning, "track read of %s doesn't match first sector content", CH(cylhead.cyl, cylhead.head));
                 break;
@@ -622,7 +622,7 @@ TimedRawDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cylhead, c
         FD_MULTI_TRACK_TIME_RESULT track_time;
         if (!m_fdrawcmd->FdGetMultiTrackTime(track_time, 1))
             throw win32_error(GetLastError_MP(), "GetMultiTrackTime"); // "not available for this disk type"
-        m_trackInfo[cylhead].trackTime = lossless_static_cast<int>(track_time.spintime);
+        m_trackInfo[cylhead].trackTime = static_cast<int>(track_time.spintime);
         // variable speed is out of scope. however this solution supports variable speed unless m_trackInfo[all] is set as spintime.
     }
 
