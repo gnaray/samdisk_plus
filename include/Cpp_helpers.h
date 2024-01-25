@@ -314,4 +314,42 @@ inline T ceil_AS(U x)
 #define checkedlongsizeof(x) (lossless_static_cast<long>(sizeof(x)))
 #define checkedintsizeof(x) (lossless_static_cast<int>(sizeof(x)))
 
+
+
+constexpr const char* Module_divisor_is_0 = "Can not calculate modulo when divisor is 0";
+
+// https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
+inline int modulo2Power(int value, unsigned powerOf2)
+{
+    if (powerOf2 == 0)
+        throw make_error<std::runtime_error>(Module_divisor_is_0);
+    return value & static_cast<int>(powerOf2 - 1);
+}
+
+// https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
+// Slightly faster than modulo(int, int).
+inline int modulo(int value, unsigned m)
+{
+    if (m == 0)
+        throw make_error<std::runtime_error>(Module_divisor_is_0);
+    int mod = value % static_cast<int>(m);
+    if (value < 0) {
+        mod += m;
+    }
+    return mod;
+}
+
+// https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
+inline int modulo_euclidean(int value, int m) // modulo_Euclidean2
+{
+    if (m == 0)
+        throw make_error<std::runtime_error>(Module_divisor_is_0);
+    if (m == -1)
+        return 0; // This test needed to prevent UB of `INT_MIN % -1`.
+    int mod = value % m;
+    if (mod < 0)
+        mod = (m < 0) ? mod - m : mod + m;
+    return mod;
+}
+
 #endif // CPP_HELPERS_H
