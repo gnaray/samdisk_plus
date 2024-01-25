@@ -158,13 +158,12 @@ public:
             throw util::exception("write error (readstats)");
         if (numDatas > 0)
         {
-            const auto dataReadCountDataByteSize = DataReadCountDataByteSize();
             if (fwrite(dataReadCount.data(), EdskReadstatsElement::DataReadCountByteSize(), numDatas, file) != numDatas)
                 throw util::exception("write error (readstats)");
         }
     }
 
-    void TransferFromSector(const CylHead& cylhead, const Sector& sector, int numCopies = -1)
+    void TransferFromSector(const CylHead& /*cylhead*/, const Sector& sector, int numCopies = -1)
     {
         readAttempts = lossless_static_cast<uint16_t>(util::htole(sector.read_attempts()));
         int numDatas = numCopies < 0 ? sector.copies() : numCopies;
