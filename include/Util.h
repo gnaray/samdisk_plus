@@ -47,6 +47,7 @@ inline size_t array_size(T(&)[SIZE]) { return SIZE; }
 template <typename T, size_t N>
 char(&ArraySizeHelper(T(&array)[N]))[N];
 #define arraysize(array) (sizeof(ArraySizeHelper(array)))
+#define arrayintsizeof(array) (intsizeof(ArraySizeHelper(array)))
 #endif
 
 #define DAY ( \
