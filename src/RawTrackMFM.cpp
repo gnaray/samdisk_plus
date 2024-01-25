@@ -75,6 +75,21 @@ void SectorIdFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapable
 }
 // ====================================
 
+void SectorDataRefFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const
+{
+    const uint8_t dam = m_addressMark;
+    const auto am_offset = m_foundByteBitPosition.TotalBitPosition() * 2; // Counted in mfmbits.
+    const Header header(rawTrackContext.cylHead.cyl, rawTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, SIZECODE_UNKNOWN);
+    Sector sector(rawTrackContext.dataRate, rawTrackContext.encoding, header);
+    sector.offset = am_offset;
+    sector.dam = dam; // TODO not needed
+    sector.set_constant_disk(false);
+    if (opt_debug)
+        util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " DAM (am=" << dam << ") at offset " << sector.offset << "\n";
+    orphanDataCapableTrack.orphanDataTrack.add(std::move(sector));
+}
+// ====================================
+
 void SectorDataFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const
 {
     if (!rawTrackContext.sectorIdFromRawTrackLastFound.empty() && rawTrackContext.DoSectorIdAndDataPositionsCohere(

@@ -166,6 +166,29 @@ public:
 private:
 };
 
+class SectorDataRefInRawTrack : public AddressMarkInTrack
+{
+public:
+    constexpr SectorDataRefInRawTrack(const AddressMarkInTrack& addressMarkInTrack)
+        : AddressMarkInTrack(addressMarkInTrack)
+    {
+    }
+
+    static constexpr bool IsSuitable(uint8_t addressMarkValue)
+    {
+        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue));
+    }
+
+    static constexpr bool IsSuitable(const AddressMark& addressMark)
+    {
+        return addressMark == AddressMark::DATA || addressMark == AddressMark::ALT_DATA
+                || addressMark == AddressMark::DELETED_DATA || addressMark == AddressMark::ALT_DELETED_DATA
+                || addressMark == AddressMark::RX02;
+    }
+
+private:
+};
+
 template<unsigned int S>
 class SectorBlockInRawTrack
 {
@@ -324,6 +347,19 @@ public:
     uint8_t head;
     uint8_t sector;
     uint8_t sizeId;
+};
+
+class SectorDataRefFromRawTrack : public SomethingFromRawTrack
+{
+public:
+    SectorDataRefFromRawTrack(
+        const ByteBitPosition& foundByteBitPosition,
+        const SectorDataRefInRawTrack& sectorDataInRawTrack)
+        : SomethingFromRawTrack(foundByteBitPosition, sectorDataInRawTrack.m_addressMark)
+    {
+    }
+
+    void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const override;
 };
 
 class SectorDataFromRawTrack : public SomethingFromRawTrack, public CrcFromTrackAndCalculated
