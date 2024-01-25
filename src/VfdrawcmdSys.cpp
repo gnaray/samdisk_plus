@@ -412,7 +412,7 @@ bool VfdrawcmdSys::CmdFormatAndWrite(FD_FORMAT_PARAMS* /*params*/, int /*size*/)
 
 bool VfdrawcmdSys::CmdScan(int head, FD_SCAN_RESULT* scan, int size)
 {
-    const auto sectors = (lossless_static_cast<size_t>(size) - sizeof(FD_SCAN_RESULT)) / sizeof(FD_ID_HEADER);
+    const auto sectors = (size - intsizeof(FD_SCAN_RESULT)) / intsizeof(FD_ID_HEADER);
     if (sectors == 0)
     {
         SetLastError_MP(ERROR_NOT_ENOUGH_MEMORY);
@@ -421,7 +421,7 @@ bool VfdrawcmdSys::CmdScan(int head, FD_SCAN_RESULT* scan, int size)
 
     // WaitIndex(head, true); // Currently calling it in the called CmdTimedScan method.
 
-    const auto timedScanSize = lossless_static_cast<int>(sizeof(FD_TIMED_SCAN_RESULT) + sizeof(FD_TIMED_ID_HEADER) * sectors);
+    const auto timedScanSize = intsizeof(FD_TIMED_SCAN_RESULT) + intsizeof(FD_TIMED_ID_HEADER) * sectors;
     const MEMORY mem(timedScanSize);
     const auto timedScanResult = reinterpret_cast<FD_TIMED_SCAN_RESULT*>(mem.pb);
 
@@ -443,7 +443,7 @@ bool VfdrawcmdSys::CmdScan(int head, FD_SCAN_RESULT* scan, int size)
 
 bool VfdrawcmdSys::CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int size)
 {
-    const auto sectors = (lossless_static_cast<size_t>(size) - sizeof(FD_TIMED_SCAN_RESULT)) / sizeof(FD_TIMED_ID_HEADER);
+    const auto sectors = (size - intsizeof(FD_TIMED_SCAN_RESULT)) / intsizeof(FD_TIMED_ID_HEADER);
     if (sectors == 0)
     {
         SetLastError_MP(ERROR_NOT_ENOUGH_MEMORY);
@@ -452,7 +452,7 @@ bool VfdrawcmdSys::CmdTimedScan(int head, FD_TIMED_SCAN_RESULT* timed_scan, int 
 
     // WaitIndex(head, true); // Currently calling it in the called CmdTimedMultiScan method.
 
-    const auto timedMultiScanSize = lossless_static_cast<int>(sizeof(FD_TIMED_MULTI_SCAN_RESULT) + sizeof(FD_TIMED_MULTI_ID_HEADER) * sectors);
+    const auto timedMultiScanSize = intsizeof(FD_TIMED_MULTI_SCAN_RESULT) + intsizeof(FD_TIMED_MULTI_ID_HEADER) * sectors;
     const MEMORY mem(timedMultiScanSize);
     const auto timedMultiScanResult = reinterpret_cast<FD_TIMED_MULTI_SCAN_RESULT*>(mem.pb);
 
@@ -482,7 +482,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     if (head < 0 || head > 1)
         throw util::exception("unsupported head (", head, ")");
 
-    const auto sectorsMax = static_cast<int>((lossless_static_cast<size_t>(size) - sizeof(FD_TIMED_MULTI_SCAN_RESULT)) / sizeof(FD_TIMED_MULTI_ID_HEADER));
+    const auto sectorsMax = (size - intsizeof(FD_TIMED_MULTI_SCAN_RESULT)) / intsizeof(FD_TIMED_MULTI_ID_HEADER);
     if (sectorsMax == 0)
     {
         SetLastError_MP(ERROR_NOT_ENOUGH_MEMORY);

@@ -190,7 +190,7 @@ bool IsTrDosDirSector(const Sector& sector)
     if (sector.header.sector != 1 || sector.header.size != 1)
         return false;
 
-    auto dir_entries = sector.size() / lossless_static_cast<int>(sizeof(TRDOS_DIR));
+    auto dir_entries = sector.size() / intsizeof(TRDOS_DIR);
     auto pd = reinterpret_cast<const TRDOS_DIR*>(data.data());
 
     for (auto entry = 0; entry < dir_entries; ++entry, ++pd)
@@ -215,7 +215,7 @@ bool DirTrDos(Disk& disk)
         auto& sector = disk.get_sector(Header(0, 0, i, 1));
         auto& data = sector.data_copy();
 
-        auto dir_entries = sector.size() / lossless_static_cast<int>(sizeof(TRDOS_DIR));
+        auto dir_entries = sector.size() / intsizeof(TRDOS_DIR);
         auto pd = reinterpret_cast<const TRDOS_DIR*>(data.data());
 
         for (auto entry = 0; entry < dir_entries; ++entry, ++pd)
@@ -310,7 +310,7 @@ bool IsOpusDirSector(const Sector& sector)
         return false;
 
     auto pd = reinterpret_cast<const OPUS_DIR*>(data.data());
-    auto dir_entries = data.size() / lossless_static_cast<int>(sizeof(OPUS_DIR));
+    auto dir_entries = data.size() / intsizeof(OPUS_DIR);
 
     for (auto entry = 0; entry < dir_entries; ++entry, ++pd)
     {
@@ -353,7 +353,7 @@ bool DirOpus(Disk& disk)
         }
 
         auto pd = reinterpret_cast<const OPUS_DIR*>(data.data());
-        auto dir_entries = fmt.sector_size() / lossless_static_cast<int>(sizeof(OPUS_DIR));
+        auto dir_entries = fmt.sector_size() / intsizeof(OPUS_DIR);
 
         for (auto j = 0; j < dir_entries; ++j, ++pd)
         {
@@ -739,7 +739,7 @@ bool DirCpm(Disk& disk, const Sector& s)
             if (data.size() > sector->size())
                 data.resize(sector->size());
 
-            for (auto j = 0; j < data.size() / lossless_static_cast<int>(sizeof(CPM_DIR)); ++j)
+            for (auto j = 0; j < data.size() / intsizeof(CPM_DIR); ++j)
             {
                 auto p = &reinterpret_cast<const CPM_DIR*>(data.data())[j];
 

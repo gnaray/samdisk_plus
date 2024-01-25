@@ -675,7 +675,7 @@ noMoreDirEntries:
         auto& sector = disk.get_sector(Header(0, 0, i, 1));
         auto& data = sector.data_copy();
 
-        auto dir_entries = sector.size() / lossless_static_cast<int>(sizeof(TRDOS_DIR));
+        auto dir_entries = sector.size() / intsizeof(TRDOS_DIR);
         auto pd = reinterpret_cast<const TRDOS_DIR*>(data.data());
 
         for (auto entry = 0; entry < dir_entries; ++entry, ++pd)
