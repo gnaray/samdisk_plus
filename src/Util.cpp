@@ -683,7 +683,7 @@ int SizeToCode(int sector_size)
         if (sector_size == Sector::SizeCodeToLength(i))
             return i;
 
-    return 0xff;    // Should never hit this
+    return SIZECODE_UNKNOWN; // Should never hit this
 }
 
 bool ReadSector(const HDD& hdd, int sector, MEMORY& pm_)

@@ -210,6 +210,9 @@ bool IsTrackUsed(int cyl_, int head_);
 void CalculateGeometry(int64_t total_sectors, int& cyls, int& heads, int& sectors);
 void ValidateRange(Range& range, int max_cyls, int max_heads, int cyl_step = 1, int def_cyls = -1, int def_heads = -1);
 
+constexpr int SIZECODE_UNKNOWN = 0xff;
+constexpr int SIZECODE_MAX = 7;
+
 int SizeToCode(int sector_size);
 bool ReadSector(const HDD& hdd, int sector, MEMORY& pm_);
 bool CheckSig(const HDD& hdd, int sector, int offset, const char* sig, int len = 0);
