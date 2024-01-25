@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 
 #include "ByteBitPosition.h"
+#include "VectorX.h"
 
 #include <cassert>
 #include <cstddef>
@@ -19,12 +20,12 @@ class BitPositionableByteVector
 public:
     BitPositionableByteVector() = default;
 
-    BitPositionableByteVector(size_t size)
+    BitPositionableByteVector(int size)
         : m_bytes(size), m_byteBitPosition(0)
     {
     }
 
-    BitPositionableByteVector(const std::vector<uint8_t>& bytes)
+    BitPositionableByteVector(const Data& bytes)
         : m_bytes(bytes), m_byteBitPosition(0)
     {
     }
@@ -72,14 +73,14 @@ public:
         return result;
     }
 
-    void ReadBytes(uint8_t* mem, size_t size, ByteBitPosition* byteBitPosition = nullptr)
+    void ReadBytes(uint8_t* mem, int size, ByteBitPosition* byteBitPosition = nullptr)
     {
         if (size == 0)
             return;
         const auto remainingByteSize = RemainingByteLength();
         assert(remainingByteSize >= size);
         auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
-        for (auto i = 0u; i < size; i++)
+        for (auto i = 0; i < size; i++)
             *(mem++) = ReadByte(byteBitPositionSelected);
     }
 
@@ -114,7 +115,7 @@ public:
         byteBitPositionSelected->PreAddBytes(1);
     }
 
-    void WriteBytes(const uint8_t* mem, size_t size, ByteBitPosition* byteBitPosition = nullptr)
+    void WriteBytes(const uint8_t* mem, int size, ByteBitPosition* byteBitPosition = nullptr)
     {
         if (size == 0)
             return;
@@ -123,16 +124,16 @@ public:
         if (remainingByteSize < size)
             m_bytes.resize(m_bytes.size() + size - remainingByteSize);
         const auto iSup = size;
-        for (auto i = 0u; i < iSup; i++)
+        for (auto i = 0; i < iSup; i++)
             WriteByte(*(mem++), byteBitPositionSelected);
     }
 
-    void WriteBytes(std::vector<uint8_t>bytes, ByteBitPosition* byteBitPosition = nullptr)
+    void WriteBytes(Data bytes, ByteBitPosition* byteBitPosition = nullptr)
     {
         WriteBytes(bytes.data(), bytes.size(), byteBitPosition);
     }
 
-    void CopyBytesFrom(BitPositionableByteVector& srcBytes, size_t byteLen, ByteBitPosition* srcByteBitPosition = nullptr, ByteBitPosition* dstByteBitPosition = nullptr)
+    void CopyBytesFrom(BitPositionableByteVector& srcBytes, int byteLen, ByteBitPosition* srcByteBitPosition = nullptr, ByteBitPosition* dstByteBitPosition = nullptr)
     {
         if (byteLen == 0)
             return;
@@ -143,11 +144,11 @@ public:
         const auto dstRemainingByteSize = RemainingByteLength();
         if (dstRemainingByteSize < byteLen)
             m_bytes.resize(m_bytes.size() + byteLen - dstRemainingByteSize);
-        for (auto i = 0u; i < byteLen; i++)
+        for (auto i = 0; i < byteLen; i++)
             WriteByte(ReadByte(srcByteBitPositionSelected), dstByteBitPositionSelected);
     }
 
-    uint8_t ReadBits(size_t bitsLen, ByteBitPosition* byteBitPosition = nullptr)
+    uint8_t ReadBits(int bitsLen, ByteBitPosition* byteBitPosition = nullptr)
     {
         if (bitsLen == 0)
             return 0;
@@ -165,7 +166,7 @@ public:
         return result;
     }
 
-    void WriteBits(uint8_t bits, size_t bitsLen, ByteBitPosition* byteBitPosition = nullptr)
+    void WriteBits(uint8_t bits, int bitsLen, ByteBitPosition* byteBitPosition = nullptr)
     {
         if (bitsLen == 0)
             return;
@@ -197,7 +198,7 @@ public:
         *byteBitPositionSelected += bitsLen;
     }
 
-    void CopyBitsFrom(BitPositionableByteVector& srcBits, size_t bitsLen, ByteBitPosition* srcByteBitPosition = nullptr, ByteBitPosition* dstByteBitPosition = nullptr)
+    void CopyBitsFrom(BitPositionableByteVector& srcBits, int bitsLen, ByteBitPosition* srcByteBitPosition = nullptr, ByteBitPosition* dstByteBitPosition = nullptr)
     {
         if (bitsLen == 0)
             return;
@@ -220,7 +221,7 @@ public:
         if (bitsLen >= UINT8_T_BIT_SIZE)
         {
             const auto byteLen = bitsLen / UINT8_T_BIT_SIZE;
-            for (auto i = 0u; i < byteLen; i++)
+            for (auto i = 0; i < byteLen; i++)
                 WriteByte(srcBits.ReadByte(srcByteBitPositionSelected), dstByteBitPositionSelected);
             bitsLen -= byteLen * UINT8_T_BIT_SIZE;
         }
@@ -233,7 +234,7 @@ public:
         }
     }
 
-    void CopyBitsDoubledFrom(BitPositionableByteVector& srcBits, size_t bitsLen, ByteBitPosition* srcByteBitPosition = nullptr, ByteBitPosition* dstByteBitPosition = nullptr)
+    void CopyBitsDoubledFrom(BitPositionableByteVector& srcBits, int bitsLen, ByteBitPosition* srcByteBitPosition = nullptr, ByteBitPosition* dstByteBitPosition = nullptr)
     {
         if (bitsLen == 0)
             return;
@@ -272,21 +273,21 @@ public:
         (*byteBitPositionSelected)++;
     }
 
-    constexpr void StepBytes(size_t bytes, ByteBitPosition* byteBitPosition = nullptr)
+    constexpr void StepBytes(int bytes, ByteBitPosition* byteBitPosition = nullptr)
     {
         auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
         (*byteBitPositionSelected).PreAddBytes(bytes);
     }
 
-    size_t RemainingByteLength(const ByteBitPosition* byteBitPosition = nullptr)
+    int RemainingByteLength(const ByteBitPosition* byteBitPosition = nullptr)
     {
         const auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
-        auto affectedBytePosition = byteBitPositionSelected->BytePosition() + (byteBitPositionSelected->BitPosition() > 0 ? 1u : 0u);
+        auto affectedBytePosition = byteBitPositionSelected->BytePosition() + (byteBitPositionSelected->BitPosition() > 0 ? 1 : 0);
         assert(BytesByteSize() >= affectedBytePosition);
         return BytesByteSize() - affectedBytePosition;
     }
 
-    size_t RemainingBitLength(const ByteBitPosition* byteBitPosition = nullptr)
+    int RemainingBitLength(const ByteBitPosition* byteBitPosition = nullptr)
     {
         const auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
         auto affectedBytePosition = byteBitPositionSelected->TotalBitPosition();
@@ -294,33 +295,33 @@ public:
         return BytesBitSize() - affectedBytePosition;
     }
 
-    inline size_t ByteSizeHavingBits(size_t bitSize)
+    inline int ByteSizeHavingBits(int bitSize)
     {
         return bitSize == 0 ? 0 : (bitSize - 1) / UINT8_T_BIT_SIZE + 1;
     }
 
-    std::vector<uint8_t>& Bytes()
+    Data& Bytes()
     {
         return m_bytes;
     }
 
-    const std::vector<uint8_t>& Bytes() const
+    const Data& Bytes() const
     {
         return m_bytes;
     }
 
-    inline size_t BytesByteSize() const
+    inline int BytesByteSize() const
     {
         return m_bytes.size();
     }
 
-    inline size_t BytesBitSize() const
+    inline int BytesBitSize() const
     {
         return BytesByteSize() * UINT8_T_BIT_SIZE;
     }
 
 private:
-    std::vector<uint8_t> m_bytes{};
+    Data m_bytes{};
     ByteBitPosition m_byteBitPosition{};
 };
 
