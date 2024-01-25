@@ -399,7 +399,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         // If the sector id occurs more than once on the track, synchronise to the correct one
         if (track.is_repeated(sector))
         {
-            auto offset{ (index + track.size() + firstSectorSeen) % track.size() };
+            auto offset = (index + firstSectorSeen) % track.size();
             m_fdrawcmd->FdSetSectorOffset(offset);
         }
 
