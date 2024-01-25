@@ -263,10 +263,10 @@ public:
             pb = nullptr;
             size = 0;
         }
+        size = uSize;
         if (uSize > 0)
         {
             pb = AllocMem(uSize);
-            size = uSize;
             // Invalidate the content so misbehaving FDCs can be identified.
             fill();
         }
