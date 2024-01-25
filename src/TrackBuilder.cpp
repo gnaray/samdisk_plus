@@ -331,8 +331,8 @@ std::vector<uint32_t> TrackBuilder::splitAmigaBits(const void* buf, int len, uin
 {
     auto dwords = len / static_cast<int>(sizeof(uint32_t));
     const uint32_t* pdw = reinterpret_cast<const uint32_t*>(buf);
-    std::vector<uint32_t> odddata;
-    odddata.reserve(lossless_static_cast<std::vector<uint32_t>::size_type>(dwords * 2));
+    VectorX<uint32_t> odddata;
+    odddata.reserve(dwords * 2);
 
     // Even then odd passes over the data
     for (auto i = 0; i < 2; ++i)
