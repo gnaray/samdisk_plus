@@ -88,16 +88,16 @@ public:
     EdskReadstatsElement() = default;
 
     uint16_t readAttempts = 0;
-    std::vector<uint16_t> dataReadCount{};
+    VectorX<uint16_t> dataReadCount{};
 
-    static int DataReadCountByteSize()
+    static size_t DataReadCountByteSize()
     {
-        return sizeof(std::vector<uint16_t>::value_type);
+        return sizeof(decltype(dataReadCount)::value_type);
     }
 
     int DataReadCountDataByteSize() const
     {
-        return EdskReadstatsElement::DataReadCountByteSize() * dataReadCount.size();
+        return static_cast<int>(EdskReadstatsElement::DataReadCountByteSize()) * dataReadCount.size();
     }
 
     void TransferFromFile(MemFile& file, const CylHead& cylhead, Sector& sector)
@@ -172,7 +172,7 @@ public:
         dataReadCount.reserve(numDatas);
         // Process each data instance.
         for (auto instance = 0; instance < numDatas; ++instance)
-            dataReadCount.push_back(util::htole(sector.data_copy_read_stats(instance).ReadCount()));
+            dataReadCount.push_back(lossless_static_cast<uint16_t>(util::htole(sector.data_copy_read_stats(instance).ReadCount())));
     }
 
     static EdskReadstatsElement CreateTransferFromSector(const CylHead& cylhead, const Sector& sector, int numCopies = -1)
@@ -215,7 +215,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
     // For RDSK (edsk version >= 2) the size of abHeader must have been increased in order
     // to have enough space for storing 4 byte long track sizes for MAX TRACKS (128) tracks.
     // Since abHeader has dynamic size, it is now vector instead of plain array.
-    std::vector<uint8_t> ab(edsk_version >= 2 ? 1024 : 256);
+    VectorX<uint8_t> ab(edsk_version >= 2 ? 1024 : 256);
 
     if (!file.rewind() || !file.read(ab.data(), ab.size()))
         return false;
@@ -615,11 +615,11 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
     // For RDSK (edsk version >= 2) the size of abHeader must have been increased in order
     // to have enough space for storing 4 byte long track sizes for MAX TRACKS (128) tracks.
     // Since abHeader has dynamic size, it is now vector instead of plain array.
-    std::vector<uint8_t> abHeader(edsk_version >= 2 ? 1024 : 256); // EDSK file header is fixed at 256 bytes - don't change!
+    VectorX<uint8_t> abHeader(edsk_version >= 2 ? 1024 : 256); // EDSK file header is fixed at 256 bytes - don't change!
     auto peh = reinterpret_cast<EDSK_HEADER*>(abHeader.data());
     auto pbIndex = reinterpret_cast<uint8_t*>(peh + 1);
     auto pbIndex32 = reinterpret_cast<uint32_t*>(pbIndex); // For RDSK.
-    auto max_cyls = (abHeader.size() - sizeof(EDSK_HEADER)) / MAX_SIDES;
+    auto max_cyls = (abHeader.size() - intsizeof(EDSK_HEADER)) / MAX_SIDES;
 
     memcpy(peh->szSignature, edsk_version >= 2 ? RDSK_SIGNATURE : EDSK_SIGNATURE, (edsk_version >= 2 ? sizeof(RDSK_SIGNATURE) : sizeof(EDSK_SIGNATURE)) - 1);
     strncpy(peh->szCreator, util::fmt("SAMdisk%02u%02u%02u", YEAR % 100, MONTH + 1, DAY).c_str(), sizeof(peh->szCreator));
@@ -633,14 +633,14 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
         throw util::exception("too many heads for EDSK");
 
     bool add_offsets_block = true;
-    std::vector<uint16_t> offsets;
+    VectorX<uint16_t> offsets;
     offsets.reserve((peh->bTracks + 1) * peh->bSides);
 
     // Saving readstats if requested and writing RDSK image file.
     bool opt_add_readstats_block = opt_readstats && edsk_version >= 2;
     bool opt_paranoia_local = opt_paranoia && opt_add_readstats_block;
     bool opt_legacy_local = opt_legacy != 0 && edsk_version < 2;
-    std::vector<EdskReadstatsElement> readstats_vector;
+    VectorX<EdskReadstatsElement> readstats_vector;
     readstats_vector.reserve((peh->bTracks + 1) * peh->bSides * disk->read_track(CylHead(0, 0)).size());
 
     fseek(f_, abHeader.size(), SEEK_SET);
@@ -905,7 +905,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
     }
 
     fseek(f_, 0, SEEK_SET);
-    if (fwrite(abHeader.data(), abHeader.size(), 1, f_) != 1)
+    if (fwrite(abHeader.data(), static_cast<size_t>(abHeader.size()), 1, f_) != 1)
         throw util::exception("write error");
     fseek(f_, 0, SEEK_END);
 
