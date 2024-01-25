@@ -2,25 +2,9 @@
 
 #include "TrackSectorIds.h"
 #include "Header.h"
-#include "Cpp_helpers.h"
 #include "IBMPCBase.h"
 #include "Interval.h"
-
-class Data : public std::vector<uint8_t>
-{
-public:
-    using std::vector<uint8_t>::vector;
-
-    int size() const
-    {
-        return lossless_static_cast<int>(std::vector<uint8_t>::size());
-    }
-};
-
-typedef Data::size_type DataST;
-
-using DataList = std::vector<Data>;
-typedef DataList::size_type DataListST;
+#include "VectorX.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -53,8 +37,7 @@ public:
 private:
     int m_read_count = 0; // Amount of reading (good or bad) data of the owner sector (provided only by not constant (real) disks).
 };
-typedef std::vector<DataReadStats> DataReadStatsList;
-typedef DataReadStatsList::size_type DataReadStatsListST;
+typedef VectorX<DataReadStats> DataReadStatsList;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -200,10 +183,10 @@ inline std::ostream& operator<<(std::ostream& os, const Sector& sector) { return
 
 //////////////////////////////////////////////////////////////////////////////
 
-class Sectors : public std::vector<Sector>
+class Sectors : public VectorX<Sector>
 {
 public:
-    using std::vector<Sector>::vector;
+    using VectorX<Sector>::vector;
 
     void push_more_back(const Sectors& sectors);
     bool HasIdSequence(const int first_id, const int length) const;
@@ -220,7 +203,5 @@ public:
         return ss.str();
     }
 };
-
-typedef Sectors::size_type SectorsST;
 
 inline std::ostream& operator<<(std::ostream& os, const Sectors& sectors) { return os << to_string(sectors); }

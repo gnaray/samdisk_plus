@@ -66,17 +66,15 @@ DataList& Sector::datas()
 const Data& Sector::data_copy(int copy/*=0*/) const
 {
     assert(m_data.size() != 0);
-    copy = std::max(std::min(copy, limited_static_cast<int>(m_data.size()) - 1), 0);
-    const auto u_copy = lossless_static_cast<DataListST>(copy);
-    return m_data[u_copy];
+    copy = std::max(std::min(copy, m_data.size() - 1), 0);
+    return m_data[copy];
 }
 
 Data& Sector::data_copy(int copy/*=0*/)
 {
     assert(m_data.size() != 0);
-    copy = std::max(std::min(copy, limited_static_cast<int>(m_data.size()) - 1), 0);
-    const auto u_copy = lossless_static_cast<DataListST>(copy);
-    return m_data[u_copy];
+    copy = std::max(std::min(copy, m_data.size() - 1), 0);
+    return m_data[copy];
 }
 
 const Data& Sector::data_best_copy() const
@@ -92,17 +90,15 @@ Data& Sector::data_best_copy()
 const DataReadStats& Sector::data_copy_read_stats(int instance/*=0*/) const
 {
     assert(m_data_read_stats.size() != 0);
-    instance = std::max(std::min(instance, limited_static_cast<int>(m_data_read_stats.size()) - 1), 0);
-    const auto u_instance = lossless_static_cast<DataListST>(instance);
-    return m_data_read_stats[u_instance];
+    instance = std::max(std::min(instance, m_data_read_stats.size() - 1), 0);
+    return m_data_read_stats[instance];
 }
 
 DataReadStats& Sector::data_copy_read_stats(int instance/*=0*/)
 {
     assert(m_data_read_stats.size() != 0);
-    instance = std::max(std::min(instance, limited_static_cast<int>(m_data_read_stats.size()) - 1), 0);
-    const auto u_instance = lossless_static_cast<DataListST>(instance);
-    return m_data_read_stats[u_instance];
+    instance = std::max(std::min(instance, m_data_read_stats.size() - 1), 0);
+    return m_data_read_stats[instance];
 }
 
 const DataReadStats& Sector::data_best_copy_read_stats() const
@@ -122,11 +118,11 @@ int Sector::get_data_best_copy_index() const
     if (!opt_readstats)
         return 0;
     int max_index = 0;
-    const auto i_sup = lossless_static_cast<int>(m_data.size());
+    const auto i_sup = m_data.size();
     for (auto i = max_index + 1; i < i_sup; i++)
     {
-        if (m_data_read_stats[lossless_static_cast<DataReadStatsListST>(i)].ReadCount()
-                > m_data_read_stats[lossless_static_cast<DataReadStatsListST>(max_index)].ReadCount())
+        if (m_data_read_stats[i].ReadCount()
+                > m_data_read_stats[max_index].ReadCount())
             max_index = i;
     }
     return max_index;
@@ -175,27 +171,24 @@ void Sector::fix_readstats()
     const auto data_copies = copies();
     if (opt_readstats && data_copies > 0 && m_data_read_stats.size() == 0)
     {
-        const auto u_data_copies = lossless_static_cast<DataListST>(data_copies);
-        m_data_read_stats.resize(u_data_copies, DataReadStats(1));
+        m_data_read_stats.resize(static_cast<size_t>(data_copies), DataReadStats(1));
         m_read_attempts = data_copies;
     }
 }
 
 int Sector::copies() const
 {
-    return lossless_static_cast<int>(m_data.size());
+    return m_data.size();
 }
 
 void Sector::add_read_stats(int instance, DataReadStats&& data_read_stats)
 {
-    const auto u_instance = lossless_static_cast<DataListST>(instance);
-    m_data_read_stats[u_instance] += std::move(data_read_stats);
+    m_data_read_stats[instance] += std::move(data_read_stats);
 }
 
 void Sector::set_read_stats(int instance, DataReadStats&& data_read_stats)
 {
-    const auto u_instance = lossless_static_cast<DataListST>(instance);
-    m_data_read_stats[u_instance] = std::move(data_read_stats);
+    m_data_read_stats[instance] = std::move(data_read_stats);
 }
 
 Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/, int* affected_data_index/*=nullptr*/,
@@ -264,11 +257,10 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
     // Compare existing data with the new data, to avoid storing redundant copies.
     // The goal is keeping only 1 optimal sized data amongst those having matching content.
     // Optimal sized: complete size else smallest above complete size else biggest below complete size.
-    const auto i_sup = lossless_static_cast<int>(m_data.size());
+    const auto i_sup = m_data.size();
     for (auto i = 0; i < i_sup; i++)
     {
-        const auto u_i = lossless_static_cast<DataListST>(i);
-        const auto& data = m_data[u_i];
+        const auto& data = m_data[i];
         const auto common_size = std::min({ data.size(), new_data.size(), complete_size });
         if (std::equal(data.begin(), data.begin() + common_size, new_data.begin()))
         {
@@ -283,7 +275,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
                     return Merge::Matched; // was Unchanged;
                 }
                 // The new shorter complete copy replaces the existing data.
-                *improved_data_read_stats = m_data_read_stats[u_i];
+                *improved_data_read_stats = m_data_read_stats[i];
                 erase_data(i--);
                 ret = Merge::Improved;
                 break; // Not continuing. See the goal above.
@@ -295,7 +287,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
                     return Merge::Matched; // was Unchanged;
                 }
                 // The new longer complete copy replaces the existing data.
-                *improved_data_read_stats = m_data_read_stats[u_i];
+                *improved_data_read_stats = m_data_read_stats[i];
                 erase_data(i--);
                 ret = Merge::Improved;
                 break; // Not continuing. See the goal above.
@@ -322,7 +314,7 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
             return Merge::Unchanged;
 
         // Keep multiple copies the same size, whichever is shortest
-        const auto new_size = lossless_static_cast<size_t>(std::min(new_data.size(), m_data[0].size()));
+        const auto new_size = std::min(new_data.size(), m_data[0].size());
         new_data.resize(new_size);
 
         // Resize any existing copies to match
@@ -380,24 +372,23 @@ void Sector::process_merge_result(const Merge& ret, int new_read_attempts, const
     }
     if (ret == Merge::Matched || ret == Merge::Improved)
     {
-        const auto u_affected_data_index = static_cast<decltype(m_data_read_stats)::size_type>(affected_data_index);
         if (readstats_counter_mode) // counter combination, i.e. summing readstats
         {
             if (ret == Merge::Matched)
-                m_data_read_stats[u_affected_data_index] += new_data_read_stats;
+                m_data_read_stats[affected_data_index] += new_data_read_stats;
             else // Improved
                 m_data_read_stats.emplace_back(new_data_read_stats + improved_data_read_stats);
         }
         else // % combination, to prefer higher read rate.
         {
-            auto data_read_stats = ret == Merge::Matched ? m_data_read_stats[u_affected_data_index] : improved_data_read_stats;
+            auto data_read_stats = ret == Merge::Matched ? m_data_read_stats[affected_data_index] : improved_data_read_stats;
             auto combined_read_attempts = read_attempts() + new_read_attempts;
             auto read_rate = lossless_static_cast<double>(data_read_stats.ReadCount()) / m_read_attempts;
             auto new_read_rate = lossless_static_cast<double>(new_data_read_stats.ReadCount()) / new_read_attempts;
             auto combined_read_rate = read_rate + new_read_rate - read_rate * new_read_rate;
             auto combined_read_count = round_AS<int>(combined_read_rate * combined_read_attempts);
             if (ret == Merge::Matched)
-                m_data_read_stats[u_affected_data_index] = DataReadStats(combined_read_count);
+                m_data_read_stats[affected_data_index] = DataReadStats(combined_read_count);
             else // Improved
                 m_data_read_stats.emplace_back(DataReadStats(combined_read_count));
         }
@@ -439,16 +430,15 @@ Sector::Merge Sector::merge(Sector&& sector)
     const auto i_sup = sector.copies();
     for (auto i = 0; i < i_sup; i++)
     {
-        const auto u_i = lossless_static_cast<DataListST>(i);
         Sector::Merge add_ret;
         // Move the data into place, passing on the existing data CRC status and DAM
         if (opt_readstats)
-            add_ret = add_with_readstats(std::move(sector.m_data[u_i]),
+            add_ret = add_with_readstats(std::move(sector.m_data[i]),
                     sector.has_baddatacrc(), sector.dam, sector.m_read_attempts,
-                    sector.m_data_read_stats[lossless_static_cast<DataReadStatsListST>(i)],
+                    sector.m_data_read_stats[i],
                     !sector.is_constant_disk(), false);
         else
-            add_ret = add(std::move(sector.m_data[u_i]), sector.has_baddatacrc(), sector.dam);
+            add_ret = add(std::move(sector.m_data[i]), sector.has_baddatacrc(), sector.dam);
         if (add_ret != Merge::Unchanged)
         {
             if (ret == Merge::Unchanged || ret == Merge::Matched || (ret == Merge::Improved && add_ret == Merge::NewData))
@@ -534,7 +524,7 @@ void Sector::set_baddatacrc(bool bad/* = true*/)
 
         if (!has_data())
         {
-            m_data.push_back(Data(lossless_static_cast<DataST>(size()), fill_byte));
+            m_data.push_back(Data(size(), fill_byte));
             m_data_read_stats.emplace_back(DataReadStats()); // This is a newly created (not read) data.
         }
         else if (copies() > 1)
@@ -544,7 +534,7 @@ void Sector::set_baddatacrc(bool bad/* = true*/)
 
             if (data_size() < size())
             {
-                auto pad{ Data(lossless_static_cast<DataST>(size() - data_size()), fill_byte) };
+                auto pad{ Data(size() - data_size(), fill_byte) };
                 m_data[0].insert(m_data[0].end(), pad.begin(), pad.end());
             }
         }
@@ -559,9 +549,8 @@ void Sector::erase_data(int instance)
 
 void Sector::resize_data(int count)
 {
-    auto u_count = lossless_static_cast<DataListST>(count);
-    m_data.resize(u_count);
-    m_data_read_stats.resize(u_count);
+    m_data.resize(count);
+    m_data_read_stats.resize(count);
 }
 
 void Sector::remove_data()
@@ -581,9 +570,8 @@ void Sector::limit_copies(int max_copies)
 {
     if (copies() > max_copies)
     {
-        const auto u_max_copies = lossless_static_cast<DataListST>(max_copies);
-        m_data.resize(u_max_copies);
-        m_data_read_stats.resize(u_max_copies);
+        m_data.resize(max_copies);
+        m_data_read_stats.resize(max_copies);
     }
 }
 
@@ -636,9 +624,9 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
     {
         // If requested, attempt to preserve CRC bytes on bad sectors.
         if (keep_crc && has_baddatacrc() && data.size() >= (size() + 2))
-            data.resize(lossless_static_cast<DataST>(size() + 2));
+            data.resize(size() + 2);
         else
-            data.resize(lossless_static_cast<DataST>(size()));
+            data.resize(size());
     }
 }
 

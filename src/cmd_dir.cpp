@@ -258,7 +258,7 @@ bool DirTrDos(Disk& disk)
 
                 if (offset < sectorE.size() - 1)
                 {
-                    auto line = (dataE[lossless_static_cast<DataST>(offset + 1)] << 8) | dataE[lossless_static_cast<DataST>(offset)];
+                    auto line = (dataE[offset + 1] << 8) | dataE[offset];
                     if (line)
                     {
                         if (hidden)
@@ -737,7 +737,7 @@ bool DirCpm(Disk& disk, const Sector& s)
             // Process the sector data, ignoring gap data.
             auto data = sector->data_copy();
             if (data.size() > sector->size())
-                data.resize(lossless_static_cast<DataST>(sector->size()));
+                data.resize(sector->size());
 
             for (auto j = 0; j < data.size() / lossless_static_cast<int>(sizeof(CPM_DIR)); ++j)
             {

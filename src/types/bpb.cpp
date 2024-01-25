@@ -23,7 +23,7 @@ bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
             || fat12FileSystem->format.disk_size() < file.size())
         return false;
 
-    Data bootSectorData(static_cast<DataST>(fat12FileSystem->format.sector_size()));
+    Data bootSectorData(fat12FileSystem->format.sector_size());
     if (!file.rewind() || !file.read(bootSectorData))
         return false;
 

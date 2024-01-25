@@ -109,7 +109,7 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
 
     Data track_data;
     std::vector<colour> colours;
-    track_data.reserve(static_cast<DataST>(max_size));
+    track_data.reserve(max_size);
     colours.reserve(static_cast<std::vector<colour>::size_type>(max_size));
 
     uint32_t dword = 0;

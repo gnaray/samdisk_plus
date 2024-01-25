@@ -250,7 +250,7 @@ void TrackBuilder::addSectorData(const Data& data, int size, uint8_t dam, bool c
     {
         // Short data padded to full size, and an appropriate CRC.
         addBlockUpdateCrc(data);
-        Data data_pad(lossless_static_cast<DataST>(len_bytes - data.size()), 0x00);
+        Data data_pad(len_bytes - data.size(), 0x00);
         addBlockUpdateCrc(data_pad);
         addCrcBytes(crc_error);
     }

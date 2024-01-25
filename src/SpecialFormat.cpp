@@ -104,7 +104,7 @@ TrackData GenerateKBI19Track(const CylHead& cylhead, const Track& track)
         {
             if (s.header.sector == 0)
             {
-                data.resize(lossless_static_cast<DataST>(s.size()));
+                data.resize(s.size());
                 bitbuf.addBlock(data);
                 bitbuf.addCrc(3 + 1 + 512);
             }

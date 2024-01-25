@@ -15,7 +15,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 Track::Track(int num_sectors/*=0*/)
 {
-    m_sectors.reserve(lossless_static_cast<SectorsST>(num_sectors));
+    m_sectors.reserve(num_sectors);
 }
 
 bool Track::empty() const
@@ -70,13 +70,13 @@ const Sectors& Track::sectors_view_ordered_by_id() const
 const Sector& Track::operator [] (int index) const
 {
     assert(index < static_cast<int>(m_sectors.size()));
-    return m_sectors[lossless_static_cast<Sectors::size_type>(index)];
+    return m_sectors[index];
 }
 
 Sector& Track::operator [] (int index)
 {
     assert(index < static_cast<int>(m_sectors.size()));
-    return m_sectors[lossless_static_cast<Sectors::size_type>(index)];
+    return m_sectors[index];
 }
 
 int Track::index_of(const Sector& sector) const
@@ -556,8 +556,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
         return sectorIdsAndOffsets;
     if (!opt_normal_disk) // There can be different sector sizes and can not tell if one big or more small sectors fill in a hole.
         util::cout << "DiscoverTrackSectorScheme is called but normal disk option is not set. This method supports normal disk so setting that option is recommended.\n";
-    typedef std::vector<int>::size_type SectorIdsST;
-    sectorIdsAndOffsets.reserve(static_cast<SectorIdsST>(size())); // Size will be more if holes are found at the track end.
+    sectorIdsAndOffsets.reserve(size()); // Size will be more if holes are found at the track end.
 
     const auto optByteToleranceBits = opt_byte_tolerance_of_time * 8 * 2;
     const auto sectorSize = m_sectors[0].size();
@@ -647,8 +646,8 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
             for (int i = 0; i < iSup; i++)
             {
                     util::cout << "DiscoverTrackSectorScheme: sectorIdsAndOffsets[" << i << "] has id=" <<
-                                  sectorIdsAndOffsets[static_cast<IdAndOffsetVectorST>(i)].id << ", offset=" <<
-                                  sectorIdsAndOffsets[static_cast<IdAndOffsetVectorST>(i)].offset << "\n";
+                                  sectorIdsAndOffsets[i].id << ", offset=" <<
+                                  sectorIdsAndOffsets[i].offset << "\n";
             }
         }
         return sectorIdsAndOffsets;
@@ -661,13 +660,13 @@ Track& Track::format(const CylHead& cylhead, const Format& fmt)
     assert(fmt.sectors != 0);
 
     m_sectors.clear();
-    m_sectors.reserve(lossless_static_cast<Sectors::size_type>(fmt.sectors));
+    m_sectors.reserve(fmt.sectors);
 
     for (auto id : fmt.get_ids(cylhead))
     {
         Header header(cylhead.cyl, cylhead.head ? fmt.head1 : fmt.head0, id, fmt.size);
         Sector sector(fmt.datarate, fmt.encoding, header, fmt.gap3);
-        Data data(lossless_static_cast<DataST>(fmt.sector_size()), fmt.fill);
+        Data data(fmt.sector_size(), fmt.fill);
 
         sector.add(std::move(data));
         add(std::move(sector));
@@ -681,7 +680,7 @@ Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterat
     assert(std::distance(it, itEnd) >= 0);
 
     // Populate in sector number order, which requires sorting the track
-    std::vector<Sector*> ptrs(m_sectors.size());
+    VectorX<Sector*> ptrs(m_sectors.size());
     std::transform(m_sectors.begin(), m_sectors.end(), ptrs.begin(), [](Sector& s) { return &s; });
     std::sort(ptrs.begin(), ptrs.end(), [](Sector* a, Sector* b) { return a->header.sector < b->header.sector; });
 

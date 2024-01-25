@@ -61,8 +61,8 @@ bool ReadMSA(MemFile& file, std::shared_ptr<Disk>& disk)
     fmt.Override();
 
     auto track_size = fmt.track_size();
-    Data mem(static_cast<DataST>(track_size));
-    Data mem2(static_cast<DataST>(track_size));
+    Data mem(track_size);
+    Data mem2(track_size);
 
     for (uint8_t cyl = bStartTrack; cyl <= bEndTrack; ++cyl)
     {

@@ -309,7 +309,7 @@ int Fat12FileSystem::AnalyseDirEntries()
             const auto dir_sector_data = dir_sector->data_best_copy();
             for (int i = 0; i < dir_sector_min_size; i += msdos_dir_entry_size)
             {
-                auto& dir_entry = *reinterpret_cast<const msdos_dir_entry*>(&dir_sector_data[lossless_static_cast<DataST>(i)]);
+                auto& dir_entry = *reinterpret_cast<const msdos_dir_entry*>(&dir_sector_data[i]);
                 if (looking_for_0)
                 {
                     if (dir_entry.name[0] == 0)
@@ -404,16 +404,16 @@ int Fat12FileSystem::AnalyseFatSectors()
                 auto fat1_data = fat1_sector->data_best_copy();
                 auto fat2_data = fat2_sector->data_best_copy();
                 for (int i = 0; i < common_size; ) {
-                    auto fat1_data_i = fat1_data[lossless_static_cast<DataST>(i)];
-                    if (fat1_data_i == fat2_data[lossless_static_cast<DataST>(i)])
+                    auto fat1_data_i = fat1_data[i];
+                    if (fat1_data_i == fat2_data[i])
                         equal++;
-                    sum += fat1_data[lossless_static_cast<DataST>(i++)];
+                    sum += fat1_data[i++];
                     difference += std::abs(fat1_data_i - static_cast<int>(std::round(sum / i)));
                 }
                 // equal / common_size is in [0,1], difference / common_size is in [0, 128)
-                fat_sector_match[lossless_static_cast<DataST>(fat_sector_dist)] += static_cast<double>(equal)
+                fat_sector_match[fat_sector_dist] += static_cast<double>(equal)
                     * difference / 128 / common_size / common_size;
-                fat_sector_participants[lossless_static_cast<DataST>(fat_sector_dist)]++;
+                fat_sector_participants[fat_sector_dist]++;
             }
         }
     }
@@ -437,8 +437,8 @@ int Fat12FileSystem::AnalyseFatSectors()
 
     const auto fat_byte_length = best_fat_sector_dist * format.sector_size();
     // Store the FAT sectors continuously in fat1, fat2 so those can be processed by FAT12 3 bytes.
-    fat1.resize(lossless_static_cast<DataST>(fat_byte_length));
-    fat2.resize(lossless_static_cast<DataST>(fat_byte_length));
+    fat1.resize(fat_byte_length);
+    fat2.resize(fat_byte_length);
     for (int fat_sector_i = fat1_sector_0_index; fat_sector_i < fat1_sector_0_index + best_fat_sector_dist; fat_sector_i++)
     {
         auto fat1_sector = logical_sectors[lossless_static_cast<size_t>(fat_sector_i)];
@@ -512,7 +512,7 @@ bool Fat12FileSystem::EnsureBootSector()
     auto& bootSectorNew = *track00.findIgnoringSize(bootSectorHeader); // Iterator should not fail.
     if (!bootSectorNew.has_data())
     {
-        Data new_boot_sector_data(lossless_static_cast<DataST>(format.sector_size()), format.fill);
+        Data new_boot_sector_data(format.sector_size(), format.fill);
         std::copy(MISSING_SECTOR_SIGN.begin(), MISSING_SECTOR_SIGN.end(), new_boot_sector_data.begin()); // Signing sector with MISS.
         bootSectorNew.add_with_readstats(std::move(new_boot_sector_data), true); // Flagging sector as bad so it can be repaired in the future.
     }
@@ -601,7 +601,7 @@ bool Fat12FileSystem::Dir() /*override*/
             const auto dir_sector_data = dir_sector->data_best_copy();
             for (int i = 0; i < dir_sector_min_size; i += msdos_dir_entry_size)
             {
-                auto& dir_entry = *reinterpret_cast<const msdos_dir_entry*>(&dir_sector_data[lossless_static_cast<DataST>(i)]);
+                auto& dir_entry = *reinterpret_cast<const msdos_dir_entry*>(&dir_sector_data[i]);
                 if (dir_entry.name[0] == 0)
                     goto noMoreDirEntries;
                 if (dir_entry.attr == DIR_ENTRY_ATTR_LONG_NAME || dir_entry.name[0] < 33)
@@ -718,7 +718,7 @@ noMoreDirEntries:
 
                 if (offset < sectorE.size() - 1)
                 {
-                    auto line = (dataE[lossless_static_cast<DataST>(offset + 1)] << 8) | dataE[lossless_static_cast<DataST>(offset)];
+                    auto line = (dataE[offset + 1] << 8) | dataE[offset];
                     if (line)
                     {
                         if (hidden)

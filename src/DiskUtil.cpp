@@ -207,7 +207,7 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
             }
 
             // Show the gap until end of track
-            auto last_offset = track.sectors()[lossless_static_cast<DataST>(track.size() - 1)].offset;
+            auto last_offset = track.sectors()[track.size() - 1].offset;
             if (track.tracklen > last_offset)
                 util::cout << util::fmt("[%s]", WordStr((track.tracklen - last_offset) >> shift));
             else
@@ -408,7 +408,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
                 // Add a copy with differences matching the typical weak sector
                 auto data = sector1.data_copy();
                 for (i = weak_offset; i < data.size(); ++i)
-                    data[lossless_static_cast<DataST>(i)] = ~data[lossless_static_cast<DataST>(i)];
+                    data[i] = ~data[i];
                 sector1.add(std::move(data), true);
 
                 Message(msgFix, "added suitable second copy of +3 Speedlock weak sector");
@@ -427,7 +427,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
                 // Add a second data copy with differences matching the typical weak sector
                 auto data = sector7.data_copy();
                 for (i = weak_offset; i < data.size(); ++i)
-                    data[lossless_static_cast<DataST>(i)] = ~data[lossless_static_cast<DataST>(i)];
+                    data[i] = ~data[i];
                 sector7.add(std::move(data), true);
 
                 Message(msgFix, "added suitable second copy of CPC Speedlock weak sector");
@@ -459,7 +459,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
                 // Add a second data copy with differences matching the typical weak sector
                 auto data = sector1.data_copy();
                 for (i = weak_offset; i < data.size(); ++i)
-                    data[lossless_static_cast<DataST>(i)] = ~data[lossless_static_cast<DataST>(i)];
+                    data[i] = ~data[i];
                 sector1.add(std::move(data), true);
 
                 Message(msgFix, "added suitable second copy of Rainbow Arts weak sector");
@@ -487,7 +487,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
                 data8.push_back(0x9f);
 
                 // Fill up to the protection check with gap filler
-                auto fill8{ Data(lossless_static_cast<DataST>(0x512 - data8.size()), 0x4e) };
+                auto fill8{ Data(0x512 - data8.size(), 0x4e) };
                 data8.insert(data8.end(), fill8.begin(), fill8.end());
 
                 // Append sector 7 data to offset 0x512 to pass the protection check.
@@ -544,12 +544,12 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
 
             for (i = 0; i < data.size() - static_cast<int>(sizeof(prot_check)); ++i)
             {
-                if (data[lossless_static_cast<DataST>(i)] == 0xdd && !memcmp(data.data() + i, prot_check, sizeof(prot_check)))
+                if (data[i] == 0xdd && !memcmp(data.data() + i, prot_check, sizeof(prot_check)))
                 {
                     // Are we to fix (disable) the protection?
                     if (opt_fix == 1)
                     {
-                        data[lossless_static_cast<DataST>(i + 3)] = 0xaf; // XOR A
+                        data[i + 3] = 0xaf; // XOR A
                         Message(msgFix, "disabled problematic Reussir protection");
                     }
                     else
@@ -938,7 +938,7 @@ bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
 
         for (header.sector = fmt.base; header.sector < fmt.base + fmt.sectors; ++header.sector)
         {
-            Data buf(lossless_static_cast<DataST>(fmt.sector_size()), fmt.fill);
+            Data buf(fmt.sector_size(), fmt.fill);
 
             auto it = track.find(header);
             if (it != track.end() && (*it).has_data())
@@ -979,7 +979,7 @@ bool WriteAppleDODisk(FILE* f_, Disk& disk, const Format& fmt)
 
         for (int sector = fmt.base; sector < fmt.base + fmt.sectors; ++sector)
         {
-            Data buf(lossless_static_cast<DataST>(fmt.sector_size()), fmt.fill);
+            Data buf(fmt.sector_size(), fmt.fill);
             header.sector = map[sector];
 
             auto it = track.find(header);
