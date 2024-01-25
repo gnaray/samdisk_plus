@@ -2,6 +2,7 @@
 
 #include "Interval.h"
 #include "DiskConstants.h"
+#include "VectorX.h"
 #include "utils.h"
 
 #include <algorithm>
@@ -170,7 +171,7 @@ constexpr bool operator <=(const Header& lhs, const Header& rhs)
 
 //////////////////////////////////////////////////////////////////////////////
 
-class Headers : public std::vector<Header>
+class Headers : public VectorX<Header>
 {
 public:
     Headers() = default;

@@ -200,19 +200,16 @@ bool Headers::HasIdSequence(const int first_id, const int length) const
     assert(length >= 0);
     if (length == 0)
         return false; // Better than throwing exception. It means that empty sequence is not contained.
-    typedef std::vector<bool> BoolVector;
-    typedef BoolVector::size_type BoolVectorST;
-    const auto u_length = lossless_static_cast<BoolVectorST>(length);
-    if (size() < u_length) // No chance for long enough sequence.
+    if (size() < length) // No chance for long enough sequence.
         return false;
-    BoolVector sequenceFlags(u_length);
+    VectorX<bool> sequenceFlags(length);
     // Check the sequence of first_id, first_id+1, ..., first_id + length - 1
     std::for_each(begin(), end(), [&](const Header& header)
     {
         const auto headerSector = header.sector;
         if (headerSector < first_id || headerSector >= first_id + length)
             return;
-        sequenceFlags[lossless_static_cast<BoolVectorST>(headerSector - first_id)] = true; // Multiple ids are OK, the id is still found.
+        sequenceFlags[headerSector - first_id] = true; // Multiple ids are OK, the id is still found.
     });
     return std::all_of(sequenceFlags.cbegin(), sequenceFlags.cend(), [](bool marked) {return marked;});
 }
