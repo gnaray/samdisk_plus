@@ -63,7 +63,7 @@ TrackData VfdRawTrackDevDisk::LoadRawTrack(const CylHead& cylhead)
         {
             break;
         }
-        std::vector<uint8_t> rawTrackContent(lossless_static_cast<std::vector<uint8_t>::size_type>(file.size()));
+        VectorX<uint8_t> rawTrackContent(file.size());
         if (file.rewind() && file.read(rawTrackContent))
             rawTrackMFM = RawTrackMFM(file.data(), DataRate::_250K);
     } while (false);
