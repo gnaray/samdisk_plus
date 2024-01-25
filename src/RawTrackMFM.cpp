@@ -43,7 +43,7 @@ void TrackIndexFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapab
     }
     else
     {
-        orphanDataCapableTrack.trackIndexOffset = lossless_static_cast<int>(m_foundByteBitPosition.TotalBitPosition() * 2); // Counted in mfmbits.
+        orphanDataCapableTrack.trackIndexOffset = m_foundByteBitPosition.TotalBitPosition() * 2; // Counted in mfmbits.
         if (opt_debug)
             util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " IAM at offset " << orphanDataCapableTrack.trackIndexOffset << "\n";
     }
@@ -64,7 +64,7 @@ void SectorIdFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapable
         const Header header(cyl, head, sector, sizeId);
         Sector sector(rawTrackContext.dataRate, rawTrackContext.encoding, header);
 
-        sector.offset = lossless_static_cast<int>(m_foundByteBitPosition.TotalBitPosition() * 2); // Counted in mfmbits.
+        sector.offset = m_foundByteBitPosition.TotalBitPosition() * 2; // Counted in mfmbits.
         sector.set_badidcrc(CrcsDiffer());
         sector.set_constant_disk(false);
         orphanDataCapableTrack.track.add(std::move(sector));
@@ -110,7 +110,7 @@ void SectorDataFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapab
     else // Data without id. It is stored in track of orphan sectors with orphan sector id.
     {    // However if cylhead differs at least once during decoding then this kind of orphan data is very unsafe!
         const uint8_t dam = m_addressMark;
-        const auto am_offset = lossless_static_cast<int>(m_foundByteBitPosition.TotalBitPosition() * 2); // Counted in mfmbits.
+        const auto am_offset = m_foundByteBitPosition.TotalBitPosition() * 2; // Counted in mfmbits.
         const Header header(rawTrackContext.cylHead.cyl, rawTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, SizeToCode(data.size()));
         Sector sector(rawTrackContext.dataRate, rawTrackContext.encoding, header);
 
@@ -173,7 +173,7 @@ BitBuffer RawTrackMFM::AsBitstream()
     util::bit_reverse(rawTrackContentForBitBuffer.Bytes().data(), rawTrackContentForBitBuffer.BytesByteSize());
 
     // Luckily BitBuffer's default encoding is MFM so no need to set it.
-    return BitBuffer(dataRate, rawTrackContentForBitBuffer.Bytes().data(), lossless_static_cast<int>(rawTrackContentForBitBuffer.BytesBitSize()));
+    return BitBuffer(dataRate, rawTrackContentForBitBuffer.Bytes().data(), rawTrackContentForBitBuffer.BytesBitSize());
 }
 
 // ====================================
@@ -315,7 +315,7 @@ OrphanDataCapableTrack RawTrackMFM::DecodeTrack(const CylHead& cylHead)
     } while (true);
 
     if (!orphanDataCapableTrack.empty())
-        orphanDataCapableTrack.setTrackLen(lossless_static_cast<int>(m_rawTrackContent.BytesBitSize() * 2)); // Counted in mfmbits.
+        orphanDataCapableTrack.setTrackLen(m_rawTrackContent.BytesBitSize() * 2); // Counted in mfmbits.
     return orphanDataCapableTrack;
 }
 // ====================================

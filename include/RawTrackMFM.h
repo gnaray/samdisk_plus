@@ -414,7 +414,7 @@ public:
     }
 
     RawTrackMFM(const MEMORY& rawTrackContent, const DataRate& dataRate)
-        : m_rawTrackContent(rawTrackContent.pb, lossless_static_cast<size_t>(rawTrackContent.size)), dataRate(dataRate)
+        : m_rawTrackContent(rawTrackContent.pb, rawTrackContent.size), dataRate(dataRate)
     {
     }
 
