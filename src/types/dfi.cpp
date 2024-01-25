@@ -127,7 +127,7 @@ bool ReadDFI(MemFile& file, std::shared_ptr<Disk>& disk)
             throw util::exception("hard-sectored images are not supported");
 
         CylHead cylhead(util::betoh(th.cyl), util::betoh(th.head));
-        auto data_length = (static_cast<uint32_t>(th.datalen[0]) << 24) | (th.datalen[1] << 16) | (th.datalen[2] << 8) | th.datalen[3];
+        auto data_length = static_cast<uint32_t>((th.datalen[0] << 24) | (th.datalen[1] << 16) | (th.datalen[2] << 8) | th.datalen[3]);
 
         Data track_data(data_length);
         if (!file.read(track_data))
