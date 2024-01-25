@@ -127,7 +127,7 @@ bool DirMgtEntry(int n_, const MGT_DIR* p_, bool fHidden_)
             "EDOS NOMEN", "EDOS SYSTEM", "EDOS OVERLAY", nullptr, "HDOS DOS", "HDOS DIR", "HDOS DISK", "HDOS TEMP"
         };
 
-        if (file_type < lossless_static_cast<int>(arraysize(szTypes)) && szTypes[file_type])
+        if (file_type < arrayintsizeof(szTypes) && szTypes[file_type])
             ss << szTypes[file_type];
         else
             ss << "WHAT?";
