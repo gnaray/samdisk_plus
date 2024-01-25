@@ -408,7 +408,7 @@ class RawTrackMFM
 public:
     RawTrackMFM() = default;
 
-    RawTrackMFM(const std::vector<uint8_t>& rawTrackContent, const DataRate& dataRate)
+    RawTrackMFM(const Data& rawTrackContent, const DataRate& dataRate)
         : m_rawTrackContent(rawTrackContent), dataRate(dataRate)
     {
     }
