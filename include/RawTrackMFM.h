@@ -105,6 +105,27 @@ public:
 
 typedef uint16_t crc_t;
 
+class TrackIndexInRawTrack : public AddressMarkInTrack
+{
+public:
+    constexpr TrackIndexInRawTrack(const AddressMarkInTrack& addressMarkInTrack)
+        : AddressMarkInTrack(addressMarkInTrack)
+    {
+    }
+
+    static constexpr bool IsSuitable(uint8_t addressMarkValue)
+    {
+        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue));
+    }
+
+    static constexpr bool IsSuitable(const AddressMark& addressMark)
+    {
+        return addressMark == AddressMark::INDEX;
+    }
+
+private:
+};
+
 class SectorIdInRawTrack : public AddressMarkInTrack, public SectorIdInTrack, public CrcInTrack
 {
 public:
@@ -141,27 +162,6 @@ public:
 	{
         return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
 	}
-
-private:
-};
-
-class TrackIndexInRawTrack : public AddressMarkInTrack
-{
-public:
-    constexpr TrackIndexInRawTrack(const AddressMarkInTrack& addressMarkInTrack)
-        : AddressMarkInTrack(addressMarkInTrack)
-    {
-    }
-
-    static constexpr bool IsSuitable(uint8_t addressMarkValue)
-    {
-        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue));
-    }
-
-    static constexpr bool IsSuitable(const AddressMark& addressMark)
-    {
-        return addressMark == AddressMark::INDEX;
-    }
 
 private:
 };
