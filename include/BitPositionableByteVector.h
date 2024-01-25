@@ -30,7 +30,7 @@ public:
     {
     }
 
-    BitPositionableByteVector(uint8_t* pb, size_t len)
+    BitPositionableByteVector(const uint8_t* pb, int len)
         : m_bytes(pb, pb + len), m_byteBitPosition(0)
     {
     }
