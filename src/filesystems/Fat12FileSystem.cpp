@@ -380,21 +380,21 @@ int Fat12FileSystem::AnalyseFatSectors()
         throw util::exception("amount of fat not being 2 is unsuitable for ST output");
     const auto fat1_sector_0_index = util::le_value(bpb.abResSectors);
     const auto max_fat_sectors = MaxFatSectorsBeforeAnalysingFat();
-    std::vector<double> fat_sector_match(lossless_static_cast<size_t>(max_fat_sectors + 1));
-    std::vector<int> fat_sector_participants(lossless_static_cast<size_t>(max_fat_sectors + 1));
-    std::vector<const Sector*> logical_sectors(lossless_static_cast<size_t>(fat1_sector_0_index + max_fat_sectors * 2));
+    VectorX<double> fat_sector_match(max_fat_sectors + 1);
+    VectorX<int> fat_sector_participants(max_fat_sectors + 1);
+    VectorX<const Sector*> logical_sectors(fat1_sector_0_index + max_fat_sectors * 2);
 
     // Cache the sectors so algorithm is bit faster.
     for (int fat_sector_i = fat1_sector_0_index; fat_sector_i < fat1_sector_0_index + max_fat_sectors * 2; fat_sector_i++)
-        logical_sectors[lossless_static_cast<size_t>(fat_sector_i)] = GetLogicalSector(fat_sector_i);
+        logical_sectors[fat_sector_i] = GetLogicalSector(fat_sector_i);
 
     // Collect distance matches.
     for (int fat_sector_dist = 1; fat_sector_dist <= max_fat_sectors; fat_sector_dist++)
     {
         for (int fat_sector_i = fat1_sector_0_index; fat_sector_i < fat1_sector_0_index + fat_sector_dist; fat_sector_i++)
         {
-            auto fat1_sector = logical_sectors[lossless_static_cast<size_t>(fat_sector_i)];
-            auto fat2_sector = logical_sectors[lossless_static_cast<size_t>(fat_sector_i + fat_sector_dist)];
+            auto fat1_sector = logical_sectors[fat_sector_i];
+            auto fat2_sector = logical_sectors[fat_sector_i + fat_sector_dist];
             if (fat1_sector && fat2_sector && fat1_sector->has_normaldata() && fat2_sector->has_normaldata())
             {
                 auto common_size = std::min({ fat1_sector->data_size(), fat2_sector->data_size(), format.sector_size() });
@@ -422,9 +422,9 @@ int Fat12FileSystem::AnalyseFatSectors()
     double best_match_percent = 0;
     for (int fat_sector_dist = 1; fat_sector_dist <= max_fat_sectors; fat_sector_dist++)
     {
-        if (fat_sector_participants[lossless_static_cast<size_t>(fat_sector_dist)] == 0)
+        if (fat_sector_participants[fat_sector_dist] == 0)
             continue;
-        auto match_percent = 100 * fat_sector_match[lossless_static_cast<size_t>(fat_sector_dist)] / fat_sector_participants[lossless_static_cast<size_t>(fat_sector_dist)]
+        auto match_percent = 100 * fat_sector_match[fat_sector_dist] / fat_sector_participants[fat_sector_dist]
             * std::sqrt(fat_sector_dist); // Weighting with sqrt(dist) preferring match of more sectors (so max percent is above 100).
         if (match_percent > best_match_percent)
         {
@@ -441,14 +441,14 @@ int Fat12FileSystem::AnalyseFatSectors()
     fat2.resize(fat_byte_length);
     for (int fat_sector_i = fat1_sector_0_index; fat_sector_i < fat1_sector_0_index + best_fat_sector_dist; fat_sector_i++)
     {
-        auto fat1_sector = logical_sectors[lossless_static_cast<size_t>(fat_sector_i)];
+        auto fat1_sector = logical_sectors[fat_sector_i];
         if (fat1_sector && fat1_sector->has_normaldata())
         {
             const auto common_size = std::min(fat1_sector->data_size(), format.sector_size());
             auto d_first = fat1.begin() + (fat_sector_i - fat1_sector_0_index) * format.sector_size();
             std::copy_n(fat1_sector->data_best_copy().begin(), common_size, d_first);
         }
-        auto fat2_sector = logical_sectors[lossless_static_cast<size_t>(fat_sector_i + best_fat_sector_dist)];
+        auto fat2_sector = logical_sectors[fat_sector_i + best_fat_sector_dist];
         if (fat2_sector && fat2_sector->has_normaldata())
         {
             const auto common_size = std::min(fat2_sector->data_size(), format.sector_size());
