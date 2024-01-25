@@ -308,8 +308,8 @@ class TrackIndexFromRawTrack : public SomethingFromRawTrack
 public:
     TrackIndexFromRawTrack(
         const ByteBitPosition& foundByteBitPosition,
-        const TrackIndexInRawTrack& sectorIdInRawTrack)
-        : SomethingFromRawTrack(foundByteBitPosition, sectorIdInRawTrack.m_addressMark)
+        const TrackIndexInRawTrack& trackIndexInRawTrack)
+        : SomethingFromRawTrack(foundByteBitPosition, trackIndexInRawTrack.m_addressMark)
     {
     }
 
