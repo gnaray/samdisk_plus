@@ -464,12 +464,11 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
     trackTempSingle.tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / tracklen);
     if (!empty())
     {
-        const auto tracklenCeilToMultiSingle = trackLenSingle * ceil_AS<int>(static_cast<double>(tracklen) / trackLenSingle);
         auto it = begin();
         while (it < end())
         {
             Sector sector(*it);
-            sector.offset = (sector.offset - syncOffset + tracklenCeilToMultiSingle) % trackLenSingle; // Synced and demultid offset.
+            sector.offset = modulo(sector.offset - syncOffset, static_cast<unsigned>(trackLenSingle));
             const auto addResult = trackTempSingle.add(std::move(sector));
             if (addResult == Track::AddResult::Append || addResult == Track::AddResult::Insert)
             {
@@ -545,7 +544,7 @@ int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 {
     const auto offsetDiff = GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) * 8 * 2;
     // We could check if the sector overlaps something existing but unimportant now.
-    return (dataOffset - offsetDiff + tracklen) % tracklen;
+    return modulo(dataOffset - offsetDiff, static_cast<unsigned>(tracklen));
 }
 
 // Guess sector ids based on discovered gap3s and format scheme recognition.
@@ -747,7 +746,7 @@ Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const in
     const auto offsetDiffMaxTolerated = (GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time) * 16;
     // Find a sector close enough to the data offset to be the same one.
     auto it = std::find_if(begin(), end(), [&](const Sector& s) {
-        return (dataOffset - s.offset + tracklen) % tracklen <= offsetDiffMaxTolerated && s.size() == dataSize;
+        return modulo(dataOffset - s.offset, static_cast<unsigned>(tracklen)) <= offsetDiffMaxTolerated && s.size() == dataSize;
         });
     return it;
 }
@@ -761,7 +760,7 @@ Sectors::const_iterator Track::findDataForSectorIdFmOrMfm(const int sectorIdOffs
     const auto offsetDiffMaxTolerated = (GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time) * 16;
     // Find data close enough to the sector id offset to be the same one.
     auto it = std::find_if(begin(), end(), [&](const Sector& s) {
-        return (s.offset - sectorIdOffset + tracklen) % tracklen <= offsetDiffMaxTolerated && s.data_size() == dataSize;
+        return modulo(s.offset - sectorIdOffset, static_cast<unsigned>(tracklen)) <= offsetDiffMaxTolerated && s.data_size() == dataSize;
         });
     return it;
 }

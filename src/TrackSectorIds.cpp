@@ -14,7 +14,7 @@
     for (auto s = 0; s < sectors; ++s)
     {
         // Calculate the expected sector index using the interleave and skew
-        auto index = static_cast<size_t>((offset + s * interleave + skew * (cylhead.cyl)) % sectors);
+        auto index = modulo(offset + s * interleave + skew * (cylhead.cyl), static_cast<unsigned>(sectors));
 
         // Find a free slot starting from the expected position
         for (; used[index]; index = (index + 1) % sectors) ;
@@ -88,11 +88,11 @@ int TrackSectorIds::MatchSectorIds(const TrackSectorIds& incompleteSectorIds) co
                 if (operator[](thisIdIndex) == id)
                 {
                     // Now sector ID is found in track sector ids, determine the offset and compare the rest.
-                    const auto offset = (idIndex - thisIdIndex + thisIdIndexSup) % thisIdIndexSup;
+                    const auto offset = modulo(idIndex - thisIdIndex, static_cast<unsigned>(thisIdIndexSup));
                     for (++idIndex; idIndex < idIndexSup; idIndex++)
                     {
                         if (incompleteSectorIds[idIndex] >= 0 && incompleteSectorIds[idIndex] !=
-                                data()[static_cast<SectorIdsST>((idIndex - offset + thisIdIndexSup) % thisIdIndexSup)])
+                                operator[](modulo(idIndex - offset, static_cast<unsigned>(thisIdIndexSup))))
                             return resultNoOffset;
                     }
                     return offset; // Match!
