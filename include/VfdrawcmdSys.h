@@ -35,7 +35,7 @@ protected:
     bool SetPerpendicularMode(int ow_ds_gap_wgate) override;
     void LimitCyl();
     const RawTrackMFM& ReadRawTrack(const CylHead& cylhead);
-    OrphanDataCapableTrack ReadTrackFromRowTrack(const CylHead& cylhead);
+    OrphanDataCapableTrack& ReadTrackFromRowTrack(const CylHead& cylhead);
 public:
     bool SetEncRate(Encoding encoding, DataRate datarate) override;
     bool SetHeadSettleTime(int ms) override;

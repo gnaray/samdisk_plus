@@ -181,7 +181,7 @@ const RawTrackMFM& VfdrawcmdSys::ReadRawTrack(const CylHead& cylhead)
     return m_rawTracks[cylhead];
 }
 
-OrphanDataCapableTrack VfdrawcmdSys::ReadTrackFromRowTrack(const CylHead& cylhead)
+OrphanDataCapableTrack& VfdrawcmdSys::ReadTrackFromRowTrack(const CylHead& cylhead)
 {
     if (!m_odcTrackDecoded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
