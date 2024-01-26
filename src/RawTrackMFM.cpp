@@ -67,10 +67,10 @@ void SectorIdFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapable
         sector.offset = m_foundByteBitPosition.TotalBitPosition() * 2; // Counted in mfmbits.
         sector.set_badidcrc(CrcsDiffer());
         sector.set_constant_disk(false);
-        orphanDataCapableTrack.track.add(std::move(sector));
-        rawTrackContext.sectorIdFromRawTrackLastFound = *this;
         if (opt_debug)
             util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " IDAM (id=" << header.sector << ") at offset " << sector.offset << "\n";
+        orphanDataCapableTrack.track.add(std::move(sector));
+        rawTrackContext.sectorIdFromRawTrackLastFound = *this;
     }
 }
 // ====================================
@@ -118,9 +118,9 @@ void SectorDataFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapab
         sector.set_constant_disk(false);
         const bool data_crc_error = CrcsDiffer();
         sector.add_with_readstats(Data(data), data_crc_error, dam);
-        orphanDataCapableTrack.orphanDataTrack.add(std::move(sector));
         if (opt_debug)
             util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " DAM (am=" << dam << ") at offset " << sector.offset << " without IDAM\n";
+        orphanDataCapableTrack.orphanDataTrack.add(std::move(sector));
     }
 }
 // ====================================
