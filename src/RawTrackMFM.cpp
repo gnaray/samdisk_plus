@@ -144,11 +144,11 @@ void RawTrackMFM::Rewind()
  */
 BitBuffer RawTrackMFM::AsBitstream()
 {
-    const std::vector<uint8_t> addressMarkBytes{0x44, 0x89, 0x44, 0x89, 0x44, 0x89}; // 0x4489 3 times in reverse bit order.
-    const auto readLengthMin = sizeof(AddressMarkSyncInTrack); // Looking for address mark sync only.
+    const Data addressMarkBytes{0x44, 0x89, 0x44, 0x89, 0x44, 0x89}; // 0x4489 3 times in reverse bit order.
+    const auto readLengthMin = intsizeof(AddressMarkSyncInTrack); // Looking for address mark sync only.
     BitPositionableByteVector rawTrackContentForBitBuffer;
     ByteBitPosition lastAddressMarkPosition{0};
-    std::vector<uint8_t> somethingInTrackBytes(sizeof(AddressMarkSyncInTrack));
+    Data somethingInTrackBytes(readLengthMin);
     const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(somethingInTrackBytes.data());
     for ( ; m_rawTrackContent.RemainingByteLength() >= readLengthMin; m_rawTrackContent.StepBit())
     {
