@@ -465,15 +465,13 @@ bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffse
     return true;
 }
 
-void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
+void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool ignoreEndingDataCopy/* = false*/)
 {
-    assert(trackLenSingle > 0);
-    assert(tracklen > 0);
-    assert(syncOffset < tracklen);
+    assert(trackLenSingle > 0 && tracklen > 0 && syncOffset < tracklen);
 
-    Track trackTempSingle;
-    trackTempSingle.tracklen = trackLenSingle;
-    trackTempSingle.tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / tracklen);
+    Track trackAuxiliarySingle;
+    trackAuxiliarySingle.tracklen = trackLenSingle;
+    trackAuxiliarySingle.tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / tracklen);
     if (!empty())
     {
         auto it = begin();
@@ -481,10 +479,22 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
         {
             Sector sector(*it);
             sector.offset = modulo(sector.offset - syncOffset, static_cast<unsigned>(trackLenSingle));
-            const auto addResult = trackTempSingle.add(std::move(sector));
+            // If ignore ending data copy and the actual sector ends at track end ...
+            if (ignoreEndingDataCopy && (tracklen - it->offset) / 8 / 2 == it->data_size())
+            {
+                int mergedSectorIndexDryrun;
+                const auto addResultDryrun = trackAuxiliarySingle.add(std::move(sector), &mergedSectorIndexDryrun, true);
+                // ... and another copy exists and it is not shorter then the actual sector is a broken one, ignore (discard) it.
+                if (addResultDryrun == Track::AddResult::Merge && sector.data_size() <= operator[](mergedSectorIndexDryrun).data_size())
+                {
+                    it = sectors().erase(it);
+                    continue;
+                }
+            }
+            const auto addResult = trackAuxiliarySingle.add(std::move(sector));
             if (addResult == Track::AddResult::Append || addResult == Track::AddResult::Insert)
             {
-                it->revolution = it->offset / trackTempSingle.tracklen;
+                it->revolution = it->offset / trackAuxiliarySingle.tracklen;
                 it->offset = sector.offset;
                 it++;
             }
@@ -494,8 +504,8 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
         std::sort(begin(), end(),
                   [](const Sector& s1, const Sector& s2) { return s1.offset < s2.offset; });
     }
-    tracklen = trackTempSingle.tracklen;
-    tracktime = trackTempSingle.tracktime;
+    tracklen = trackAuxiliarySingle.tracklen;
+    tracktime = trackAuxiliarySingle.tracktime;
 }
 
 int Track::determineBestTrackLen(const int timedTrackLen) const

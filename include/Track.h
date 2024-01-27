@@ -51,7 +51,7 @@ public:
     static int findMostPopularToleratedDiff(std::vector<int>& diffs);
 
     bool findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const;
-    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
+    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool ignoreEndingDataCopy = false);
     int determineBestTrackLen(const int timedTrackLen) const;
     void setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen);
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;
