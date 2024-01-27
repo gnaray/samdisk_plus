@@ -26,7 +26,7 @@ bool Track::empty() const
 
 int Track::size() const
 {
-    return static_cast<int>(m_sectors.size());
+    return m_sectors.size();
 }
 /*
 EncRate Track::encrate(EncRate preferred) const
@@ -70,13 +70,13 @@ const Sectors& Track::sectors_view_ordered_by_id() const
 
 const Sector& Track::operator [] (int index) const
 {
-    assert(index < static_cast<int>(m_sectors.size()));
+    assert(index < m_sectors.size());
     return m_sectors[index];
 }
 
 Sector& Track::operator [] (int index)
 {
-    assert(index < static_cast<int>(m_sectors.size()));
+    assert(index < m_sectors.size());
     return m_sectors[index];
 }
 
@@ -362,7 +362,7 @@ Track::AddResult Track::add(Sector&& sector, int* mergedSectorIndex/* = nullptr*
 
 void Track::insert(int index, Sector&& sector)
 {
-    assert(index <= static_cast<int>(m_sectors.size()));
+    assert(index <= m_sectors.size());
 
     if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
         throw util::exception("can't mix datarates on a track");
@@ -373,7 +373,7 @@ void Track::insert(int index, Sector&& sector)
 
 Sector Track::remove(int index)
 {
-    assert(index < static_cast<int>(m_sectors.size()));
+    assert(index < m_sectors.size());
 
     auto it = m_sectors.begin() + index;
     auto sector = std::move(*it);
@@ -580,7 +580,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     sectorIdsAndOffsets.reserve(size()); // Size will be more if holes are found at the track end.
 
     const auto optByteToleranceBits = opt_byte_tolerance_of_time * 8 * 2;
-    const auto sectorSize = m_sectors[0].size();
+    const auto sectorSize = operator[](0).size();
     const auto encoding = getEncoding();
     const auto predictedOverheadedSectorWithoutSyncAndDataBits = GetFmOrMfmSectorOverheadWithoutSync(getDataRate(), encoding) * 8 * 2;
     const auto predictedOverheadedSectorWithGap3AndDataBits = (GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding) + sectorSize) * 8 * 2;
@@ -590,14 +590,14 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     const auto iSup = size();
     for (int i = 0; i < iSup; i++)
     {
-        const auto& sector = m_sectors[static_cast<Sectors::size_type>(i)];
+        const auto& sector = operator[](i);
         if (sector.size() != sectorSize) // Only same sized sectors are supported.
             return sectorIdsAndOffsets;
         if (opt_debug)
             util::cout << "DiscoverTrackSectorScheme: processing sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
         if (i < iSup - 1)
         {
-            const auto offsetDiff = m_sectors[static_cast<Sectors::size_type>(i + 1)].offset - sector.offset;
+            const auto offsetDiff = operator[](i + 1).offset - sector.offset;
             if (offsetDiff <= overheadedSectorWithGap3AndDataBitsAbout + optByteToleranceBits) // Next sector is close enough so there is no hole.
             {
                 overheadedSectorWithGap3AndDataBits += offsetDiff;
@@ -613,7 +613,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     // Determine and add holes between track start and first sector.
     const auto overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits =
             overheadedSectorWithGap3AndDataBitsAbout + gap3PlusSyncBits + GetIdamOverheadSyncOverhead(encoding) * 8 * 2; // gap3 should be gap4a but good enough now.
-    auto remainingStartOffset = m_sectors[0].offset;
+    auto remainingStartOffset = operator[](0).offset;
     while (remainingStartOffset - 0 >= overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits) // Could subtract a minimal gap4a instead of 0.
     {
         remainingStartOffset -= overheadedSectorWithGap3AndDataBitsAbout;
@@ -625,13 +625,13 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     // Determine and add holes between sectors.
     for (int i = 0; i < iSup; i++)
     {
-        const auto& sector = m_sectors[static_cast<Sectors::size_type>(i)];
+        const auto& sector = operator[](i);
         sectorIdsAndOffsets.push_back(IdAndOffset(sector.header.sector, sector.offset));
         if (opt_debug)
             util::cout << "DiscoverTrackSectorScheme: pushed sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
         if (i < iSup - 1)
         {
-            const auto offsetDiff = m_sectors[static_cast<Sectors::size_type>(i + 1)].offset - sector.offset;
+            const auto offsetDiff = operator[](i + 1).offset - sector.offset;
             if (offsetDiff > overheadedSectorWithGap3AndDataBitsAbout + optByteToleranceBits) // Next sector is not close enough so there is hole.
             {
                 const auto remainingoffsetDiff = offsetDiff - overheadedSectorWithGap3AndDataBits; // Subtracting this sector from hole.
@@ -651,7 +651,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
 
     // Determine and add holes between last sector and track end.
     const auto overheadedSectorFromOffsetToDataCrcEndBits = overheadedSectorWithGap3AndDataBitsAbout - gap3PlusSyncBits - GetIdamOverheadSyncOverhead(encoding) * 8 * 2;
-    auto remainingEndOffset = m_sectors[static_cast<Sectors::size_type>(iSup - 1)].offset + overheadedSectorWithGap3AndDataBits;
+    auto remainingEndOffset = operator[](iSup - 1).offset + overheadedSectorWithGap3AndDataBits;
     while (tracklen - remainingEndOffset >= overheadedSectorFromOffsetToDataCrcEndBits)
     {
         sectorIdsAndOffsets.push_back(IdAndOffset(-1, remainingEndOffset));
@@ -663,7 +663,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     {
         if (opt_debug)
         {
-            const auto iSup = static_cast<int>(sectorIdsAndOffsets.size());
+            const auto iSup = sectorIdsAndOffsets.size();
             for (int i = 0; i < iSup; i++)
             {
                     util::cout << "DiscoverTrackSectorScheme: sectorIdsAndOffsets[" << i << "] has id=" <<
