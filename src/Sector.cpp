@@ -544,7 +544,8 @@ void Sector::set_baddatacrc(bool bad/* = true*/)
 void Sector::erase_data(int instance)
 {
     m_data.erase(m_data.begin() + instance);
-    m_data_read_stats.erase(m_data_read_stats.begin() + instance);
+    if (!m_data_read_stats.empty()) // It can be empty if readstats are not requested by user.
+        m_data_read_stats.erase(m_data_read_stats.begin() + instance);
 }
 
 void Sector::resize_data(int count)
