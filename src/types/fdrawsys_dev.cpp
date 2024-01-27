@@ -740,12 +740,12 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedRawDualTr
             util::cout << "GuessAndAddSectorIdsOfOrphans: Orphan has no parent, offset=" << orphanDataSector.offset << "\n";
             if (idAndOffsetVector.empty())
             {
-                // Let us discover the format scheme if possible.
+                // Let us discover the track sector scheme if possible.
                 idAndOffsetVector = track.DiscoverTrackSectorScheme();
                 if (idAndOffsetVector.empty())
                     return;
             }
-            // Missing sector ID, try to find it in the found format scheme.
+            // Missing sector ID, try to find it in the found track sector scheme.
             const auto sectorId = orphanDataSector.FindParentSectorIdByOffset(idAndOffsetVector);
             if (sectorId >= 0)
             {
