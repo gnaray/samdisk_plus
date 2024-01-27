@@ -53,7 +53,7 @@ int Disk::heads() const
         return false;
 
     ThreadPool pool;
-    std::vector<std::future<void>> rets;
+    VectorX<std::future<void>> rets;
 
     range_.each([&](const CylHead cylhead) {
         rets.push_back(pool.enqueue([this, cylhead, cyl_step]() {
