@@ -420,7 +420,7 @@ public:
 
     void Rewind();
     BitBuffer AsBitstream();
-    std::shared_ptr<SomethingFromRawTrack> FindNextSomething(const RawTrackContext& rawTrackContext); //const SectorIdFromRawTrack* lastSectorId = nullptr);
+    std::shared_ptr<SomethingFromRawTrack> FindNextSomething();
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead) const;
 

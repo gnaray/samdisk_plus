@@ -184,8 +184,7 @@ static const std::vector<size_t> sectorDataInRawTrackSizes{
     sizeof(SectorDataInRawTrack<2048>), sizeof(SectorDataInRawTrack<4096>),
     sizeof(SectorDataInRawTrack<8192>), sizeof(SectorDataInRawTrack<16384>)
 };
-
-std::shared_ptr<SomethingFromRawTrack> RawTrackMFM::FindNextSomething(const RawTrackContext& rawTrackContext) //const SectorIdFromRawTrack* lastSectorId/* = nullptr*/)
+std::shared_ptr<SomethingFromRawTrack> RawTrackMFM::FindNextSomething()
 {
     const auto readLengthMin = sizeof(AddressMarkSyncInTrack) + sizeof(SectorIdInRawTrack); // Either sector id is found or sector data, former is shorter.
     std::vector<uint8_t> somethingInTrackBytes(sizeof(AddressMarkSyncInTrack));
@@ -307,7 +306,7 @@ OrphanDataCapableTrack RawTrackMFM::DecodeTrack(const CylHead& cylHead)
 
 	do
 	{
-        auto somethingFromRawTrack = FindNextSomething(rawTrackContext);
+        auto somethingFromRawTrack = FindNextSomething();
 		if (somethingFromRawTrack == nullptr)
 			break;
         somethingFromRawTrack->ProcessInto(orphanDataCapableTrack, rawTrackContext);
