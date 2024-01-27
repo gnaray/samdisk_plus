@@ -196,11 +196,23 @@ inline uint32_t lossless_static_cast(int x)
 }
 
 template<>
+inline unsigned long lossless_static_cast(unsigned long x)
+{
+    return x;
+}
+
+template<>
 inline unsigned long lossless_static_cast(int16_t x)
 {
     if (x < 0)
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
     return static_cast<size_t>(x);
+}
+
+template<>
+inline unsigned long lossless_static_cast(uint8_t x)
+{
+    return static_cast<unsigned long>(x);
 }
 
 template<>
