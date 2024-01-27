@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Platform.h"
-#include "IBMPCBase.h"
 #include "Header.h"
 #include "Track.h"
 

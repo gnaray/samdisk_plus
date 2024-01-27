@@ -1,6 +1,5 @@
 // Calculations related to IBM PC format MFM/FM disks (System/34 compatible)
 
-#include "PlatformConfig.h"
 #include "IBMPC.h"
 #include "Options.h"
 
