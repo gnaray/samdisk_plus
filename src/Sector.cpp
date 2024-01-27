@@ -669,7 +669,7 @@ std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
 
 //////////////////////////////////////////////////////////////////////////////
 
-void Sectors::push_more_back(const Sectors& sectors)
+void Sectors::push_back_more(const Sectors& sectors)
 {
     for (auto& sector : sectors)
         std::vector<Sector>::push_back(sector);
