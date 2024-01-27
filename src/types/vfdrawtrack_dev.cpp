@@ -77,9 +77,9 @@ TrackData VfdRawTrackDevDisk::LoadRawTrack(const CylHead& cylhead)
 
 void VfdRawTrackDevDisk::SetMetadata(const std::string&/* path*/)
 {
-    static const std::vector<std::string> fdc_types{
+    static const VectorX<std::string> fdc_types{
         "Unknown", "Unknown1", "Normal", "Enhanced", "82077", "82077AA", "82078_44", "82078_64", "National" };
-    static const std::vector<std::string> data_rates{
+    static const VectorX<std::string> data_rates{
         "250K", "300K", "500K", "1M", "2M" };
 
     metadata()["fdc_type"] = fdc_types[2];
