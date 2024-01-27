@@ -56,7 +56,7 @@ Range Format::range() const
     return Range(cyls, heads);
 }
 
-std::vector<int> Format::get_ids(const CylHead& cylhead) const
+VectorX<int> Format::get_ids(const CylHead& cylhead) const
 {
     return TrackSectorIds::GetIds(cylhead, sectors, interleave, skew, offset, base);
 }

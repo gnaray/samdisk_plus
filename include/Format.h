@@ -30,7 +30,7 @@ struct Format
     int total_sectors() const;
     Range range() const;
 
-    std::vector<int> get_ids(const CylHead& cylhead) const;
+    VectorX<int> get_ids(const CylHead& cylhead) const;
     void Validate() const;
     bool TryValidate() const;
     void Override(bool full_control = false);
