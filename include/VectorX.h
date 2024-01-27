@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <vector>
 
-template <typename T>
+template <typename T, typename IT = int>
 class VectorX : public std::vector<T>
 {
 public:
@@ -18,54 +18,55 @@ public:
     using std::vector<T>::resize;
     using std::vector<T>::reserve;
 
-    template <typename U>
+    template <typename U = IT>
     explicit VectorX(U count)
         : std::vector<T>(lossless_static_cast<ST>(count))
     {
     }
 
-    template <typename U>
+    template <typename U = IT>
     VectorX(U count, const T& value)
         : std::vector<T>(lossless_static_cast<ST>(count), value)
     {
     }
 
-    template <typename U>
+    template <typename U = IT>
     typename VectorX::reference operator[](U pos)
     {
         return std::vector<T>::operator[](pos);
     }
 
-    template <typename U>
+    template <typename U = IT>
     typename VectorX::const_reference operator[](U pos) const
     {
         return std::vector<T>::operator[](pos);
     }
 
-    template <typename U>
+    template <typename U = IT>
     typename VectorX::iterator insert(typename VectorX::const_iterator pos, U count, const T& value)
     {
         return std::vector<T>::insert(pos, count, value);
     }
 
-    int size() const
+    template <typename U = IT>
+    U size() const
     {
-        return lossless_static_cast<int>(std::vector<T>::size());
+        return lossless_static_cast<U>(std::vector<T>::size());
     }
 
-    template <typename U>
+    template <typename U = IT>
     void resize(U count)
     {
         std::vector<T>::resize(lossless_static_cast<ST>(count));
     }
 
-    template <typename U>
+    template <typename U = IT>
     void resize(U count, const T& value)
     {
         std::vector<T>::resize(lossless_static_cast<ST>(count), value);
     }
 
-    template <typename U>
+    template <typename U = IT>
     void reserve(U new_cap)
     {
         std::vector<T>::reserve(lossless_static_cast<ST>(new_cap));
