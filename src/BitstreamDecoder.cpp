@@ -58,7 +58,7 @@ void scan_flux(TrackData& trackdata)
     trackdata.add(std::move(track));
 
 
-    std::vector<Encoding> encodings;
+    VectorX<Encoding> encodings;
     if (opt_encoding != Encoding::Unknown)
     {
         // Just the one requested format.
@@ -145,7 +145,7 @@ void scan_bitstream(TrackData& trackdata)
 {
     static Encoding last_encoding = Encoding::MFM;
 
-    std::vector<Encoding> encodings;
+    VectorX<Encoding> encodings;
     if (opt_encoding != Encoding::Unknown)
     {
         // Just the one requested format.
@@ -277,7 +277,7 @@ void scan_bitstream_apple(TrackData& trackdata)
     Data block;
     uint32_t dword = 0;
     uint8_t cksum = 0, invalid = 0;
-    std::vector<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields;
 
     auto& bitbuf = trackdata.bitstream();
     bitbuf.seek(0);
@@ -518,7 +518,7 @@ void scan_bitstream_gcr(TrackData& trackdata)
     Track track;
     uint32_t dword = 0;
     uint8_t stored_cksum = 0;
-    std::vector<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields;
 
     auto& bitbuf = trackdata.bitstream();
     bitbuf.seek(0);
@@ -991,7 +991,7 @@ void scan_bitstream_mx(TrackData& trackdata)
 
 void scan_flux_mx(TrackData& trackdata, DataRate last_datarate)
 {
-    std::vector<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_300K };
+    VectorX<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_300K };
     datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
 
     for (auto datarate : datarates)
@@ -1013,7 +1013,7 @@ void scan_flux_mx(TrackData& trackdata, DataRate last_datarate)
 
 static bool amiga_read_dwords(BitBuffer& bitbuf, uint32_t* pdw, size_t dwords, uint32_t& checksum)
 {
-    std::vector<uint32_t> evens;
+    VectorX<uint32_t> evens;
     evens.reserve(dwords);
     size_t i;
 
@@ -1081,7 +1081,7 @@ void scan_bitstream_amiga(TrackData& trackdata)
             track_nr != static_cast<uint8_t>((trackdata.cylhead.cyl << 1) + trackdata.cylhead.head))
             continue;
 
-        std::vector<uint32_t> label(4);
+        VectorX<uint32_t, size_t> label(4);
         if (!amiga_read_dwords(bitbuf, label.data(), label.size(), calcsum))
             continue;
 
@@ -1151,7 +1151,7 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
     track.tracklen = bitbuf.track_bitsize();
 
     CRC16 crc;
-    std::vector<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields;
 
     uint32_t dword = 0;
     uint8_t last_fm_am = 0;
@@ -1459,17 +1459,17 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
 void scan_flux_mfm_fm(TrackData& trackdata, DataRate last_datarate)
 {
     // Small speed variations to simulate jitter.
-    std::vector<int> flux_scales{ 100, 100 - JITTER_PERCENT, 100 + JITTER_PERCENT };
+    VectorX<int> flux_scales{ 100, 100 - JITTER_PERCENT, 100 + JITTER_PERCENT };
     if (opt_nowobble || !JITTER_PERCENT)
         flux_scales.resize(1);
 
     // PLL adjustments for different views of the same data.
-    std::vector<int> pll_adjusts{ 2, 4, 8, 16 };
+    VectorX<int> pll_adjusts{ 2, 4, 8, 16 };
     if (opt_plladjust > 0)
         pll_adjusts = { opt_plladjust };
 
     // Set the datarate scanning order, with the last successful rate first (and its duplicate removed)
-    std::vector<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_500K, DataRate::_300K, DataRate::_1M };
+    VectorX<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_500K, DataRate::_300K, DataRate::_1M };
     datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
 
     for (auto datarate : datarates)
@@ -1515,7 +1515,7 @@ void scan_bitstream_agat(TrackData& trackdata)
     Data block;
     uint64_t dword = 0;
     uint16_t stored_cksum = 0, cksum = 0;
-    std::vector<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields;
 
     auto& bitbuf = trackdata.bitstream();
     bitbuf.seek(0);
@@ -1702,7 +1702,7 @@ void scan_bitstream_agat(TrackData& trackdata)
 
 void scan_flux_agat(TrackData& trackdata, DataRate last_datarate)
 {
-    std::vector<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_300K };
+    VectorX<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_300K };
     datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
 
     for (auto datarate : datarates)
@@ -1768,7 +1768,7 @@ void scan_bitstream_victor(TrackData& trackdata)
     Track track;
     uint32_t dword = 0;
     uint16_t stored_cksum, cksum;
-    std::vector<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields;
 
     auto& bitbuf = trackdata.bitstream();
     bitbuf.seek(0);
