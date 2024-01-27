@@ -311,7 +311,7 @@ Track::AddResult Track::add(Sector&& sector, int* mergedSectorIndex/* = nullptr*
         throw util::exception("can't mix datarates on a track");
 
     // If there's no positional information, simply append.
-    if (sector.offset == 0 || tracklen == 0) // The offset is 0 exactly when tracklen is 0 but safer to check both.
+    if (sector.offset == 0)
     {
         if (!dryrun)
             m_sectors.emplace_back(std::move(sector));
