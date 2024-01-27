@@ -251,13 +251,12 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
     // DD 8K sectors are considered complete at 6K, everything else at natural size
     auto complete_size = is_8k_sector() ? 0x1800 : new_data.size();
 
-    DataReadStats dataReadStatsTmp;
-    if (improved_data_read_stats == nullptr)
-        improved_data_read_stats = &dataReadStatsTmp;
     // Compare existing data with the new data, to avoid storing redundant copies.
     // The goal is keeping only 1 optimal sized data amongst those having matching content.
     // Optimal sized: complete size else smallest above complete size else biggest below complete size.
     const auto i_sup = m_data.size();
+    auto affected_data_index_local = -1;
+    DataReadStats improved_data_read_stats_local;
     for (auto i = 0; i < i_sup; i++)
     {
         const auto& data = m_data[i];
@@ -266,16 +265,21 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
         {
             if (data.size() == new_data.size())
             {
-                return Merge::Matched; // was Unchanged;
+                affected_data_index_local = i;
+                ret = Merge::Matched; // was Unchanged;
+                break;
             }
             if (new_data.size() < data.size())
             {
                 if (new_data.size() < complete_size)
                 {
-                    return Merge::Matched; // was Unchanged;
+                    affected_data_index_local = i;
+                    ret = Merge::Matched; // was Unchanged;
+                    break;
                 }
                 // The new shorter complete copy replaces the existing data.
-                *improved_data_read_stats = m_data_read_stats[i];
+                if (improved_data_read_stats != nullptr)
+                    improved_data_read_stats_local = m_data_read_stats[i];
                 erase_data(i--);
                 ret = Merge::Improved;
                 break; // Not continuing. See the goal above.
@@ -284,15 +288,24 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
             {
                 if (data.size() >= complete_size)
                 {
-                    return Merge::Matched; // was Unchanged;
+                    affected_data_index_local = i;
+                    ret = Merge::Matched; // was Unchanged;
+                    break;
                 }
                 // The new longer complete copy replaces the existing data.
-                *improved_data_read_stats = m_data_read_stats[i];
+                if (improved_data_read_stats != nullptr)
+                    improved_data_read_stats_local = m_data_read_stats[i];
                 erase_data(i--);
                 ret = Merge::Improved;
                 break; // Not continuing. See the goal above.
             }
         }
+    }
+    if (ret == Merge::Matched)
+    {
+        if (affected_data_index != nullptr)
+            *affected_data_index = affected_data_index_local;
+        return ret;
     }
 
     // Will we now have multiple copies?
@@ -332,8 +345,6 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
     {
         // Insert the new data copy.
         m_data.emplace_back(std::move(new_data));
-        if (affected_data_index != nullptr)
-            *affected_data_index = copies() - 1;
     }
 
     // Update the data CRC state and DAM
@@ -347,17 +358,18 @@ Sector::Merge Sector::add_with_readstats(Data&& new_data, bool new_bad_crc/*=fal
     int new_read_attempts/*=1*/, const DataReadStats& new_data_read_stats/*=DataReadStats(1)*/,
     bool readstats_counter_mode/*= true*/, bool update_this_read_attempts/*=true*/)
 {
-    auto affected_data_index = -1;
-    DataReadStats improved_data_read_stats;
-    auto ret = add(std::move(new_data), new_bad_crc, new_dam, &affected_data_index, &improved_data_read_stats);
     if (opt_readstats)
     {
+        auto affected_data_index = -1;
+        DataReadStats improved_data_read_stats;
+        auto ret = add(std::move(new_data), new_bad_crc, new_dam, &affected_data_index, &improved_data_read_stats);
         process_merge_result(ret, new_read_attempts, new_data_read_stats, readstats_counter_mode,
             affected_data_index, improved_data_read_stats);
         if (update_this_read_attempts)
             m_read_attempts += new_read_attempts;
+        return ret;
     }
-    return ret;
+    return add(std::move(new_data), new_bad_crc, new_dam);
 }
 
 void Sector::process_merge_result(const Merge& ret, int new_read_attempts, const DataReadStats& new_data_read_stats,
