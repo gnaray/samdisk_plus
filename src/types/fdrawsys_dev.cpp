@@ -560,10 +560,16 @@ bool FdrawSysDevDisk::ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScan
     }
 
     // Prefer MFM to FM.
-    for (auto encoding : { Encoding::MFM, Encoding::FM })
+    VectorX<Encoding> encodings{ Encoding::MFM, Encoding::FM };
+    if (m_lastEncoding != Encoding::Unknown)
+        encodings.findAndMove(m_lastEncoding, 0);
+    // Prefer higher datarates.
+    VectorX<DataRate> dataRates{ DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K };
+    if (m_lastDataRate != DataRate::Unknown)
+        dataRates.findAndMove(m_lastDataRate, 0);
+    for (auto encoding : encodings)
     {
-        // Prefer higher datarates.
-        for (auto dataRate : { DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K })
+        for (auto dataRate : dataRates)
         {
             // Skip FM if we're only looking for MFM, or the data rate is 1Mbps.
             if (encoding == Encoding::FM && (opt_encoding == Encoding::MFM || dataRate == DataRate::_1M))
