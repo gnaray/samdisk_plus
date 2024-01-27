@@ -3,6 +3,7 @@
 
 #include "Cpp_helpers.h"
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -82,6 +83,49 @@ public:
     void reserve(U new_cap)
     {
         std::vector<T>::reserve(lossless_static_cast<ST>(new_cap));
+    }
+
+    void swap(const typename VectorX::iterator pos1, const typename VectorX::iterator pos2)
+    {
+        assert(pos1 != VectorX::end() && pos2 != VectorX::end());
+        std::swap(*pos1, *pos2);
+    }
+
+    template <typename U = IT>
+    void swap(const U pos1, const U pos2)
+    {
+        assert(pos1 >= 0 && pos1 < VectorX::size() && pos2 >= 0 && pos2 < VectorX::size());
+        return swap(VectorX::begin() + pos1, VectorX::begin() + pos2);
+    }
+
+    // Returns index of current location of value, pos if success, -1 otherwise. Invalidates iterators like insert and erase methods.
+    template <typename U = IT>
+    U findAndMove(const T& value, U pos)
+    {
+        assert(pos >= 0 && pos < VectorX::size());
+        const auto itFound = std::find(VectorX::begin(), VectorX::end(), value);
+        if (itFound == VectorX::end())
+            return -1; // Not found, can not move.
+        auto indexFound = itFound - VectorX::begin();
+        if (indexFound != pos)
+        {
+            VectorX::insert(VectorX::begin() + pos, value);
+            if (pos < indexFound)
+                indexFound++;
+            else
+                pos--;
+            VectorX::erase(VectorX::begin() + indexFound);
+        }
+        return pos;
+    }
+
+    // Returns iterator of current location of value, . Invalidates iterators like insert method.
+    typename VectorX::iterator findAndMove(const T& value, const typename VectorX::iterator pos)
+    {
+        const auto posIndex = findAndMove(value, std::distance(VectorX::begin(), pos));
+        if (posIndex == -1)
+            return VectorX::end();
+        return VectorX::begin() + posIndex;
     }
 };
 
