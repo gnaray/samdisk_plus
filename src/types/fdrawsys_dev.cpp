@@ -748,7 +748,12 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedRawDualTr
                 auto parentSector = orphanDataSector;
                 parentSector.header.sector = sectorId;
                 parentSector.offset = track.findReasonableIdOffsetForDataFmOrMfm(orphanDataSector.offset);
+                parentSector.header.size = track[0].header.size;
+                parentSector.remove_data();
+                if (opt_debug)
+                    util::cout << "GuessAndAddSectorIdsOfOrphans: added sector as parent, offset=" << parentSector.offset << ", ID=" << parentSector.header.sector << "\n";
                 track.add(std::move(parentSector));
+                // Not removing orphan sector, it will be read later as parent sector.
             }
         }
     }
@@ -773,9 +778,17 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedRawDualTr
     const auto it = timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.findDataForSectorIdFmOrMfm(sector.offset, sector.header.size);
     if (it != timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.end())
     {
-        if (it->has_good_data(false, opt_normal_disk))
+        auto data = it->data_copy(); // Copy the orphan data.
+        if (sector.size() < it->data_size()) // Resize the copied data if bigger than header specifies.
+            data.resize(sector.size());
+        // Calculate the CRC of data (from IDAM overhead to end of CRC bytes)
+        CRC16 crc(CRC16::A1A1A1);
+        crc.add(it->dam);
+        const auto badCrc = crc.add(data.data(), data.size() + AM_CRC) != 0;
+        if (!badCrc)
         {
-            sector.add_with_readstats(Data(it->data_copy()));
+            sector.add_with_readstats(std::move(data), badCrc, it->dam);
+            timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.sectors().erase(it); // Remove it so it will not be counted again in readstats.
             return true;
         }
     }
