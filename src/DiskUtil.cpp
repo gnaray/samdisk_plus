@@ -766,10 +766,10 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
     return changed_amount;
 }
 
-std::vector<std::pair<char, size_t>> DiffSectorCopies(const Sector& sector)
+VectorX<std::pair<char, size_t>> DiffSectorCopies(const Sector& sector)
 {
     assert(sector.copies() > 0);
-    std::vector<std::pair<char, size_t>> diffs;
+    VectorX<std::pair<char, size_t>> diffs;
 
     auto& smallest = *std::min_element(
         sector.datas().begin(), sector.datas().end(),

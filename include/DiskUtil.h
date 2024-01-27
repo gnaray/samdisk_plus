@@ -36,7 +36,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track);
 bool NormaliseBitstream(BitBuffer& bitbuf);
 int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Sectors& ignored_sectors = Sectors{});
 
-std::vector<std::pair<char, size_t>> DiffSectorCopies(const Sector& sector);
+VectorX<std::pair<char, size_t>> DiffSectorCopies(const Sector& sector);
 
 Sector GetTypicalSector(const CylHead& cylhead, const Track& track, const Sector& last);
 
