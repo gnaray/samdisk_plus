@@ -706,7 +706,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                 // Point to the start of the data area and the sector space
                 auto pb = mem + track_header_size;
 
-                std::vector<EdskReadstatsElement> track_readstats_vector;
+                VectorX<EdskReadstatsElement> track_readstats_vector;
                 if (opt_add_readstats_block)
                     track_readstats_vector.reserve(pt->sectors);
                 for (int i = 0; i < pt->sectors; ++i)
