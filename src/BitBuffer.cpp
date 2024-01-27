@@ -53,7 +53,7 @@ BitBuffer::BitBuffer(DataRate datarate_, FluxDecoder& decoder)
     }
 }
 
-const std::vector<uint8_t>& BitBuffer::data() const
+const Data &BitBuffer::data() const
 {
     return m_data;
 }

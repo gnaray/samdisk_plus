@@ -11,7 +11,7 @@ public:
     BitBuffer(DataRate datarate_, const uint8_t* pb, int len);
     BitBuffer(DataRate datarate_, FluxDecoder& decoder);
 
-    const std::vector<uint8_t>& data() const;
+    const Data& data() const;
     bool wrapped() const;
     int size() const;
     int remaining() const;
@@ -61,7 +61,7 @@ public:
     Encoding encoding{ Encoding::MFM };
 
 private:
-    std::vector<uint8_t> m_data{};
+    Data m_data{};
     std::vector<int> m_indexes{};
     std::vector<int> m_sync_losses{};
     int m_bitsize = 0;
