@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Cpp_helpers.h"
+#include "VectorX.h"
 
 #include <cassert>
 #include <cctype>
@@ -301,7 +302,7 @@ public:
 };
 
 std::string fmt(const char* fmt, ...);
-std::vector<std::string> split(const std::string& str, char delim = ' ', bool skip_empty = false);
+VectorX<std::string> split(const std::string& str, char delim = ' ', bool skip_empty = false);
 std::string trim(const std::string& str);
 std::string replace_extension(const std::string& s, const std::string& new_ext);
 std::string prepend_extension(const std::string& s, const std::string& new_ext);
