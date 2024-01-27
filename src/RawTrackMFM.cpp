@@ -23,11 +23,11 @@ constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
         return false;
     // This code is taken from Samdisk/BitstreamDecoder where every databit is
     // stored as two bits (in addition every FM encoded bit is stored as two rawbits).
-    // We calculate with databits here thus the code is slightly modified.
+    // We also calculate with bits here though the code is slightly modified.
     const auto gap2_size_min = GetFmOrMfmGap2Length(dataRate, encoding);
     const auto idam_am_distance = GetFmOrMfmIdamAndAmDistance(dataRate, encoding);
-    const auto min_distance = (1 + 6 + gap2_size_min) * 8; // IDAM, ID, gap2 (without sync and DAM.a1sync, why?)
-    const auto max_distance = (idam_am_distance + 8) * 8; // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
+    const auto min_distance = (1 + 6 + gap2_size_min) * 8 * 2; // IDAM, ID, gap2 (without sync and DAM.a1sync, why?)
+    const auto max_distance = (idam_am_distance + 8) * 8 * 2; // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
 
     const auto sectorIdAndDataPositionDistance = static_cast<int>((dataByteBitPosition - sectorIdByteBitPosition).TotalBitPosition());
     return sectorIdAndDataPositionDistance >= min_distance && sectorIdAndDataPositionDistance <= max_distance;
@@ -82,46 +82,11 @@ void SectorDataRefFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCa
     const Header header(rawTrackContext.cylHead.cyl, rawTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, SIZECODE_UNKNOWN);
     Sector sector(rawTrackContext.dataRate, rawTrackContext.encoding, header);
     sector.offset = am_offset;
-    sector.dam = dam; // TODO not needed
+    sector.dam = dam; // Comfortable later if setting here.
     sector.set_constant_disk(false);
     if (opt_debug)
         util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " DAM (am=" << dam << ") at offset " << sector.offset << "\n";
     orphanDataCapableTrack.orphanDataTrack.add(std::move(sector));
-}
-// ====================================
-
-void SectorDataFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const
-{
-    if (!rawTrackContext.sectorIdFromRawTrackLastFound.empty() && rawTrackContext.DoSectorIdAndDataPositionsCohere(
-                rawTrackContext.sectorIdFromRawTrackLastFound.m_foundByteBitPosition, m_foundByteBitPosition))
-    {
-        const auto sectorIndex = orphanDataCapableTrack.track.size() - 1; // NOTE Last sector is sectorIdFromRawTrackLastFound except if more close same IDAMs are merged which is super rare.
-        auto& sector = orphanDataCapableTrack.track[sectorIndex];
-        const bool data_crc_error = CrcsDiffer();
-        const uint8_t dam = m_addressMark;
-
-        sector.add_with_readstats(Data{data}, data_crc_error, dam);
-        if (opt_debug)
-        {
-            const auto am_offset = m_foundByteBitPosition.TotalBitPosition() * 2;
-            util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " DAM (am=" << dam << ") at offset " << am_offset << "\n";
-        }
-    }
-    else // Data without id. It is stored in track of orphan sectors with orphan sector id.
-    {    // However if cylhead differs at least once during decoding then this kind of orphan data is very unsafe!
-        const uint8_t dam = m_addressMark;
-        const auto am_offset = m_foundByteBitPosition.TotalBitPosition() * 2; // Counted in mfmbits.
-        const Header header(rawTrackContext.cylHead.cyl, rawTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, SizeToCode(data.size()));
-        Sector sector(rawTrackContext.dataRate, rawTrackContext.encoding, header);
-
-        sector.offset = am_offset;
-        sector.set_constant_disk(false);
-        const bool data_crc_error = CrcsDiffer();
-        sector.add_with_readstats(Data(data), data_crc_error, dam);
-        if (opt_debug)
-            util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " DAM (am=" << dam << ") at offset " << sector.offset << " without IDAM\n";
-        orphanDataCapableTrack.orphanDataTrack.add(std::move(sector));
-    }
 }
 // ====================================
 
@@ -146,11 +111,12 @@ BitBuffer RawTrackMFM::AsBitstream()
 {
     const Data addressMarkBytes{0x44, 0x89, 0x44, 0x89, 0x44, 0x89}; // 0x4489 3 times in reverse bit order.
     const auto readLengthMin = intsizeof(AddressMarkSyncInTrack); // Looking for address mark sync only.
+    const auto readLengthMinBits = readLengthMin * 8;
     BitPositionableByteVector rawTrackContentForBitBuffer;
     ByteBitPosition lastAddressMarkPosition{0};
     Data somethingInTrackBytes(readLengthMin);
     const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(somethingInTrackBytes.data());
-    for ( ; m_rawTrackContent.RemainingByteLength() >= readLengthMin; m_rawTrackContent.StepBit())
+    for ( ; m_rawTrackContent.RemainingBitLength() >= readLengthMinBits; m_rawTrackContent.StepBit())
     {
         if (!AddressMarkSyncInTrack::IsValid(m_rawTrackContent.PeekByte())) // Bit of optimisation for speed.
             continue;
@@ -178,18 +144,13 @@ BitBuffer RawTrackMFM::AsBitstream()
 
 // ====================================
 
-static const std::vector<size_t> sectorDataInRawTrackSizes{
-    sizeof(SectorDataInRawTrack<128>), sizeof(SectorDataInRawTrack<256>),
-    sizeof(SectorDataInRawTrack<512>), sizeof(SectorDataInRawTrack<1024>),
-    sizeof(SectorDataInRawTrack<2048>), sizeof(SectorDataInRawTrack<4096>),
-    sizeof(SectorDataInRawTrack<8192>), sizeof(SectorDataInRawTrack<16384>)
-};
-std::shared_ptr<SomethingFromRawTrack> RawTrackMFM::FindNextSomething()
+std::shared_ptr<ProcessableSomethingFromRawTrack> RawTrackMFM::FindNextSomething()
 {
-    const auto readLengthMin = sizeof(AddressMarkSyncInTrack) + sizeof(SectorIdInRawTrack); // Either sector id is found or sector data, former is shorter.
-    std::vector<uint8_t> somethingInTrackBytes(sizeof(AddressMarkSyncInTrack));
+    const auto readLengthMin = static_cast<int>(sizeof(AddressMarkSyncInTrack) + sizeof(SectorIdInRawTrack)); // Either sector id is found or sector data, former is shorter.
+    const auto readLengthMinBits = readLengthMin * 8;
+    Data somethingInTrackBytes(sizeof(AddressMarkSyncInTrack));
     const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(somethingInTrackBytes.data());
-    for ( ; m_rawTrackContent.RemainingByteLength() >= readLengthMin; m_rawTrackContent.StepBit())
+    for ( ; m_rawTrackContent.RemainingBitLength() >= readLengthMinBits; m_rawTrackContent.StepBit())
 	{
         if (!AddressMarkSyncInTrack::IsValid(m_rawTrackContent.PeekByte())) // Bit of optimisation for speed.
 			continue;
@@ -211,83 +172,135 @@ std::shared_ptr<SomethingFromRawTrack> RawTrackMFM::FindNextSomething()
                 const auto sectorIdInRawTrack = reinterpret_cast<SectorIdInRawTrack*>(somethingInTrackBytes.data());
                 m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), somethingInTrackBytes.size(), &byteBitPosition);
                 return std::make_shared<SectorIdFromRawTrack>(byteBitPositionFound, *sectorIdInRawTrack);
-            } else if (SectorDataInRawTrack<128>::IsSuitable(addressMarkValue)) // <Size> is irrelevant.
+            } else if (SectorDataRefInRawTrack::IsSuitable(addressMarkValue))
             {
-                const auto dataSizePreferred = !rawTrackContext.sectorIdFromRawTrackLastFound.empty() ? rawTrackContext.sectorIdFromRawTrackLastFound.DataSize() : 512; // Floppies have 512 bytes (sizeId = 2) sectors usually.
-                const auto remainingByteLength = m_rawTrackContent.RemainingByteLength();
-                size_t dataSizeCodeBegin = 0;
-                size_t dataSizeCodeEnd = 8;
-                if (!rawTrackContext.sectorIdFromRawTrackLastFound.empty() &&
-                        rawTrackContext.DoSectorIdAndDataPositionsCohere(rawTrackContext.sectorIdFromRawTrackLastFound.m_foundByteBitPosition, byteBitPositionFound))
-                {
-                    dataSizeCodeBegin = rawTrackContext.sectorIdFromRawTrackLastFound.sizeId;
-                    dataSizeCodeEnd = dataSizeCodeBegin + 1;
-                }
-                size_t dataSizeCode;
-                for (dataSizeCode = dataSizeCodeBegin; dataSizeCode < dataSizeCodeEnd; dataSizeCode++)
-                {
-                    if (sectorDataInRawTrackSizes[dataSizeCode] > remainingByteLength)
-                        break;
-                }
-                if (dataSizeCode == dataSizeCodeBegin) // There are not enough remaining bytes.
-                    break;
-                dataSizeCodeEnd = dataSizeCode--; // The dataSizeCode is not suitable but its decremented value is suitable.
-                const size_t maxSectorDataSize = sectorDataInRawTrackSizes[dataSizeCode];
-                somethingInTrackBytes.resize(maxSectorDataSize);
+                somethingInTrackBytes.resize(sizeof(SectorDataRefInRawTrack));
+                const auto sectorDataRefInRawTrack = reinterpret_cast<SectorDataRefInRawTrack*>(somethingInTrackBytes.data());
                 m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), somethingInTrackBytes.size(), &byteBitPosition);
-                std::shared_ptr<SectorDataFromRawTrack> resultBest;
-                for (dataSizeCode = dataSizeCodeBegin; dataSizeCode < dataSizeCodeEnd; dataSizeCode++)
-                {
-                    std::shared_ptr<SectorDataFromRawTrack> result;
-                    switch (dataSizeCode)
-                    {
-                    case 0:
-                        result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                            *reinterpret_cast<SectorDataInRawTrack<128>*>(somethingInTrackBytes.data()));
-                        break;
-                    case 1:
-                        result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                            *reinterpret_cast<SectorDataInRawTrack<256>*>(somethingInTrackBytes.data()));
-                        break;
-                    case 2:
-                        result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                            *reinterpret_cast<SectorDataInRawTrack<512>*>(somethingInTrackBytes.data()));
-                        break;
-                    case 3:
-                        result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                            *reinterpret_cast<SectorDataInRawTrack<1024>*>(somethingInTrackBytes.data()));
-                        break;
-                    case 4:
-                        result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                            *reinterpret_cast<SectorDataInRawTrack<2048>*>(somethingInTrackBytes.data()));
-                        break;
-                    case 5:
-                        result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                            *reinterpret_cast<SectorDataInRawTrack<4096>*>(somethingInTrackBytes.data()));
-                        break;
-                    case 6:
-                        result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                            *reinterpret_cast<SectorDataInRawTrack<8192>*>(somethingInTrackBytes.data()));
-                        break;
-                    case 7:
-                        result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                            *reinterpret_cast<SectorDataInRawTrack<16384>*>(somethingInTrackBytes.data()));
-                        break;
-                    } // end of switch(dataSizeCode)
-                    if (result == nullptr)
-                        continue;
-                    if (resultBest == nullptr || (resultBest->CrcsDiffer() && result->CrcsDiffer() && resultBest->data.size() != lossless_static_cast<int>(dataSizePreferred))
-                            || (resultBest->CrcsDiffer() && !result->CrcsDiffer())
-                            || (!resultBest->CrcsDiffer() && !result->CrcsDiffer() && resultBest->data.size() != lossless_static_cast<int>(dataSizePreferred)))
-                        resultBest = result;
-                }
-                if (resultBest != nullptr)
-                    return resultBest;
-				break;
-            } // endif SectorDataInRawTrack<128>::IsSuitable(addressMarkValue)
+                return std::make_shared<SectorDataRefFromRawTrack>(byteBitPositionFound, *sectorDataRefInRawTrack);
+            }
 		}
 	}
 	return nullptr;
+}
+// ====================================
+
+void RawTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const RawTrackContext& rawTrackContext)
+{
+    static const VectorX<int> sectorDataInRawTrackSizes{
+        intsizeof(SectorDataInRawTrack<128>), intsizeof(SectorDataInRawTrack<256>),
+        intsizeof(SectorDataInRawTrack<512>), intsizeof(SectorDataInRawTrack<1024>),
+        intsizeof(SectorDataInRawTrack<2048>), intsizeof(SectorDataInRawTrack<4096>),
+        intsizeof(SectorDataInRawTrack<8192>), intsizeof(SectorDataInRawTrack<16384>)
+    };
+
+    const auto sectorIdsIndexSup = orphanDataCapableTrack.track.size();
+    auto sectorIdsIndex = 0;
+    auto orphanIt = orphanDataCapableTrack.orphanDataTrack.begin();
+    while (orphanIt != orphanDataCapableTrack.orphanDataTrack.end())
+    {
+        auto& orphanSector = *orphanIt;
+        m_rawTrackContent.SetByteBitPosition(orphanSector.offset / 2); // hbit to databit
+        const auto byteBitPositionFound = m_rawTrackContent.GetByteBitPosition();// Position of DAM.
+        auto byteBitPosition = byteBitPositionFound;  // Using this position for reading bytes.
+
+        auto parentSectorIndexFound = false;
+        int sectorOffset;
+        // Find the closest sector id which coheres.
+        while (sectorIdsIndex < sectorIdsIndexSup && (sectorOffset = orphanDataCapableTrack.track[sectorIdsIndex].offset) < orphanSector.offset)
+        {
+            if (rawTrackContext.DoSectorIdAndDataPositionsCohere(sectorOffset, orphanSector.offset))
+                parentSectorIndexFound = true;
+            sectorIdsIndex++;
+        }
+        if (parentSectorIndexFound) // Data belongs to sector id thus its size is provided by the sector id.
+        {
+            auto& sector = orphanDataCapableTrack.track[sectorIdsIndex - 1]; // The previous is found.
+            auto dataSizeCode = sector.header.size;
+            if (dataSizeCode > SIZECODE_MAX)
+            {
+                if (opt_debug)
+                    util::cout << "sector has unsupported (invalid?) size code  " << dataSizeCode << " at offset " << sector.offset << ", ignoring it as parent sector\n";
+                goto NextOrphan; // Not supported size code, ignoring the sector thus this data as well.
+            }
+            const auto remainingByteLength = m_rawTrackContent.RemainingBitLength() / 8;
+            if (sectorDataInRawTrackSizes[dataSizeCode] > remainingByteLength)
+                goto NextOrphan; // Not enough bytes thus crc is bad, and we do not provide bad data from raw track.
+            Data somethingInTrackBytes(sectorDataInRawTrackSizes[dataSizeCode]);
+            m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), somethingInTrackBytes.size(), &byteBitPosition);
+            std::shared_ptr<SectorDataFromRawTrack> result;
+            switch (dataSizeCode)
+            {
+            case 0:
+                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
+                    *reinterpret_cast<SectorDataInRawTrack<128>*>(somethingInTrackBytes.data()));
+                break;
+            case 1:
+                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
+                    *reinterpret_cast<SectorDataInRawTrack<256>*>(somethingInTrackBytes.data()));
+                break;
+            case 2:
+                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
+                    *reinterpret_cast<SectorDataInRawTrack<512>*>(somethingInTrackBytes.data()));
+                break;
+            case 3:
+                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
+                    *reinterpret_cast<SectorDataInRawTrack<1024>*>(somethingInTrackBytes.data()));
+                break;
+            case 4:
+                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
+                    *reinterpret_cast<SectorDataInRawTrack<2048>*>(somethingInTrackBytes.data()));
+                break;
+            case 5:
+                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
+                    *reinterpret_cast<SectorDataInRawTrack<4096>*>(somethingInTrackBytes.data()));
+                break;
+            case 6:
+                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
+                    *reinterpret_cast<SectorDataInRawTrack<8192>*>(somethingInTrackBytes.data()));
+                break;
+            case 7:
+                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
+                    *reinterpret_cast<SectorDataInRawTrack<16384>*>(somethingInTrackBytes.data()));
+                break;
+            } // end of switch(dataSizeCode)
+
+            const bool data_crc_error = result->CrcsDiffer();
+            const uint8_t dam = result->m_addressMark;
+
+            sector.add_with_readstats(std::move(result->data), data_crc_error, dam);
+            orphanIt = orphanDataCapableTrack.orphanDataTrack.sectors().erase(orphanIt);
+            continue; // Continuing from current orphan which was the next orphan before erasing.
+        }
+        else
+        {   // Sector id not found, setting orphan's data from first byte after DAM until first overhead byte of next ?AM (or track end if there is no next ?AM).
+            // Determine available bytes.
+            m_rawTrackContent.ReadByte(&byteBitPosition); // Read the DAM and ignore it, it is already stored in orphan sector.
+            const auto remainingByteLength = m_rawTrackContent.RemainingBitLength() / 8;
+            auto availableByteLength = remainingByteLength;
+            if (sectorIdsIndex < sectorIdsIndexSup)
+            {
+                auto availableByteLengthUntilNextIdam = (orphanDataCapableTrack.track[sectorIdsIndex].offset - orphanSector.offset) / 8 / 2
+                        - GetIdamOverhead(rawTrackContext.encoding);
+                if (availableByteLengthUntilNextIdam < availableByteLength)
+                    availableByteLength = availableByteLengthUntilNextIdam;
+            }
+            if (std::next(orphanIt) != orphanDataCapableTrack.orphanDataTrack.end())
+            {
+                auto availableByteLengthUntilNextDam = (std::next(orphanIt)->offset - orphanSector.offset) / 8 / 2
+                        - GetDamOverhead(rawTrackContext.encoding);
+                if (availableByteLengthUntilNextDam < availableByteLength)
+                    availableByteLength = availableByteLengthUntilNextDam;
+            }
+            Data somethingInTrackBytes(availableByteLength);
+            m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), somethingInTrackBytes.size(), &byteBitPosition);
+            if (opt_debug)
+                util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " DAM (am=" << orphanSector.dam << ") at offset " << orphanSector.offset << " without IDAM\n";
+            orphanSector.add_with_readstats(std::move(somethingInTrackBytes), true, orphanSector.dam);
+        }
+NextOrphan:
+        orphanIt++;
+    }
 }
 // ====================================
 /*
@@ -314,7 +327,10 @@ OrphanDataCapableTrack RawTrackMFM::DecodeTrack(const CylHead& cylHead)
     } while (true);
 
     if (!orphanDataCapableTrack.empty())
+    {
         orphanDataCapableTrack.setTrackLen(m_rawTrackContent.BytesBitSize() * 2); // Counted in mfmbits.
+        ProcessSectorDataRefs(orphanDataCapableTrack, rawTrackContext);
+    }
     return orphanDataCapableTrack;
 }
 // ====================================

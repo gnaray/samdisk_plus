@@ -427,6 +427,7 @@ public:
     void Rewind();
     BitBuffer AsBitstream();
     std::shared_ptr<ProcessableSomethingFromRawTrack> FindNextSomething();
+    void ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const RawTrackContext& rawTrackContext);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead) const;
 
