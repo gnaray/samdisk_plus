@@ -152,7 +152,7 @@ void OrphanDataCapableTrack::syncThisToOtherAsMulti(int syncOffset, OrphanDataCa
 void OrphanDataCapableTrack::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle)
 {
     track.syncAndDemultiThisTrackToOffset(syncOffset, trackLenSingle);
-    orphanDataTrack.syncAndDemultiThisTrackToOffset(syncOffset, trackLenSingle);
+    orphanDataTrack.syncAndDemultiThisTrackToOffset(syncOffset, trackLenSingle, true);
 }
 
 int OrphanDataCapableTrack::determineBestTrackLen(const int timedTrackLen) const
