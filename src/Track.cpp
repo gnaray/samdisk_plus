@@ -3,6 +3,7 @@
 #include "Options.h"
 //#include "DiskUtil.h"
 #include "IBMPCBase.h"
+#include "Util.h"
 
 #include <algorithm>
 #include <cmath>
@@ -748,7 +749,8 @@ Sectors::const_iterator Track::find(const Header& header, const DataRate datarat
         return header == s.header && datarate == s.datarate && encoding == s.encoding;
         });
 }
-Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const int dataSize) const
+
+Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const int sizeCode) const
 {
     if (empty())
         return end();
@@ -757,12 +759,13 @@ Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const in
     const auto offsetDiffMaxTolerated = (GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time) * 16;
     // Find a sector close enough to the data offset to be the same one.
     auto it = std::find_if(begin(), end(), [&](const Sector& s) {
-        return modulo(dataOffset - s.offset, static_cast<unsigned>(tracklen)) <= offsetDiffMaxTolerated && s.size() == dataSize;
+        return modulo(dataOffset - s.offset, static_cast<unsigned>(tracklen)) <= offsetDiffMaxTolerated &&
+                (sizeCode == SIZECODE_UNKNOWN || s.header.size == sizeCode);
         });
     return it;
 }
 
-Sectors::const_iterator Track::findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int dataSize) const
+Sectors::const_iterator Track::findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int sizeCode) const
 {
     if (empty())
         return end();
@@ -771,7 +774,8 @@ Sectors::const_iterator Track::findDataForSectorIdFmOrMfm(const int sectorIdOffs
     const auto offsetDiffMaxTolerated = (GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time) * 16;
     // Find data close enough to the sector id offset to be the same one.
     auto it = std::find_if(begin(), end(), [&](const Sector& s) {
-        return modulo(s.offset - sectorIdOffset, static_cast<unsigned>(tracklen)) <= offsetDiffMaxTolerated && s.data_size() == dataSize;
+        return modulo(s.offset - sectorIdOffset, static_cast<unsigned>(tracklen)) <= offsetDiffMaxTolerated &&
+                (s.header.size == SIZECODE_UNKNOWN || s.header.size == sizeCode);
         });
     return it;
 }

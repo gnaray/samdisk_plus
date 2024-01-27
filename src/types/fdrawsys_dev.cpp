@@ -734,7 +734,7 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedRawDualTr
         if (opt_debug)
             util::cout << "GuessAndAddSectorIdsOfOrphans: processing sector, offset=" << orphanDataSector.offset << ", ID=" << orphanDataSector.header.sector << "\n";
 
-        const auto it = track.findForDataFmOrMfm(orphanDataSector.offset, orphanDataSector.data_size());
+        const auto it = track.findForDataFmOrMfm(orphanDataSector.offset, orphanDataSector.header.size);
         if (it == track.end()) // The end is dynamic since adding sector to track.
         {
             util::cout << "GuessAndAddSectorIdsOfOrphans: Orphan has no parent, offset=" << orphanDataSector.offset << "\n";
@@ -774,7 +774,7 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedRawDualTr
     // If there is no cylhead mismatch and there are orphan datas then try to find the orphan data of sector.
     if (timedRawDualTrack.lastTimedRawTrackSingle.cylheadMismatch || timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.empty())
         return false;
-    const auto it = timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.findDataForSectorIdFmOrMfm(sector.offset, sector.size());
+    const auto it = timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.findDataForSectorIdFmOrMfm(sector.offset, sector.header.size);
     if (it != timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.end())
     {
         if (it->has_good_data(false, opt_normal_disk))
