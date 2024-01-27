@@ -31,6 +31,18 @@ public:
     }
 
     template <typename U = IT>
+    typename VectorX::reference at(U pos)
+    {
+        return std::vector<T>::at(pos);
+    }
+
+    template <typename U = IT>
+    typename VectorX::const_reference at(U pos) const
+    {
+        return std::vector<T>::at(pos);
+    }
+
+    template <typename U = IT>
     typename VectorX::reference operator[](U pos)
     {
         return std::vector<T>::operator[](pos);
