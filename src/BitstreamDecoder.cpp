@@ -991,8 +991,8 @@ void scan_bitstream_mx(TrackData& trackdata)
 
 void scan_flux_mx(TrackData& trackdata, DataRate last_datarate)
 {
-    VectorX<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_300K };
-    datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
+    VectorX<DataRate> datarates = { DataRate::_250K, DataRate::_300K };
+    datarates.findAndMove(last_datarate, 0);
 
     for (auto datarate : datarates)
     {
@@ -1469,8 +1469,8 @@ void scan_flux_mfm_fm(TrackData& trackdata, DataRate last_datarate)
         pll_adjusts = { opt_plladjust };
 
     // Set the datarate scanning order, with the last successful rate first (and its duplicate removed)
-    VectorX<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_500K, DataRate::_300K, DataRate::_1M };
-    datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
+    VectorX<DataRate> datarates = { DataRate::_250K, DataRate::_500K, DataRate::_300K, DataRate::_1M };
+    datarates.findAndMove(last_datarate, 0);
 
     for (auto datarate : datarates)
     {
@@ -1702,8 +1702,8 @@ void scan_bitstream_agat(TrackData& trackdata)
 
 void scan_flux_agat(TrackData& trackdata, DataRate last_datarate)
 {
-    VectorX<DataRate> datarates = { last_datarate, DataRate::_250K, DataRate::_300K };
-    datarates.erase(std::next(std::find(datarates.rbegin(), datarates.rend(), last_datarate)).base());
+    VectorX<DataRate> datarates = { DataRate::_250K, DataRate::_300K };
+    datarates.findAndMove(last_datarate, 0);
 
     for (auto datarate : datarates)
     {
