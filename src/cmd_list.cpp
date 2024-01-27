@@ -49,7 +49,7 @@ static const char* aszPartTypes[256] =
 
 std::string AbbreviateSize(int64_t total_bytes)
 {
-    static const std::vector<std::string> units = { "KB", "MB", "GB", "TB", "PB", "EB" };
+    static const VectorX<std::string> units = { "KB", "MB", "GB", "TB", "PB", "EB" };
 
     // Work up from Kilobytes
     auto unit_idx = 0;
@@ -371,7 +371,7 @@ bool ListDrives(int nVerbose_)
 {
     int num_opened = 0;
 
-    std::vector<std::string> lDevices = BlockDevice::GetDeviceList();
+    VectorX<std::string> lDevices = BlockDevice::GetDeviceList();
 
     for (size_t u = 0; u < lDevices.size(); ++u)
     {
