@@ -58,11 +58,11 @@ constexpr int convert_offset_by_datarate(int offset, const DataRate& datarate_so
 
 inline bool are_offsets_tolerated_same(const int offset1, const int offset2, const int byte_tolerance_of_time, const int tracklen)
 {
-    if (tracklen == 0 || offset1 == 0 || offset2 == 0) // The offset is 0 exactly when tracklen is 0 but safer to check both.
-        return true; // No offsets to compare, they are considered same.
     const auto offset_min = std::min(offset1, offset2);
     const auto offset_max = std::max(offset1, offset2);
-    auto distance = std::min(offset_max - offset_min, tracklen + offset_min - offset_max);
+    auto distance = offset_max - offset_min;
+    if (tracklen > 0)
+        distance = std::min(distance, tracklen + offset_min - offset_max);
 
     // Offsets must be close enough.
     return distance <= byte_tolerance_of_time * 16;
