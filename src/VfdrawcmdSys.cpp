@@ -59,8 +59,8 @@ int VfdrawcmdSys::GetMaxTransferSize()
      */
     constexpr int cyl = 0;
     constexpr int phead = 0;
-    const auto currentRawTrack = ReadRawTrack(CylHead(lossless_static_cast<uint8_t>(cyl), lossless_static_cast<uint8_t>(phead)));
-    return lossless_static_cast<int>(currentRawTrack.m_rawTrackContent.Bytes().size());
+    const auto currentRawTrack = ReadRawTrack(CylHead(cyl, phead));
+    return currentRawTrack.m_rawTrackContent.Bytes().size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ void VfdrawcmdSys::WaitIndex(int head/* = -1*/, const bool calcSpinTime/* = fals
     m_currentSectorIndex = 0; // alias WaitIndex in fdrawcmd.
     if (calcSpinTime)
     {
-        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, lossless_static_cast<uint8_t>(head)));
+        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, head));
         const auto bestTrackLen = !orphanDataCapableTrack.track.empty() && m_trackTime > 0 ?
                    orphanDataCapableTrack.determineBestTrackLen(orphanDataCapableTrack.getOffsetOfTime(m_trackTime)) : 0;
         m_trackTime = bestTrackLen > 0 ? orphanDataCapableTrack.getTimeOfOffset(bestTrackLen) : DEFAULT_TRACKTIMES[m_fdrate];
@@ -171,7 +171,7 @@ const RawTrackMFM& VfdrawcmdSys::ReadRawTrack(const CylHead& cylhead)
             {
                 break;
             }
-            std::vector<uint8_t> rawTrackContent(lossless_static_cast<std::vector<uint8_t>::size_type>(file.size()));
+            VectorX<uint8_t> rawTrackContent(file.size());
             if (file.rewind() && file.read(rawTrackContent))
                 rawTrackMFM = RawTrackMFM(file.data(), FDRATE_TO_DATARATE[m_fdrate]);
         } while (false);
@@ -315,8 +315,8 @@ bool VfdrawcmdSys::CmdReadTrack(int phead, int cyl, int /*head*/, int /*sector*/
         mem.resize(output_size);
     // mem.size >= output_size now.
 
-    const auto currentRawTrack = ReadRawTrack(CylHead(lossless_static_cast<uint8_t>(m_cyl), lossless_static_cast<uint8_t>(phead)));
-    const auto availSize = std::min(lossless_static_cast<int>(currentRawTrack.m_rawTrackContent.Bytes().size()), output_size);
+    const auto currentRawTrack = ReadRawTrack(CylHead(m_cyl, phead));
+    const auto availSize = std::min(currentRawTrack.m_rawTrackContent.Bytes().size(), output_size);
     mem.copyFrom(currentRawTrack.m_rawTrackContent.Bytes(), availSize);
     return true;
 }
@@ -343,7 +343,7 @@ bool VfdrawcmdSys::CmdRead(int phead, int cyl, int head, int sector, int size, i
     m_result.st2 = 0;
     if (m_encoding_flags == FD_OPTION_MFM && m_fdrate == FD_RATE_250K)
     {
-        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, lossless_static_cast<uint8_t>(phead)));
+        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, phead));
         if (WaitSector(orphanDataCapableTrack) && !orphanDataCapableTrack.track.empty())
         {
             const auto sectorIndexStart = m_currentSectorIndex;
@@ -503,7 +503,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     timed_multi_scan->tracktime = lossless_static_cast<uint32_t>(m_trackTime);
     timed_multi_scan->track_retries = lossless_static_cast<uint8_t>(std::abs(track_retries));
 
-    const CylHead cylHead{m_cyl, lossless_static_cast<uint8_t>(head)};
+    const CylHead cylHead{m_cyl, head};
     auto orphanDataCapableTrack = ReadTrackFromRowTrack(cylHead);
     timed_multi_scan->count = lossless_static_cast<WORD>(orphanDataCapableTrack.track.size());
     if (timed_multi_scan->count > 0)
@@ -586,7 +586,7 @@ bool VfdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT& result)
     bool foundId = false;
     if (m_encoding_flags == FD_OPTION_MFM && m_fdrate == FD_RATE_250K)
     {
-        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, lossless_static_cast<uint8_t>(head)));
+        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, head));
         if (WaitSector(orphanDataCapableTrack) && !orphanDataCapableTrack.track.empty())
         {
             const auto& sectorCurrent = orphanDataCapableTrack.track[m_currentSectorIndex];
