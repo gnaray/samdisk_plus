@@ -161,7 +161,7 @@ inline int GetIdamOverhead(const Encoding& encoding)
 
 inline int GetIdamOverheadSyncOverhead(const Encoding& encoding)
 {
-    return encoding == Encoding::FM ? IDAM_OVERHEAD_FM - 1 : IDAM_OVERHEAD_MFM - 1;
+    return GetIdamOverhead(encoding) - 1;
 }
 
 inline int GetDamOverhead(const Encoding& encoding)
@@ -171,7 +171,7 @@ inline int GetDamOverhead(const Encoding& encoding)
 
 inline int GetDamOverheadSyncOverhead(const Encoding& encoding)
 {
-    return encoding == Encoding::FM ? DAM_OVERHEAD_FM - 1 : DAM_OVERHEAD_MFM - 1;
+    return GetDamOverhead(encoding) - 1;
 }
 
 inline int GetIdOverhead(const Encoding& encoding)
