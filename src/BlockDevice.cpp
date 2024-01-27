@@ -217,7 +217,7 @@ bool BlockDevice::Lock()
 #ifdef _WIN32
     DWORD dwRet;
 
-    std::vector<std::string> lVolumes = GetVolumeList();
+    VectorX<std::string> lVolumes = GetVolumeList();
 
     // Logic from: http://www.techtalkz.com/microsoft-device-drivers/250612-lock-entire-disk-physicaldrive-fsctl_lock_volume.html#post983810
 
@@ -274,7 +274,7 @@ bool BlockDevice::SafetyCheck()
     if (opt_force)
         return true;
 
-    std::vector<std::string> lVolumes = GetVolumeList();
+    VectorX<std::string> lVolumes = GetVolumeList();
     std::string sRemoveList;
 
     for (size_t i = 0; i < lVolumes.size(); ++i)
@@ -306,9 +306,9 @@ bool BlockDevice::SafetyCheck()
 }
 
 
-std::vector<std::string> BlockDevice::GetVolumeList() const
+VectorX<std::string> BlockDevice::GetVolumeList() const
 {
-    std::vector<std::string> lVolumes;
+    VectorX<std::string> lVolumes;
 
 #ifdef _WIN32
     STORAGE_DEVICE_NUMBER sdn;
@@ -444,9 +444,9 @@ bool BlockDevice::ReadIdentifyData(HANDLE h_, IDENTIFYDEVICE& identify_)
     return true;
 }
 
-/*static*/ std::vector<std::string> BlockDevice::GetDeviceList()
+/*static*/ VectorX<std::string> BlockDevice::GetDeviceList()
 {
-    std::vector<std::string> vDevices;
+    VectorX<std::string> vDevices;
 
 #ifdef _WIN32
     for (int i = 0; i < 20; ++i)

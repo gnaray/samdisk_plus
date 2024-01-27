@@ -2,6 +2,7 @@
 
 #include "Platform.h"
 #include "HDD.h"
+#include "VectorX.h"
 
 #include <string>
 
@@ -22,14 +23,14 @@ public:
     bool Lock() override;
     void Unlock() override;
 
-    std::vector<std::string> GetVolumeList() const override;
+    VectorX<std::string> GetVolumeList() const override;
 
 public:
     static bool IsRecognised(const std::string& path);
     static bool IsBlockDevice(const std::string& path);
     static bool IsFileHDD(const std::string& path);
 
-    static std::vector<std::string> GetDeviceList();
+    static VectorX<std::string> GetDeviceList();
 
     // Helpers
 protected:

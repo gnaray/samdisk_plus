@@ -1,11 +1,11 @@
 #pragma once
 
 #include "config.h"
+#include "VectorX.h"
 
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #else
@@ -53,7 +53,7 @@ public:
     virtual bool SafetyCheck();
     virtual bool Lock() { return true; }
     virtual void Unlock() {}
-    virtual std::vector<std::string> GetVolumeList() const { return std::vector<std::string>(); }
+    virtual VectorX<std::string> GetVolumeList() const { return VectorX<std::string>(); }
     virtual std::string GetMakeModel() { return std::string(); }
 
 protected:
