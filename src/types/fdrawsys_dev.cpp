@@ -142,13 +142,13 @@ void FdrawSysDevDisk::SetMetadata(const std::string& path)
     const auto info = m_fdrawcmd->GetFdcInfo();
     if (info != nullptr)
     {
-        static const std::vector<std::string> fdc_types{
+        static const VectorX<std::string> fdc_types{
             "Unknown", "Unknown1", "Normal", "Enhanced", "82077", "82077AA", "82078_44", "82078_64", "National" };
-        static const std::vector<std::string> data_rates{
+        static const VectorX<std::string> data_rates{
             "250K", "300K", "500K", "1M", "2M" };
 
         std::stringstream ss;
-        for (size_t i = 0, n = 0; i < data_rates.size(); ++i)
+        for (auto i = 0, n = 0; i < data_rates.size(); ++i)
         {
             if (!(info->SpeedsAvailable & (1U << i)))
                 continue;
