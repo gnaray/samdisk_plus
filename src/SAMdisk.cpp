@@ -340,7 +340,7 @@ void ReportFileSystems()
 
 void ReportBuildOptions()
 {
-    static const std::vector<const char*> options{
+    static const VectorX<const char*> options{
 #ifdef HAVE_ZLIB
         "zlib",
 #endif
