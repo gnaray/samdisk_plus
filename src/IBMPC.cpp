@@ -92,7 +92,7 @@ bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int track_time_ms
     auto sector_overhead = GetSectorOverhead(encoding);
 
     details.sector_units.resize(track.size());
-    std::vector<int> sizes(track.size());
+    VectorX<int> sizes(track.size());
     int min_size, max_size;
 
     // Check both with real errors and dummy errors

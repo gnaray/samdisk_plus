@@ -14,7 +14,7 @@ struct FitDetails
     int total_units = 0;
     int size_code = 0;
     int gap3 = 0;
-    std::vector<int> sector_units{};
+    VectorX<int> sector_units{};
     bool real_errors;
 };
 
