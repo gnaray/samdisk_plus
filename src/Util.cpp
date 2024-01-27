@@ -424,9 +424,9 @@ int GetFileType(const char* pcsz_)
     return ftUnknown;
 }
 
-std::vector<std::string> FindFiles(const std::string& fileNamePart, const std::string& dirName)
+VectorX<std::string> FindFiles(const std::string& fileNamePart, const std::string& dirName)
 {
-    std::vector<std::string> result;
+    VectorX<std::string> result;
     DIR *dir_ptr;
     if ((dir_ptr = opendir(dirName.c_str())) != nullptr)
     {

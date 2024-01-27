@@ -197,7 +197,7 @@ std::string FileExt(const std::string& path);
 bool IsFileExt(const std::string& path, const std::string& ext);
 int64_t FileSize(const std::string& path);
 int GetFileType(const char* pcsz_);
-std::vector<std::string> FindFiles(const std::string& fileNamePart, const std::string& dirName);
+VectorX<std::string> FindFiles(const std::string& fileNamePart, const std::string& dirName);
 std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName);
 std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr);
 std::string FindNextFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr);
