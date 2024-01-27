@@ -203,11 +203,7 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
                 const auto& sector = track[i];
                 if ((i == 0 && read_first_gap_requested) || (!deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
                                                              && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
-                {
                     ReadSector(cylhead, track, i, firstSectorSeen);
-                    if (usingScanner112)
-                        GetSectorDataFromRawTrack(timedRawDualTrack, i);
-                }
             }
         }
     }
