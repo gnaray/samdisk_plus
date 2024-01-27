@@ -48,7 +48,7 @@ public:
     int getTimeOfOffset(const int offset) const;
     int getOffsetOfTime(const int time) const;
 
-    static int findMostPopularToleratedDiff(std::vector<int>& diffs);
+    static int findMostPopularToleratedDiff(VectorX<int>& diffs);
 
     bool findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const;
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool ignoreEndingDataCopy = false);

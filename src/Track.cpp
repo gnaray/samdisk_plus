@@ -419,13 +419,13 @@ int Track::getOffsetOfTime(const int time) const
     return GetFmOrMfmTimeDataBitsAsRounded(getDataRate(), getEncoding(), time); // mfmbits
 }
 
-/*static*/ int Track::findMostPopularToleratedDiff(std::vector<int>& diffs)
+/*static*/ int Track::findMostPopularToleratedDiff(VectorX<int> &diffs)
 {
     assert(diffs.size() > 0);
 
     std::sort(diffs.begin(), diffs.end());
     typedef std::pair<int, int> ParticipantsAndAverage;
-    std::vector<ParticipantsAndAverage> participantsAndAveragedOffsetDiffs;
+    VectorX<ParticipantsAndAverage> participantsAndAveragedOffsetDiffs;
     const auto diffsEnd = diffs.end();
     for (auto it = diffs.begin(); it != diffsEnd; it++)
     {
@@ -448,7 +448,7 @@ bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffse
     if (referenceTrack.empty() || empty())
         return false;
     // Find the best sync (offset diff).
-    std::vector<int> offsetDiffs;
+    VectorX<int> offsetDiffs;
     const auto trackEnd = end();
     for (auto& s : referenceTrack.sectors())
     {
@@ -514,7 +514,7 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
 
     if (empty())
         return 0;
-    std::vector<int> offsetDiffs;
+    VectorX<int> offsetDiffs;
     auto sectorsOrderedByHeader = sectors();
     std::sort(sectorsOrderedByHeader.begin(), sectorsOrderedByHeader.end(),
               [](const Sector& s1, const Sector& s2) { return s1.header < s2.header || (s1.header == s2.header && s1.offset < s2.offset); });
