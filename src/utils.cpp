@@ -35,7 +35,7 @@ std::string fmt(const char* fmt, ...)
     std::vsnprintf(&bytes[0], bytes.size(), fmt, args);
     va_end(args);
 
-    return std::string(bytes.data(), len);
+    return std::string(bytes.data(), lossless_static_cast<std::string::size_type>(len));
 }
 
 VectorX<std::string> split(const std::string& str, char delim, bool skip_empty)
