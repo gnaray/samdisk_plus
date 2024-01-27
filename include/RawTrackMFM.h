@@ -295,34 +295,42 @@ public:
     SomethingFromRawTrack& operator=(SomethingFromRawTrack&&) = default;
     virtual ~SomethingFromRawTrack() = default;
 
-    virtual void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const = 0;
-
     ByteBitPosition m_foundByteBitPosition;
     AddressMark m_addressMark;
 };
 
 
 
-class TrackIndexFromRawTrack : public SomethingFromRawTrack
+class ProcessableSomethingFromRawTrack : public SomethingFromRawTrack
+{
+public:
+    using SomethingFromRawTrack::SomethingFromRawTrack;
+
+    virtual void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const = 0;
+};
+
+
+
+class TrackIndexFromRawTrack : public ProcessableSomethingFromRawTrack
 {
 public:
     TrackIndexFromRawTrack(
         const ByteBitPosition& foundByteBitPosition,
         const TrackIndexInRawTrack& trackIndexInRawTrack)
-        : SomethingFromRawTrack(foundByteBitPosition, trackIndexInRawTrack.m_addressMark)
+        : ProcessableSomethingFromRawTrack(foundByteBitPosition, trackIndexInRawTrack.m_addressMark)
     {
     }
 
     void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const override;
 };
 
-class SectorIdFromRawTrack : public SomethingFromRawTrack, public CrcFromTrackAndCalculated
+class SectorIdFromRawTrack : public ProcessableSomethingFromRawTrack, public CrcFromTrackAndCalculated
 {
 public:
     SectorIdFromRawTrack(
 		const ByteBitPosition& foundByteBitPosition,
 		const SectorIdInRawTrack& sectorIdInRawTrack)
-        : SomethingFromRawTrack(foundByteBitPosition, sectorIdInRawTrack.m_addressMark),
+        : ProcessableSomethingFromRawTrack(foundByteBitPosition, sectorIdInRawTrack.m_addressMark),
           CrcFromTrackAndCalculated{static_cast<crc_t>((sectorIdInRawTrack.m_crcHigh << 8) | sectorIdInRawTrack.m_crcLow),
                                     sectorIdInRawTrack.CalculateCrc()},
           cyl(sectorIdInRawTrack.m_cyl), head(sectorIdInRawTrack.m_head),
@@ -349,13 +357,13 @@ public:
     uint8_t sizeId;
 };
 
-class SectorDataRefFromRawTrack : public SomethingFromRawTrack
+class SectorDataRefFromRawTrack : public ProcessableSomethingFromRawTrack
 {
 public:
     SectorDataRefFromRawTrack(
         const ByteBitPosition& foundByteBitPosition,
         const SectorDataRefInRawTrack& sectorDataInRawTrack)
-        : SomethingFromRawTrack(foundByteBitPosition, sectorDataInRawTrack.m_addressMark)
+        : ProcessableSomethingFromRawTrack(foundByteBitPosition, sectorDataInRawTrack.m_addressMark)
     {
     }
 
@@ -375,8 +383,6 @@ public:
         data(sectorDataInRawTrack.bytes, sectorDataInRawTrack.bytes + S)
 	{
 	}
-
-    void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const override;
 
     Data data{};
 };
@@ -420,7 +426,7 @@ public:
 
     void Rewind();
     BitBuffer AsBitstream();
-    std::shared_ptr<SomethingFromRawTrack> FindNextSomething();
+    std::shared_ptr<ProcessableSomethingFromRawTrack> FindNextSomething();
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead) const;
 
