@@ -29,7 +29,7 @@ std::string fmt(const char* fmt, ...)
     auto len = std::vsnprintf(nullptr, 0, fmt, args);
     va_end(args);
 
-    std::vector<char> bytes(len + 1); // +1 for \0
+    VectorX<char, size_t> bytes(len + 1); // +1 for \0
 
     va_start(args, fmt);
     std::vsnprintf(&bytes[0], bytes.size(), fmt, args);
@@ -38,9 +38,9 @@ std::string fmt(const char* fmt, ...)
     return std::string(bytes.data(), len);
 }
 
-std::vector<std::string> split(const std::string& str, char delim, bool skip_empty)
+VectorX<std::string> split(const std::string& str, char delim, bool skip_empty)
 {
-    std::vector<std::string> items;
+    VectorX<std::string> items;
     std::stringstream ss(str);
     std::string s;
 
