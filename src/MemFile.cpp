@@ -368,7 +368,7 @@ bool MemFile::read(void* buf, int len)
 
     if (avail)
     {
-        memcpy(buf, &(*m_it), avail);   // make this safer when callers can cope
+        memcpy(buf, &(*m_it), lossless_static_cast<size_t>(avail));   // make this safer when callers can cope
         m_it += avail;
     }
     return true;
