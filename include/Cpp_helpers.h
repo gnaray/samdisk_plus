@@ -74,7 +74,15 @@ constexpr almost_equal(T x, T y, int ulp)
 
 
 
-template<typename T, typename U>
+template<typename T, typename U,
+         std::enable_if_t<std::is_same<T, U>::value, int> = 0>
+inline T lossless_static_cast(U x)
+{
+    return x;
+}
+
+template<typename T, typename U,
+         std::enable_if_t<!std::is_same<T, U>::value, int> = 0>
 T lossless_static_cast(U x);
 
 template<>
@@ -193,12 +201,6 @@ inline uint32_t lossless_static_cast(int x)
     if (x < 0)
         throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
     return static_cast<uint32_t>(x);
-}
-
-template<>
-inline unsigned long lossless_static_cast(unsigned long x)
-{
-    return x;
 }
 
 template<>
