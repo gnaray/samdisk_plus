@@ -264,12 +264,12 @@ void RawTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapabl
                 goto NextOrphan; // Not enough bytes thus crc is bad, and we do not provide bad data from raw track.
             Data somethingInTrackBytes(sectorDataInRawTrackSizes[dataSizeCode]);
             m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), somethingInTrackBytes.size(), &byteBitPosition);
-            SectorDataFromRawTrack result = SectorDataFromRawTrack::Construct(dataSizeCode, byteBitPositionFound, somethingInTrackBytes);
+            SectorDataFromRawTrack sectorData = SectorDataFromRawTrack::Construct(dataSizeCode, byteBitPositionFound, somethingInTrackBytes);
 
-            const bool data_crc_error = result.badCrc != 0;
-            const uint8_t dam = result.m_addressMark;
+            const bool data_crc_error = sectorData.badCrc != 0;
+            const uint8_t dam = sectorData.m_addressMark;
 
-            sector.add_with_readstats(std::move(result.data), data_crc_error, dam);
+            sector.add_with_readstats(std::move(sectorData.data), data_crc_error, dam);
             orphanIt = orphanDataCapableTrack.orphanDataTrack.sectors().erase(orphanIt);
             continue; // Continuing from current orphan which was the next orphan before erasing.
         }
