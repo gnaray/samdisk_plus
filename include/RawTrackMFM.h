@@ -191,7 +191,7 @@ template<unsigned int S>
 class SectorBlockInRawTrack
 {
 public:
-    constexpr SectorBlockInRawTrack(uint8_t blockBytes[S])
+    constexpr SectorBlockInRawTrack(const uint8_t blockBytes[S])
     {
         std::copy(blockBytes, blockBytes + S, bytes);
     }
@@ -204,7 +204,7 @@ class SectorDataInRawTrack : public AddressMarkInTrack, public SectorBlockInRawT
 {
 public:
     constexpr SectorDataInRawTrack(const AddressMarkInTrack& addressMarkInTrack,
-        uint8_t blockBytes[S], uint8_t crcHigh, uint8_t crcLow)
+        const uint8_t blockBytes[S], uint8_t crcHigh, uint8_t crcLow)
         : AddressMarkInTrack(addressMarkInTrack), SectorBlockInRawTrack<S>(blockBytes),
         CrcInTrack(crcHigh, crcLow)
     {
