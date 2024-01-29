@@ -384,6 +384,9 @@ public:
 	{
 	}
 
+
+    static SectorDataFromRawTrack Construct(const int dataSizeCode, const ByteBitPosition& byteBitPosition, const Data& somethingInTrackBytes);
+
     Data data{};
 };
 

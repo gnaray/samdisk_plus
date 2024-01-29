@@ -75,6 +75,42 @@ void SectorIdFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapable
 }
 // ====================================
 
+/*static*/ SectorDataFromRawTrack SectorDataFromRawTrack::Construct(const int dataSizeCode, const ByteBitPosition& byteBitPosition, const Data& somethingInTrackBytes)
+{
+    assert(dataSizeCode >= 0 && dataSizeCode <= 7);
+
+    switch (dataSizeCode)
+    {
+    case 0:
+        return SectorDataFromRawTrack(byteBitPosition,
+            *reinterpret_cast<const SectorDataInRawTrack<128>*>(somethingInTrackBytes.data()));
+    case 1:
+        return SectorDataFromRawTrack(byteBitPosition,
+            *reinterpret_cast<const SectorDataInRawTrack<256>*>(somethingInTrackBytes.data()));
+    case 2:
+        return SectorDataFromRawTrack(byteBitPosition,
+            *reinterpret_cast<const SectorDataInRawTrack<512>*>(somethingInTrackBytes.data()));
+    case 3:
+        return SectorDataFromRawTrack(byteBitPosition,
+            *reinterpret_cast<const SectorDataInRawTrack<1024>*>(somethingInTrackBytes.data()));
+    case 4:
+        return SectorDataFromRawTrack(byteBitPosition,
+            *reinterpret_cast<const SectorDataInRawTrack<2048>*>(somethingInTrackBytes.data()));
+    case 5:
+        return SectorDataFromRawTrack(byteBitPosition,
+            *reinterpret_cast<const SectorDataInRawTrack<4096>*>(somethingInTrackBytes.data()));
+    case 6:
+        return SectorDataFromRawTrack(byteBitPosition,
+            *reinterpret_cast<const SectorDataInRawTrack<8192>*>(somethingInTrackBytes.data()));
+    case 7:
+        return SectorDataFromRawTrack(byteBitPosition,
+            *reinterpret_cast<const SectorDataInRawTrack<16384>*>(somethingInTrackBytes.data()));
+    default:
+        throw util::exception("Can not construct with dataSizeCode = ", dataSizeCode);
+    } // end of switch(dataSizeCode)
+}
+// ====================================
+
 void SectorDataRefFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const
 {
     const uint8_t dam = m_addressMark;
@@ -228,47 +264,12 @@ void RawTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapabl
                 goto NextOrphan; // Not enough bytes thus crc is bad, and we do not provide bad data from raw track.
             Data somethingInTrackBytes(sectorDataInRawTrackSizes[dataSizeCode]);
             m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), somethingInTrackBytes.size(), &byteBitPosition);
-            std::shared_ptr<SectorDataFromRawTrack> result;
-            switch (dataSizeCode)
-            {
-            case 0:
-                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                    *reinterpret_cast<SectorDataInRawTrack<128>*>(somethingInTrackBytes.data()));
-                break;
-            case 1:
-                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                    *reinterpret_cast<SectorDataInRawTrack<256>*>(somethingInTrackBytes.data()));
-                break;
-            case 2:
-                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                    *reinterpret_cast<SectorDataInRawTrack<512>*>(somethingInTrackBytes.data()));
-                break;
-            case 3:
-                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                    *reinterpret_cast<SectorDataInRawTrack<1024>*>(somethingInTrackBytes.data()));
-                break;
-            case 4:
-                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                    *reinterpret_cast<SectorDataInRawTrack<2048>*>(somethingInTrackBytes.data()));
-                break;
-            case 5:
-                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                    *reinterpret_cast<SectorDataInRawTrack<4096>*>(somethingInTrackBytes.data()));
-                break;
-            case 6:
-                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                    *reinterpret_cast<SectorDataInRawTrack<8192>*>(somethingInTrackBytes.data()));
-                break;
-            case 7:
-                result = std::make_shared<SectorDataFromRawTrack>(byteBitPositionFound,
-                    *reinterpret_cast<SectorDataInRawTrack<16384>*>(somethingInTrackBytes.data()));
-                break;
-            } // end of switch(dataSizeCode)
+            SectorDataFromRawTrack result = SectorDataFromRawTrack::Construct(dataSizeCode, byteBitPositionFound, somethingInTrackBytes);
 
-            const bool data_crc_error = result->CrcsDiffer();
-            const uint8_t dam = result->m_addressMark;
+            const bool data_crc_error = result.CrcsDiffer();
+            const uint8_t dam = result.m_addressMark;
 
-            sector.add_with_readstats(std::move(result->data), data_crc_error, dam);
+            sector.add_with_readstats(std::move(result.data), data_crc_error, dam);
             orphanIt = orphanDataCapableTrack.orphanDataTrack.sectors().erase(orphanIt);
             continue; // Continuing from current orphan which was the next orphan before erasing.
         }
