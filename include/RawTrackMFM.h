@@ -158,7 +158,7 @@ public:
 
     CRC16 CalculateCrc() const
     {
-        return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh + 2 - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
+        return CRC16(&m_addressMark, sizeof(SectorIdInRawTrack), CRC16::A1A1A1);
     }
 
 private:
@@ -235,7 +235,7 @@ public:
 
     CRC16 CalculateCrc() const
     {
-        return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh + 2 - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
+        return CRC16(&m_addressMark, sizeof(SectorDataInRawTrack), CRC16::A1A1A1);
     }
 
 };
