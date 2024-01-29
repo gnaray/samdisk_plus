@@ -70,7 +70,6 @@ void SectorIdFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapable
         if (opt_debug)
             util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " IDAM (id=" << header.sector << ") at offset " << sector.offset << "\n";
         orphanDataCapableTrack.track.add(std::move(sector));
-        rawTrackContext.sectorIdFromRawTrackLastFound = *this;
     }
 }
 // ====================================

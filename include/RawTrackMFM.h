@@ -359,10 +359,8 @@ public:
 class RawTrackContext
 {
 public:
-    RawTrackContext(const CylHead& cylHead, const DataRate& dataRate, const Encoding& encoding) // Constructs empty object.
-        : cylHead(cylHead), dataRate(dataRate), encoding(encoding),
-          sectorIdFromRawTrackLastFound(ByteBitPosition(), SectorIdInRawTrack(AddressMarkInTrack(AddressMark()),
-                                                                              0, 0, 0, 0, 0, 0))
+    RawTrackContext(const CylHead& cylHead, const DataRate& dataRate, const Encoding& encoding)
+        : cylHead(cylHead), dataRate(dataRate), encoding(encoding)
     {
     }
     constexpr bool DoSectorIdAndDataPositionsCohere(
@@ -371,7 +369,6 @@ public:
     CylHead cylHead;
     DataRate dataRate = DataRate::Unknown;
     Encoding encoding = Encoding::Unknown;
-    SectorIdFromRawTrack sectorIdFromRawTrackLastFound;
 };
 
 
