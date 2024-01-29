@@ -103,8 +103,6 @@ public:
     uint8_t m_crcLow;
 };
 
-typedef uint16_t crc_t;
-
 class TrackIndexInRawTrack : public AddressMarkInTrack
 {
 public:
@@ -158,9 +156,9 @@ public:
         return addressMark == AddressMark::ID;
     }
 
-    crc_t CalculateCrc() const
+    CRC16 CalculateCrc() const
 	{
-        return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
+        return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh + 2 - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
 	}
 
 private:
@@ -235,47 +233,13 @@ public:
                 || addressMark == AddressMark::RX02;
     }
 
-    crc_t CalculateCrc() const
+    CRC16 CalculateCrc() const
 	{
-        return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
+        return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh + 2 - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
 	}
 
 };
 #pragma pack(pop)
-
-class CrcFromTrackAndCalculated
-{
-public:
-    constexpr CrcFromTrackAndCalculated(crc_t crcFromTrack, crc_t crcCalculated)
-        : m_crc_from_track(crcFromTrack), m_crc_calculated(crcCalculated)
-    {
-    }
-
-    CrcFromTrackAndCalculated(const CrcFromTrackAndCalculated&) = default;
-    CrcFromTrackAndCalculated(CrcFromTrackAndCalculated&&) = default;
-    CrcFromTrackAndCalculated& operator=(const CrcFromTrackAndCalculated&) = default;
-    CrcFromTrackAndCalculated& operator=(CrcFromTrackAndCalculated&&) = default;
-    virtual ~CrcFromTrackAndCalculated() = default; // Required by virtual subclasses thus this becomes non aggregate so suggested to declare all 5 (Rule of 3/5/0).
-    // See https://en.cppreference.com/w/cpp/language/rule_of_three, "C.21: If you define or =delete any copy, move, or destructor function, define or =delete them all."
-
-    constexpr crc_t CrcFromTrack() const
-	{
-		return m_crc_from_track;
-	}
-
-    constexpr crc_t CrcCalculated() const
-	{
-		return m_crc_calculated;
-	}
-
-    constexpr bool CrcsDiffer() const
-	{
-		return m_crc_from_track != m_crc_calculated;
-	}
-private:
-    crc_t m_crc_from_track = 0;
-    crc_t m_crc_calculated = 0;
-};
 
 
 
@@ -324,17 +288,16 @@ public:
     void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const override;
 };
 
-class SectorIdFromRawTrack : public ProcessableSomethingFromRawTrack, public CrcFromTrackAndCalculated
+class SectorIdFromRawTrack : public ProcessableSomethingFromRawTrack
 {
 public:
     SectorIdFromRawTrack(
 		const ByteBitPosition& foundByteBitPosition,
 		const SectorIdInRawTrack& sectorIdInRawTrack)
         : ProcessableSomethingFromRawTrack(foundByteBitPosition, sectorIdInRawTrack.m_addressMark),
-          CrcFromTrackAndCalculated{static_cast<crc_t>((sectorIdInRawTrack.m_crcHigh << 8) | sectorIdInRawTrack.m_crcLow),
-                                    sectorIdInRawTrack.CalculateCrc()},
           cyl(sectorIdInRawTrack.m_cyl), head(sectorIdInRawTrack.m_head),
-          sector(sectorIdInRawTrack.m_sector), sizeId(sectorIdInRawTrack.m_sizeId)
+          sector(sectorIdInRawTrack.m_sector), sizeId(sectorIdInRawTrack.m_sizeId),
+          badCrc(sectorIdInRawTrack.CalculateCrc() != 0)
 	{
 	}
 
@@ -355,6 +318,7 @@ public:
     uint8_t head;
     uint8_t sector;
     uint8_t sizeId;
+    bool badCrc;
 };
 
 class SectorDataRefFromRawTrack : public ProcessableSomethingFromRawTrack
@@ -370,7 +334,7 @@ public:
     void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const override;
 };
 
-class SectorDataFromRawTrack : public SomethingFromRawTrack, public CrcFromTrackAndCalculated
+class SectorDataFromRawTrack : public SomethingFromRawTrack
 {
 public:
 	template<unsigned int S>
@@ -378,9 +342,8 @@ public:
 		const ByteBitPosition& foundByteBitPosition,
 		const SectorDataInRawTrack<S>& sectorDataInRawTrack)
         : SomethingFromRawTrack(foundByteBitPosition, sectorDataInRawTrack.m_addressMark),
-        CrcFromTrackAndCalculated{static_cast<crc_t>((sectorDataInRawTrack.m_crcHigh << 8) | sectorDataInRawTrack.m_crcLow),
-                                  sectorDataInRawTrack.CalculateCrc()},
-        data(sectorDataInRawTrack.bytes, sectorDataInRawTrack.bytes + S)
+        data(sectorDataInRawTrack.bytes, sectorDataInRawTrack.bytes + S),
+        badCrc(sectorDataInRawTrack.CalculateCrc() != 0)
 	{
 	}
 
@@ -388,6 +351,7 @@ public:
     static SectorDataFromRawTrack Construct(const int dataSizeCode, const ByteBitPosition& byteBitPosition, const Data& somethingInTrackBytes);
 
     Data data{};
+    bool badCrc;
 };
 
 

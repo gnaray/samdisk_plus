@@ -52,7 +52,7 @@ void TrackIndexFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapab
 
 void SectorIdFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const
 {
-    if (opt_normal_disk && !CrcsDiffer()
+    if (opt_normal_disk && !badCrc
             && (cyl != rawTrackContext.cylHead.cyl || head != rawTrackContext.cylHead.head))
     {
         Message(msgWarning, "ReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
@@ -65,7 +65,7 @@ void SectorIdFromRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapable
         Sector sector(rawTrackContext.dataRate, rawTrackContext.encoding, header);
 
         sector.offset = m_foundByteBitPosition.TotalBitPosition() * 2; // Counted in mfmbits.
-        sector.set_badidcrc(CrcsDiffer());
+        sector.set_badidcrc(badCrc);
         sector.set_constant_disk(false);
         if (opt_debug)
             util::cout << "raw_track_mfm_fm " << rawTrackContext.encoding << " IDAM (id=" << header.sector << ") at offset " << sector.offset << "\n";
@@ -266,7 +266,7 @@ void RawTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapabl
             m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), somethingInTrackBytes.size(), &byteBitPosition);
             SectorDataFromRawTrack result = SectorDataFromRawTrack::Construct(dataSizeCode, byteBitPositionFound, somethingInTrackBytes);
 
-            const bool data_crc_error = result.CrcsDiffer();
+            const bool data_crc_error = result.badCrc != 0;
             const uint8_t dam = result.m_addressMark;
 
             sector.add_with_readstats(std::move(result.data), data_crc_error, dam);
