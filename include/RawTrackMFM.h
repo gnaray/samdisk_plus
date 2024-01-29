@@ -31,10 +31,10 @@ class AddressMarkSyncInTrack
 {
 public:
     constexpr AddressMarkSyncInTrack()
-		: sign0(ADDRESS_MARK_SIGN), sign1(ADDRESS_MARK_SIGN),
+        : sign0(ADDRESS_MARK_SIGN), sign1(ADDRESS_MARK_SIGN),
         sign2(ADDRESS_MARK_SIGN)
-	{
-	}
+    {
+    }
 
     static constexpr bool IsValid(uint8_t byte)
     {
@@ -72,8 +72,8 @@ class SectorIdInTrack
 public:
     constexpr SectorIdInTrack(uint8_t cyl, uint8_t head, uint8_t sector, uint8_t sizeId)
         : m_cyl(cyl), m_head(head), m_sector(sector), m_sizeId(sizeId)
-	{
-	}
+    {
+    }
 
     static constexpr size_t ByteSizeBySizeId(uint8_t sizeId)
     {
@@ -81,9 +81,9 @@ public:
     }
 
     constexpr size_t ByteSizeBySizeId()
-	{
+    {
         return SectorIdInTrack::ByteSizeBySizeId(m_sizeId);
-	}
+    }
 
     uint8_t m_cyl;
     uint8_t m_head;
@@ -96,8 +96,8 @@ class CrcInTrack
 public:
     constexpr CrcInTrack(uint8_t crcHigh, uint8_t crcLow)
         : m_crcHigh(crcHigh), m_crcLow(crcLow)
-	{
-	}
+    {
+    }
 
     uint8_t m_crcHigh;
     uint8_t m_crcLow;
@@ -131,20 +131,20 @@ public:
         uint8_t cyl, uint8_t head, uint8_t sector, uint8_t sizeId,
         uint8_t crcHigh, uint8_t crcLow)
         : AddressMarkInTrack(addressMarkInTrack), SectorIdInTrack(cyl, head, sector, sizeId),
-		CrcInTrack(crcHigh, crcLow)
-	{
-	}
+          CrcInTrack(crcHigh, crcLow)
+    {
+    }
 
-//	static SectorIdInRawTrack ConstructByAddessMarkAndReadingIdAndCrc(
-//		const AddressMarkInTrack& addressMarkInTrack, BitPositionableByteVector& trackContent)
-//	{
-//		SectorIdInRawTrack sectorIdInRawTrack(
-//			addressMarkInTrack,
-//			trackContent.ReadByte(), trackContent.ReadByte(), trackContent.ReadByte(),
-//			trackContent.ReadByte(), trackContent.ReadByte(), trackContent.ReadByte()
-//		);
-//		return sectorIdInRawTrack;
-//	}
+//    static SectorIdInRawTrack ConstructByAddessMarkAndReadingIdAndCrc(
+//        const AddressMarkInTrack& addressMarkInTrack, BitPositionableByteVector& trackContent)
+//    {
+//        SectorIdInRawTrack sectorIdInRawTrack(
+//            addressMarkInTrack,
+//            trackContent.ReadByte(), trackContent.ReadByte(), trackContent.ReadByte(),
+//            trackContent.ReadByte(), trackContent.ReadByte(), trackContent.ReadByte()
+//        );
+//        return sectorIdInRawTrack;
+//    }
 
     static constexpr bool IsSuitable(uint8_t addressMarkValue)
     {
@@ -157,9 +157,9 @@ public:
     }
 
     CRC16 CalculateCrc() const
-	{
+    {
         return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh + 2 - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
-	}
+    }
 
 private:
 };
@@ -192,9 +192,9 @@ class SectorBlockInRawTrack
 {
 public:
     constexpr SectorBlockInRawTrack(uint8_t blockBytes[S])
-	{
-		std::copy(blockBytes, blockBytes + S, bytes);
-	}
+    {
+        std::copy(blockBytes, blockBytes + S, bytes);
+    }
 
     uint8_t bytes[S];
 };
@@ -207,19 +207,19 @@ public:
         uint8_t blockBytes[S], uint8_t crcHigh, uint8_t crcLow)
         : AddressMarkInTrack(addressMarkInTrack), SectorBlockInRawTrack<S>(blockBytes),
         CrcInTrack(crcHigh, crcLow)
-	{
-	}
+    {
+    }
 
-//	static SectorDataInRawTrack ConstructByAddessMarkAndReadingDataAndCrc(
-//		const AddressMarkInTrack& addressMarkInTrack, BitPositionableByteVector& trackContent,
-//		int dataByteSize)
-//	{
-//		SectorDataInRawTrack sectorDataInRawTrack(
-//			addressMarkInTrack, dataByteSize,
-//			trackContent.ReadByte(), trackContent.ReadByte()
-//		);
-//		return sectorDataInRawTrack;
-//	}
+//    static SectorDataInRawTrack ConstructByAddessMarkAndReadingDataAndCrc(
+//        const AddressMarkInTrack& addressMarkInTrack, BitPositionableByteVector& trackContent,
+//        int dataByteSize)
+//    {
+//        SectorDataInRawTrack sectorDataInRawTrack(
+//            addressMarkInTrack, dataByteSize,
+//            trackContent.ReadByte(), trackContent.ReadByte()
+//        );
+//        return sectorDataInRawTrack;
+//    }
 
     static constexpr bool IsSuitable(uint8_t addressMarkValue)
     {
@@ -234,9 +234,9 @@ public:
     }
 
     CRC16 CalculateCrc() const
-	{
+    {
         return CRC16(&m_addressMark, static_cast<size_t>(&m_crcHigh + 2 - reinterpret_cast<const uint8_t*>(&m_addressMark)), CRC16::A1A1A1);
-	}
+    }
 
 };
 #pragma pack(pop)
@@ -292,14 +292,14 @@ class SectorIdFromRawTrack : public ProcessableSomethingFromRawTrack
 {
 public:
     SectorIdFromRawTrack(
-		const ByteBitPosition& foundByteBitPosition,
-		const SectorIdInRawTrack& sectorIdInRawTrack)
+        const ByteBitPosition& foundByteBitPosition,
+        const SectorIdInRawTrack& sectorIdInRawTrack)
         : ProcessableSomethingFromRawTrack(foundByteBitPosition, sectorIdInRawTrack.m_addressMark),
           cyl(sectorIdInRawTrack.m_cyl), head(sectorIdInRawTrack.m_head),
           sector(sectorIdInRawTrack.m_sector), sizeId(sectorIdInRawTrack.m_sizeId),
           badCrc(sectorIdInRawTrack.CalculateCrc() != 0)
-	{
-	}
+    {
+    }
 
     SectorIdFromRawTrack& operator=(const SectorIdFromRawTrack& sectorIdFromRawTrack) = default;
 
@@ -337,15 +337,15 @@ public:
 class SectorDataFromRawTrack : public SomethingFromRawTrack
 {
 public:
-	template<unsigned int S>
+    template<unsigned int S>
     SectorDataFromRawTrack(
-		const ByteBitPosition& foundByteBitPosition,
-		const SectorDataInRawTrack<S>& sectorDataInRawTrack)
+        const ByteBitPosition& foundByteBitPosition,
+        const SectorDataInRawTrack<S>& sectorDataInRawTrack)
         : SomethingFromRawTrack(foundByteBitPosition, sectorDataInRawTrack.m_addressMark),
         data(sectorDataInRawTrack.bytes, sectorDataInRawTrack.bytes + S),
         badCrc(sectorDataInRawTrack.CalculateCrc() != 0)
-	{
-	}
+    {
+    }
 
 
     static SectorDataFromRawTrack Construct(const int dataSizeCode, const ByteBitPosition& byteBitPosition, const Data& somethingInTrackBytes);

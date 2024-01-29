@@ -187,13 +187,13 @@ std::shared_ptr<ProcessableSomethingFromRawTrack> RawTrackMFM::FindNextSomething
     Data somethingInTrackBytes(sizeof(AddressMarkSyncInTrack));
     const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(somethingInTrackBytes.data());
     for ( ; m_rawTrackContent.RemainingBitLength() >= readLengthMinBits; m_rawTrackContent.StepBit())
-	{
+    {
         if (!AddressMarkSyncInTrack::IsValid(m_rawTrackContent.PeekByte())) // Bit of optimisation for speed.
-			continue;
+            continue;
         auto byteBitPosition = m_rawTrackContent.GetByteBitPosition(); // Using this position for reading bytes.
         m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), sizeof(AddressMarkSyncInTrack), &byteBitPosition);
         if (addressMarkSyncInTrack->IsValid())
-		{
+        {
             const auto byteBitPositionFound = byteBitPosition; // Position of ?AM.
             const auto addressMarkValue = m_rawTrackContent.PeekByte(&byteBitPosition);
             if (TrackIndexInRawTrack::IsSuitable(addressMarkValue))
@@ -215,9 +215,9 @@ std::shared_ptr<ProcessableSomethingFromRawTrack> RawTrackMFM::FindNextSomething
                 m_rawTrackContent.ReadBytes(somethingInTrackBytes.data(), somethingInTrackBytes.size(), &byteBitPosition);
                 return std::make_shared<SectorDataRefFromRawTrack>(byteBitPositionFound, *sectorDataRefInRawTrack);
             }
-		}
-	}
-	return nullptr;
+        }
+    }
+    return nullptr;
 }
 // ====================================
 
@@ -318,11 +318,11 @@ OrphanDataCapableTrack RawTrackMFM::DecodeTrack(const CylHead& cylHead)
     OrphanDataCapableTrack orphanDataCapableTrack;
     RawTrackContext rawTrackContext{cylHead, dataRate, encoding};
 
-	do
-	{
+    do
+    {
         auto somethingFromRawTrack = FindNextSomething();
-		if (somethingFromRawTrack == nullptr)
-			break;
+        if (somethingFromRawTrack == nullptr)
+            break;
         somethingFromRawTrack->ProcessInto(orphanDataCapableTrack, rawTrackContext);
         m_rawTrackContent.StepBit();
     } while (true);
