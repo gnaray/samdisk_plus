@@ -129,5 +129,5 @@ public:
     // larger sync differences after weak sectors. We still require the header
     // to match, so only close repeated headers should be a problem.
     static constexpr int COMPARE_TOLERANCE_BYTES = 64;
-    static constexpr int COMPARE_TOLERANCE_BITS = COMPARE_TOLERANCE_BYTES * 16; // mfmbits (halfbits)
+    static constexpr int COMPARE_TOLERANCE_BITS = DataBytePositionAsBitOffset(COMPARE_TOLERANCE_BYTES); // mfmbits (halfbits)
 };

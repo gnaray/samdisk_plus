@@ -26,8 +26,8 @@ constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
     // We also calculate with bits here though the code is slightly modified.
     const auto gap2_size_min = GetFmOrMfmGap2Length(dataRate, encoding);
     const auto idam_am_distance = GetFmOrMfmIdamAndAmDistance(dataRate, encoding);
-    const auto min_distance = (1 + 6 + gap2_size_min) * 8 * 2; // IDAM, ID, gap2 (without sync and DAM.a1sync, why?)
-    const auto max_distance = (idam_am_distance + 8) * 8 * 2; // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
+    const auto min_distance = DataBytePositionAsBitOffset(1 + 6 + gap2_size_min); // IDAM, ID, gap2 (without sync and DAM.a1sync, why?)
+    const auto max_distance = DataBytePositionAsBitOffset(idam_am_distance + 8); // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
 
     const auto sectorIdAndDataPositionDistance = static_cast<int>((dataByteBitPosition - sectorIdByteBitPosition).TotalBitPosition());
     return sectorIdAndDataPositionDistance >= min_distance && sectorIdAndDataPositionDistance <= max_distance;

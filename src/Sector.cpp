@@ -645,7 +645,7 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
 
 int Sector::FindParentSectorIdByOffset(const IdAndOffsetVector& sectorIdsAndOffsets) const
 {
-    const auto optByteToleranceBits = opt_byte_tolerance_of_time * 8 * 2;
+    const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time);
     for (const auto& idAndOffset : sectorIdsAndOffsets)
     {
         if (idAndOffset.offset >= offset)

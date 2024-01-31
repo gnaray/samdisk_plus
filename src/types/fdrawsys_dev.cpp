@@ -713,9 +713,8 @@ TimedRawDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cylhead, c
             auto it = timedRawDualTrack.finalTimedAndRawTrack.rbegin();
             const auto& sector = *it;
             const auto lengthWithoutOuterGaps = GetFmOrMfmSectorOverheadFromOffsetToDataCrcEnd(sector.datarate, sector.encoding, sector.size());
-            if (sector.offset + lengthWithoutOuterGaps * 8 * 2 < timedRawDualTrack.finalTimedAndRawTrack.tracklen) // It fits, no problem.
+            if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps) < timedRawDualTrack.finalTimedAndRawTrack.tracklen) // It fits, no more problem.
                 break;
-            timedRawDualTrack.finalTimedAndRawTrack.sectors().erase(std::next(it).base());
         }
     }
 

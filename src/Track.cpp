@@ -480,7 +480,7 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
             Sector sector(*it);
             sector.offset = modulo(sector.offset - syncOffset, static_cast<unsigned>(trackLenSingle));
             // If ignore ending data copy and the actual sector ends at track end ...
-            if (ignoreEndingDataCopy && (tracklen - it->offset) / 8 / 2 == it->data_size())
+            if (ignoreEndingDataCopy && BitOffsetAsDataBytePosition(tracklen - it->offset) == it->data_size())
             {
                 int mergedSectorIndexDryrun;
                 const auto addResultDryrun = trackAuxiliarySingle.add(std::move(sector), &mergedSectorIndexDryrun, true);
@@ -564,7 +564,7 @@ void Track::setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen)
 
 int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 {
-    const auto offsetDiff = GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) * 8 * 2;
+    const auto offsetDiff = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()));
     // We could check if the sector overlaps something existing but unimportant now.
     return modulo(dataOffset - offsetDiff, static_cast<unsigned>(tracklen));
 }
@@ -579,11 +579,11 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
         util::cout << "DiscoverTrackSectorScheme is called but normal disk option is not set. This method supports normal disk so setting that option is recommended.\n";
     sectorIdsAndOffsets.reserve(size()); // Size will be more if holes are found at the track end.
 
-    const auto optByteToleranceBits = opt_byte_tolerance_of_time * 8 * 2;
+    const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time);
     const auto sectorSize = operator[](0).size();
     const auto encoding = getEncoding();
-    const auto predictedOverheadedSectorWithoutSyncAndDataBits = GetFmOrMfmSectorOverheadWithoutSync(getDataRate(), encoding) * 8 * 2;
-    const auto predictedOverheadedSectorWithGap3AndDataBits = (GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding) + sectorSize) * 8 * 2;
+    const auto predictedOverheadedSectorWithoutSyncAndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithoutSync(getDataRate(), encoding));
+    const auto predictedOverheadedSectorWithGap3AndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding) + sectorSize);
     auto overheadedSectorWithGap3AndDataBits = 0;
     auto overheadedSectorWithGap3AndDataBitsParticipants = 0;
     auto overheadedSectorWithGap3AndDataBitsAbout = predictedOverheadedSectorWithGap3AndDataBits;
@@ -607,12 +607,12 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
         }
     }
     overheadedSectorWithGap3AndDataBits = overheadedSectorWithGap3AndDataBitsAbout;
-    const auto gap3PlusSyncBits = overheadedSectorWithGap3AndDataBits - predictedOverheadedSectorWithoutSyncAndDataBits - sectorSize * 8 * 2;
-    const auto sectorOverheadTolerance = 1 * 8 * 2;
+    const auto gap3PlusSyncBits = overheadedSectorWithGap3AndDataBits - predictedOverheadedSectorWithoutSyncAndDataBits - DataBytePositionAsBitOffset(sectorSize);
+    const auto sectorOverheadTolerance = DataBytePositionAsBitOffset(1);
 
     // Determine and add holes between track start and first sector.
     const auto overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits =
-            overheadedSectorWithGap3AndDataBitsAbout + gap3PlusSyncBits + GetIdamOverheadSyncOverhead(encoding) * 8 * 2; // gap3 should be gap4a but good enough now.
+            overheadedSectorWithGap3AndDataBitsAbout + gap3PlusSyncBits + DataBytePositionAsBitOffset(GetIdamOverheadSyncOverhead(encoding)); // gap3 should be gap4a but good enough now.
     auto remainingStartOffset = operator[](0).offset;
     while (remainingStartOffset - 0 >= overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits) // Could subtract a minimal gap4a instead of 0.
     {
@@ -650,7 +650,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     }
 
     // Determine and add holes between last sector and track end.
-    const auto overheadedSectorFromOffsetToDataCrcEndBits = overheadedSectorWithGap3AndDataBitsAbout - gap3PlusSyncBits - GetIdamOverheadSyncOverhead(encoding) * 8 * 2;
+    const auto overheadedSectorFromOffsetToDataCrcEndBits = overheadedSectorWithGap3AndDataBitsAbout - gap3PlusSyncBits - DataBytePositionAsBitOffset(GetIdamOverheadSyncOverhead(encoding));
     auto remainingEndOffset = operator[](iSup - 1).offset + overheadedSectorWithGap3AndDataBits;
     while (tracklen - remainingEndOffset >= overheadedSectorFromOffsetToDataCrcEndBits)
     {
