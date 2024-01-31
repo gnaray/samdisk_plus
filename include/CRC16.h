@@ -47,6 +47,13 @@ public:
     }
 
     uint16_t add(const Data& data);
+
+    template<typename T>
+    uint16_t add(const Data& data, T len)
+    {
+        return add(data.data(), len);
+    }
+
     uint8_t lsb() const;
     uint8_t msb() const;
 
