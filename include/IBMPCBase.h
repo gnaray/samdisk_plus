@@ -179,6 +179,11 @@ inline int GetIdOverhead(const Encoding& encoding)
     return encoding == Encoding::FM ? ID_OVERHEAD_FM : ID_OVERHEAD_MFM;
 }
 
+inline int GetIdOverheadWithoutIdamOverheadSyncOverhead(const Encoding& encoding)
+{
+    return GetIdOverhead(encoding) - GetIdamOverheadSyncOverhead(encoding);
+}
+
 inline int GetDOverhead(const Encoding& encoding, const int dataSize = 0)
 {
     return (encoding == Encoding::FM ? D_OVERHEAD_FM : D_OVERHEAD_MFM) + dataSize;
