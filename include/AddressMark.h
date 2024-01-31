@@ -128,7 +128,7 @@ public:
     constexpr bool IsDeletedData() const
     { return m_addressMark == DELETED_DATA; }
 
-    std::string ToString() const
+    std::string ToString(bool /*onlyRelevantData = true*/) const
     {
         switch (m_addressMark) {
         case UNDEFINED: return "UNDEFINED";
@@ -144,9 +144,19 @@ public:
         return "invalid AddressMarkEnum error";
     }
 
+    friend std::string to_string(const AddressMark& addressMark, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << addressMark.ToString(onlyRelevantData);
+        return ss.str();
+    }
+
 private:
     AddressMarkEnum m_addressMark{UNDEFINED};
 };
+
+inline std::ostream& operator<<(std::ostream& os, const AddressMark& addressMark) { return os << to_string(addressMark); }
+
 
 //---------------------------------------------------------------------------
 #endif
