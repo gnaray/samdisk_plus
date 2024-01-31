@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <tuple>
 
-constexpr int UINT8_T_BIT_SIZE = sizeof(uint8_t) * CHAR_BIT;
+constexpr int UINT8_T_BIT_SIZE = sizeof(uint8_t) * 8;
 
 class ByteBitPosition
 {
