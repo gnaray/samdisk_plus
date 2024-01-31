@@ -84,6 +84,11 @@ public:
             *(mem++) = ReadByte(byteBitPositionSelected);
     }
 
+    inline void ReadBytes(Data& dataBytes, ByteBitPosition* byteBitPosition = nullptr)
+    {
+        ReadBytes(dataBytes.data(), dataBytes.size(), byteBitPosition);
+    }
+
     inline void StoreByteAtPosition(uint8_t byte, const ByteBitPosition& byteBitPosition)
     {
         if (RemainingByteLength() < 1)
