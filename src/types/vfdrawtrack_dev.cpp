@@ -69,7 +69,7 @@ TrackData VfdRawTrackDevDisk::LoadRawTrack(const CylHead& cylhead)
     } while (false);
 
     auto rawTrack = rawTrackMFM;
-    auto bitstream = rawTrack.AsBitstream();
+    auto bitstream = rawTrack.AsMFMBitstream();
     auto trackdata = TrackData(cylhead, std::move(bitstream));
     trackdata.fix_track_readstats();
     return trackdata;
