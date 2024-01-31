@@ -50,7 +50,7 @@ public:
         return ByteBitPosition(BytesBitSize());
     }
 
-    inline uint8_t PeekByteAtPosition(const ByteBitPosition& byteBitPosition)
+    inline uint8_t PeekByteAtPosition(const ByteBitPosition& byteBitPosition) const
     {
         assert(m_bytes.size() * UINT8_T_BIT_SIZE >= byteBitPosition + UINT8_T_BIT_SIZE);
         return byteBitPosition.BitPosition() == 0
@@ -59,7 +59,7 @@ public:
                 | (m_bytes[byteBitPosition.BytePosition() + 1] >> (UINT8_T_BIT_SIZE - byteBitPosition.BitPosition())));
     }
 
-    inline uint8_t PeekByte(const ByteBitPosition* byteBitPosition = nullptr)
+    inline uint8_t PeekByte(const ByteBitPosition* byteBitPosition = nullptr) const
     {
         const auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
         return PeekByteAtPosition(*byteBitPositionSelected);
@@ -128,7 +128,7 @@ public:
             WriteByte(*(mem++), byteBitPositionSelected);
     }
 
-    void WriteBytes(Data bytes, ByteBitPosition* byteBitPosition = nullptr)
+    void WriteBytes(const Data bytes, ByteBitPosition* byteBitPosition = nullptr)
     {
         WriteBytes(bytes.data(), bytes.size(), byteBitPosition);
     }
