@@ -171,7 +171,7 @@ const RawTrackMFM& VfdrawcmdSys::ReadRawTrack(const CylHead& cylhead)
             {
                 break;
             }
-            VectorX<uint8_t> rawTrackContent(file.size());
+            Data rawTrackContent(file.size());
             if (file.rewind() && file.read(rawTrackContent))
                 rawTrackMFM = RawTrackMFM(file.data(), FDRATE_TO_DATARATE[m_fdrate]);
         } while (false);
