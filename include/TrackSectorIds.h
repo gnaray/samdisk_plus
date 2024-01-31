@@ -33,15 +33,15 @@ public:
         return ss.str();
     }
 
-    friend std::string to_string(const TrackSectorIds& formatSectorScheme, bool onlyRelevantData = true)
+    friend std::string to_string(const TrackSectorIds& trackSectorIds, bool onlyRelevantData = true)
     {
         std::ostringstream ss;
-        ss << formatSectorScheme.ToString(onlyRelevantData);
+        ss << trackSectorIds.ToString(onlyRelevantData);
         return ss.str();
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const TrackSectorIds& formatSectorScheme) { return os << to_string(formatSectorScheme); }
+inline std::ostream& operator<<(std::ostream& os, const TrackSectorIds& trackSectorIds) { return os << to_string(trackSectorIds); }
 
 
 
