@@ -327,7 +327,7 @@ public:
 
 private:
     Data m_bytes{};
-    ByteBitPosition m_byteBitPosition{};
+    ByteBitPosition m_byteBitPosition;
 };
 
 
