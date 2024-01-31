@@ -68,6 +68,26 @@ inline bool are_offsets_tolerated_same(const int offset1, const int offset2, con
     return distance <= byte_tolerance_of_time * 16;
 }
 
+constexpr int DataBitPositionAsBitOffset(const int bitPosition)
+{
+    return bitPosition * 2;
+}
+
+constexpr int DataBytePositionAsBitOffset(const int bytePosition)
+{
+    return DataBitPositionAsBitOffset(bytePosition) * 8;
+}
+
+constexpr int BitOffsetAsDataBitPosition(const int offset)
+{
+    return offset / 2;
+}
+
+constexpr int BitOffsetAsDataBytePosition(const int offset)
+{
+    return BitOffsetAsDataBitPosition(offset) / 8;
+}
+
 
 
 inline std::ostream& operator<<(std::ostream& os, const DataRate dr) { return os << to_string(dr); }
