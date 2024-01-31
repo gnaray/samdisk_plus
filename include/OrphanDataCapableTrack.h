@@ -5,7 +5,7 @@
 class OrphanDataCapableTrack; // Required because this and RawTrackMFM includes each other.
 
 #include "RawTrackMFM.h"
-#include <Track.h>
+#include "Track.h"
 
 class OrphanDataCapableTrack
 {
@@ -27,7 +27,7 @@ public:
 public:
     void mergeRawTrack(const CylHead& cylhead, const RawTrackMFM& toBeMergedRawTrack);
     void mergeRawTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
-    void syncThisToOtherAsMulti(int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
+    void syncThisToOtherAsMulti(const int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
     int determineBestTrackLen(const int timedTrackTime) const;
 

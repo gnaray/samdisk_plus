@@ -126,7 +126,7 @@ void OrphanDataCapableTrack::mergeRawTrack(OrphanDataCapableTrack&& toBeMergedOD
 }
 
 // Apply the sync preferably on this track. However the offsets must be positive, thus opposite sync the targetTrack if have to.
-void OrphanDataCapableTrack::syncThisToOtherAsMulti(int syncOffset, OrphanDataCapableTrack& targetODCTrack)
+void OrphanDataCapableTrack::syncThisToOtherAsMulti(const int syncOffset, OrphanDataCapableTrack& targetODCTrack)
 {
     if (syncOffset == 0 || track.empty())
         return;
