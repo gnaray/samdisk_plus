@@ -128,9 +128,9 @@ public:
             WriteByte(*(mem++), byteBitPositionSelected);
     }
 
-    void WriteBytes(const Data bytes, ByteBitPosition* byteBitPosition = nullptr)
+    void WriteBytes(const Data& dataBytes, ByteBitPosition* byteBitPosition = nullptr)
     {
-        WriteBytes(bytes.data(), bytes.size(), byteBitPosition);
+        WriteBytes(dataBytes.data(), dataBytes.size(), byteBitPosition);
     }
 
     void CopyBytesFrom(BitPositionableByteVector& srcBytes, int byteLen, ByteBitPosition* srcByteBitPosition = nullptr, ByteBitPosition* dstByteBitPosition = nullptr)
