@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Sector.h"
+#include "VectorX.h"
 
 #include <cstring>
 #include <string>
@@ -24,7 +24,7 @@ public:
     Compress compression() const;
 
     bool read(uint8_t& b);
-    VectorX<uint8_t> read(int len);
+    Data read(int len);
     bool read(void* buf, int len);
     int read(void* buf, int size, int count);
 

@@ -352,10 +352,10 @@ bool MemFile::read(uint8_t& b)
     return true;
 }
 
-VectorX<uint8_t> MemFile::read(int len)
+Data MemFile::read(int len)
 {
     auto avail_bytes = std::min(len, remaining());
-    VectorX<uint8_t> data(m_it, m_it + avail_bytes);
+    Data data(m_it, m_it + avail_bytes);
     m_it += avail_bytes;
     return data;
 }
