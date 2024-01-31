@@ -53,7 +53,7 @@ uint16_t CRC16::add(uint8_t byte)
 
 uint16_t CRC16::add(const Data& data)
 {
-    return add(data.data(), data.size());
+    return add(data, data.size());
 }
 
 uint8_t CRC16::msb() const
