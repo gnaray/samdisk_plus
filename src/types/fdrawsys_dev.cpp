@@ -745,7 +745,9 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysic
         if (opt_debug)
             util::cout << "GuessAndAddSectorIdsOfOrphans: processing sector, offset=" << orphanDataSector.offset << ", ID=" << orphanDataSector.header.sector << "\n";
 
+        // Find any sector id which coheres, it does not matter if closest or not.
         const auto it = track.findForDataFmOrMfm(orphanDataSector.offset, orphanDataSector.header.size);
+        // If not found sector id then let us guess it.
         if (it == track.end()) // The end is dynamic since adding sector to track.
         {
             util::cout << "GuessAndAddSectorIdsOfOrphans: Orphan has no parent, offset=" << orphanDataSector.offset << "\n";
@@ -793,6 +795,17 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysic
     const auto it = timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.findDataForSectorIdFmOrMfm(sector.offset, sector.header.size);
     if (it != timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.end())
     {
+        // If there is next sector id which finds the same orphan data then the orphan data does not belong to current sector id. Very rare case.
+        if (index < finalTrack.size() - 1)
+        {
+            const auto& sectorNext = finalTrack[index + 1];
+            if (sectorNext.offset < it->offset) // Bit of optimisation for speed.
+            {
+                const auto it2 = timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.findDataForSectorIdFmOrMfm(sectorNext.offset, sectorNext.header.size);
+                if (it2 == it)
+                    return false;
+            }
+        }
         auto sectorData = SectorDataFromPhysicalTrack::GetGoodDataUpToSize(*it, sector.size());
         const bool badCrc = sectorData.empty();
         const auto dam = it->dam;
