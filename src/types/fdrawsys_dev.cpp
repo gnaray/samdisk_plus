@@ -353,7 +353,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 
     if (scan_result->count > 0)
     {
-        const auto mfmbit_us = GetFmOrMfmDataBitsTime(m_lastDataRate, m_lastEncoding);
+        const auto mfmbit_us = GetFmOrMfmBitsTime(m_lastDataRate, m_lastEncoding);
         track.tracktime = tracktime;
         track.tracklen = round_AS<int>(track.tracktime / mfmbit_us);
 
@@ -842,7 +842,7 @@ bool FdrawSysDevDisk::ReadAndMergeRawTracks(const CylHead& cylhead, TimedRawDual
     const bool foundNewSector = timedRawDualTrack.rawTrackMulti.size() > sectorAmountPrev;
     if (m_trackInfo[cylhead].trackLenIdeal <= 0 && foundNewSectorId)
     {
-        const auto bestTrackLen = timedRawDualTrack.rawTrackMulti.determineBestTrackLen(GetFmOrMfmTimeDataBitsAsRounded(m_lastDataRate, m_lastEncoding, m_trackInfo[cylhead].trackTime));
+        const auto bestTrackLen = timedRawDualTrack.rawTrackMulti.determineBestTrackLen(GetFmOrMfmTimeBitsAsRounded(m_lastDataRate, m_lastEncoding, m_trackInfo[cylhead].trackTime));
         if (bestTrackLen > 0)
         {
             m_trackInfo[cylhead].trackLenIdeal = bestTrackLen;

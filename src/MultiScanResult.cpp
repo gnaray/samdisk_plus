@@ -6,7 +6,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 Track MultiScanResult::DecodeResult(const CylHead& cylhead, const DataRate& dataRate, const Encoding& encoding, int trackLen/* = 0*/) const
 {
     Track timedTrack;
-    const auto mfmbit_us = GetFmOrMfmDataBitsTime(dataRate, encoding);
+    const auto mfmbit_us = GetFmOrMfmBitsTime(dataRate, encoding);
     if (trackLen > 0)
     {
         timedTrack.tracklen = trackLen;
