@@ -56,18 +56,6 @@ constexpr int convert_offset_by_datarate(int offset, const DataRate& datarate_so
     return bits_per_second(datarate_target) / 10000 * offset / bits_per_second(datarate_source) * 10000;
 }
 
-inline bool are_offsets_tolerated_same(const int offset1, const int offset2, const int byte_tolerance_of_time, const int tracklen)
-{
-    const auto offset_min = std::min(offset1, offset2);
-    const auto offset_max = std::max(offset1, offset2);
-    auto distance = offset_max - offset_min;
-    if (tracklen > 0)
-        distance = std::min(distance, tracklen + offset_min - offset_max);
-
-    // Offsets must be close enough.
-    return distance <= byte_tolerance_of_time * 16;
-}
-
 constexpr int DataBitPositionAsBitOffset(const int bitPosition)
 {
     return bitPosition * 2;
@@ -86,6 +74,18 @@ constexpr int BitOffsetAsDataBitPosition(const int offset)
 constexpr int BitOffsetAsDataBytePosition(const int offset)
 {
     return BitOffsetAsDataBitPosition(offset) / 8;
+}
+
+inline bool are_offsets_tolerated_same(const int offset1, const int offset2, const int byte_tolerance_of_time, const int tracklen)
+{
+    const auto offset_min = std::min(offset1, offset2);
+    const auto offset_max = std::max(offset1, offset2);
+    auto distance = offset_max - offset_min;
+    if (tracklen > 0)
+        distance = std::min(distance, tracklen + offset_min - offset_max);
+
+    // Offsets must be close enough.
+    return distance <= DataBytePositionAsBitOffset(byte_tolerance_of_time);
 }
 
 
