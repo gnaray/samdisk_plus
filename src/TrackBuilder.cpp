@@ -9,7 +9,7 @@ TrackBuilder::TrackBuilder(DataRate datarate, Encoding encoding)
     setEncoding(encoding);
 }
 
-void TrackBuilder::setEncoding(Encoding encoding)
+/*virtual*/ void TrackBuilder::setEncoding(Encoding encoding)
 {
     switch (encoding)
     {
@@ -105,7 +105,7 @@ void TrackBuilder::addBlockUpdateCrc(const Data& data)
     }
 }
 
-void TrackBuilder::addGap(int count, int fill)
+void TrackBuilder::addGap(int count, int fill/* = -1*/)
 {
     if (fill < 0)
         fill = (m_encoding == Encoding::FM) ? 0xff : 0x4e;
@@ -113,7 +113,7 @@ void TrackBuilder::addGap(int count, int fill)
     addBlock(fill, count);
 }
 
-void TrackBuilder::addGap2(int fill)
+void TrackBuilder::addGap2(int fill/* = -1*/)
 {
     int gap2_bytes = GetFmOrMfmGap2Length(m_datarate, m_encoding);
     addGap(gap2_bytes, fill);
@@ -215,7 +215,7 @@ void TrackBuilder::addTrackStart(bool short_mfm_gap/* = false*/)
     }
 }
 
-void TrackBuilder::addSectorHeader(const Header& header, bool crc_error, bool short_mfm_gap/* = false*/)
+void TrackBuilder::addSectorHeader(const Header& header, bool crc_error/* = false*/, bool short_mfm_gap/* = false*/)
 {
     addAM(IBM_IDAM, false, short_mfm_gap);
     addByteUpdateCrc(header.cyl);
@@ -225,7 +225,7 @@ void TrackBuilder::addSectorHeader(const Header& header, bool crc_error, bool sh
     addCrcBytes(crc_error);
 }
 
-void TrackBuilder::addSectorData(const Data& data, int size, uint8_t dam, bool crc_error)
+void TrackBuilder::addSectorData(const Data& data, int size, uint8_t dam/* = IBM_DAM*/, bool crc_error/* = false*/)
 {
     // Ensure this isn't used for over-sized protected sectors.
     assert(Sector::SizeCodeToLength(size) == Sector::SizeCodeToLength(size));
@@ -256,7 +256,7 @@ void TrackBuilder::addSectorData(const Data& data, int size, uint8_t dam, bool c
     }
 }
 
-void TrackBuilder::addSector(const Sector& sector, int gap3_bytes, bool short_mfm_gap/* = false*/)
+void TrackBuilder::addSector(const Sector& sector, int gap3_bytes/* = 0*/, bool short_mfm_gap/* = false*/)
 {
     setEncoding(sector.encoding);
 
@@ -286,7 +286,7 @@ void TrackBuilder::addSector(const Sector& sector, int gap3_bytes, bool short_mf
     }
 }
 
-void TrackBuilder::addSector(const Header& header, const Data& data, int gap3_bytes, uint8_t dam, bool crc_error)
+void TrackBuilder::addSector(const Header& header, const Data& data, int gap3_bytes/* = 0*/, uint8_t dam/* = IBM_DAM*/, bool crc_error/* = false*/)
 {
     Sector sector(m_datarate, m_encoding, header, gap3_bytes);
     sector.add(Data(data), crc_error, dam);
@@ -294,7 +294,7 @@ void TrackBuilder::addSector(const Header& header, const Data& data, int gap3_by
 }
 
 // Sector header and DAM, but no data, CRC, or gap3 -- for weak sectors.
-void TrackBuilder::addSectorUpToData(const Header& header, uint8_t dam)
+void TrackBuilder::addSectorUpToData(const Header& header, uint8_t dam/* = IBM_DAM*/)
 {
     addSectorHeader(header);
     addGap2();
