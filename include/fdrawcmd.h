@@ -166,7 +166,15 @@ typedef struct tagFD_FORMAT_PARAMS
     {
         return reinterpret_cast<FD_ID_HEADER*>(&this[1]);
     }
+    inline const FD_ID_HEADER* HeaderArray() const
+    {
+        return reinterpret_cast<const FD_ID_HEADER*>(&this[1]);
+    }
     inline FD_ID_HEADER& HeaderArray(const int index)
+    {
+        return HeaderArray()[index];
+    }
+    inline const FD_ID_HEADER& HeaderArray(const int index) const
     {
         return HeaderArray()[index];
     }
@@ -271,7 +279,15 @@ typedef struct tagFD_SCAN_RESULT
     {
         return reinterpret_cast<FD_ID_HEADER*>(&this[1]);
     }
+    inline const FD_ID_HEADER* HeaderArray() const
+    {
+        return reinterpret_cast<const FD_ID_HEADER*>(&this[1]);
+    }
     inline FD_ID_HEADER& HeaderArray(const int index)
+    {
+        return HeaderArray()[index];
+    }
+    inline const FD_ID_HEADER& HeaderArray(const int index) const
     {
         return HeaderArray()[index];
     }
@@ -295,7 +311,15 @@ typedef struct tagFD_TIMED_SCAN_RESULT
     {
         return reinterpret_cast<FD_TIMED_ID_HEADER*>(&this[1]);
     }
+    inline const FD_TIMED_ID_HEADER* HeaderArray() const
+    {
+        return reinterpret_cast<const FD_TIMED_ID_HEADER*>(&this[1]);
+    }
     inline FD_TIMED_ID_HEADER& HeaderArray(const int index)
+    {
+        return HeaderArray()[index];
+    }
+    inline const FD_TIMED_ID_HEADER& HeaderArray(const int index) const
     {
         return HeaderArray()[index];
     }
@@ -330,7 +354,15 @@ typedef struct tagFD_TIMED_MULTI_SCAN_RESULT
     {
         return reinterpret_cast<FD_TIMED_MULTI_ID_HEADER*>(&this[1]);
     }
+    inline const FD_TIMED_MULTI_ID_HEADER* HeaderArray() const
+    {
+        return reinterpret_cast<const FD_TIMED_MULTI_ID_HEADER*>(&this[1]);
+    }
     inline FD_TIMED_MULTI_ID_HEADER& HeaderArray(const int index)
+    {
+        return HeaderArray()[index];
+    }
+    inline const FD_TIMED_MULTI_ID_HEADER& HeaderArray(const int index) const
     {
         return HeaderArray()[index];
     }
