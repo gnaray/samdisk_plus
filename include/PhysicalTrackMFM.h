@@ -111,7 +111,7 @@ public:
     {
     }
 
-    constexpr bool DoSectorIdAndDataPositionsCohere(const ByteBitPosition& sectorIdByteBitPosition, const ByteBitPosition& dataByteBitPosition, const Encoding& encoding) const;
+    constexpr bool DoSectorIdAndDataPositionsCohere(const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const;
 
     CylHead cylHead;
     DataRate dataRate = DataRate::Unknown;
