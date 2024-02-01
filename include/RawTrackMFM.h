@@ -10,10 +10,8 @@ class RawTrackMFM; // Required because this and OrphanDataCapableTrack includes 
 #include "AddressMark.h"
 #include "CRC16.h"
 #include "Header.h"
-#include "Sector.h"
 #include "OrphanDataCapableTrack.h"
 #include "Util.h"
-#include "utils.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -103,6 +101,24 @@ public:
     uint8_t m_crcLow;
 };
 
+
+
+class RawTrackContext
+{
+public:
+    RawTrackContext(const CylHead& cylHead, const DataRate& dataRate)
+        : cylHead(cylHead), dataRate(dataRate)
+    {
+    }
+
+    constexpr bool DoSectorIdAndDataPositionsCohere(const ByteBitPosition& sectorIdByteBitPosition, const ByteBitPosition& dataByteBitPosition, const Encoding& encoding) const;
+
+    CylHead cylHead;
+    DataRate dataRate = DataRate::Unknown;
+};
+
+
+
 class TrackIndexInRawTrack : public AddressMarkInTrack
 {
 public:
@@ -111,15 +127,17 @@ public:
     {
     }
 
-    static constexpr bool IsSuitable(uint8_t addressMarkValue)
+    static constexpr bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
     {
-        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue));
+        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue), availableBytes);
     }
 
-    static constexpr bool IsSuitable(const AddressMark& addressMark)
+    static constexpr bool IsSuitable(const AddressMark& addressMark, const int /*availableBytes*/)
     {
         return addressMark == AddressMark::INDEX;
     }
+
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& rawTrackContent, const RawTrackContext& rawTrackContext, const Encoding& encoding);
 
 private:
 };
@@ -135,30 +153,26 @@ public:
     {
     }
 
-//    static SectorIdInRawTrack ConstructByAddessMarkAndReadingIdAndCrc(
-//        const AddressMarkInTrack& addressMarkInTrack, BitPositionableByteVector& trackContent)
-//    {
-//        SectorIdInRawTrack sectorIdInRawTrack(
-//            addressMarkInTrack,
-//            trackContent.ReadByte(), trackContent.ReadByte(), trackContent.ReadByte(),
-//            trackContent.ReadByte(), trackContent.ReadByte(), trackContent.ReadByte()
-//        );
-//        return sectorIdInRawTrack;
-//    }
-
-    static constexpr bool IsSuitable(uint8_t addressMarkValue)
+    static constexpr bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
     {
-        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue));
+        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue), availableBytes);
     }
 
-    static constexpr bool IsSuitable(const AddressMark& addressMark)
+    static constexpr bool IsSuitable(const AddressMark& addressMark, const int availableBytes)
     {
-        return addressMark == AddressMark::ID;
+        return addressMark == AddressMark::ID && intsizeof(SectorIdInRawTrack) <= availableBytes;
     }
+
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& rawTrackContent, const RawTrackContext& rawTrackContext, const Encoding& encoding);
 
     CRC16 CalculateCrc() const
     {
         return CRC16(&m_addressMark, sizeof(SectorIdInRawTrack), CRC16::A1A1A1);
+    }
+
+    Header AsHeader() const
+    {
+        return Header(m_cyl, m_head, m_sector, m_sizeId);
     }
 
 private:
@@ -172,203 +186,88 @@ public:
     {
     }
 
-    static constexpr bool IsSuitable(uint8_t addressMarkValue)
+    static constexpr bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
     {
-        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue));
+        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue), availableBytes);
     }
 
-    static constexpr bool IsSuitable(const AddressMark& addressMark)
+    static constexpr bool IsSuitable(const AddressMark& addressMark, const int availableBytes)
     {
-        return addressMark == AddressMark::DATA || addressMark == AddressMark::ALT_DATA
+        return (addressMark == AddressMark::DATA || addressMark == AddressMark::ALT_DATA
                 || addressMark == AddressMark::DELETED_DATA || addressMark == AddressMark::ALT_DELETED_DATA
-                || addressMark == AddressMark::RX02;
+                || addressMark == AddressMark::RX02) &&
+                (intsizeof(SectorDataRefInRawTrack) + intsizeof(CrcInTrack) <= availableBytes);
     }
+
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& rawTrackContent, const RawTrackContext& rawTrackContext, const Encoding& encoding);
 
 private:
 };
 
-template<unsigned int S>
-class SectorBlockInRawTrack
-{
-public:
-    constexpr SectorBlockInRawTrack(const uint8_t blockBytes[S])
-    {
-        std::copy(blockBytes, blockBytes + S, bytes);
-    }
-
-    uint8_t bytes[S];
-};
-
-template<unsigned int S>
-class SectorDataInRawTrack : public AddressMarkInTrack, public SectorBlockInRawTrack<S>, public CrcInTrack
-{
-public:
-    constexpr SectorDataInRawTrack(const AddressMarkInTrack& addressMarkInTrack,
-        const uint8_t blockBytes[S], uint8_t crcHigh, uint8_t crcLow)
-        : AddressMarkInTrack(addressMarkInTrack), SectorBlockInRawTrack<S>(blockBytes),
-        CrcInTrack(crcHigh, crcLow)
-    {
-    }
-
-//    static SectorDataInRawTrack ConstructByAddessMarkAndReadingDataAndCrc(
-//        const AddressMarkInTrack& addressMarkInTrack, BitPositionableByteVector& trackContent,
-//        int dataByteSize)
-//    {
-//        SectorDataInRawTrack sectorDataInRawTrack(
-//            addressMarkInTrack, dataByteSize,
-//            trackContent.ReadByte(), trackContent.ReadByte()
-//        );
-//        return sectorDataInRawTrack;
-//    }
-
-    static constexpr bool IsSuitable(uint8_t addressMarkValue)
-    {
-        return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue));
-    }
-
-    static constexpr bool IsSuitable(const AddressMark& addressMark)
-    {
-        return addressMark == AddressMark::DATA || addressMark == AddressMark::ALT_DATA
-                || addressMark == AddressMark::DELETED_DATA || addressMark == AddressMark::ALT_DELETED_DATA
-                || addressMark == AddressMark::RX02;
-    }
-
-    CRC16 CalculateCrc() const
-    {
-        return CRC16(&m_addressMark, sizeof(SectorDataInRawTrack), CRC16::A1A1A1);
-    }
-
-};
 #pragma pack(pop)
 
 
 
-class RawTrackContext;
-
-class SomethingFromRawTrack
+// Required by virtual subclasses thus this becomes non aggregate so suggested to declare all 5 (Rule of 3/5/0).
+// See https://en.cppreference.com/w/cpp/language/rule_of_three, "C.21: If you define or =delete any copy, move, or destructor function, define or =delete them all."
+class SectorDataFromRawTrack
 {
 public:
-    constexpr SomethingFromRawTrack(const ByteBitPosition& foundByteBitPosition, const AddressMark& addressMark)
-        : m_foundByteBitPosition(foundByteBitPosition), m_addressMark(addressMark)
+    // Constructor for the case when raw data is processed first time.
+    SectorDataFromRawTrack(const Encoding& encoding, const ByteBitPosition& byteBitPositionFound, Data&& rawData, bool dataSizeKnown)
+        : rawData(rawData), encoding(encoding), byteBitPositionFound(byteBitPositionFound),
+          addressMark(rawData[0]), badCrc(dataSizeKnown ? CalculateCrcIsBad() : true)
     {
     }
 
-    SomethingFromRawTrack(const SomethingFromRawTrack&) = default;
-    SomethingFromRawTrack(SomethingFromRawTrack&&) = default;
-    SomethingFromRawTrack& operator=(const SomethingFromRawTrack&) = default;
-    SomethingFromRawTrack& operator=(SomethingFromRawTrack&&) = default;
-    virtual ~SomethingFromRawTrack() = default;
+    static void ProcessInto(Sector& sector, BitPositionableByteVector& rawTrackContent, const Encoding& encoding,
+                            const int nextIdamOffset = 0, const int nextDamOffset = 0);
 
-    ByteBitPosition m_foundByteBitPosition;
-    AddressMark m_addressMark;
-};
+    // Method for the case when good data of raw data is requested because its size became known.
+    static Data GetGoodDataUpToSize(const Sector& rawSector, const int sectorSize);
 
+    static constexpr int RawSizeOf(const int dataSize)
+    {
+        return intsizeof(AddressMarkInTrack) + dataSize + intsizeof(CrcInTrack);
+    }
 
+    static constexpr bool IsSuitable(const int dataSize, const int availableBytes)
+    {
+        return RawSizeOf(dataSize) <= availableBytes;
+    }
 
-class ProcessableSomethingFromRawTrack : public SomethingFromRawTrack
-{
+    Data GetData() const
+    {
+        return GetData(rawData, static_cast<int>(rawData.end() - rawData.begin()));
+    }
+
+protected:
+    // Select real data from raw data.
+    static Data GetData(const Data& rawData, const int rawSize)
+    {
+        if (rawSize <= intsizeof(AddressMarkInTrack) + intsizeof(CrcInTrack))
+            return Data();
+        return Data(rawData.begin() + intsizeof(AddressMarkInTrack), rawData.begin() + rawSize - intsizeof(CrcInTrack));
+    }
+
+    static bool CalculateCrcIsBad(const Encoding& encoding, const Data& rawData, const int rawSize)
+    {
+        CRC16 crc(encoding == Encoding::FM ? CRC16::INIT_CRC : CRC16::A1A1A1);
+        return crc.add(rawData, rawSize) != 0;
+    }
+
+    bool CalculateCrcIsBad() const
+    {
+        return CalculateCrcIsBad(encoding, rawData, rawData.size());
+    }
+
+    Data rawData{};
+
 public:
-    using SomethingFromRawTrack::SomethingFromRawTrack;
-
-    virtual void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const = 0;
-};
-
-
-
-class TrackIndexFromRawTrack : public ProcessableSomethingFromRawTrack
-{
-public:
-    TrackIndexFromRawTrack(
-        const ByteBitPosition& foundByteBitPosition,
-        const TrackIndexInRawTrack& trackIndexInRawTrack)
-        : ProcessableSomethingFromRawTrack(foundByteBitPosition, trackIndexInRawTrack.m_addressMark)
-    {
-    }
-
-    void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const override;
-};
-
-class SectorIdFromRawTrack : public ProcessableSomethingFromRawTrack
-{
-public:
-    SectorIdFromRawTrack(
-        const ByteBitPosition& foundByteBitPosition,
-        const SectorIdInRawTrack& sectorIdInRawTrack)
-        : ProcessableSomethingFromRawTrack(foundByteBitPosition, sectorIdInRawTrack.m_addressMark),
-          cyl(sectorIdInRawTrack.m_cyl), head(sectorIdInRawTrack.m_head),
-          sector(sectorIdInRawTrack.m_sector), sizeId(sectorIdInRawTrack.m_sizeId),
-          badCrc(sectorIdInRawTrack.CalculateCrc() != 0)
-    {
-    }
-
-    SectorIdFromRawTrack& operator=(const SectorIdFromRawTrack& sectorIdFromRawTrack) = default;
-
-    void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const override;
-
-    constexpr size_t DataSize() const
-    {
-        return SectorIdInTrack::ByteSizeBySizeId(sizeId);
-    }
-    constexpr bool empty() const
-    {
-        return m_foundByteBitPosition == 0;
-    }
-
-    uint8_t cyl;
-    uint8_t head;
-    uint8_t sector;
-    uint8_t sizeId;
+    Encoding encoding;
+    ByteBitPosition byteBitPositionFound;
+    AddressMark addressMark;
     bool badCrc;
-};
-
-class SectorDataRefFromRawTrack : public ProcessableSomethingFromRawTrack
-{
-public:
-    SectorDataRefFromRawTrack(
-        const ByteBitPosition& foundByteBitPosition,
-        const SectorDataRefInRawTrack& sectorDataInRawTrack)
-        : ProcessableSomethingFromRawTrack(foundByteBitPosition, sectorDataInRawTrack.m_addressMark)
-    {
-    }
-
-    void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, RawTrackContext& rawTrackContext) const override;
-};
-
-class SectorDataFromRawTrack : public SomethingFromRawTrack
-{
-public:
-    template<unsigned int S>
-    SectorDataFromRawTrack(
-        const ByteBitPosition& foundByteBitPosition,
-        const SectorDataInRawTrack<S>& sectorDataInRawTrack)
-        : SomethingFromRawTrack(foundByteBitPosition, sectorDataInRawTrack.m_addressMark),
-        data(sectorDataInRawTrack.bytes, sectorDataInRawTrack.bytes + S),
-        badCrc(sectorDataInRawTrack.CalculateCrc() != 0)
-    {
-    }
-
-
-    static SectorDataFromRawTrack Construct(const int dataSizeCode, const ByteBitPosition& byteBitPosition, const Data& somethingInTrackBytes);
-
-    Data data{};
-    bool badCrc;
-};
-
-
-
-class RawTrackContext
-{
-public:
-    RawTrackContext(const CylHead& cylHead, const DataRate& dataRate, const Encoding& encoding)
-        : cylHead(cylHead), dataRate(dataRate), encoding(encoding)
-    {
-    }
-    constexpr bool DoSectorIdAndDataPositionsCohere(
-            const ByteBitPosition& sectorIdByteBitPosition, const ByteBitPosition& dataByteBitPosition) const;
-
-    CylHead cylHead;
-    DataRate dataRate = DataRate::Unknown;
-    Encoding encoding = Encoding::Unknown;
 };
 
 
@@ -390,7 +289,6 @@ public:
 
     void Rewind();
     BitBuffer AsMFMBitstream();
-    std::shared_ptr<ProcessableSomethingFromRawTrack> FindNextSomething();
     void ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const RawTrackContext& rawTrackContext);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead) const;
