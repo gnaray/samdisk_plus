@@ -94,7 +94,7 @@ bool VfdrawcmdSys::AdvanceSectorIndexByFindingSectorIds(const OrphanDataCapableT
     {
         count -= trackSectorCount - (static_cast<int>(m_currentSectorIndex));
         const auto itlastSector = orphanDataCapableTrack.track.end() - 1;
-        auto offset = itlastSector->offset + GetSectorOverhead(fdEncodingToEncoding(m_encoding_flags)) * 16; // Addition is not perfect but good enough now. mfmbits
+        auto offset = itlastSector->offset + DataBytePositionAsBitOffset(GetSectorOverhead(fdEncodingToEncoding(m_encoding_flags))); // Addition is not perfect but good enough now. mfmbits
         if (offset < trackLen)
             m_currentSectorIndex = 0;
         else

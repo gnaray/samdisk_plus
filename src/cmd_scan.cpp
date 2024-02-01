@@ -34,10 +34,10 @@ void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context,
 
             // Calculate the offset needed to hide a 256-byte sector using the current encoding and
             // data rate.  If the first sector offset exceeds that then there could be a problem.
-            auto min_offset_bits = (GetFmOrMfmSectorOverhead(first_sector.datarate, first_sector.encoding, Sector::SizeCodeToLength(1))) * 16;
+            auto min_offset_bits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverhead(first_sector.datarate, first_sector.encoding, Sector::SizeCodeToLength(1)));
 
             // Calculate the gap between the end of final sector and the start of the first sector
-            auto data_end_bits = last_sector.offset + (GetFmOrMfmSectorOverhead(last_sector.datarate, last_sector.encoding, last_sector.size())) * 16;
+            auto data_end_bits = last_sector.offset + DataBytePositionAsBitOffset(GetFmOrMfmSectorOverhead(last_sector.datarate, last_sector.encoding, last_sector.size()));
             auto wrap_start_bits = track.tracklen + first_sector.offset;
 
             // If the gap before the first visible sector is suspiciously large, and the wrapping

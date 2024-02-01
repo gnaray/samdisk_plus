@@ -515,12 +515,12 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
 
                 uint16_t val;
                 if (file.read(&val, sizeof(val), 1))
-                    track.tracklen = util::letoh(val) * 16; // convert to bitstream bits
+                    track.tracklen = DataBytePositionAsBitOffset(util::letoh(val)); // convert to bitstream bits
 
                 for (auto& sector : track.sectors())
                 {
                     if (file.read(&val, sizeof(val), 1))
-                        sector.offset = util::letoh(val) * 16;  // convert to bitstream bits
+                        sector.offset = DataBytePositionAsBitOffset(util::letoh(val));  // convert to bitstream bits
                 }
 
                 disk->write(cylhead, std::move(track));
@@ -655,7 +655,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                 throw util::exception(cylhead, " is mixed-density, which EDSK doesn't support");
 
             bool added_sector_offsets = false;
-            offsets.push_back(util::htole(static_cast<uint16_t>(track.tracklen / 16)));
+            offsets.push_back(util::htole(static_cast<uint16_t>(BitOffsetAsDataBytePosition(track.tracklen))));
 
             auto pt = reinterpret_cast<EDSK_TRACK*>(mem.pb);
             auto ps = reinterpret_cast<EDSK_SECTOR*>(pt + 1);
@@ -724,7 +724,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                     {
                         // This dsk format converts datarate 300Kbps to 250Kbps so do it on sectors as well.
                         sector.normalise_datarate(datarate);
-                        offsets.push_back(util::htole(static_cast<uint16_t>(sector.offset / 16)));
+                        offsets.push_back(util::htole(static_cast<uint16_t>(BitOffsetAsDataBytePosition(sector.offset))));
                     }
 
                     // Accept only normal and deleted DAMs, removing the data field for other types.

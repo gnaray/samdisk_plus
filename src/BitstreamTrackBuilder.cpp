@@ -27,7 +27,7 @@ void BitstreamTrackBuilder::addRawBit(bool bit)
 
 int BitstreamTrackBuilder::gapPreIDAMBits(const bool short_mfm_gap/* = false*/) const
 {
-    return (getSyncLength(short_mfm_gap) + IDAM_OVERHEAD_MFM - 1) * 8 * 2; // The IDAM byte has the offset.
+    return DataBytePositionAsBitOffset(getSyncLength(short_mfm_gap) + IDAM_OVERHEAD_MFM - 1); // The IDAM byte has the offset.
 }
 
 void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, const int gap3_bytes/* = 0*/, const bool short_mfm_gap/* = false*/)
@@ -39,18 +39,18 @@ void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, c
         auto missingBitsToAdd = sectorBitpos - currentBitpos;
         if (missingBitsToAdd > 0)
         {
-            const auto gap3Bits = std::min(missingBitsToAdd / 8 / 2, gap3_bytes) * 8 * 2;
+            const auto gap3Bits = DataBytePositionAsBitOffset(std::min(BitOffsetAsDataBytePosition(missingBitsToAdd), gap3_bytes));
             while (missingBitsToAdd > gap3Bits)
             {
                 addBit(true);
                 missingBitsToAdd--;
             }
-            if (missingBitsToAdd == gap3Bits && gap3Bits >= 16)
-                addGap(gap3Bits / 8 / 2);
+            if (missingBitsToAdd == gap3Bits && gap3Bits >= DataBytePositionAsBitOffset(1))
+                addGap(BitOffsetAsDataBytePosition(gap3Bits));
         }
         else
         {
-            const auto idWithGap3Bits = (ID_OVERHEAD_MFM - (IDAM_OVERHEAD_MFM - 1) + gap3_bytes) * 8 * 2;
+            const auto idWithGap3Bits = DataBytePositionAsBitOffset(ID_OVERHEAD_MFM - (IDAM_OVERHEAD_MFM - 1) + gap3_bytes);
             const auto protectedBitpos = m_prevSectorOffset + idWithGap3Bits;
             m_buffer.seek(offsetToRawOffset(std::max(sectorBitpos, protectedBitpos)));
         }
@@ -82,7 +82,7 @@ void BitstreamTrackBuilder::cutExcessUnimportantDataBitsAtTheEnd(const int track
 void BitstreamTrackBuilder::addIAM()
 {
     TrackBuilder::addIAM();
-    m_iamOffset = rawOffsetToOffset(m_buffer.tell()) - 8;
+    m_iamOffset = rawOffsetToOffset(m_buffer.tell()) - DataBytePositionAsBitOffset(1);
 }
 
 int BitstreamTrackBuilder::getIAMPosition() const
@@ -94,7 +94,7 @@ int BitstreamTrackBuilder::getIAMPosition() const
 void BitstreamTrackBuilder::addCrc(int size)
 {
     auto old_bitpos{ m_buffer.tell() };
-    auto byte_bits = bitRawBits() * 16;
+    auto byte_bits = bitRawBits() * DataBytePositionAsBitOffset(1);
     assert(old_bitpos >= size * byte_bits);
     m_buffer.seek(old_bitpos - size * byte_bits);
 
