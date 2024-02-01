@@ -792,16 +792,12 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedRawDualTr
     const auto it = timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.findDataForSectorIdFmOrMfm(sector.offset, sector.header.size);
     if (it != timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.end())
     {
-        auto data = it->data_copy(); // Copy the orphan data.
-        if (sector.size() < it->data_size()) // Resize the copied data if bigger than header specifies.
-            data.resize(sector.size());
-        // Calculate the CRC of data (from IDAM overhead to end of CRC bytes)
-        CRC16 crc(CRC16::A1A1A1);
-        crc.add(it->dam);
-        const auto badCrc = crc.add(data.data(), data.size() + AM_CRC) != 0;
+        auto sectorData = SectorDataFromRawTrack::GetGoodDataUpToSize(*it, sector.size());
+        const bool badCrc = sectorData.empty();
+        const auto dam = it->dam;
         if (!badCrc)
         {
-            sector.add_with_readstats(std::move(data), badCrc, it->dam);
+            sector.add_with_readstats(std::move(sectorData), badCrc, dam);
             timedRawDualTrack.lastTimedRawTrackSingle.orphanDataTrack.sectors().erase(it); // Remove it so it will not be counted again in readstats.
             return true;
         }
