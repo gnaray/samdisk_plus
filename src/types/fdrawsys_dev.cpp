@@ -109,6 +109,7 @@ private:
      */
     bool ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScanResult& multiScanResult);
     TimedRawDualTrack BlindReadHeaders112(const CylHead& cylhead, const DeviceReadingPolicy& deviceReadingPolicy);
+    void DiscardOufOfSpaceSectorsAtTrackEnd(Track& track) const;
     void GuessAndAddSectorIdsOfOrphans(Track& track, TimedRawDualTrack& timedRawDualTrack) const;
     static bool GetSectorDataFromRawTrack(TimedRawDualTrack& timedRawDualTrack, const int index);
     bool ReadSectors(const CylHead& cylhead, TimedRawDualTrack& timedRawDualTrack, const DeviceReadingPolicy& deviceReadingPolicy);
@@ -695,6 +696,7 @@ TimedRawDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cylhead, c
         }
         if (!deviceReadingPolicyForScanning.WantMoreSectors())
         {
+            DiscardOufOfSpaceSectorsAtTrackEnd(timedRawDualTrack.finalTimedAndRawTrack);
             if (ReadSectors(cylhead, timedRawDualTrack, deviceReadingPolicy))
                 break; // Scanning and reading is complete.
         }
@@ -705,22 +707,29 @@ TimedRawDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cylhead, c
         }
     } while (rawTrackRescans-- > 0);
 
-    // Remove not normal sector headers at the track end.
-    if (opt_normal_disk)
-    {
-        while (!timedRawDualTrack.finalTimedAndRawTrack.empty())
-        {
-            auto it = timedRawDualTrack.finalTimedAndRawTrack.rbegin();
-            const auto& sector = *it;
-            const auto lengthWithoutOuterGaps = GetFmOrMfmSectorOverheadFromOffsetToDataCrcEnd(sector.datarate, sector.encoding, sector.size());
-            if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps) < timedRawDualTrack.finalTimedAndRawTrack.tracklen) // It fits, no more problem.
-                break;
-        }
-    }
-
+    DiscardOufOfSpaceSectorsAtTrackEnd(timedRawDualTrack.finalTimedAndRawTrack);
     ReadSectors(cylhead, timedRawDualTrack, deviceReadingPolicy);
 
     return timedRawDualTrack;
+}
+
+// Remove not normal sector headers at the track end.
+void FdrawSysDevDisk::DiscardOufOfSpaceSectorsAtTrackEnd(Track& track) const
+{
+    if (opt_normal_disk)
+    {
+        while (!track.empty())
+        {
+            auto it = track.rbegin();
+            const auto& sector = *it;
+            const auto lengthWithoutOuterGaps = GetFmOrMfmSectorOverheadFromOffsetToDataCrcEnd(sector.datarate, sector.encoding, sector.size());
+            if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps) < track.tracklen) // It fits, no more problem.
+                break;
+            if (opt_debug)
+                util::cout << "DiscardOufOfSpaceSectorsAtTrackEnd: discarding sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
+            track.sectors().erase(std::next(it).base());
+        }
+    }
 }
 
 void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedRawDualTrack& timedRawDualTrack) const
