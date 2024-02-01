@@ -248,7 +248,7 @@ inline int GetFmOrMfmSectorOverheadWithGap3(const DataRate& datarate, const Enco
     return GetFmOrMfmSectorOverhead(datarate, encoding, dataSize, short_mfm_gap) + GetFmOrMfmGap3Length(short_mfm_gap);
 }
 
-constexpr bool DoSectorIdAndDataPositionsCohere(
+constexpr bool DoSectorIdAndDataOffsetsCohere(
         const int sectorIdOffset, const int dataOffset, const DataRate& dataRate, const Encoding& encoding)
 {
     if (sectorIdOffset >= dataOffset) // The data must be behind the sector id.
