@@ -15,7 +15,7 @@ protected:
     TrackData load(const CylHead& cylhead, bool first_read,
         int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) override;
 
-    TrackData LoadRawTrack(const CylHead& cylhead);
+    TrackData LoadPhysicalTrack(const CylHead& cylhead);
 
 private:
     void SetMetadata(const std::string& path);

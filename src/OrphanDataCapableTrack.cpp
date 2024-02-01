@@ -91,13 +91,13 @@ int OrphanDataCapableTrack::size() const
     return track.size() + orphanDataTrack.size();
 }
 
-void OrphanDataCapableTrack::mergeRawTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedRawTrack)
+void OrphanDataCapableTrack::mergePhysicalTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedPhysicalTrack)
 {
-    auto orphanDataCapableTrack = toBeMergedRawTrack.DecodeTrack(cylhead);
-    mergeRawTrack(std::move(orphanDataCapableTrack));
+    auto orphanDataCapableTrack = toBeMergedPhysicalTrack.DecodeTrack(cylhead);
+    mergePhysicalTrack(std::move(orphanDataCapableTrack));
 }
 
-void OrphanDataCapableTrack::mergeRawTrack(OrphanDataCapableTrack&& toBeMergedODCTrack)
+void OrphanDataCapableTrack::mergePhysicalTrack(OrphanDataCapableTrack&& toBeMergedODCTrack)
 {
     if (toBeMergedODCTrack.empty())
     {

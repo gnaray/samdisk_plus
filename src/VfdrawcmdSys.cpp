@@ -5,6 +5,7 @@
 #include "IBMPCBase.h"
 #include "MemFile.h"
 #include "Options.h"
+#include "PhysicalTrackMFM.h"
 #include "SpecialFormat.h"
 #include "win32_error.h"
 
@@ -59,8 +60,8 @@ int VfdrawcmdSys::GetMaxTransferSize()
      */
     constexpr int cyl = 0;
     constexpr int phead = 0;
-    const auto currentRawTrack = ReadRawTrack(CylHead(cyl, phead));
-    return currentRawTrack.m_rawTrackContent.Bytes().size();
+    const auto currentPhysicalTrack = ReadPhysicalTrack(CylHead(cyl, phead));
+    return currentPhysicalTrack.m_physicalTrackContent.Bytes().size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +118,7 @@ void VfdrawcmdSys::WaitIndex(int head/* = -1*/, const bool calcSpinTime/* = fals
     m_currentSectorIndex = 0; // alias WaitIndex in fdrawcmd.
     if (calcSpinTime)
     {
-        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, head));
+        const auto& orphanDataCapableTrack = ReadTrackFromPhysicalTrack(CylHead(m_cyl, head));
         const auto bestTrackLen = !orphanDataCapableTrack.track.empty() && m_trackTime > 0 ?
                    orphanDataCapableTrack.determineBestTrackLen(orphanDataCapableTrack.getOffsetOfTime(m_trackTime)) : 0;
         m_trackTime = bestTrackLen > 0 ? orphanDataCapableTrack.getTimeOfOffset(bestTrackLen) : DEFAULT_TRACKTIMES[m_fdrate];
@@ -149,44 +150,44 @@ void VfdrawcmdSys::LimitCyl()
         m_cyl = 82;
 }
 
-const PhysicalTrackMFM& VfdrawcmdSys::ReadRawTrack(const CylHead& cylhead)
+const PhysicalTrackMFM& VfdrawcmdSys::ReadPhysicalTrack(const CylHead& cylhead)
 {
-    if (!m_rawTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())])
+    if (!m_physicalTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
         MemFile file;
-        PhysicalTrackMFM rawTrackMFM;
+        PhysicalTrackMFM physicalTrackMFM;
         const auto pattern = " Raw track (track %02d, head %1d).floppy_raw_track";
         const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
-        const auto rawTrackFilePath = FindFirstFile(fileNamePart, m_path);
+        const auto physicalTrackFilePath = FindFirstFile(fileNamePart, m_path);
 
         do
         {
-            if (rawTrackFilePath.empty())
+            if (physicalTrackFilePath.empty())
                 break;
             try
             {
-                file.open(rawTrackFilePath);
+                file.open(physicalTrackFilePath);
             }
             catch (...)
             {
                 break;
             }
-            Data rawTrackContent(file.size());
-            if (file.rewind() && file.read(rawTrackContent))
-                rawTrackMFM = PhysicalTrackMFM(file.data(), FDRATE_TO_DATARATE[m_fdrate]);
+            Data physicalTrackContent(file.size());
+            if (file.rewind() && file.read(physicalTrackContent))
+                physicalTrackMFM = PhysicalTrackMFM(file.data(), FDRATE_TO_DATARATE[m_fdrate]);
         } while (false);
-        m_rawTracks[cylhead] = std::move(rawTrackMFM);
-        m_rawTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())] = true;
+        m_physicalTracks[cylhead] = std::move(physicalTrackMFM);
+        m_physicalTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())] = true;
     }
-    return m_rawTracks[cylhead];
+    return m_physicalTracks[cylhead];
 }
 
-OrphanDataCapableTrack& VfdrawcmdSys::ReadTrackFromRowTrack(const CylHead& cylhead)
+OrphanDataCapableTrack& VfdrawcmdSys::ReadTrackFromPhysicalTrack(const CylHead& cylhead)
 {
     if (!m_odcTrackDecoded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
-        const auto& rawTrack = ReadRawTrack(cylhead);
-        const auto orphanDataCapableTrack = rawTrack.DecodeTrack(cylhead);
+        const auto& physicalTrack = ReadPhysicalTrack(cylhead);
+        const auto orphanDataCapableTrack = physicalTrack.DecodeTrack(cylhead);
         m_odcTracks[cylhead] = std::move(orphanDataCapableTrack);
         m_odcTrackDecoded[lossless_static_cast<size_t>(cylhead.operator int())] = true;
     }
@@ -315,9 +316,9 @@ bool VfdrawcmdSys::CmdReadTrack(int phead, int cyl, int /*head*/, int /*sector*/
         mem.resize(output_size);
     // mem.size >= output_size now.
 
-    const auto currentRawTrack = ReadRawTrack(CylHead(m_cyl, phead));
-    const auto availSize = std::min(currentRawTrack.m_rawTrackContent.Bytes().size(), output_size);
-    mem.copyFrom(currentRawTrack.m_rawTrackContent.Bytes(), availSize);
+    const auto currentPhysicalTrack = ReadPhysicalTrack(CylHead(m_cyl, phead));
+    const auto availSize = std::min(currentPhysicalTrack.m_physicalTrackContent.Bytes().size(), output_size);
+    mem.copyFrom(currentPhysicalTrack.m_physicalTrackContent.Bytes(), availSize);
     return true;
 }
 
@@ -343,7 +344,7 @@ bool VfdrawcmdSys::CmdRead(int phead, int cyl, int head, int sector, int size, i
     m_result.st2 = 0;
     if (m_encoding_flags == FD_OPTION_MFM && m_fdrate == FD_RATE_250K)
     {
-        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, phead));
+        const auto& orphanDataCapableTrack = ReadTrackFromPhysicalTrack(CylHead(m_cyl, phead));
         if (WaitSector(orphanDataCapableTrack) && !orphanDataCapableTrack.track.empty())
         {
             const auto sectorIndexStart = m_currentSectorIndex;
@@ -504,7 +505,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
     timed_multi_scan->track_retries = lossless_static_cast<uint8_t>(std::abs(track_retries));
 
     const CylHead cylHead{m_cyl, head};
-    auto orphanDataCapableTrack = ReadTrackFromRowTrack(cylHead);
+    auto orphanDataCapableTrack = ReadTrackFromPhysicalTrack(cylHead);
     timed_multi_scan->count = lossless_static_cast<WORD>(orphanDataCapableTrack.track.size());
     if (timed_multi_scan->count > 0)
     {
@@ -533,7 +534,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
             if (it == orphanDataCapableTrack.track.end())
             {
                 if (opt_debug)
-                    util::cout << "CmdTimedMultiScan found neither IAM nor sector ID=1 thus ignoring raw track without start sync\n";
+                    util::cout << "CmdTimedMultiScan found neither IAM nor sector ID=1 thus ignoring physical track without start sync\n";
                 timed_multi_scan->count = 0;
                 return true;
             }

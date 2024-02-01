@@ -103,10 +103,10 @@ public:
 
 
 
-class RawTrackContext
+class PhysicalTrackContext
 {
 public:
-    RawTrackContext(const CylHead& cylHead, const DataRate& dataRate)
+    PhysicalTrackContext(const CylHead& cylHead, const DataRate& dataRate)
         : cylHead(cylHead), dataRate(dataRate)
     {
     }
@@ -119,10 +119,10 @@ public:
 
 
 
-class TrackIndexInRawTrack : public AddressMarkInTrack
+class TrackIndexInPhysicalTrack : public AddressMarkInTrack
 {
 public:
-    constexpr TrackIndexInRawTrack(const AddressMarkInTrack& addressMarkInTrack)
+    constexpr TrackIndexInPhysicalTrack(const AddressMarkInTrack& addressMarkInTrack)
         : AddressMarkInTrack(addressMarkInTrack)
     {
     }
@@ -137,15 +137,15 @@ public:
         return addressMark == AddressMark::INDEX;
     }
 
-    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& rawTrackContent, const RawTrackContext& rawTrackContext, const Encoding& encoding);
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& physicalTrackContent, const PhysicalTrackContext& physicalTrackContext, const Encoding& encoding);
 
 private:
 };
 
-class SectorIdInRawTrack : public AddressMarkInTrack, public SectorIdInTrack, public CrcInTrack
+class SectorIdInPhysicalTrack : public AddressMarkInTrack, public SectorIdInTrack, public CrcInTrack
 {
 public:
-    constexpr SectorIdInRawTrack(const AddressMarkInTrack& addressMarkInTrack,
+    constexpr SectorIdInPhysicalTrack(const AddressMarkInTrack& addressMarkInTrack,
         uint8_t cyl, uint8_t head, uint8_t sector, uint8_t sizeId,
         uint8_t crcHigh, uint8_t crcLow)
         : AddressMarkInTrack(addressMarkInTrack), SectorIdInTrack(cyl, head, sector, sizeId),
@@ -160,14 +160,14 @@ public:
 
     static constexpr bool IsSuitable(const AddressMark& addressMark, const int availableBytes)
     {
-        return addressMark == AddressMark::ID && intsizeof(SectorIdInRawTrack) <= availableBytes;
+        return addressMark == AddressMark::ID && intsizeof(SectorIdInPhysicalTrack) <= availableBytes;
     }
 
-    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& rawTrackContent, const RawTrackContext& rawTrackContext, const Encoding& encoding);
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& physicalTrackContent, const PhysicalTrackContext& physicalTrackContext, const Encoding& encoding);
 
     CRC16 CalculateCrc() const
     {
-        return CRC16(&m_addressMark, sizeof(SectorIdInRawTrack), CRC16::A1A1A1);
+        return CRC16(&m_addressMark, sizeof(SectorIdInPhysicalTrack), CRC16::A1A1A1);
     }
 
     Header AsHeader() const
@@ -178,10 +178,10 @@ public:
 private:
 };
 
-class SectorDataRefInRawTrack : public AddressMarkInTrack
+class SectorDataRefInPhysicalTrack : public AddressMarkInTrack
 {
 public:
-    constexpr SectorDataRefInRawTrack(const AddressMarkInTrack& addressMarkInTrack)
+    constexpr SectorDataRefInPhysicalTrack(const AddressMarkInTrack& addressMarkInTrack)
         : AddressMarkInTrack(addressMarkInTrack)
     {
     }
@@ -196,10 +196,10 @@ public:
         return (addressMark == AddressMark::DATA || addressMark == AddressMark::ALT_DATA
                 || addressMark == AddressMark::DELETED_DATA || addressMark == AddressMark::ALT_DELETED_DATA
                 || addressMark == AddressMark::RX02) &&
-                (intsizeof(SectorDataRefInRawTrack) + intsizeof(CrcInTrack) <= availableBytes);
+                (intsizeof(SectorDataRefInPhysicalTrack) + intsizeof(CrcInTrack) <= availableBytes);
     }
 
-    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& rawTrackContent, const RawTrackContext& rawTrackContext, const Encoding& encoding);
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& physicalTrackContent, const PhysicalTrackContext& physicalTrackContext, const Encoding& encoding);
 
 private:
 };
@@ -210,58 +210,58 @@ private:
 
 // Required by virtual subclasses thus this becomes non aggregate so suggested to declare all 5 (Rule of 3/5/0).
 // See https://en.cppreference.com/w/cpp/language/rule_of_three, "C.21: If you define or =delete any copy, move, or destructor function, define or =delete them all."
-class SectorDataFromRawTrack
+class SectorDataFromPhysicalTrack
 {
 public:
-    // Constructor for the case when raw data is processed first time.
-    SectorDataFromRawTrack(const Encoding& encoding, const ByteBitPosition& byteBitPositionFound, Data&& rawData, bool dataSizeKnown)
-        : rawData(rawData), encoding(encoding), byteBitPositionFound(byteBitPositionFound),
-          addressMark(rawData[0]), badCrc(dataSizeKnown ? CalculateCrcIsBad() : true)
+    // Constructor for the case when physical data is processed first time.
+    SectorDataFromPhysicalTrack(const Encoding& encoding, const ByteBitPosition& byteBitPositionFound, Data&& physicalData, bool dataSizeKnown)
+        : physicalData(physicalData), encoding(encoding), byteBitPositionFound(byteBitPositionFound),
+          addressMark(physicalData[0]), badCrc(dataSizeKnown ? CalculateCrcIsBad() : true)
     {
     }
 
-    static void ProcessInto(Sector& sector, BitPositionableByteVector& rawTrackContent, const Encoding& encoding,
+    static void ProcessInto(Sector& sector, BitPositionableByteVector& physicalTrackContent, const Encoding& encoding,
                             const int nextIdamOffset = 0, const int nextDamOffset = 0);
 
-    // Method for the case when good data of raw data is requested because its size became known.
-    static Data GetGoodDataUpToSize(const Sector& rawSector, const int sectorSize);
+    // Method for the case when good data of physical data is requested because its size became known.
+    static Data GetGoodDataUpToSize(const Sector& physicalSector, const int sectorSize);
 
-    static constexpr int RawSizeOf(const int dataSize)
+    static constexpr int PhysicalSizeOf(const int dataSize)
     {
         return intsizeof(AddressMarkInTrack) + dataSize + intsizeof(CrcInTrack);
     }
 
     static constexpr bool IsSuitable(const int dataSize, const int availableBytes)
     {
-        return RawSizeOf(dataSize) <= availableBytes;
+        return PhysicalSizeOf(dataSize) <= availableBytes;
     }
 
     Data GetData() const
     {
-        return GetData(rawData, static_cast<int>(rawData.end() - rawData.begin()));
+        return GetData(physicalData, static_cast<int>(physicalData.end() - physicalData.begin()));
     }
 
 protected:
-    // Select real data from raw data.
-    static Data GetData(const Data& rawData, const int rawSize)
+    // Select real data from physical data.
+    static Data GetData(const Data& physicalData, const int physicalSize)
     {
-        if (rawSize <= intsizeof(AddressMarkInTrack) + intsizeof(CrcInTrack))
+        if (physicalSize <= intsizeof(AddressMarkInTrack) + intsizeof(CrcInTrack))
             return Data();
-        return Data(rawData.begin() + intsizeof(AddressMarkInTrack), rawData.begin() + rawSize - intsizeof(CrcInTrack));
+        return Data(physicalData.begin() + intsizeof(AddressMarkInTrack), physicalData.begin() + physicalSize - intsizeof(CrcInTrack));
     }
 
-    static bool CalculateCrcIsBad(const Encoding& encoding, const Data& rawData, const int rawSize)
+    static bool CalculateCrcIsBad(const Encoding& encoding, const Data& physicalData, const int physicalSize)
     {
         CRC16 crc(encoding == Encoding::FM ? CRC16::INIT_CRC : CRC16::A1A1A1);
-        return crc.add(rawData, rawSize) != 0;
+        return crc.add(physicalData, physicalSize) != 0;
     }
 
     bool CalculateCrcIsBad() const
     {
-        return CalculateCrcIsBad(encoding, rawData, rawData.size());
+        return CalculateCrcIsBad(encoding, physicalData, physicalData.size());
     }
 
-    Data rawData{};
+    Data physicalData{};
 
 public:
     Encoding encoding;
@@ -277,23 +277,23 @@ class PhysicalTrackMFM
 public:
     PhysicalTrackMFM() = default;
 
-    PhysicalTrackMFM(const Data& rawTrackContent, const DataRate& dataRate)
-        : m_rawTrackContent(rawTrackContent), dataRate(dataRate)
+    PhysicalTrackMFM(const Data& physicalTrackContent, const DataRate& dataRate)
+        : m_physicalTrackContent(physicalTrackContent), dataRate(dataRate)
     {
     }
 
-    PhysicalTrackMFM(const MEMORY& rawTrackContent, const DataRate& dataRate)
-        : m_rawTrackContent(rawTrackContent.pb, rawTrackContent.size), dataRate(dataRate)
+    PhysicalTrackMFM(const MEMORY& physicalTrackContent, const DataRate& dataRate)
+        : m_physicalTrackContent(physicalTrackContent.pb, physicalTrackContent.size), dataRate(dataRate)
     {
     }
 
     void Rewind();
     BitBuffer AsMFMBitstream();
-    void ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const RawTrackContext& rawTrackContext);
+    void ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const PhysicalTrackContext& physicalTrackContext);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead) const;
 
-    BitPositionableByteVector m_rawTrackContent{};
+    BitPositionableByteVector m_physicalTrackContent{};
 
     DataRate dataRate = DataRate::Unknown;
     static const Encoding encoding;

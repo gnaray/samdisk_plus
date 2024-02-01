@@ -16,7 +16,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 // ====================================
 
-constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
+constexpr bool PhysicalTrackContext::DoSectorIdAndDataPositionsCohere(
         const ByteBitPosition& sectorIdByteBitPosition, const ByteBitPosition& dataByteBitPosition, const Encoding& encoding) const
 {
     if (sectorIdByteBitPosition >= dataByteBitPosition) // The data must be behind the sector id.
@@ -34,14 +34,14 @@ constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
 }
 // ====================================
 
-/*static*/ void TrackIndexInRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
-                                                  BitPositionableByteVector& rawTrackContent,
-                                                  const RawTrackContext& /*rawTrackContext*/,
+/*static*/ void TrackIndexInPhysicalTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
+                                                  BitPositionableByteVector& physicalTrackContent,
+                                                  const PhysicalTrackContext& /*physicalTrackContext*/,
                                                   const Encoding& encoding)
 {
-    const auto byteBitPositionIAM = rawTrackContent.GetByteBitPosition();
+    const auto byteBitPositionIAM = physicalTrackContent.GetByteBitPosition();
     if (opt_debug)
-        util::cout << "raw_track_mfm_fm " << encoding << " IAM at offset " << byteBitPositionIAM.TotalBitPosition() * 2;
+        util::cout << "physical_track_mfm_fm " << encoding << " IAM at offset " << byteBitPositionIAM.TotalBitPosition() * 2;
     if (orphanDataCapableTrack.trackIndexOffset > 0)
     {
         if (opt_debug)
@@ -54,76 +54,76 @@ constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
 }
 // ====================================
 
-/*static*/ void SectorIdInRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
-                                                BitPositionableByteVector& rawTrackContent,
-                                                const RawTrackContext& rawTrackContext,
+/*static*/ void SectorIdInPhysicalTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
+                                                BitPositionableByteVector& physicalTrackContent,
+                                                const PhysicalTrackContext& physicalTrackContext,
                                                 const Encoding& encoding)
 {
-    const auto byteBitPositionIDAM = rawTrackContent.GetByteBitPosition();
-    const auto requiredByteLength = intsizeof(SectorIdInRawTrack);
-    Data sectorIdInRawTrackBytes(requiredByteLength);
-    rawTrackContent.ReadBytes(sectorIdInRawTrackBytes);
+    const auto byteBitPositionIDAM = physicalTrackContent.GetByteBitPosition();
+    const auto requiredByteLength = intsizeof(SectorIdInPhysicalTrack);
+    Data sectorIdInPhysicalTrackBytes(requiredByteLength);
+    physicalTrackContent.ReadBytes(sectorIdInPhysicalTrackBytes);
 
-    const auto sectorIdInRawTrack = *reinterpret_cast<SectorIdInRawTrack*>(sectorIdInRawTrackBytes.data());
-    const auto addressMark = sectorIdInRawTrack.m_addressMark;
-    const auto badCrc = sectorIdInRawTrack.CalculateCrc() != 0;
+    const auto sectorIdInPhysicalTrack = *reinterpret_cast<SectorIdInPhysicalTrack*>(sectorIdInPhysicalTrackBytes.data());
+    const auto addressMark = sectorIdInPhysicalTrack.m_addressMark;
+    const auto badCrc = sectorIdInPhysicalTrack.CalculateCrc() != 0;
 
     if (opt_normal_disk && !badCrc
-            && (sectorIdInRawTrack.m_cyl != rawTrackContext.cylHead.cyl || sectorIdInRawTrack.m_head != rawTrackContext.cylHead.head))
+            && (sectorIdInPhysicalTrack.m_cyl != physicalTrackContext.cylHead.cyl || sectorIdInPhysicalTrack.m_head != physicalTrackContext.cylHead.head))
     {
         Message(msgWarning, "ReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
-            CH(rawTrackContext.cylHead.cyl, rawTrackContext.cylHead.head), CHR(sectorIdInRawTrack.m_cyl, sectorIdInRawTrack.m_head, sectorIdInRawTrack.m_sector));
+            CH(physicalTrackContext.cylHead.cyl, physicalTrackContext.cylHead.head), CHR(sectorIdInPhysicalTrack.m_cyl, sectorIdInPhysicalTrack.m_head, sectorIdInPhysicalTrack.m_sector));
         orphanDataCapableTrack.cylheadMismatch = true;
     }
     else
     {
-        const Header header = sectorIdInRawTrack.AsHeader();
-        Sector sector(rawTrackContext.dataRate, encoding, header);
+        const Header header = sectorIdInPhysicalTrack.AsHeader();
+        Sector sector(physicalTrackContext.dataRate, encoding, header);
 
         sector.offset = DataBitPositionAsBitOffset(byteBitPositionIDAM.TotalBitPosition()); // Counted in mfmbits.
         sector.set_badidcrc(badCrc);
         sector.set_constant_disk(false);
         if (opt_debug)
-            util::cout << "raw_track_mfm_fm " << encoding << " IDAM (am=" << addressMark << ", id=" << header.sector << ") at offset " << sector.offset << "\n";
+            util::cout << "physical_track_mfm_fm " << encoding << " IDAM (am=" << addressMark << ", id=" << header.sector << ") at offset " << sector.offset << "\n";
         orphanDataCapableTrack.track.add(std::move(sector));
     }
 }
 // ====================================
 
-/*static*/ void SectorDataRefInRawTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
-                                                     BitPositionableByteVector& rawTrackContent,
-                                                     const RawTrackContext& rawTrackContext,
+/*static*/ void SectorDataRefInPhysicalTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
+                                                     BitPositionableByteVector& physicalTrackContent,
+                                                     const PhysicalTrackContext& physicalTrackContext,
                                                      const Encoding& encoding)
 {
-    const auto byteBitPositionDAM = rawTrackContent.GetByteBitPosition();
-    const auto requiredByteLength = intsizeof(SectorDataRefInRawTrack);
-    Data sectorDataRefInRawTrackBytes(requiredByteLength);
-    rawTrackContent.ReadBytes(sectorDataRefInRawTrackBytes);
+    const auto byteBitPositionDAM = physicalTrackContent.GetByteBitPosition();
+    const auto requiredByteLength = intsizeof(SectorDataRefInPhysicalTrack);
+    Data sectorDataRefInPhysicalTrackBytes(requiredByteLength);
+    physicalTrackContent.ReadBytes(sectorDataRefInPhysicalTrackBytes);
 
-    const auto sectorDataRefInRawTrack = *reinterpret_cast<SectorDataRefInRawTrack*>(sectorDataRefInRawTrackBytes.data());
-    const auto addressMark = sectorDataRefInRawTrack.m_addressMark;
-    const Header header(rawTrackContext.cylHead.cyl, rawTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, SIZECODE_UNKNOWN);
-    Sector sector(rawTrackContext.dataRate, encoding, header);
+    const auto sectorDataRefInPhysicalTrack = *reinterpret_cast<SectorDataRefInPhysicalTrack*>(sectorDataRefInPhysicalTrackBytes.data());
+    const auto addressMark = sectorDataRefInPhysicalTrack.m_addressMark;
+    const Header header(physicalTrackContext.cylHead.cyl, physicalTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, SIZECODE_UNKNOWN);
+    Sector sector(physicalTrackContext.dataRate, encoding, header);
     sector.offset = DataBitPositionAsBitOffset(byteBitPositionDAM.TotalBitPosition()); // Counted in mfmbits.
     sector.set_constant_disk(false);
     if (opt_debug)
-        util::cout << "raw_track_mfm_fm " << encoding << " DAM (am=" << addressMark << ") at offset " << sector.offset << "\n";
+        util::cout << "physical_track_mfm_fm " << encoding << " DAM (am=" << addressMark << ") at offset " << sector.offset << "\n";
     orphanDataCapableTrack.orphanDataTrack.add(std::move(sector));
 }
 // ====================================
 
-/*static*/ void SectorDataFromRawTrack::ProcessInto(Sector& sector, BitPositionableByteVector& rawTrackContent,
+/*static*/ void SectorDataFromPhysicalTrack::ProcessInto(Sector& sector, BitPositionableByteVector& physicalTrackContent,
                                                     const Encoding& encoding,
                                                     const int nextIdamOffset/* = 0*/, const int nextDamOffset/* = 0*/)
 {
-    const auto byteBitPositionDAM = rawTrackContent.GetByteBitPosition();
+    const auto byteBitPositionDAM = physicalTrackContent.GetByteBitPosition();
     if (sector.header.size != SIZECODE_UNKNOWN)
     {
         const auto dataSize = sector.size();
-        const auto requiredByteLength = RawSizeOf(dataSize);
-        Data sectorDataInRawTrackBytes(requiredByteLength);
-        rawTrackContent.ReadBytes(sectorDataInRawTrackBytes);
-        const SectorDataFromRawTrack sectorData(encoding, byteBitPositionDAM, std::move(sectorDataInRawTrackBytes), true);
+        const auto requiredByteLength = PhysicalSizeOf(dataSize);
+        Data sectorDataInPhysicalTrackBytes(requiredByteLength);
+        physicalTrackContent.ReadBytes(sectorDataInPhysicalTrackBytes);
+        const SectorDataFromPhysicalTrack sectorData(encoding, byteBitPositionDAM, std::move(sectorDataInPhysicalTrackBytes), true);
         const bool data_crc_error = sectorData.badCrc;
         const auto dam = sectorData.addressMark;
         sector.add_with_readstats(sectorData.GetData(), data_crc_error, dam);
@@ -132,7 +132,7 @@ constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
     {   // Sector id not found, setting orphan's data from DAM until first overhead byte of next ?AM (or track end if there is no next ?AM).
         // Determine available bytes.
         auto& orphanSector = sector;
-        const auto remainingByteLength = rawTrackContent.RemainingByteLength();
+        const auto remainingByteLength = physicalTrackContent.RemainingByteLength();
         auto availableByteLength = remainingByteLength;
         if (nextIdamOffset > 0)
         {
@@ -149,43 +149,43 @@ constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
                 availableByteLength = availableByteLengthUntilNextDam;
         }
         // Read the bytes, create sector data then add its data to orphan sector.
-        Data sectorDataInRawTrackBytes(availableByteLength);
-        rawTrackContent.ReadBytes(sectorDataInRawTrackBytes);
-        SectorDataFromRawTrack sectorData(encoding, byteBitPositionDAM, std::move(sectorDataInRawTrackBytes), false);
+        Data sectorDataInPhysicalTrackBytes(availableByteLength);
+        physicalTrackContent.ReadBytes(sectorDataInPhysicalTrackBytes);
+        SectorDataFromPhysicalTrack sectorData(encoding, byteBitPositionDAM, std::move(sectorDataInPhysicalTrackBytes), false);
         const bool data_crc_error = sectorData.badCrc; // Always true in this case (because size is unknown).
         const auto dam = sectorData.addressMark;
         if (opt_debug)
-            util::cout << "raw_track_mfm_fm " << encoding << " DAM (am=" << dam << ") at offset " << orphanSector.offset << " without IDAM\n";
-        orphanSector.add_with_readstats(std::move(sectorData.rawData), data_crc_error, dam);
+            util::cout << "physical_track_mfm_fm " << encoding << " DAM (am=" << dam << ") at offset " << orphanSector.offset << " without IDAM\n";
+        orphanSector.add_with_readstats(std::move(sectorData.physicalData), data_crc_error, dam);
     }
 }
 // ====================================
 
-/*static*/ Data SectorDataFromRawTrack::GetGoodDataUpToSize(const Sector& rawSector, const int sectorSize)
+/*static*/ Data SectorDataFromPhysicalTrack::GetGoodDataUpToSize(const Sector& physicalSector, const int sectorSize)
 {
-    const auto& rawData = rawSector.data_copy();
-    auto rawDataSize = rawData.size();
-    const auto rawSectorSize = SectorDataFromRawTrack::RawSizeOf(sectorSize);
-    if (rawDataSize > rawSectorSize) // Not using more data than requested.
-        rawDataSize = rawSectorSize;
-    if (CalculateCrcIsBad(rawSector.encoding, rawData, rawDataSize))
+    const auto& physicalData = physicalSector.data_copy();
+    auto physicalDataSize = physicalData.size();
+    const auto physicalSectorSize = SectorDataFromPhysicalTrack::PhysicalSizeOf(sectorSize);
+    if (physicalDataSize > physicalSectorSize) // Not using more data than requested.
+        physicalDataSize = physicalSectorSize;
+    if (CalculateCrcIsBad(physicalSector.encoding, physicalData, physicalDataSize))
         return Data();
-    return GetData(rawData, rawDataSize);
+    return GetData(physicalData, physicalDataSize);
 }
 // ====================================
 
 void PhysicalTrackMFM::Rewind()
 {
-    m_rawTrackContent.SetByteBitPosition(0);
+    m_physicalTrackContent.SetByteBitPosition(0);
 }
 // ====================================
-/* The bitstream has two bits for each raw track databits.
+/* The bitstream has two bits for each physical track databits.
  * In addition bitstream is made of little endian bytes.
- * For example: 11010010 in raw track results 1x0x1x1x 0x1x0x0x in bitstream where x is 0 or 1.
+ * For example: 11010010 in physical track results 1x0x1x1x 0x1x0x0x in bitstream where x is 0 or 1.
  *                                            ^ ^ ^ ^  ^ ^ ^ ^
  * Address mark is special case: 10100001 results 00100010 10010001 in bitstream.
  *                                                ^ ^ ^ ^  ^ ^ ^ ^
- * To convert raw track byte to stream two bytes (e.g. 11010010):
+ * To convert physical track byte to stream two bytes (e.g. 11010010):
  * Double the bits (x1x1x0x1 x0x0x1x0) then reverse the bytes (1x0x1x1x 0x1x0x0x), correct.
  * If firstly reverse the bytes (01001011) then double the bits (0x1x0x0x 1x0x1x1x), would be wrong.
  */
@@ -195,29 +195,29 @@ BitBuffer PhysicalTrackMFM::AsMFMBitstream()
     const auto readLengthMin = intsizeof(AddressMarkSyncInTrack); // Looking for address mark sync only.
     BitPositionableByteVector rawTrackContentForBitBuffer;
     ByteBitPosition lastAddressMarkPosition(0);
-    Data addressMarkSyncInRawTrackBytes(readLengthMin);
-    const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(addressMarkSyncInRawTrackBytes.data());
-    while (m_rawTrackContent.RemainingByteLength() >= readLengthMin)
+    Data addressMarkSyncInPhysicalTrackBytes(readLengthMin);
+    const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(addressMarkSyncInPhysicalTrackBytes.data());
+    while (m_physicalTrackContent.RemainingByteLength() >= readLengthMin)
     {
-        if (AddressMarkSyncInTrack::IsValid(m_rawTrackContent.PeekByte())) // Bit of optimisation for speed.
+        if (AddressMarkSyncInTrack::IsValid(m_physicalTrackContent.PeekByte())) // Bit of optimisation for speed.
         {
-            const auto byteBitPositionFound = m_rawTrackContent.GetByteBitPosition();
-            m_rawTrackContent.ReadBytes(addressMarkSyncInRawTrackBytes);
-            if (addressMarkSyncInTrack->IsValid() && AddressMarkInTrack::IsValid(m_rawTrackContent.PeekByte()))
+            const auto byteBitPositionFound = m_physicalTrackContent.GetByteBitPosition();
+            m_physicalTrackContent.ReadBytes(addressMarkSyncInPhysicalTrackBytes);
+            if (addressMarkSyncInTrack->IsValid() && AddressMarkInTrack::IsValid(m_physicalTrackContent.PeekByte()))
             {
                 const auto bitsLen = byteBitPositionFound - lastAddressMarkPosition;
-                rawTrackContentForBitBuffer.CopyBitsDoubledFrom(m_rawTrackContent, bitsLen.TotalBitPosition(), &lastAddressMarkPosition);
+                rawTrackContentForBitBuffer.CopyBitsDoubledFrom(m_physicalTrackContent, bitsLen.TotalBitPosition(), &lastAddressMarkPosition);
                 rawTrackContentForBitBuffer.WriteBytes(addressMarkBytes);
-                lastAddressMarkPosition = m_rawTrackContent.GetByteBitPosition();
+                lastAddressMarkPosition = m_physicalTrackContent.GetByteBitPosition();
                 continue;
             }
             else
-                m_rawTrackContent.SetByteBitPosition(byteBitPositionFound);
+                m_physicalTrackContent.SetByteBitPosition(byteBitPositionFound);
         }
-        m_rawTrackContent.StepBit();
+        m_physicalTrackContent.StepBit();
     }
-    const auto bitsLen = m_rawTrackContent.BytesBitEndPosition() - lastAddressMarkPosition;
-    rawTrackContentForBitBuffer.CopyBitsDoubledFrom(m_rawTrackContent, bitsLen.TotalBitPosition(), &lastAddressMarkPosition);
+    const auto bitsLen = m_physicalTrackContent.BytesBitEndPosition() - lastAddressMarkPosition;
+    rawTrackContentForBitBuffer.CopyBitsDoubledFrom(m_physicalTrackContent, bitsLen.TotalBitPosition(), &lastAddressMarkPosition);
 
     // Bitstream scanner expects bits like: 0.:76543210, 1.:76543210, etc. while our content has 0.:01234567, 1.:01234567, etc.
     util::bit_reverse(rawTrackContentForBitBuffer.Bytes().data(), rawTrackContentForBitBuffer.BytesByteSize());
@@ -228,7 +228,7 @@ BitBuffer PhysicalTrackMFM::AsMFMBitstream()
 
 // ====================================
 
-void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const RawTrackContext& rawTrackContext)
+void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const PhysicalTrackContext& physicalTrackContext)
 {
     const auto sectorIdsIndexSup = orphanDataCapableTrack.track.size();
     auto sectorIdsIndex = 0;
@@ -236,14 +236,14 @@ void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataC
     while (orphanIt != orphanDataCapableTrack.orphanDataTrack.end())
     {
         auto& orphanSector = *orphanIt;
-        m_rawTrackContent.SetByteBitPosition(BitOffsetAsDataBitPosition(orphanSector.offset)); // mfmbits to databits
+        m_physicalTrackContent.SetByteBitPosition(BitOffsetAsDataBitPosition(orphanSector.offset)); // mfmbits to databits
 
         auto parentSectorIndexFound = false;
         int sectorOffset;
         // Find the closest sector id which coheres.
         while (sectorIdsIndex < sectorIdsIndexSup && (sectorOffset = orphanDataCapableTrack.track[sectorIdsIndex].offset) < orphanSector.offset)
         {
-            if (rawTrackContext.DoSectorIdAndDataPositionsCohere(sectorOffset, orphanSector.offset, orphanSector.encoding))
+            if (physicalTrackContext.DoSectorIdAndDataPositionsCohere(sectorOffset, orphanSector.offset, orphanSector.encoding))
                 parentSectorIndexFound = true;
             sectorIdsIndex++;
         }
@@ -251,16 +251,16 @@ void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataC
         {
             auto& sector = orphanDataCapableTrack.track[sectorIdsIndex - 1]; // The previous is found.
             const auto dataSize = sector.header.size;
-            const auto availableBytes = m_rawTrackContent.RemainingByteLength();
-            if (!SectorDataFromRawTrack::IsSuitable(dataSize, availableBytes))
-                goto NextOrphan; // Not enough bytes thus crc is bad, and we do not provide bad data from raw track.
-            SectorDataFromRawTrack::ProcessInto(sector, m_rawTrackContent, orphanSector.encoding);
+            const auto availableBytes = m_physicalTrackContent.RemainingByteLength();
+            if (!SectorDataFromPhysicalTrack::IsSuitable(dataSize, availableBytes))
+                goto NextOrphan; // Not enough bytes thus crc is bad, and we do not provide bad data from physical track.
+            SectorDataFromPhysicalTrack::ProcessInto(sector, m_physicalTrackContent, orphanSector.encoding);
             orphanIt = orphanDataCapableTrack.orphanDataTrack.sectors().erase(orphanIt);
             continue; // Continuing from current orphan which was the next orphan before erasing.
         }
         else
         {   // Sector id not found, setting orphan's data from first byte after DAM until first overhead byte of next ?AM (or track end if there is no next ?AM).
-            SectorDataFromRawTrack::ProcessInto(orphanSector, m_rawTrackContent, orphanSector.encoding,
+            SectorDataFromPhysicalTrack::ProcessInto(orphanSector, m_physicalTrackContent, orphanSector.encoding,
                                                 sectorIdsIndex < sectorIdsIndexSup ? orphanDataCapableTrack.track[sectorIdsIndex].offset : 0,
                                                 (orphanIt + 1) != orphanDataCapableTrack.orphanDataTrack.end() ? (orphanIt + 1)->offset : 0);
         }
@@ -282,46 +282,46 @@ OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
 {
     const auto encoding = Encoding::MFM; // Now only MFM encoding is supported. Decoding a FM track has high false-positive risk.
     OrphanDataCapableTrack orphanDataCapableTrack;
-    const RawTrackContext rawTrackContext(cylHead, dataRate);
+    const PhysicalTrackContext physicalTrackContext(cylHead, dataRate);
 
     const auto readLengthMin = intsizeof(AddressMarkSyncInTrack);
-    Data addressMarkSyncInRawTrackBytes(readLengthMin);
-    const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(addressMarkSyncInRawTrackBytes.data());
-    while (m_rawTrackContent.RemainingByteLength() >= readLengthMin)
+    Data addressMarkSyncInPhysicalTrackBytes(readLengthMin);
+    const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(addressMarkSyncInPhysicalTrackBytes.data());
+    while (m_physicalTrackContent.RemainingByteLength() >= readLengthMin)
     {
-        if (AddressMarkSyncInTrack::IsValid(m_rawTrackContent.PeekByte())) // Bit of optimisation for speed.
+        if (AddressMarkSyncInTrack::IsValid(m_physicalTrackContent.PeekByte())) // Bit of optimisation for speed.
         {
-            auto byteBitPosition = m_rawTrackContent.GetByteBitPosition();
-            m_rawTrackContent.ReadBytes(addressMarkSyncInRawTrackBytes);
+            auto byteBitPosition = m_physicalTrackContent.GetByteBitPosition();
+            m_physicalTrackContent.ReadBytes(addressMarkSyncInPhysicalTrackBytes);
             if (addressMarkSyncInTrack->IsValid())
             {
-                const auto addressMarkValue = m_rawTrackContent.PeekByte();
-                const auto availableBytes = m_rawTrackContent.RemainingByteLength();
-                if (TrackIndexInRawTrack::IsSuitable(addressMarkValue, availableBytes))
+                const auto addressMarkValue = m_physicalTrackContent.PeekByte();
+                const auto availableBytes = m_physicalTrackContent.RemainingByteLength();
+                if (TrackIndexInPhysicalTrack::IsSuitable(addressMarkValue, availableBytes))
                 {
-                    TrackIndexInRawTrack::ProcessInto(orphanDataCapableTrack, m_rawTrackContent, rawTrackContext, encoding);
+                    TrackIndexInPhysicalTrack::ProcessInto(orphanDataCapableTrack, m_physicalTrackContent, physicalTrackContext, encoding);
                     continue;
                 }
-                else if (SectorIdInRawTrack::IsSuitable(addressMarkValue, availableBytes))
+                else if (SectorIdInPhysicalTrack::IsSuitable(addressMarkValue, availableBytes))
                 {
-                    SectorIdInRawTrack::ProcessInto(orphanDataCapableTrack, m_rawTrackContent, rawTrackContext, encoding);
+                    SectorIdInPhysicalTrack::ProcessInto(orphanDataCapableTrack, m_physicalTrackContent, physicalTrackContext, encoding);
                     continue;
                 }
-                else if (SectorDataRefInRawTrack::IsSuitable(addressMarkValue, availableBytes))
+                else if (SectorDataRefInPhysicalTrack::IsSuitable(addressMarkValue, availableBytes))
                 {
-                    SectorDataRefInRawTrack::ProcessInto(orphanDataCapableTrack, m_rawTrackContent, rawTrackContext, encoding);
+                    SectorDataRefInPhysicalTrack::ProcessInto(orphanDataCapableTrack, m_physicalTrackContent, physicalTrackContext, encoding);
                     continue;
                 }
             }
-            m_rawTrackContent.SetByteBitPosition(byteBitPosition);
+            m_physicalTrackContent.SetByteBitPosition(byteBitPosition);
         }
-        m_rawTrackContent.StepBit();
+        m_physicalTrackContent.StepBit();
     }
 
     if (!orphanDataCapableTrack.empty())
     {
-        orphanDataCapableTrack.setTrackLen(DataBitPositionAsBitOffset(m_rawTrackContent.BytesBitSize())); // Counted in mfmbits.
-        ProcessSectorDataRefs(orphanDataCapableTrack, rawTrackContext);
+        orphanDataCapableTrack.setTrackLen(DataBitPositionAsBitOffset(m_physicalTrackContent.BytesBitSize())); // Counted in mfmbits.
+        ProcessSectorDataRefs(orphanDataCapableTrack, physicalTrackContext);
     }
     return orphanDataCapableTrack;
 }
@@ -329,8 +329,8 @@ OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
 
 OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead) const
 {
-    auto rawTrack = *this;
-    return rawTrack.DecodeTrack(cylHead);
+    auto physicalTrack = *this;
+    return physicalTrack.DecodeTrack(cylHead);
 }
 
 //---------------------------------------------------------------------------

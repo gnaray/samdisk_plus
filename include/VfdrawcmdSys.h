@@ -34,8 +34,8 @@ protected:
     bool WaitSector(const OrphanDataCapableTrack &orphanDataCapableTrack);
     bool SetPerpendicularMode(int ow_ds_gap_wgate) override;
     void LimitCyl();
-    const PhysicalTrackMFM& ReadRawTrack(const CylHead& cylhead);
-    OrphanDataCapableTrack& ReadTrackFromRowTrack(const CylHead& cylhead);
+    const PhysicalTrackMFM& ReadPhysicalTrack(const CylHead& cylhead);
+    OrphanDataCapableTrack& ReadTrackFromPhysicalTrack(const CylHead& cylhead);
 public:
     bool SetEncRate(Encoding encoding, DataRate datarate) override;
     bool SetHeadSettleTime(int ms) override;
@@ -80,8 +80,8 @@ private:
     bool m_waitSector = false;
     uint8_t m_currentSectorIndex = 0;
 
-    std::bitset<MAX_DISK_CYLS * MAX_DISK_HEADS> m_rawTrackLoaded{};
-    std::map<CylHead, PhysicalTrackMFM> m_rawTracks{};
+    std::bitset<MAX_DISK_CYLS * MAX_DISK_HEADS> m_physicalTrackLoaded{};
+    std::map<CylHead, PhysicalTrackMFM> m_physicalTracks{};
     std::bitset<MAX_DISK_CYLS * MAX_DISK_HEADS> m_odcTrackDecoded{};
     std::map<CylHead, OrphanDataCapableTrack> m_odcTracks{};
 };

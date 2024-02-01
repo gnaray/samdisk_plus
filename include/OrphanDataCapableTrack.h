@@ -2,7 +2,7 @@
 #define ORPHANDATACAPABLETRACK_H
 //---------------------------------------------------------------------------
 
-class OrphanDataCapableTrack; // Required because this and RawTrackMFM includes each other.
+class OrphanDataCapableTrack; // Required because this and PhysicalTrackMFM includes each other.
 
 #include "PhysicalTrackMFM.h"
 #include "Track.h"
@@ -25,8 +25,8 @@ public:
     int size() const;
 
 public:
-    void mergeRawTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedRawTrack);
-    void mergeRawTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
+    void mergePhysicalTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedPhysicalTrack);
+    void mergePhysicalTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
     void syncThisToOtherAsMulti(const int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
     int determineBestTrackLen(const int timedTrackTime) const;
