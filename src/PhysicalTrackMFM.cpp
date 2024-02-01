@@ -157,6 +157,12 @@ constexpr bool PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
     const auto physicalSectorSize = SectorDataFromPhysicalTrack::PhysicalSizeOf(sectorSize);
     if (physicalDataSize > physicalSectorSize) // Not using more data than requested.
         physicalDataSize = physicalSectorSize;
+    /* TODO If the physical data size is less than physical sector size then the data ends at next AM or track end.
+     * It means the data contains gap3 and sync thus its crc will be bad.
+     * I am not sure which bytes the FDC reads latest but theoretically we could find the end of good data
+     * by calculating crc for each data length and if it becomes 0 then probably we found the correct length,
+     * and the last two bytes are the crc.
+     */
     if (CalculateCrcIsBad(physicalSector.encoding, physicalData, physicalDataSize))
         return Data();
     return GetData(physicalData, physicalDataSize);
