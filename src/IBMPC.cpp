@@ -57,7 +57,7 @@ int GetUnformatSizeCode(DataRate datarate)
     return 7;
 }
 
-int GetFormatGap(int drive_speed, DataRate datarate, Encoding encoding, int sectors, int size_)
+int GetFormatGap(int revolution_time_ms, DataRate datarate, Encoding encoding, int sectors, int size_)
 {
     if (!sectors) return 0;
 
@@ -65,19 +65,19 @@ int GetFormatGap(int drive_speed, DataRate datarate, Encoding encoding, int sect
     for (auto& fg : standard_gaps)
     {
         // If the format matches exactly, return the known gap
-        if (fg.drivespeed == drive_speed && fg.datarate == datarate && fg.encoding == encoding &&
+        if (fg.drivespeed == revolution_time_ms && fg.datarate == datarate && fg.encoding == encoding &&
             fg.sectors == sectors && fg.size == size_)
             return fg.gap3;
     }
 
-    auto track_len = GetTrackCapacity(drive_speed, datarate, encoding) - GetTrackOverhead(encoding);
+    auto track_len = GetTrackCapacity(revolution_time_ms, datarate, encoding) - GetTrackOverhead(encoding);
     auto chunk = track_len / sectors;
     auto overhead = Sector::SizeCodeToLength(size_) + GetSectorOverhead(encoding);
     auto gap3 = (chunk > overhead) ? chunk - overhead : 0;
     return (gap3 > MAX_GAP3) ? MAX_GAP3 : gap3;
 }
 
-bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int track_time_ms, FitDetails& details)
+bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int revolution_time_ms, FitDetails& details)
 {
     if (track.empty() || track.is_mixed_encoding())
         return false;
@@ -87,7 +87,7 @@ bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int track_time_ms
     if (encoding != Encoding::MFM && encoding != Encoding::FM)
         return false;
 
-    auto track_space = GetTrackCapacity(track_time_ms, datarate, encoding);
+    auto track_space = GetTrackCapacity(revolution_time_ms, datarate, encoding);
     auto sector_overhead = GetSectorOverhead(encoding);
 
     details.sector_units.resize(track.size());
@@ -138,7 +138,7 @@ bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int track_time_ms
 
             // Try standard format gaps, or calculate one that is suitable
             details.gap3 =
-                GetFormatGap(track_time_ms, datarate, encoding, details.total_units, details.size_code);
+                GetFormatGap(revolution_time_ms, datarate, encoding, details.total_units, details.size_code);
 
             if (details.gap3)
             {

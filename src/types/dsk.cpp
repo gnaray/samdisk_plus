@@ -713,8 +713,8 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                 {
                     auto sector = track[i];
 
-                    auto rpm_time = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
-                    auto track_capacity = GetTrackCapacity(rpm_time, sector.datarate, sector.encoding);
+                    auto revolution_time_ms = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
+                    auto track_capacity = GetTrackCapacity(revolution_time_ms, sector.datarate, sector.encoding);
 
                     // If any offsets are zero we can't generate append an offsets block.
                     if (!sector.offset)

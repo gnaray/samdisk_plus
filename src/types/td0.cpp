@@ -302,8 +302,8 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
         }
 
         // Assume 360rpm for 300Kbps and 300rpm for the rest, then work out the track size
-        auto drive_speed = (datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
-        auto track_capacity = GetTrackCapacity(drive_speed, datarate, encoding);
+        auto revolution_time_ms = (datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
+        auto track_capacity = GetTrackCapacity(revolution_time_ms, datarate, encoding);
 
         // Roughly sum the data stored, ignoring gaps and headers
         auto data_sum = 0;

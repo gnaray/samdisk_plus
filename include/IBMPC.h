@@ -5,7 +5,7 @@
 
 int GetFormatLength(Encoding encoding, int sectors, int size, int gap3);
 int GetUnformatSizeCode(DataRate datarate);
-int GetFormatGap(int drive_speed, DataRate datarate, Encoding encoding, int sectors, int size);
+int GetFormatGap(int revolution_time_ms, DataRate datarate, Encoding encoding, int sectors, int size);
 
 struct FitDetails
 {
@@ -16,4 +16,4 @@ struct FitDetails
     bool real_errors;
 };
 
-bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int drive_speed, FitDetails& details);
+bool FitTrackIBMPC(const CylHead& cylhead, const Track& track, int revolution_time_ms, FitDetails& details);

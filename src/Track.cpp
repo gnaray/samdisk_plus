@@ -97,8 +97,8 @@ int Track::data_extent_bits(const Sector& sector) const
     auto it = find(sector);
     assert(it != end());
 
-    auto drive_speed = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300;
-    auto track_len = tracklen ? tracklen : GetTrackCapacity(drive_speed, sector.datarate, sector.encoding);
+    auto revolution_time_ms = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300; // time / rotation.
+    auto track_len = tracklen ? tracklen : GetTrackCapacity(revolution_time_ms, sector.datarate, sector.encoding);
 
     // Approximate bit distance to next ID header.
     auto gap_bits = ((std::next(it) != end()) ? std::next(it)->offset : (track_len + begin()->offset)) - sector.offset;
