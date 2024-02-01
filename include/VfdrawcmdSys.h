@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RawTrackMFM.h"
+#include "PhysicalTrackMFM.h"
 #include "config.h"
 
 #include "Platform.h"
@@ -34,7 +34,7 @@ protected:
     bool WaitSector(const OrphanDataCapableTrack &orphanDataCapableTrack);
     bool SetPerpendicularMode(int ow_ds_gap_wgate) override;
     void LimitCyl();
-    const RawTrackMFM& ReadRawTrack(const CylHead& cylhead);
+    const PhysicalTrackMFM& ReadRawTrack(const CylHead& cylhead);
     OrphanDataCapableTrack& ReadTrackFromRowTrack(const CylHead& cylhead);
 public:
     bool SetEncRate(Encoding encoding, DataRate datarate) override;
@@ -81,7 +81,7 @@ private:
     uint8_t m_currentSectorIndex = 0;
 
     std::bitset<MAX_DISK_CYLS * MAX_DISK_HEADS> m_rawTrackLoaded{};
-    std::map<CylHead, RawTrackMFM> m_rawTracks{};
+    std::map<CylHead, PhysicalTrackMFM> m_rawTracks{};
     std::bitset<MAX_DISK_CYLS * MAX_DISK_HEADS> m_odcTrackDecoded{};
     std::map<CylHead, OrphanDataCapableTrack> m_odcTracks{};
 };

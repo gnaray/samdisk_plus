@@ -2,7 +2,7 @@
 
 #include "types/vfdrawtrack_dev.h"
 #include "MemFile.h"
-#include "RawTrackMFM.h"
+#include "PhysicalTrackMFM.h"
 
 VfdRawTrackDevDisk::VfdRawTrackDevDisk(const std::string& path)
 {
@@ -46,7 +46,7 @@ TrackData VfdRawTrackDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
 TrackData VfdRawTrackDevDisk::LoadRawTrack(const CylHead& cylhead)
 {
     MemFile file;
-    RawTrackMFM rawTrackMFM;
+    PhysicalTrackMFM rawTrackMFM;
     const auto pattern = " Raw track (track %02d, head %1d).floppy_raw_track";
     const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
     const auto rawTrackFilePath = FindFirstFile(fileNamePart, m_path);
@@ -65,7 +65,7 @@ TrackData VfdRawTrackDevDisk::LoadRawTrack(const CylHead& cylhead)
         }
         VectorX<uint8_t> rawTrackContent(file.size());
         if (file.rewind() && file.read(rawTrackContent))
-            rawTrackMFM = RawTrackMFM(file.data(), DataRate::_250K);
+            rawTrackMFM = PhysicalTrackMFM(file.data(), DataRate::_250K);
     } while (false);
 
     auto rawTrack = rawTrackMFM;

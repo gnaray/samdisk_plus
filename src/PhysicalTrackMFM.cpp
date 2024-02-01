@@ -1,4 +1,4 @@
-#include "RawTrackMFM.h"
+#include "PhysicalTrackMFM.h"
 #include "Options.h"
 #include "Track.h"
 #include "IBMPCBase.h"
@@ -174,7 +174,7 @@ constexpr bool RawTrackContext::DoSectorIdAndDataPositionsCohere(
 }
 // ====================================
 
-void RawTrackMFM::Rewind()
+void PhysicalTrackMFM::Rewind()
 {
     m_rawTrackContent.SetByteBitPosition(0);
 }
@@ -189,7 +189,7 @@ void RawTrackMFM::Rewind()
  * Double the bits (x1x1x0x1 x0x0x1x0) then reverse the bytes (1x0x1x1x 0x1x0x0x), correct.
  * If firstly reverse the bytes (01001011) then double the bits (0x1x0x0x 1x0x1x1x), would be wrong.
  */
-BitBuffer RawTrackMFM::AsMFMBitstream()
+BitBuffer PhysicalTrackMFM::AsMFMBitstream()
 {
     const Data addressMarkBytes{0x44, 0x89, 0x44, 0x89, 0x44, 0x89}; // 0x4489 3 times in reverse bit order.
     const auto readLengthMin = intsizeof(AddressMarkSyncInTrack); // Looking for address mark sync only.
@@ -228,7 +228,7 @@ BitBuffer RawTrackMFM::AsMFMBitstream()
 
 // ====================================
 
-void RawTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const RawTrackContext& rawTrackContext)
+void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const RawTrackContext& rawTrackContext)
 {
     const auto sectorIdsIndexSup = orphanDataCapableTrack.track.size();
     auto sectorIdsIndex = 0;
@@ -278,7 +278,7 @@ In BitstreamDecoder: sync_mask = opt_a1sync ? 0xffdfffdf
 a1syncmask: FF DF FF DF FF DF
 The a1syncmask removes the 2nd clocksign from the byte 89.
 */
-OrphanDataCapableTrack RawTrackMFM::DecodeTrack(const CylHead& cylHead)
+OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
 {
     const auto encoding = Encoding::MFM; // Now only MFM encoding is supported. Decoding a FM track has high false-positive risk.
     OrphanDataCapableTrack orphanDataCapableTrack;
@@ -327,7 +327,7 @@ OrphanDataCapableTrack RawTrackMFM::DecodeTrack(const CylHead& cylHead)
 }
 // ====================================
 
-OrphanDataCapableTrack RawTrackMFM::DecodeTrack(const CylHead& cylHead) const
+OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead) const
 {
     auto rawTrack = *this;
     return rawTrack.DecodeTrack(cylHead);

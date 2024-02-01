@@ -149,12 +149,12 @@ void VfdrawcmdSys::LimitCyl()
         m_cyl = 82;
 }
 
-const RawTrackMFM& VfdrawcmdSys::ReadRawTrack(const CylHead& cylhead)
+const PhysicalTrackMFM& VfdrawcmdSys::ReadRawTrack(const CylHead& cylhead)
 {
     if (!m_rawTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
         MemFile file;
-        RawTrackMFM rawTrackMFM;
+        PhysicalTrackMFM rawTrackMFM;
         const auto pattern = " Raw track (track %02d, head %1d).floppy_raw_track";
         const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
         const auto rawTrackFilePath = FindFirstFile(fileNamePart, m_path);
@@ -173,7 +173,7 @@ const RawTrackMFM& VfdrawcmdSys::ReadRawTrack(const CylHead& cylhead)
             }
             Data rawTrackContent(file.size());
             if (file.rewind() && file.read(rawTrackContent))
-                rawTrackMFM = RawTrackMFM(file.data(), FDRATE_TO_DATARATE[m_fdrate]);
+                rawTrackMFM = PhysicalTrackMFM(file.data(), FDRATE_TO_DATARATE[m_fdrate]);
         } while (false);
         m_rawTracks[cylhead] = std::move(rawTrackMFM);
         m_rawTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())] = true;

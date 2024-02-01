@@ -1,8 +1,8 @@
-#ifndef RawTrackMFMH
-#define RawTrackMFMH
+#ifndef PhysicalTrackMFMH
+#define PhysicalTrackMFMH
 //---------------------------------------------------------------------------
 
-class RawTrackMFM; // Required because this and OrphanDataCapableTrack includes each other.
+class PhysicalTrackMFM; // Required because this and OrphanDataCapableTrack includes each other.
 
 #include "BitBuffer.h"
 #include "BitPositionableByteVector.h"
@@ -272,17 +272,17 @@ public:
 
 
 
-class RawTrackMFM
+class PhysicalTrackMFM
 {
 public:
-    RawTrackMFM() = default;
+    PhysicalTrackMFM() = default;
 
-    RawTrackMFM(const Data& rawTrackContent, const DataRate& dataRate)
+    PhysicalTrackMFM(const Data& rawTrackContent, const DataRate& dataRate)
         : m_rawTrackContent(rawTrackContent), dataRate(dataRate)
     {
     }
 
-    RawTrackMFM(const MEMORY& rawTrackContent, const DataRate& dataRate)
+    PhysicalTrackMFM(const MEMORY& rawTrackContent, const DataRate& dataRate)
         : m_rawTrackContent(rawTrackContent.pb, rawTrackContent.size), dataRate(dataRate)
     {
     }

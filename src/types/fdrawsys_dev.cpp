@@ -16,7 +16,7 @@
 #include "Disk.h"
 #include "Util.h"
 #include "win32_error.h"
-#include "RawTrackMFM.h"
+#include "PhysicalTrackMFM.h"
 #include "OrphanDataCapableTrack.h"
 #include "TimedRawDualTrack.h"
 #include "MultiScanResult.h"
@@ -839,7 +839,7 @@ bool FdrawSysDevDisk::ReadAndMergeRawTracks(const CylHead& cylhead, TimedRawDual
 
     if (!m_fdrawcmd->CmdReadTrack(cylhead.head, cylhead.cyl, cylhead.head, 0, 8, 1, mem)) // Read one big 32K sector.
         throw win32_error(GetLastError_MP(), "ReadTrack");
-    RawTrackMFM toBeMergedRawTrack(mem, m_lastDataRate);
+    PhysicalTrackMFM toBeMergedRawTrack(mem, m_lastDataRate);
     const auto sectorIdAmountPrev = timedRawDualTrack.rawTrackMulti.track.size();
     const auto sectorAmountPrev = timedRawDualTrack.rawTrackMulti.size();
     timedRawDualTrack.rawTrackMulti.mergeRawTrack(cylhead, toBeMergedRawTrack);
