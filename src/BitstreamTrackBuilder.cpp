@@ -94,9 +94,9 @@ int BitstreamTrackBuilder::getIAMPosition() const
 void BitstreamTrackBuilder::addCrc(int size)
 {
     auto old_bitpos{ m_buffer.tell() };
-    auto byte_bits = bitRawBits() * DataBytePositionAsBitOffset(1);
-    assert(old_bitpos >= size * byte_bits);
-    m_buffer.seek(old_bitpos - size * byte_bits);
+    auto byte_rawbits = bitRawBits() * DataBytePositionAsBitOffset(1);
+    assert(old_bitpos >= size * byte_rawbits);
+    m_buffer.seek(old_bitpos - size * byte_rawbits);
 
     CRC16 crc{};
     while (size-- > 0)
