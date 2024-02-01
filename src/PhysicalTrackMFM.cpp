@@ -25,7 +25,7 @@ constexpr bool PhysicalTrackContext::DoSectorIdAndDataPositionsCohere(
     // stored as two bits (in addition every FM encoded bit is stored as two rawbits).
     // We also calculate with bits here though the code is slightly modified.
     const auto gap2_size_min = GetFmOrMfmGap2Length(dataRate, encoding);
-    const auto idam_am_distance = GetFmOrMfmIdamAndAmDistance(dataRate, encoding);
+    const auto idam_am_distance = GetFmOrMfmIdamAndDamDistance(dataRate, encoding);
     const auto min_distance = DataBytePositionAsBitOffset(GetIdOverheadWithoutIdamOverheadSyncOverhead(encoding) + gap2_size_min); // IDAM, ID, gap2 (without sync and DAM.a1sync, why?)
     const auto max_distance = DataBytePositionAsBitOffset(idam_am_distance + 8); // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
 

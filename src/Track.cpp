@@ -564,7 +564,7 @@ void Track::setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen)
 
 int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 {
-    const auto offsetDiff = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()));
+    const auto offsetDiff = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndDamDistance(getDataRate(), getEncoding()));
     // We could check if the sector overlaps something existing but unimportant now.
     return modulo(dataOffset - offsetDiff, static_cast<unsigned>(tracklen));
 }
@@ -766,7 +766,7 @@ Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const in
         return end();
     assert(dataOffset > 0);
 
-    const auto offsetDiffMaxTolerated = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time);
+    const auto offsetDiffMaxTolerated = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndDamDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time);
     // Find a sector close enough to the data offset to be the same one.
     auto it = std::find_if(begin(), end(), [&](const Sector& s) {
         return modulo(dataOffset - s.offset, static_cast<unsigned>(tracklen)) <= offsetDiffMaxTolerated &&
@@ -781,7 +781,7 @@ Sectors::const_iterator Track::findDataForSectorIdFmOrMfm(const int sectorIdOffs
         return end();
     assert(sectorIdOffset > 0);
 
-    const auto offsetDiffMaxTolerated = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndAmDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time);
+    const auto offsetDiffMaxTolerated = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndDamDistance(getDataRate(), getEncoding()) + opt_byte_tolerance_of_time);
     // Find data close enough to the sector id offset to be the same one.
     auto it = std::find_if(begin(), end(), [&](const Sector& s) {
         return modulo(s.offset - sectorIdOffset, static_cast<unsigned>(tracklen)) <= offsetDiffMaxTolerated &&

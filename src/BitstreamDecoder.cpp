@@ -1276,7 +1276,7 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
 
         auto shift = (sector.encoding == Encoding::FM) ? 5 : 4;
         const auto gap2_size_min = GetFmOrMfmGap2Length(sector.datarate, sector.encoding);
-        const auto idam_am_distance = GetFmOrMfmIdamAndAmDistance(sector.datarate, sector.encoding);
+        const auto idam_am_distance = GetFmOrMfmIdamAndDamDistance(sector.datarate, sector.encoding);
         const auto min_distance = (1 + 6 + gap2_size_min) << shift;          // IDAM, ID, gap2 (without sync and DAM.a1sync, why?)
         const auto max_distance = (idam_am_distance + 8) << shift;          // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
 
