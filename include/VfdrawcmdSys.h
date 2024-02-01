@@ -34,7 +34,7 @@ protected:
     bool WaitSector(const OrphanDataCapableTrack &orphanDataCapableTrack);
     bool SetPerpendicularMode(int ow_ds_gap_wgate) override;
     void LimitCyl();
-    const PhysicalTrackMFM& ReadPhysicalTrack(const CylHead& cylhead);
+    const PhysicalTrackMFM& LoadPhysicalTrack(const CylHead& cylhead);
     OrphanDataCapableTrack& ReadTrackFromPhysicalTrack(const CylHead& cylhead);
 public:
     bool SetEncRate(Encoding encoding, DataRate datarate) override;

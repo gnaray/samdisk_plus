@@ -60,7 +60,7 @@ int VfdrawcmdSys::GetMaxTransferSize()
      */
     constexpr int cyl = 0;
     constexpr int phead = 0;
-    const auto currentPhysicalTrack = ReadPhysicalTrack(CylHead(cyl, phead));
+    const auto currentPhysicalTrack = LoadPhysicalTrack(CylHead(cyl, phead));
     return currentPhysicalTrack.m_physicalTrackContent.Bytes().size();
 }
 
@@ -150,7 +150,7 @@ void VfdrawcmdSys::LimitCyl()
         m_cyl = 82;
 }
 
-const PhysicalTrackMFM& VfdrawcmdSys::ReadPhysicalTrack(const CylHead& cylhead)
+const PhysicalTrackMFM& VfdrawcmdSys::LoadPhysicalTrack(const CylHead& cylhead)
 {
     if (!m_physicalTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
@@ -186,7 +186,7 @@ OrphanDataCapableTrack& VfdrawcmdSys::ReadTrackFromPhysicalTrack(const CylHead& 
 {
     if (!m_odcTrackDecoded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
-        const auto& physicalTrack = ReadPhysicalTrack(cylhead);
+        const auto& physicalTrack = LoadPhysicalTrack(cylhead);
         const auto orphanDataCapableTrack = physicalTrack.DecodeTrack(cylhead);
         m_odcTracks[cylhead] = std::move(orphanDataCapableTrack);
         m_odcTrackDecoded[lossless_static_cast<size_t>(cylhead.operator int())] = true;
@@ -316,7 +316,7 @@ bool VfdrawcmdSys::CmdReadTrack(int phead, int cyl, int /*head*/, int /*sector*/
         mem.resize(output_size);
     // mem.size >= output_size now.
 
-    const auto currentPhysicalTrack = ReadPhysicalTrack(CylHead(m_cyl, phead));
+    const auto currentPhysicalTrack = LoadPhysicalTrack(CylHead(m_cyl, phead));
     const auto availSize = std::min(currentPhysicalTrack.m_physicalTrackContent.Bytes().size(), output_size);
     mem.copyFrom(currentPhysicalTrack.m_physicalTrackContent.Bytes(), availSize);
     return true;
@@ -587,7 +587,7 @@ bool VfdrawcmdSys::CmdReadId(int head, FD_CMD_RESULT& result)
     bool foundId = false;
     if (m_encoding_flags == FD_OPTION_MFM && m_fdrate == FD_RATE_250K)
     {
-        const auto& orphanDataCapableTrack = ReadTrackFromRowTrack(CylHead(m_cyl, head));
+        const auto& orphanDataCapableTrack = ReadTrackFromPhysicalTrack(CylHead(m_cyl, head));
         if (WaitSector(orphanDataCapableTrack) && !orphanDataCapableTrack.track.empty())
         {
             const auto& sectorCurrent = orphanDataCapableTrack.track[m_currentSectorIndex];
