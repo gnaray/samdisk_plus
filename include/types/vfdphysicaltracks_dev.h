@@ -1,11 +1,11 @@
-// vfdrawtrack virtual device
+// vfdphysicaltracks virtual device
 
 #include "DemandDisk.h"
 
-class VfdRawTrackDevDisk final : public DemandDisk
+class VfdPhysicalTracksDevDisk final : public DemandDisk
 {
 public:
-    VfdRawTrackDevDisk(const std::string& path);
+    VfdPhysicalTracksDevDisk(const std::string& path);
 
 protected:
     bool preload(const Range& range, int cyl_step) override;
@@ -21,5 +21,5 @@ private:
     void SetMetadata(const std::string& path);
 };
 
-bool ReadVfdrawtrack(const std::string& path, std::shared_ptr<Disk>& disk);
-bool WriteVfdrawtrack(const std::string& path, std::shared_ptr<Disk>& disk);
+bool ReadVfdphysicaltracks(const std::string& path, std::shared_ptr<Disk>& disk);
+bool WriteVfdphysicaltracks(const std::string& path, std::shared_ptr<Disk>& disk);

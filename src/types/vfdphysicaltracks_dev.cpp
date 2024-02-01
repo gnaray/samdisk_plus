@@ -1,10 +1,10 @@
-// vfdrawtrack virtual device
+// vfdphysicaltracks virtual device
 
-#include "types/vfdrawtrack_dev.h"
+#include "types/vfdphysicaltracks_dev.h"
 #include "MemFile.h"
 #include "PhysicalTrackMFM.h"
 
-VfdRawTrackDevDisk::VfdRawTrackDevDisk(const std::string& path)
+VfdPhysicalTracksDevDisk::VfdPhysicalTracksDevDisk(const std::string& path)
 {
     try
     {
@@ -12,38 +12,38 @@ VfdRawTrackDevDisk::VfdRawTrackDevDisk(const std::string& path)
     }
     catch (...)
     {
-        throw util::exception("failed to initialise vfdrawtrack device");
+        throw util::exception("failed to initialise vfdphysicaltracks device");
     }
     m_path = path;
 }
 
-bool VfdRawTrackDevDisk::preload(const Range&/*range*/, int /*cyl_step*/) /*override*/
+bool VfdPhysicalTracksDevDisk::preload(const Range&/*range*/, int /*cyl_step*/) /*override*/
 {
     return false;
 }
 
-bool VfdRawTrackDevDisk::is_constant_disk() const /*override*/
+bool VfdPhysicalTracksDevDisk::is_constant_disk() const /*override*/
 {
     return false;
 }
 
-bool VfdRawTrackDevDisk::supports_retries() const /*override*/
+bool VfdPhysicalTracksDevDisk::supports_retries() const /*override*/
 {
     return true;
 }
 
-bool VfdRawTrackDevDisk::supports_rescans() const /*override*/
+bool VfdPhysicalTracksDevDisk::supports_rescans() const /*override*/
 {
     return true;
 }
 
-TrackData VfdRawTrackDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
+TrackData VfdPhysicalTracksDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) /*override*/
 {
     return LoadPhysicalTrack(cylhead);
 }
 
-TrackData VfdRawTrackDevDisk::LoadPhysicalTrack(const CylHead& cylhead)
+TrackData VfdPhysicalTracksDevDisk::LoadPhysicalTrack(const CylHead& cylhead)
 {
     MemFile file;
     PhysicalTrackMFM physicalTrackMFM;
@@ -75,7 +75,7 @@ TrackData VfdRawTrackDevDisk::LoadPhysicalTrack(const CylHead& cylhead)
     return trackdata;
 }
 
-void VfdRawTrackDevDisk::SetMetadata(const std::string&/* path*/)
+void VfdPhysicalTracksDevDisk::SetMetadata(const std::string&/* path*/)
 {
     static const VectorX<std::string> fdc_types{
         "Unknown", "Unknown1", "Normal", "Enhanced", "82077", "82077AA", "82078_44", "82078_64", "National" };
@@ -86,27 +86,27 @@ void VfdRawTrackDevDisk::SetMetadata(const std::string&/* path*/)
     metadata()["data_rates"] = data_rates[0];
 }
 
-bool ReadVfdrawtrack(const std::string& path, std::shared_ptr<Disk>& disk)
+bool ReadVfdphysicaltracks(const std::string& path, std::shared_ptr<Disk>& disk)
 {
-    if (!IsVfdrt(path))
+    if (!IsVfdpt(path))
         return false;
     const auto realPath = path.substr(6);
     if (!IsDir(realPath))
-        throw util::exception("failed to open vfdrawtrack device");
+        throw util::exception("failed to open vfdphysicaltracks device");
 
-    auto fdrawcmd_dev_disk = std::make_shared<VfdRawTrackDevDisk>(realPath);
-    fdrawcmd_dev_disk->extend(CylHead(83 - 1, 2 - 1));
+    auto vfdphysicaltracks_dev_disk = std::make_shared<VfdPhysicalTracksDevDisk>(realPath);
+    vfdphysicaltracks_dev_disk->extend(CylHead(83 - 1, 2 - 1));
 
-    fdrawcmd_dev_disk->strType() = "Vfdrawtrack";
-    disk = fdrawcmd_dev_disk;
+    vfdphysicaltracks_dev_disk->strType() = "Vfdphysicaltrack";
+    disk = vfdphysicaltracks_dev_disk;
 
     return true;
 }
 
-bool WriteVfdrawtrack(const std::string& path, std::shared_ptr<Disk>&/*disk*/)
+bool WriteVfdphysicaltracks(const std::string& path, std::shared_ptr<Disk>&/*disk*/)
 {
     if (!IsFloppyDevice(path))
         return false;
 
-    throw util::exception("vfdrawtrack writing not yet implemented");
+    throw util::exception("vfdphysicaltracks writing not yet implemented");
 }
