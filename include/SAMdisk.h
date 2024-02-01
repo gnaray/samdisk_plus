@@ -1,17 +1,10 @@
 #pragma once
 
 #include "PlatformConfig.h"
-//#include "utils.h"
-//#include "win32_error.h"
-//#include "CRC16.h"
 #include "Disk.h"
 #include "DiskUtil.h"
 #include "Header.h"
-//#include "MemFile.h"
-//#include "Image.h"
 #include "HDD.h"
-//#include "Util.h"
-//#include "SAMCoupe.h"
 
 // copy
 bool ImageToImage(const std::string& src_path, const std::string& dst_path);
