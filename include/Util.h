@@ -83,7 +83,7 @@ char(&ArraySizeHelper(T(&array)[N]))[N];
 #define USECS_PER_MINUTE    60000000
 
 //const int MIN_TRACK_OVERHEAD = 32;        // 32 bytes of 0x4e at the start of a track
-//const int MIN_SECTOR_OVERHEAD = 95;       // 22+12+3+1+6+22+8+3+1+1+16
+//const int MIN_SECTOR_OVERHEAD = 95;       // 22+12+3+1+6+22+8+3+1+1+16 (gapx, sync, idamsync, idam, id+idcrc, gap2, gap2sync, damsync, dam, ?, ?)
 
 const int NORMAL_SIDES = 2;
 const int NORMAL_TRACKS = 80;

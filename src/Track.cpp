@@ -569,7 +569,7 @@ int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
     return modulo(dataOffset - offsetDiff, static_cast<unsigned>(tracklen));
 }
 
-// Guess sector ids based on discovered gap3s and format scheme recognition.
+// Guess track sector ids based on discovered gap3s and track sector scheme recognition.
 IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
 {
     IdAndOffsetVector sectorIdsAndOffsets;
