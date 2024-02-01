@@ -39,8 +39,7 @@ public:
     }
     inline const FD_TIMED_MULTI_ID_HEADER* HeaderArray() const
     {
-        // TODO const_cast could be removed if there were "HeaderArray* const" methods in fdrawcmd.h.
-        return const_cast<FD_TIMED_MULTI_SCAN_RESULT*>(this->operator const FD_TIMED_MULTI_SCAN_RESULT*())->HeaderArray();
+        return (this->operator const FD_TIMED_MULTI_SCAN_RESULT*())->HeaderArray();
     }
     inline const FD_TIMED_MULTI_ID_HEADER& HeaderArray(const int index) const
     {
