@@ -4,22 +4,14 @@
 #include "config.h"
 
 #ifdef HAVE_FDRAWCMD_H
+
+#include "types/fdrawsys_dev.h"
 #include "Platform.h"
 #include "fdrawcmd.h"
 
 #include "DiskUtil.h"
 #include "Options.h"
-#include "DemandDisk.h"
-#include "IBMPCBase.h"
-#include "FdrawcmdSys.h"
 #include "VfdrawcmdSys.h"
-#include "Disk.h"
-#include "Util.h"
-#include "win32_error.h"
-#include "PhysicalTrackMFM.h"
-#include "OrphanDataCapableTrack.h"
-#include "TimedAndPhysicalDualTrack.h"
-#include "MultiScanResult.h"
 
 #include <cstring>
 #include <memory>
@@ -37,20 +29,8 @@ static auto& opt_retries = getOpt<RetryPolicy>("retries");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_steprate = getOpt<int>("steprate");
 
-class TrackInfo
-{
-public:
-    Encoding encoding{ Encoding::Unknown };
-    DataRate dataRate{ DataRate::Unknown };
-    int trackTime = 0;
-    int trackLenIdeal = 0;
-};
-
-class FdrawSysDevDisk final : public DemandDisk
-{
-public:
-    FdrawSysDevDisk(const std::string& path, std::unique_ptr<FdrawcmdSys> fdrawcmd)
-            : m_fdrawcmd(std::move(fdrawcmd))
+FdrawSysDevDisk::FdrawSysDevDisk(const std::string& path, std::unique_ptr<FdrawcmdSys> fdrawcmd)
+        : m_fdrawcmd(std::move(fdrawcmd))
     {
         try
         {
@@ -73,54 +53,25 @@ public:
         }
     }
 
-protected:
-    bool supports_retries() const override
-    {
-        return true;
-    }
+bool FdrawSysDevDisk::supports_retries() const /*override*/
+{
+    return true;
+}
 
-    bool supports_rescans() const override
-    {
-        return m_fdrawcmd->GetVersion().value >= DriverVersion1_0_1_12; // Since new version can rescan.
-    }
+bool FdrawSysDevDisk::supports_rescans() const /*override*/
+{
+    return m_fdrawcmd->GetVersion().value >= DriverVersion1_0_1_12; // Since new version can rescan.
+}
 
-    TrackData load(const CylHead& cylhead, bool /*first_read*/,
-            int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override;
+bool FdrawSysDevDisk::preload(const Range& /*range*/, int /*cyl_step*/) /*override*/
+{
+    return false;
+}
 
-    bool preload(const Range& /*range*/, int /*cyl_step*/) override
-    {
-        return false;
-    }
-
-    bool is_constant_disk() const override
-    {
-        return false;
-    }
-
-private:
-    void SetMetadata(const std::string& path);
-    bool DetectEncodingAndDataRate(int head);
-    Track BlindReadHeaders(const CylHead& cylhead, int& firstSectorSeen);
-    void ReadSector(const CylHead& cylhead, Track& track, int index, int firstSectorSeen = 0);
-    void ReadFirstGap(const CylHead& cylhead, Track& track);
-
-    /* Here are the methods of multi track reading based on CmdTimedMultiScan
-     * implemented in driver version >= 1.0.1.12.
-     */
-    bool ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScanResult& multiScanResult);
-    TimedAndPhysicalDualTrack BlindReadHeaders112(const CylHead& cylhead, const DeviceReadingPolicy& deviceReadingPolicy);
-    void DiscardOufOfSpaceSectorsAtTrackEnd(Track& track) const;
-    void GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack) const;
-    static bool GetSectorDataFromPhysicalTrack(TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const int index);
-    bool ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const DeviceReadingPolicy& deviceReadingPolicy);
-    bool ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack);
-
-    std::unique_ptr<FdrawcmdSys> m_fdrawcmd;
-    Encoding m_lastEncoding{ Encoding::Unknown };
-    DataRate m_lastDataRate{ DataRate::Unknown };
-    TrackInfo m_trackInfo[MAX_DISK_CYLS * MAX_DISK_HEADS];
-    bool m_warnedMFM128 = false;
-};
+bool FdrawSysDevDisk::is_constant_disk() const /*override*/
+{
+    return false;
+}
 
 
 void FdrawSysDevDisk::SetMetadata(const std::string& path)
