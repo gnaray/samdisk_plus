@@ -472,46 +472,6 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
 {
     assert(trackLenSingle > 0 && tracklen > 0 && syncOffset < tracklen);
 
-    Track trackAuxiliarySingle;
-    trackAuxiliarySingle.tracklen = trackLenSingle;
-    trackAuxiliarySingle.tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / tracklen);
-    if (!empty())
-    {
-        auto it = begin();
-        while (it < end())
-        {
-            Sector sector(*it);
-            sector.offset = modulo(sector.offset - syncOffset, static_cast<unsigned>(trackLenSingle));
-            // If ignore ending data copy and the actual sector ends at track end ...
-            if (ignoreEndingDataCopy && BitOffsetAsDataBytePosition(tracklen - it->offset) == it->data_size())
-            {
-                int mergedSectorIndexDryrun;
-                const auto addResultDryrun = trackAuxiliarySingle.add(std::move(sector), &mergedSectorIndexDryrun, true);
-                // ... and another copy exists and it is not shorter then the actual sector is a broken one, ignore (discard) it.
-                if (addResultDryrun == Track::AddResult::Merge && sector.data_size() <= operator[](mergedSectorIndexDryrun).data_size())
-                {
-                    it = sectors().erase(it);
-                    continue;
-                }
-            }
-            const auto addResult = trackAuxiliarySingle.add(std::move(sector));
-            if (addResult == Track::AddResult::Append || addResult == Track::AddResult::Insert)
-            {
-                it->revolution = it->offset / trackAuxiliarySingle.tracklen;
-                it->offset = sector.offset;
-                it++;
-            }
-            else
-                it = sectors().erase(it);
-        }
-        std::sort(begin(), end(),
-                  [](const Sector& s1, const Sector& s2) { return s1.offset < s2.offset; });
-    }
-    tracklen = trackAuxiliarySingle.tracklen;
-    tracktime = trackAuxiliarySingle.tracktime;
-{
-    assert(trackLenSingle > 0 && tracklen > 0 && syncOffset < tracklen);
-
     auto sectorsEarlier = std::move(m_sectors); // m_sectors become empty.
     const auto trackLenMulti = tracklen;
     tracklen = trackLenSingle;
