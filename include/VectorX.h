@@ -131,6 +131,4 @@ public:
 
 using Data = VectorX<uint8_t>;
 
-using DataList = VectorX<Data>;
-
 #endif // VECTORX_H
