@@ -5,7 +5,7 @@
 class TrackSectorIds : public VectorX<int>
 {
 public:
-    using VectorX<int>::vector;
+    using VectorX<int>::VectorX;
 
     static TrackSectorIds GetIds(const CylHead& cylhead, const int sectors, const int interleave = 0, const int skew = 0, const int offset = 0, const int base = 1);
     static const TrackSectorIds& GetTrackSectorIds(int sectors, int interleave);
@@ -60,7 +60,7 @@ public:
 class IdAndOffsetVector : public VectorX<IdAndOffset>
 {
 public:
-    using VectorX<IdAndOffset>::vector;
+    using VectorX<IdAndOffset>::VectorX;
 
     TrackSectorIds GetSectorIds() const;
     void ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackSectorIds);

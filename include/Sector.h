@@ -186,7 +186,7 @@ inline std::ostream& operator<<(std::ostream& os, const Sector& sector) { return
 class Sectors : public VectorX<Sector>
 {
 public:
-    using VectorX<Sector>::vector;
+    using VectorX<Sector>::VectorX;
 
     void push_back_more(const Sectors& sectors);
     bool HasIdSequence(const int first_id, const int length) const;

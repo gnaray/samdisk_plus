@@ -85,7 +85,7 @@ template<typename FS> inline std::ostream& operator<<(std::ostream& os, const Fi
 class FileSystemWrappers : public VectorX<std::unique_ptr<FileSystemWrapperInterface>>
 {
 public:
-    using VectorX<std::unique_ptr<FileSystemWrapperInterface>>::vector;
+    using VectorX<std::unique_ptr<FileSystemWrapperInterface>>::VectorX;
 
     bool IsValidFSName(const std::string& detectFSHavingName) const;
     bool FindAndSetApprover(Disk &disk, const std::string& detectFSHavingName = DETECT_FS_AUTO) const;
