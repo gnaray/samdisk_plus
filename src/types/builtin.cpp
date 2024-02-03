@@ -23,7 +23,7 @@ static Track& complete(Track& track)
 
         // Remove data from sectors with 0 bytes of data (for no-data sectors)
         else if (!sector.data_size())
-            sector.datas().clear();
+            sector.remove_data();
 
         ++fill;
     }
@@ -1177,7 +1177,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             disk->write(trackdata.cylhead, FluxData(trackdata.flux()), true);
 
             // Half weak sector.
-            track[0].datas()[0][129] = 'S';
+            track[0].data_copy(0)[129] = 'S';
             track[7].remove_data();
             fill(weak_data, 0, 256, 0xe5);
             iota(weak_data, 256, 1);
@@ -1186,7 +1186,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
             disk->write(trackdata.cylhead, FluxData(trackdata.flux()), true);
 
             // Part weak sector.
-            track[0].datas()[0][129] = 0;
+            track[0].data_copy(0)[129] = 0;
             track[7].remove_data();
             fill(weak_data, 0, 256, 0xe5);
             iota(weak_data, 256, 1);

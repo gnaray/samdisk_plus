@@ -58,11 +58,6 @@ const DataList& Sector::datas() const
     return m_data;
 }
 
-DataList& Sector::datas()
-{
-    return m_data;
-}
-
 const Data& Sector::data_copy(int copy/*=0*/) const
 {
     assert(m_data.size() != 0);
@@ -352,6 +347,16 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
     dam = new_dam;
 
     return ret;
+}
+
+void Sector::assign(Data&& data)
+{
+    m_data.clear();
+    m_data.push_back(data);
+    constexpr auto data_copies = 1;
+    m_read_attempts = data_copies;
+    m_data_read_stats.clear();
+    m_data_read_stats.resize(data_copies, DataReadStats(1));
 }
 
 Sector::Merge Sector::add_with_readstats(Data&& new_data, bool new_bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/,

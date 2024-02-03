@@ -111,7 +111,6 @@ public:
     int data_size() const;
 
     const DataList& datas() const;
-    DataList& datas();
     const Data& data_copy(int copy = 0) const;
     Data& data_copy(int copy = 0);
     const Data& data_best_copy() const;
@@ -130,6 +129,7 @@ public:
 
     Merge add(Data&& data, bool bad_crc = false, uint8_t dam = IBM_DAM, int* affected_data_index = nullptr, DataReadStats* improved_data_read_stats = nullptr);
     Merge add_with_readstats(Data&& new_data, bool new_bad_crc = false, uint8_t new_dam = IBM_DAM,
+    void assign(Data&& data);
         int new_read_attempts = 1, const DataReadStats& new_data_read_stats = DataReadStats(1), bool readstats_counter_mode = true, bool update_this_read_attempts = true);
     int copies() const;
     void add_read_stats(int instance, DataReadStats&& data_read_stats);
