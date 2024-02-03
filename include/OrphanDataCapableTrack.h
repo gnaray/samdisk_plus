@@ -28,7 +28,7 @@ public:
     void mergePhysicalTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedPhysicalTrack);
     void mergePhysicalTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
     void syncThisToOtherAsMulti(const int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
-    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle);
+    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
     int determineBestTrackLen(const int timedTrackTime) const;
 
     static constexpr int ORPHAN_SECTOR_ID = 256;

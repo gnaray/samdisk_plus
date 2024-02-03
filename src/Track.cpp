@@ -468,7 +468,7 @@ bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffse
     return true;
 }
 
-void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool ignoreEndingDataCopy/* = false*/)
+void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly, bool ignoreEndingDataCopy/* = false*/)
 {
     assert(trackLenSingle > 0 && tracklen > 0 && syncOffset < tracklen);
 
@@ -509,6 +509,37 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
     }
     tracklen = trackAuxiliarySingle.tracklen;
     tracktime = trackAuxiliarySingle.tracktime;
+{
+    assert(trackLenSingle > 0 && tracklen > 0 && syncOffset < tracklen);
+
+    auto sectorsEarlier = std::move(m_sectors); // m_sectors become empty.
+    const auto trackLenMulti = tracklen;
+    tracklen = trackLenSingle;
+    tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / trackLenMulti);
+    for (auto& sectorEarlier : sectorsEarlier)
+    {
+        const auto offsetEarlier = sectorEarlier.offset;
+        sectorEarlier.offset = modulo(offsetEarlier - syncOffset, static_cast<unsigned>(trackLenSingle));
+        // If demulti and ignore ending data copy and the actual sector ends at track end ...
+        if (!syncOnly && ignoreEndingDataCopy && BitOffsetAsDataBytePosition(trackLenMulti - offsetEarlier) == sectorEarlier.data_size())
+        {
+            int affectedSectorIndexDryrun;
+            const auto addResultDryrun = add(std::move(sectorEarlier), &affectedSectorIndexDryrun, true);
+            // ... and another copy exists and it is not shorter then the actual sector is a broken one, ignore it.
+            if (addResultDryrun == Track::AddResult::Merge && sectorEarlier.data_size() <= operator[](affectedSectorIndexDryrun).data_size())
+                continue;
+        }
+
+        int affectedSectorIndex;
+        const auto addResult = add(std::move(sectorEarlier), &affectedSectorIndex);
+        if (addResult == Track::AddResult::Append || addResult == Track::AddResult::Insert)
+        {
+            if (!syncOnly)
+                operator[](affectedSectorIndex).revolution = offsetEarlier / trackLenSingle;
+        }
+    }
+    std::sort(begin(), end(),
+              [](const Sector& s1, const Sector& s2) { return s1.offset < s2.offset; });
 }
 
 int Track::determineBestTrackLen(const int timedTrackLen) const
