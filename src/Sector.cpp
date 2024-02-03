@@ -118,7 +118,7 @@ int Sector::get_data_best_copy_index() const
     if (!opt_readstats)
         return 0;
     int max_index = 0;
-    const auto i_sup = m_data.size();
+    const auto i_sup = m_data_read_stats.size();
     for (auto i = max_index + 1; i < i_sup; i++)
     {
         if (m_data_read_stats[i].ReadCount()
