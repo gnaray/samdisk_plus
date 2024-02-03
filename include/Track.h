@@ -78,6 +78,11 @@ public:
         auto it = static_cast<const Track&>(*this).findNext(header, itPrev);
         return m_sectors.erase(it, it);
     }
+    Sectors::iterator find(const Header& header, const int offset)
+    {
+        auto it = static_cast<const Track&>(*this).find(header, offset);
+        return m_sectors.erase(it, it);
+    }
     Sectors::iterator findFirstFromOffset(const int offset)
     {
         auto it = static_cast<const Track&>(*this).findFirstFromOffset(offset);
@@ -110,6 +115,7 @@ public:
     Sectors::const_iterator find(const Sector& sector) const;
     Sectors::const_iterator find(const Header& header) const;
     Sectors::const_iterator findNext(const Header& header, const Sectors::const_iterator& itPrev) const;
+    Sectors::const_iterator find(const Header& header, const int offset) const;
     Sectors::const_iterator findFirstFromOffset(const int offset) const;
     Sectors::const_iterator findIgnoringSize(const Header& header) const;
     Sectors::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;

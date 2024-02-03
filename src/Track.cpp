@@ -742,6 +742,13 @@ Sectors::const_iterator Track::findNext(const Header& header, const Sectors::con
         });
 }
 
+Sectors::const_iterator Track::find(const Header& header, const int offset) const
+{
+    return std::find_if(begin(), end(), [&](const Sector& s) {
+        return offset == s.offset && header == s.header;
+        });
+}
+
 Sectors::const_iterator Track::findFirstFromOffset(const int offset) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
