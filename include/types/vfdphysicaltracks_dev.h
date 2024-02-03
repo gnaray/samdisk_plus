@@ -1,5 +1,9 @@
 // vfdphysicaltracks virtual device
 
+#ifndef VFDPHYSICALTRACKS_DEV_H
+#define VFDPHYSICALTRACKS_DEV_H
+//---------------------------------------------------------------------------
+
 #include "DemandDisk.h"
 
 class VfdPhysicalTracksDevDisk final : public DemandDisk
@@ -23,3 +27,6 @@ private:
 
 bool ReadVfdphysicaltracks(const std::string& path, std::shared_ptr<Disk>& disk);
 bool WriteVfdphysicaltracks(const std::string& path, std::shared_ptr<Disk>& disk);
+
+//---------------------------------------------------------------------------
+#endif // VFDPHYSICALTRACKS_DEV_H

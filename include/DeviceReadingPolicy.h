@@ -48,6 +48,7 @@ public:
 
     void AddSkippableSectors(const Sectors& skippableSectors)
     {
+        // No problem if inserted sector exists though more elegant if there are no duplicates.
         m_skippableSectors.insert(m_skippableSectors.end(), skippableSectors.begin(), skippableSectors.end());
         m_unskippableWantedSectorHeaderIdsValid = false;
     }
