@@ -38,7 +38,7 @@ public:
     void clear();
     void add(Track&& track);
     void add(Sectors&& sectors);
-    AddResult add(Sector&& sector, int* mergedSectorIndex = nullptr, bool dryrun = false);
+    AddResult add(Sector&& sector, int* affectedSectorIndex = nullptr, bool dryrun = false);
     void insert(int index, Sector&& sector);
     Sector remove(int index);
     const Sector& get_sector(const Header& header) const;

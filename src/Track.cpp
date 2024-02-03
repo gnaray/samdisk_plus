@@ -303,8 +303,13 @@ void Track::add(Sectors&& sectors)
         add(std::move(sector));
     }
 }
-// If dryrun is true then one of {Append, Insert, Merge} is returned and sector is unchanged.
-Track::AddResult Track::add(Sector&& sector, int* mergedSectorIndex/* = nullptr*/, bool dryrun/* = false*/)
+
+/* If dryrun is true then one of {Append, Insert, Merge} is returned and sector is unchanged.
+ * If dryrun is false then one of {Append, Insert, Merge, Unchanged} is returned where
+ * the Unchanged value is a subcase of Merge when the data was ignored (unchanged) or matched.
+ * The returned affectedSectorIndex is the index of added sector (even if dryrun is true).
+ */
+Track::AddResult Track::add(Sector&& sector, int* affectedSectorIndex/* = nullptr*/, bool dryrun/* = false*/)
 {
     // Check the new datarate against any existing sector.
     if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
@@ -313,51 +318,49 @@ Track::AddResult Track::add(Sector&& sector, int* mergedSectorIndex/* = nullptr*
     // If there's no positional information, simply append.
     if (sector.offset == 0)
     {
+        if (affectedSectorIndex != nullptr)
+            *affectedSectorIndex = m_sectors.size();
         if (!dryrun)
             m_sectors.emplace_back(std::move(sector));
         return AddResult::Append;
     }
-    else
-    {
-        // Find a sector close enough to the new offset to be the same one
-        auto it = std::find_if(begin(), end(), [&](const Sector& s) {
-            return sector.is_sector_tolerated_same(s, opt_byte_tolerance_of_time, tracklen);
-            });
 
-        // If that failed, we have a new sector with an offset
-        if (it == end())
-        {
-            if (!dryrun)
-            {
-                // Find the insertion point to keep the sectors in order
-                it = std::find_if(begin(), end(), [&](const Sector& s) {
-                    return sector.offset < s.offset;
-                    });
-                m_sectors.emplace(it, std::move(sector));
-            }
-            return AddResult::Insert;
-        }
+    // Find a sector close enough to the new offset to be the same one
+    auto it = std::find_if(begin(), end(), [&](const Sector& s) {
+        return sector.is_sector_tolerated_same(s, opt_byte_tolerance_of_time, tracklen);
+        });
+
+    // If that failed, we have a new sector with an offset
+    if (it == end())
+    {
+        // Find the insertion point to keep the sectors in order
+        it = std::find_if(begin(), end(), [&](const Sector& s) {
+            return sector.offset < s.offset;
+            });
+        if (affectedSectorIndex != nullptr)
+            *affectedSectorIndex = static_cast<int>(it - begin());
+        if (!dryrun)
+            m_sectors.emplace(it, std::move(sector));
+        return AddResult::Insert;
+    }
+
+    auto result = AddResult::Merge;
+    if (affectedSectorIndex != nullptr)
+        *affectedSectorIndex = static_cast<int>(it - begin());
+    if (!dryrun)
+    {
+        // Merge details with the existing sector
+        auto ret = it->merge(std::move(sector));
+        if (ret == Sector::Merge::Unchanged || ret == Sector::Merge::Matched) // Matched for backward compatibility.
+            result = AddResult::Unchanged;
         else
         {
-            auto result = AddResult::Merge;
-            if (!dryrun)
-            {
-                // Merge details with the existing sector
-                auto ret = it->merge(std::move(sector));
-                if (ret == Sector::Merge::Unchanged || ret == Sector::Merge::Matched) // Matched for backward compatibility.
-                    result = AddResult::Unchanged;
-                else
-                {
-                    // Limit the number of data copies kept for each sector.
-                    if (data_overlap(*it) && !is_8k_sector())
-                        it->limit_copies(1);
-                }
-            }
-            if (mergedSectorIndex != nullptr)
-                *mergedSectorIndex = static_cast<int>(it - begin());
-            return result;
+            // Limit the number of data copies kept for each sector.
+            if (data_overlap(*it) && !is_8k_sector())
+                it->limit_copies(1);
         }
     }
+    return result;
 }
 
 void Track::insert(int index, Sector&& sector)
