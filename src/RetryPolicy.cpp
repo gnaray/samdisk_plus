@@ -11,7 +11,7 @@ std::string to_string(const RetryPolicy& retryPolicy)
         ss << "No retry";
     else
     {
-        ss << "Retry " << retryPolicy.retryTimes << "time";
+        ss << "Retry " << retryPolicy.retryTimes << " time";
         if (retryPolicy.retryTimes > 1)
             ss << 's';
         ss << ' ' << (retryPolicy.sinceLastChange ? "since last change" : "total");
