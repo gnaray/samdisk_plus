@@ -329,7 +329,7 @@ void TrackBuilder::addAmigaBits(std::vector<uint32_t>& bits)
 
 std::vector<uint32_t> TrackBuilder::splitAmigaBits(const void* buf, int len, uint32_t& checksum)
 {
-    auto dwords = len / static_cast<int>(sizeof(uint32_t));
+    auto dwords = len / intsizeof(uint32_t);
     const uint32_t* pdw = reinterpret_cast<const uint32_t*>(buf);
     VectorX<uint32_t> odddata;
     odddata.reserve(dwords * 2);

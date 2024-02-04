@@ -540,7 +540,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
             // LD A,(IX+0); CP (HL); JR NZ,e
             static const uint8_t prot_check[]{ 0xdd, 0x7e, 0x00, 0xbe, 0x20 };
 
-            for (i = 0; i < data.size() - static_cast<int>(sizeof(prot_check)); ++i)
+            for (i = 0; i < data.size() - intsizeof(prot_check); ++i)
             {
                 if (data[i] == 0xdd && !memcmp(data.data() + i, prot_check, sizeof(prot_check)))
                 {

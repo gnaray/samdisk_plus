@@ -218,7 +218,7 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
         scp_disk->add_track_data(cylhead, std::move(revs_data));
     }
 
-    auto footer_offset = file.size() - static_cast<int>(sizeof(SCP_FILE_FOOTER));
+    auto footer_offset = file.size() - intsizeof(SCP_FILE_FOOTER);
     if ((fh.flags & FLAG_FOOTER) && footer_offset >= file.tell())
     {
         SCP_FILE_FOOTER ff{};

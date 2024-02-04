@@ -43,7 +43,7 @@ public:
     bool read(T& buf)
     {
         static_assert(sizeof(buf[0]) == 1, "unit size must be 1 byte");
-        bool clean = remaining() >= static_cast<int>(sizeof(buf));
+        bool clean = remaining() >= intsizeof(buf);
 
         for (auto& b : buf)
             b = read_byte();

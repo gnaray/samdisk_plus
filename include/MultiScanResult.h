@@ -9,7 +9,7 @@ class MultiScanResult : public MEMORY
 {
 public:
     explicit MultiScanResult(int sectorCount)
-        : MEMORY(static_cast<int>(sizeof(FD_TIMED_MULTI_SCAN_RESULT) + sizeof(FD_TIMED_MULTI_ID_HEADER)) * sectorCount)
+        : MEMORY((intsizeof(FD_TIMED_MULTI_SCAN_RESULT) + intsizeof(FD_TIMED_MULTI_ID_HEADER)) * sectorCount)
     {
     }
 

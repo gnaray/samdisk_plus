@@ -57,7 +57,7 @@ bool ReadDTI(MemFile& file, std::shared_ptr<Disk>& disk)
 
             uint8_t flags = mem[0];
             auto uDataLen = (mem[2] << 8) | mem[1];
-            if (uDataLen > uBlock - static_cast<int>(sizeof(DTI_TRACK)))
+            if (uDataLen > uBlock - intsizeof(DTI_TRACK))
                 throw util::exception("invalid data length (", uDataLen, ") on ", cylhead);
 
             Track track(1);
@@ -111,7 +111,7 @@ bool WriteDTI(FILE* f_, std::shared_ptr<Disk>& disk)
             auto& data = sector.data_copy();
             auto data_offset = 0;
 
-            if (IsDeepThoughtSector(sector, data_offset) && data.size() <= (DTI_BLOCK_SIZE - static_cast<int>(sizeof(DTI_TRACK))))
+            if (IsDeepThoughtSector(sector, data_offset) && data.size() <= (DTI_BLOCK_SIZE - intsizeof(DTI_TRACK)))
             {
                 mem[0] = sector.has_baddatacrc() ? 1 : 0;
                 mem[1] = sector.data_size() & 0xff;

@@ -38,7 +38,7 @@ static size_t SumBlock(void* p, size_t len)
 
 bool ReadSCL(MemFile& file, std::shared_ptr<Disk>& disk)
 {
-    if (!file.rewind() || file.size() < static_cast<int>(sizeof(SCL_HEADER) + sizeof(SCL_FILE) + 1))
+    if (!file.rewind() || file.size() < intsizeof(SCL_HEADER) + intsizeof(SCL_FILE) + 1)
         return false;
 
     SCL_HEADER sh;
@@ -74,7 +74,7 @@ bool ReadSCL(MemFile& file, std::shared_ptr<Disk>& disk)
     }
 
     // Ensure the file size matches what we're expecting
-    auto calc_size = static_cast<int>(sizeof(SCL_HEADER) + sh.bFiles * sizeof(SCL_FILE) + (uDataLba - 16) * 256 + 4);
+    auto calc_size = intsizeof(SCL_HEADER) + sh.bFiles * intsizeof(SCL_FILE) + (uDataLba - 16) * 256 + 4;
     if (!opt_force && file.size() != calc_size)
         throw util::exception("file size (", file.size(), " doesn't match content size (", calc_size, ")");
 
@@ -120,7 +120,7 @@ bool ReadSCL(MemFile& file, std::shared_ptr<Disk>& disk)
 
                 // SCL has a 32-bit checksum at the end of file.  If we read it as part of the
                 // file data it should be removed from the byte count.
-                if (file.eof() && uRead > static_cast<int>(sizeof(uint32_t)))
+                if (file.eof() && uRead > intsizeof(uint32_t))
                     uRead -= sizeof(uint32_t);
 
                 // Clear the unread part of the track data, then sum what we did read

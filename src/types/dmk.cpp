@@ -48,7 +48,7 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
     if (!cyls || !tracklen || tracklen > DMK_MAX_TRACK_LENGTH)
         return false;
 
-    auto total_size = static_cast<int>(sizeof(DMK_HEADER) + tracklen * cyls * heads);
+    auto total_size = intsizeof(DMK_HEADER) + tracklen * cyls * heads;
     if (file.size() != total_size)
     {
         // Accept wrong size only if the extension is recognised.

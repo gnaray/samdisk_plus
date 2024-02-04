@@ -58,7 +58,7 @@ bool ReadFDI(MemFile& file, std::shared_ptr<Disk>& disk)
     Format::Validate(cyls, heads);
 
     auto data_pos = (fh.bDataOffset[1] << 8) | fh.bDataOffset[0];
-    auto header_pos = static_cast<int>(sizeof(FDI_HEADER)) + ((fh.bExtraSize[1] << 8) | fh.bExtraSize[0]);
+    auto header_pos = intsizeof(FDI_HEADER) + ((fh.bExtraSize[1] << 8) | fh.bExtraSize[0]);
     file.seek(header_pos);
 
     //  uint8_t* pbData = pb + fh.bDataOffset[0];
