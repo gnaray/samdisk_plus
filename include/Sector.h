@@ -56,6 +56,7 @@ private:
 
 public:
     Sector(DataRate datarate, Encoding encoding, const Header& header = Header(), int gap3 = 0);
+    Sector CopyWithoutData(bool keepReadAttempts = true) const;
     bool operator==(const Sector& sector) const;
 
     Merge merge(Sector&& sector);

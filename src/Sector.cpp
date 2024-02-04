@@ -21,6 +21,23 @@ Sector::Sector(DataRate datarate_, Encoding encoding_, const Header& header_, in
 {
 }
 
+Sector Sector::CopyWithoutData(bool keepReadAttempts/* = true*/) const
+{
+    auto& thisWritable = *const_cast<Sector*>(this);
+    auto dataTmp = std::move(thisWritable.m_data);
+    auto dataReadStatsTmp = std::move(thisWritable.m_data_read_stats);
+    thisWritable.m_data.clear();
+    thisWritable.m_data_read_stats.clear();
+    Sector sector(*this);
+    thisWritable.m_data = std::move(dataTmp);
+    thisWritable.m_data_read_stats = std::move(dataReadStatsTmp);
+
+    if (!keepReadAttempts)
+        sector.m_read_attempts = 0;
+
+    return sector;
+}
+
 bool Sector::operator== (const Sector& sector) const
 {
     // Headers must match
