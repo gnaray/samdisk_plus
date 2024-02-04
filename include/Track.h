@@ -10,6 +10,7 @@ public:
 
 public:
     explicit Track(int sectors = 0);    // sectors to reserve
+    Track CopyWithoutSectorData() const;
 
     bool empty() const;
     int size() const;

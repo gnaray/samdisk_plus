@@ -19,6 +19,25 @@ Track::Track(int num_sectors/*=0*/)
     m_sectors.reserve(num_sectors);
 }
 
+Track Track::CopyWithoutSectorData() const
+{
+    auto& thisWritable = *const_cast<Track*>(this);
+    auto sectorsTmp = std::move(thisWritable.m_sectors);
+    auto sectorsViewOrdereByIdTmp = std::move(thisWritable.m_sectors_view_ordered_by_id);
+    thisWritable.m_sectors.clear();
+    thisWritable.m_sectors_view_ordered_by_id.clear();
+    Track track(*this);
+    thisWritable.m_sectors = std::move(sectorsTmp);
+    thisWritable.m_sectors_view_ordered_by_id = std::move(sectorsViewOrdereByIdTmp);
+
+    for (auto& sector : m_sectors)
+        track.m_sectors.push_back(sector.CopyWithoutData(false)); // Resets read_attempts.
+    for (auto& sectorView : m_sectors_view_ordered_by_id)
+        track.m_sectors_view_ordered_by_id.push_back(sectorView.CopyWithoutData(false)); // Resets read_attempts.
+
+    return track;
+}
+
 bool Track::empty() const
 {
     return m_sectors.empty();
