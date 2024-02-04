@@ -320,7 +320,7 @@ void Sector::set_baddatacrc(bool bad)
             if (data_size() < size())
             {
                 auto pad{ Data(size() - data_size(), fill_byte) };
-                m_data[0].insert(m_data[0].begin(), pad.begin(), pad.end());
+                m_data[0].insert(m_data[0].end(), pad.begin(), pad.end());
             }
         }
     }
