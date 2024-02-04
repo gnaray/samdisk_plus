@@ -79,21 +79,21 @@ std::string to_string(FloppyInterfaceMode interface_mode)
 {
     switch (interface_mode)
     {
-    case IBMPC_DD_FLOPPYMODE:   return "IBMPC_DD_FLOPPYMODE";   break;
-    case IBMPC_HD_FLOPPYMODE:   return "IBMPC_HD_FLOPPYMODE";   break;
-    case ATARIST_DD_FLOPPYMODE: return "ATARIST_DD_FLOPPYMODE"; break;
-    case ATARIST_HD_FLOPPYMODE: return "ATARIST_HD_FLOPPYMODE"; break;
-    case AMIGA_DD_FLOPPYMODE:   return "AMIGA_DD_FLOPPYMODE";   break;
-    case AMIGA_HD_FLOPPYMODE:   return "AMIGA_HD_FLOPPYMODE";   break;
-    case CPC_DD_FLOPPYMODE:     return "CPC_DD_FLOPPYMODE";     break;
-    case GENERIC_SHUGART_DD_FLOPPYMODE: return "GENERIC_SHUGART_DD_FLOPPYMODE"; break;
-    case IBMPC_ED_FLOPPYMODE:   return "IBMPC_ED_FLOPPYMODE";   break;
-    case MSX2_DD_FLOPPYMODE:    return "MSX2_DD_FLOPPYMODE";    break;
-    case C64_DD_FLOPPYMODE:     return "C64_DD_FLOPPYMODE";     break;
-    case EMU_SHUGART_FLOPPYMODE:return "EMU_SHUGART_FLOPPYMODE"; break;
-    case S950_DD_FLOPPYMODE:    return "S950_DD_FLOPPYMODE";    break;
-    case S950_HD_FLOPPYMODE:    return "S950_HD_FLOPPYMODE";    break;
-    case DISABLE_FLOPPYMODE:    return "DISABLE_FLOPPYMODE";    break;
+    case IBMPC_DD_FLOPPYMODE:   return "IBMPC_DD_FLOPPYMODE";
+    case IBMPC_HD_FLOPPYMODE:   return "IBMPC_HD_FLOPPYMODE";
+    case ATARIST_DD_FLOPPYMODE: return "ATARIST_DD_FLOPPYMODE";
+    case ATARIST_HD_FLOPPYMODE: return "ATARIST_HD_FLOPPYMODE";
+    case AMIGA_DD_FLOPPYMODE:   return "AMIGA_DD_FLOPPYMODE";
+    case AMIGA_HD_FLOPPYMODE:   return "AMIGA_HD_FLOPPYMODE";
+    case CPC_DD_FLOPPYMODE:     return "CPC_DD_FLOPPYMODE";
+    case GENERIC_SHUGART_DD_FLOPPYMODE: return "GENERIC_SHUGART_DD_FLOPPYMODE";
+    case IBMPC_ED_FLOPPYMODE:   return "IBMPC_ED_FLOPPYMODE";
+    case MSX2_DD_FLOPPYMODE:    return "MSX2_DD_FLOPPYMODE";
+    case C64_DD_FLOPPYMODE:     return "C64_DD_FLOPPYMODE";
+    case EMU_SHUGART_FLOPPYMODE:return "EMU_SHUGART_FLOPPYMODE";
+    case S950_DD_FLOPPYMODE:    return "S950_DD_FLOPPYMODE";
+    case S950_HD_FLOPPYMODE:    return "S950_HD_FLOPPYMODE";
+    case DISABLE_FLOPPYMODE:    return "DISABLE_FLOPPYMODE";
     }
     return "Unknown";
 }
@@ -102,11 +102,11 @@ std::string to_string(TrackEncoding track_encoding)
 {
     switch (track_encoding)
     {
-    case ISOIBM_MFM_ENCODING:   return "ISOIBM_MFM_ENCODING";   break;
-    case AMIGA_MFM_ENCODING:    return "AMIGA_MFM_ENCODING";    break;
-    case ISOIBM_FM_ENCODING:    return "ISOIBM_FM_ENCODING";    break;
-    case EMU_FM_ENCODING:       return "EMU_FM_ENCODING";       break;
-    case UNKNOWN_ENCODING:      return "UNKNOWN_ENCODING";      break;
+    case ISOIBM_MFM_ENCODING:   return "ISOIBM_MFM_ENCODING";
+    case AMIGA_MFM_ENCODING:    return "AMIGA_MFM_ENCODING";
+    case ISOIBM_FM_ENCODING:    return "ISOIBM_FM_ENCODING";
+    case EMU_FM_ENCODING:       return "EMU_FM_ENCODING";
+    case UNKNOWN_ENCODING:      return "UNKNOWN_ENCODING";
     }
     return "Unknown";
 }
