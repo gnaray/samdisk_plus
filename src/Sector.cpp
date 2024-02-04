@@ -674,10 +674,9 @@ std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
 
 //////////////////////////////////////////////////////////////////////////////
 
-void Sectors::push_back_more(const Sectors& sectors)
+void Sectors::push_back(const Sectors& sectors)
 {
-    for (auto& sector : sectors)
-        push_back(sector);
+    insert(end(), sectors.begin(), sectors.end());
 }
 
 bool Sectors::HasIdSequence(const int first_id, const int length) const

@@ -191,8 +191,9 @@ class Sectors : public VectorX<Sector>
 {
 public:
     using VectorX<Sector>::VectorX;
+    using VectorX<Sector>::push_back;
 
-    void push_back_more(const Sectors& sectors);
+    void push_back(const Sectors& sectors);
     bool HasIdSequence(const int first_id, const int length) const;
     const std::set<int> NotContainedIds(const Interval<int> &id_interval) const;
     class Headers GoodHeaders() const;
