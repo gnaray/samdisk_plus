@@ -1,5 +1,7 @@
 #pragma once
 
+#include "VectorX.h"
+
 #include <cstdint>
 #include <vector>
 
@@ -8,7 +10,7 @@
 #define MAX_PLL_ADJUST      50
 #define MAX_PLL_PHASE       90
 
-using FluxData = std::vector<std::vector<uint32_t>>;
+using FluxData = VectorX<VectorX<uint32_t>>;
 
 class FluxDecoder
 {
@@ -27,7 +29,7 @@ public:
 protected:
     const FluxData& m_flux_revs;
     FluxData::const_iterator m_rev_it{};
-    std::vector<uint32_t>::const_iterator m_flux_it{};
+    VectorX<uint32_t>::const_iterator m_flux_it{};
 
     int m_clock = 0, m_clock_centre, m_clock_min, m_clock_max;
     int m_flux = 0;

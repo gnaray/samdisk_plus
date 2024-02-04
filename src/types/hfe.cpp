@@ -220,7 +220,7 @@ static uint16_t HfeDataRate(const Track& track)
 
     if (datarate != DataRate::Unknown)
     {
-        auto kbps = bits_per_second(datarate) / 1000U;
+        auto kbps = bits_per_second(datarate) / 1000;
         return static_cast<uint16_t>(kbps);
     }
 
@@ -270,7 +270,7 @@ static uint8_t HfeInterfaceMode(const Track& track)
 
 bool WriteHFE(FILE* f_, std::shared_ptr<Disk>& disk)
 {
-    std::vector<uint8_t> header(256, 0xff);
+    Data header(256, 0xff);
     auto& hh = *reinterpret_cast<HFE_HEADER*>(header.data());
 
     auto& track0 = disk->read_track({ 0, 0 });
@@ -292,7 +292,7 @@ bool WriteHFE(FILE* f_, std::shared_ptr<Disk>& disk)
     hh.track0s1_altencoding = 0xff;
     hh.track0s1_encoding = 0xff;
 
-    if (!fwrite(header.data(), header.size(), 1, f_))
+    if (!fwrite(header.data(), static_cast<size_t>(header.size()), 1, f_))
         throw util::exception("write error");
     if (fseek(f_, hh.track_list_offset << 9, SEEK_SET))
         throw util::exception("seek error");
@@ -341,7 +341,7 @@ bool WriteHFE(FILE* f_, std::shared_ptr<Disk>& disk)
                 auto chunk_size = std::min(track_bytes, 0x100);
                 for (int i = 0; i < chunk_size; ++i)
                     *pbTrack++ = bitstream.read8_lsb();
-                memset(pbTrack, 0x55, 0x100 - chunk_size);
+                memset(pbTrack, 0x55, static_cast<size_t>(0x100 - chunk_size));
                 pbTrack += 0x200 - chunk_size;
                 track_bytes -= chunk_size;
             }
@@ -349,7 +349,7 @@ bool WriteHFE(FILE* f_, std::shared_ptr<Disk>& disk)
 
         fseek(f_, util::letoh(aTrackLUT[cyl].offset) * 512, SEEK_SET);
         auto track_len = (util::letoh(aTrackLUT[cyl].track_len) + 511) & ~0x1ff;
-        if (fwrite(mem.pb, 1, track_len, f_) != static_cast<size_t>(track_len))
+        if (fwrite(mem.pb, 1, static_cast<size_t>(track_len), f_) != static_cast<size_t>(track_len))
             throw util::exception("write error");
     }
 

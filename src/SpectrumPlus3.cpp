@@ -93,7 +93,7 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
     }
 
     // Decrypter code - the data (HL) and length (BC) values will change between loaders, and the DI is optional
-    static const std::vector<uint8_t> erbe_decrypt
+    static const Data erbe_decrypt
     {
         0x21, 0x2b, 0xfe,   // LD HL,#FE2B
         0x01, 0x6c, 0x01,   // LD BC,#016C
@@ -147,7 +147,7 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
             data[i] |= 0x08;
 
             // Replace the decrypter with code to turn the motor on and allow some spin-up time
-            static std::vector<uint8_t> fix
+            static Data fix
             {
                 0xf6, 0x08,     // OR #08
                 0xed, 0x79,     // OUT (C),A
@@ -178,7 +178,7 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
         ((!std::memcmp(&data[0x1f0], "IRONLORD", 8) && CRC16(&data[0x10], 0x1f0 - 0x10) == 0x3e0a) ||
         (!std::memcmp(&data[0x180], "TWINWORLD", 9) && CRC16(&data[0x10], 0x180 - 0x10) == 0x5546)))
     {
-        static std::vector<uint8_t> fix
+        static Data fix
         {
             0x31, 0x00, 0x5e,   // LD SP,#5E00
             0x11, 0x13, 0x0c,   // LD DE,#130C
@@ -203,7 +203,7 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
         patched = true;
     }
 
-    static const std::vector<uint8_t> ubisoft_clear
+    static const Data ubisoft_clear
     {
         0xf3,               // DI
         0x3e, 0x0d,         // LD A,#0D
@@ -225,7 +225,7 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
     if (!patched && (data[0x12] & 0x08) &&  // check for motor on
         MatchBlock(&data[0x10], ubisoft_clear.data(), pcszUbiSoftMatch))
     {
-        static const std::vector<uint8_t> fix
+        static const Data fix
         {
             0x2e, 0x02,         // LD L,#02
             0x0b,               // loop: DEC BC
@@ -250,7 +250,7 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
         !std::memcmp(&data[0x41], "\xaf\x21\x00\x58", 4) &&
         CRC16(&data[0x10], 0x053 - 0x10) == 0x6e53)
     {
-        static const std::vector<uint8_t> fix
+        static const Data fix
         {
             0x2e, 0x02,         // LD L,#02
             0x0b,               // loop: DEC BC

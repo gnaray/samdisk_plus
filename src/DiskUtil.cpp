@@ -1319,7 +1319,7 @@ int ChecksumLength(ChecksumType method)
     return 0;
 }
 
-void scale_flux(std::vector<uint32_t>& flux_rev, uint64_t numerator, uint64_t denominator)
+void scale_flux(VectorX<uint32_t>& flux_rev, uint64_t numerator, uint64_t denominator)
 {
     uint64_t old_total = 0, new_total = 0;
     for (auto& time : flux_rev)

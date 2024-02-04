@@ -4,7 +4,7 @@
 
 FluxTrackBuilder::FluxTrackBuilder(const CylHead& cylhead, DataRate datarate, Encoding encoding)
     : TrackBuilder(datarate, encoding),
-    m_cylhead(cylhead), m_bitcell_ns(bitcell_ns(datarate)),
+    m_cylhead(cylhead), m_bitcell_ns(static_cast<uint32_t>(bitcell_ns(datarate))),
     m_flux_time(0U - m_bitcell_ns)
 {
     // We start with a negative cell time to absorb the first zero m_cur_bit.
@@ -57,7 +57,7 @@ void FluxTrackBuilder::addWeakBlock(int length)
         m_flux_times.push_back(m_bitcell_ns * 3 / 2);
 }
 
-std::vector<uint32_t>& FluxTrackBuilder::buffer()
+VectorX<uint32_t>& FluxTrackBuilder::buffer()
 {
     // Flush any buffered time with a transition.
     if (m_flux_time)

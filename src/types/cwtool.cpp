@@ -76,7 +76,7 @@ bool ReadCWTOOL(MemFile& file, std::shared_ptr<Disk>& disk)
     while (file.read(&th, sizeof(th)))
     {
         auto size = util::letoh(th.size);
-        std::vector<uint8_t> data(size);
+        Data data(size);
         file.read(data);
 
         CylHead cylhead(th.track / heads, th.track % heads);
@@ -86,7 +86,7 @@ bool ReadCWTOOL(MemFile& file, std::shared_ptr<Disk>& disk)
         auto ps_per_tick = 1'000'000'000 * 2 / clock_khz;
 
         FluxData flux_revs;
-        std::vector<uint32_t> flux;
+        VectorX<uint32_t> flux;
         flux.reserve(data.size());
 
         if (th.flags & FLAG_INDEX_STORED)   // index markers

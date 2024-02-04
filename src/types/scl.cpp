@@ -49,7 +49,7 @@ bool ReadSCL(MemFile& file, std::shared_ptr<Disk>& disk)
     if (memcmp(sh.szSig, SCL_SIGNATURE, sizeof(sh.szSig)) || sh.bFiles > 128)
         return false;
 
-    std::vector<uint8_t> mem(TRD_TRACK_SIZE);
+    Data mem(TRD_TRACK_SIZE);
     auto pb = mem.data();
 
     auto uDataLba = 16;     // data starts on track 1
@@ -124,8 +124,8 @@ bool ReadSCL(MemFile& file, std::shared_ptr<Disk>& disk)
                     uRead -= sizeof(uint32_t);
 
                 // Clear the unread part of the track data, then sum what we did read
-                memset(mem.data() + uRead, 0, TRD_TRACK_SIZE - uRead);
-                sum += SumBlock(mem.data(), uRead);
+                memset(mem.data() + uRead, 0, static_cast<size_t>(TRD_TRACK_SIZE - uRead));
+                sum += SumBlock(mem.data(), static_cast<size_t>(uRead));
             }
 
             Track track;
@@ -137,10 +137,10 @@ bool ReadSCL(MemFile& file, std::shared_ptr<Disk>& disk)
 
     // Read the 4-byte file checksum
     uint8_t ab[4] = {};
-    file.seek(file.size() - sizeof(uint32_t));
+    file.seek(file.size() - intsizeof(uint32_t));
     file.read(ab, sizeof(ab), 1);
 
-    uint32_t sum_check = ((ab[3] << 24) | (ab[2] << 16) | (ab[1] << 8) | ab[0]);
+    uint32_t sum_check = static_cast<uint32_t>((ab[3] << 24) | (ab[2] << 16) | (ab[1] << 8) | ab[0]);
     if (sum != sum_check)
         Message(msgWarning, "file checksum does not match contents");
 

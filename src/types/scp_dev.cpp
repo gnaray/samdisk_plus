@@ -33,7 +33,7 @@ public:
         m_supercardpro->Seek0();
     }
 
-    ~SCPDevDisk()
+    ~SCPDevDisk() override
     {
         m_supercardpro->DisableMotor(0);
         m_supercardpro->DeselectDrive(0);
@@ -41,7 +41,7 @@ public:
 
 protected:
     TrackData load(const CylHead& cylhead, bool first_read,
-        int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
+        int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) override
     {
         FluxData flux_revs;
         auto rev_limit = std::min(REMAIN_READ_REVS, SuperCardPro::MAX_FLUX_REVS);

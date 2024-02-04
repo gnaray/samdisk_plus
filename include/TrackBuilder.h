@@ -41,8 +41,8 @@ public:
     void addSectorUpToData(const Header& header, uint8_t dam = IBM_DAM);
 
     void addAmigaTrackStart();
-    std::vector<uint32_t> splitAmigaBits(const void* buf, int len, uint32_t& checksum);
-    void addAmigaBits(std::vector<uint32_t>& bits);
+    VectorX<uint32_t> splitAmigaBits(const void* buf, int len, uint32_t& checksum);
+    void addAmigaBits(VectorX<uint32_t> &bits);
     void addAmigaDword(uint32_t dword, uint32_t& checksum);
     void addAmigaSector(const CylHead& cylhead, int sector, const void* buf);
 

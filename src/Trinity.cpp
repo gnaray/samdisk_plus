@@ -2,7 +2,6 @@
 
 #include "Trinity.h"
 #include "HDD.h"
-#include "Sector.h"
 #include "utils.h"
 #include "Format.h"
 
@@ -48,7 +47,7 @@ Trinity::Trinity()
 
     // TODO: determine broadcast addresses for all network interfaces.
     // For now try 255.255.255.255, 192.168.0.255, 10.0.0.255 (usually treated as Class C).
-    std::vector<uint32_t> broadcast_addrs{ INADDR_BROADCAST, 0xc0a800ff, 0x0a0000ff };
+    VectorX<uint32_t> broadcast_addrs{ INADDR_BROADCAST, 0xc0a800ff, 0x0a0000ff };
 
     for (auto& broadcast_addr : broadcast_addrs)
     {
@@ -95,7 +94,7 @@ Trinity::~Trinity()
 }
 
 
-const std::vector<std::string> Trinity::devices() const
+const VectorX<std::string> Trinity::devices() const
 {
     return m_devices;
 }
@@ -144,18 +143,18 @@ void Trinity::select_record(int record)
     Recv(ab, sizeof(ab));
 }
 
-std::vector<uint8_t> Trinity::read_sector(int cyl, int head, int sector)
+Data Trinity::read_sector(int cyl, int head, int sector)
 {
     // Form an execute command for the execution address
     uint8_t cmd[3];
     cmd[0] = 'S';
     cmd[1] = static_cast<uint8_t>(sector);
-    cmd[2] = ((head & 1) << 7) | (cyl & 0x7f);
+    cmd[2] = static_cast<uint8_t>(((head & 1) << 7) | (cyl & 0x7f));
 
     // Send the sector read request
     Send(cmd, sizeof(cmd));
 
-    std::vector<uint8_t> data;
+    Data data;
     while (data.size() != SECTOR_SIZE)
     {
         uint8_t ab[1472];
@@ -166,14 +165,14 @@ std::vector<uint8_t> Trinity::read_sector(int cyl, int head, int sector)
     return data;
 }
 
-std::vector<uint8_t> Trinity::read_track(int cyl, int head)
+Data Trinity::read_track(int cyl, int head)
 {
     Format fmt{ RegularFormat::MGT };
 
     // Form an execute command for the execution address
     uint8_t cmd[2];
     cmd[0] = 'T';
-    cmd[1] = ((head & 1) << 7) | (cyl & 0x7f);
+    cmd[1] = static_cast<uint8_t>(((head & 1) << 7) | (cyl & 0x7f));
 
     // Send the sector read request
     Send(cmd, sizeof(cmd));
@@ -188,7 +187,7 @@ std::vector<uint8_t> Trinity::read_track(int cyl, int head)
         data.insert(data.end(), ab + sizeof(cmd), ab + len);
     }
 
-    return std::move(data);
+    return data;
 }
 
 void Trinity::send_file(const void* pv_, int len, int start_addr, int exec_addr)

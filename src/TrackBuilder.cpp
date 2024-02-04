@@ -310,11 +310,11 @@ void TrackBuilder::addAmigaTrackStart()
 void TrackBuilder::addAmigaDword(uint32_t dword, uint32_t& checksum)
 {
     dword = util::htobe(dword);
-    std::vector<uint32_t> bits = splitAmigaBits(&dword, sizeof(uint32_t), checksum);
+    VectorX<uint32_t> bits = splitAmigaBits(&dword, sizeof(uint32_t), checksum);
     addAmigaBits(bits);
 }
 
-void TrackBuilder::addAmigaBits(std::vector<uint32_t>& bits)
+void TrackBuilder::addAmigaBits(VectorX<uint32_t>& bits)
 {
     for (auto it = bits.begin(); it != bits.end(); ++it)
     {
@@ -327,7 +327,7 @@ void TrackBuilder::addAmigaBits(std::vector<uint32_t>& bits)
     }
 }
 
-std::vector<uint32_t> TrackBuilder::splitAmigaBits(const void* buf, int len, uint32_t& checksum)
+VectorX<uint32_t> TrackBuilder::splitAmigaBits(const void* buf, int len, uint32_t& checksum)
 {
     auto dwords = len / intsizeof(uint32_t);
     const uint32_t* pdw = reinterpret_cast<const uint32_t*>(buf);

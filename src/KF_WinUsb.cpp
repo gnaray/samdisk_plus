@@ -35,7 +35,7 @@ DEFINE_GUID(GUID_KRYOFLUX, 0x9E09C9CD, 0x5068, 0x4b31, 0x82, 0x89, 0xE3, 0x63, 0
             DWORD dwSize = 0;
             SetupDiGetDeviceInterfaceDetail(hDevInfo, &DevIntfData, nullptr, 0, &dwSize, nullptr);
 
-            std::vector<uint8_t> data(dwSize);
+            Data data(dwSize);
             auto pDevIntfData = reinterpret_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(data.data());
             pDevIntfData->cbSize = sizeof(*pDevIntfData);
 

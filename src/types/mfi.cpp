@@ -65,7 +65,7 @@ enum {
 class MFIDisk final : public DemandDisk
 {
 public:
-    void add_track_data(const CylHead& cylhead, std::vector<uint32_t>&& trackdata)
+    void add_track_data(const CylHead& cylhead, VectorX<uint32_t>&& trackdata)
     {
         m_data[cylhead] = std::move(trackdata);
         extend(cylhead);
@@ -73,7 +73,7 @@ public:
 
 protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
-        int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
+        int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) override
     {
         const auto& data = m_data[cylhead];
         if (data.empty())
@@ -81,7 +81,7 @@ protected:
 
         FluxData flux_revs;
 
-        std::vector<uint32_t> flux_times;
+        VectorX<uint32_t> flux_times;
         flux_times.reserve(data.size());
 
         uint32_t total_time = 0;
@@ -104,7 +104,7 @@ protected:
     }
 
 private:
-    std::map<CylHead, std::vector<uint32_t>> m_data{};
+    std::map<CylHead, VectorX<uint32_t>> m_data{};
 
 };
 
@@ -132,9 +132,9 @@ bool ReadMFI(MemFile& file, std::shared_ptr<Disk>& disk)
 
     fh.cyl_count &= CYLINDER_MASK;
 
-    for (unsigned int cyl = 0; cyl < fh.cyl_count; cyl++)
+    for (int cyl = 0; cyl < static_cast<int>(fh.cyl_count); cyl++)
     {
-        for (unsigned int head = 0; head < fh.head_count; head++)
+        for (int head = 0; head < static_cast<int>(fh.head_count); head++)
         {
             MFI_TRACK_HEADER th;
             if (!file.read(&th, sizeof(th)))
@@ -143,17 +143,17 @@ bool ReadMFI(MemFile& file, std::shared_ptr<Disk>& disk)
             CylHead cylhead(cyl, head);
 
             Data compressed_data(util::letoh(th.compressed_size));
-            std::vector<uint32_t> track_data(util::letoh(th.uncompressed_size) >> 2);
+            VectorX<uint32_t> track_data(util::letoh(th.uncompressed_size) >> 2);
 
             auto o = file.tell();
-            file.seek(util::letoh(th.offset));
+            file.seek(static_cast<int>(util::letoh(th.offset)));
             if (!file.read(compressed_data))
                 throw util::exception("short file reading ", cylhead, " data");
 
             file.seek(o);
 
             uLongf size = util::letoh(th.uncompressed_size);
-            int rc = uncompress((Bytef*)&track_data[0], &size, &compressed_data[0], util::letoh(th.compressed_size));
+            int rc = uncompress(reinterpret_cast<Bytef*>(&track_data[0]), &size, &compressed_data[0], util::letoh(th.compressed_size));
             if (rc != Z_OK)
             {
                 util::cout << "decompress of " << cylhead << " failed, rc " << rc << "\n";
@@ -216,27 +216,25 @@ bool WriteMFI(FILE* f_, std::shared_ptr<Disk>& disk)
 #ifndef HAVE_ZLIB
     throw util::exception("MFI disk images are not supported without ZLIB");
 #else
-    int tracks, heads;
-
-    std::vector<uint8_t> header(sizeof(MFI_FILE_HEADER), 0);
+    Data header(sizeof(MFI_FILE_HEADER), 0);
     auto& fh = *reinterpret_cast<MFI_FILE_HEADER*>(header.data());
     auto& track0 = disk->read_track({ 0, 0 });
 
-    tracks = static_cast<uint32_t>(disk->cyls());
-    heads = static_cast<uint32_t>(disk->heads());
+    auto tracks = disk->cyls();
+    auto heads = disk->heads();
 
     strncpy(fh.signature, "MESSFLOPPYIMAGE", sizeof(fh.signature));
-    fh.cyl_count = util::htole(tracks);
-    fh.head_count = util::htole(heads);
+    fh.cyl_count = static_cast<uint32_t>(util::htole(tracks));
+    fh.head_count = static_cast<uint32_t>(util::htole(heads));
     fh.form_factor = util::htole(FF_UNKNOWN);
     fh.variant = util::htole(MfiVariant(track0, disk->cyls(), disk->heads()));
 
-    if (!fwrite(header.data(), header.size(), 1, f_))
+    if (!fwrite(header.data(), static_cast<size_t>(header.size()), 1, f_))
         throw util::exception("write error");
 
     std::map<CylHead, MFI_TRACK_HEADER> track_lut;
     std::map<CylHead, FluxData> bitstreams;
-    int pos = sizeof(MFI_FILE_HEADER) + tracks * heads * sizeof(MFI_TRACK_HEADER);
+    int pos = intsizeof(MFI_FILE_HEADER) + tracks * heads * intsizeof(MFI_TRACK_HEADER);
 
     if (fseek(f_, pos, SEEK_SET) < 0)
         throw util::exception("seek error");
@@ -269,7 +267,7 @@ bool WriteMFI(FILE* f_, std::shared_ptr<Disk>& disk)
             int orient = 0;
             unsigned int total_sum = 0;
 
-            std::vector<uint32_t> track_data(track_size - 1);
+            VectorX<uint32_t> track_data(track_size - 1);
             Data compressed_data(track_size * 4 + 1000);
 
             std::transform(bitstream[0].begin(), bitstream[0].end(), track_data.begin(),
@@ -279,7 +277,7 @@ bool WriteMFI(FILE* f_, std::shared_ptr<Disk>& disk)
 
             // Normalize the times in a cell buffer to sum up to 200000000
             unsigned int current_sum = 0;
-            for (unsigned int i = 0; i != track_data.size(); i++) {
+            for (int i = 0; i != track_data.size(); i++) {
                 uint32_t time = track_data[i] & TIME_MASK;
                 track_data[i] = (track_data[i] & MG_MASK) | (200000000ULL * time / total_sum);
                 current_sum += (track_data[i] & TIME_MASK);
@@ -291,7 +289,7 @@ bool WriteMFI(FILE* f_, std::shared_ptr<Disk>& disk)
             }
 
             auto csize = static_cast<uLongf>(track_size * 4 + 1000);
-            int rc = compress(&compressed_data[0], &csize, (const Bytef*)&track_data[0], static_cast<uLongf>(track_size * 4));
+            int rc = compress(&compressed_data[0], &csize, reinterpret_cast<const Bytef*>(&track_data[0]), static_cast<uLongf>(track_size * 4));
             if (rc != Z_OK) {
                 util::cout << "compress of " << CylHead(cyl, head) << " failed, rc " << rc << "\n";
                 return false;

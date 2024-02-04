@@ -68,8 +68,8 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
     {
         for (auto head = 0; head < heads; ++head)
         {
-            std::vector<uint16_t> index(64);
-            std::vector<uint8_t> data(tracklen);
+            VectorX<uint16_t> index(64);
+            Data data(tracklen);
 
             if (!file.read(index) || !file.read(data))
                 Message(msgWarning, "short file reading %s", CH(cyl, head));

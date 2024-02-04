@@ -1,7 +1,6 @@
 #pragma once
 
 #include "FluxDecoder.h"
-#include "Sector.h"
 
 #include <cstdint>
 #include <memory>

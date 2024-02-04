@@ -121,5 +121,5 @@ int FluxDecoder::next_flux()
     }
 
     auto time_ns = *m_flux_it++;
-    return time_ns;
+    return static_cast<int>(time_ns);
 }

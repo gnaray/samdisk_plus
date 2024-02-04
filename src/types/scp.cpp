@@ -73,13 +73,13 @@ std::string FooterString(MemFile& file, uint32_t offset)
     if (static_cast<int>(offset + len) >= file.size())
         return "";
 
-    std::vector<char> str;
+    VectorX<char> str;
     str.resize(len);
 
-    if (!file.read(str.data(), static_cast<int>(str.size())))
+    if (!file.read(str.data(), str.size()))
         return "";
 
-    return std::string(str.data(), str.size());
+    return std::string(str.data(), static_cast<size_t>(str.size()));
 }
 
 std::string FooterVersion(uint32_t version)
@@ -107,7 +107,7 @@ class SCPDisk final : public DemandDisk
 public:
     SCPDisk(bool normalised) : m_normalised(normalised) {}
 
-    void add_track_data(const CylHead& cylhead, std::vector<std::vector<uint16_t>>&& trackdata)
+    void add_track_data(const CylHead& cylhead, VectorX<VectorX<uint16_t>>&& trackdata)
     {
         m_data[cylhead] = std::move(trackdata);
         extend(cylhead);
@@ -115,7 +115,7 @@ public:
 
 protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
-        int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
+        int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) override
     {
         FluxData flux_revs;
 
@@ -125,7 +125,7 @@ protected:
 
         for (auto& rev_times : it->second)
         {
-            std::vector<uint32_t> flux_times;
+            VectorX<uint32_t> flux_times;
             flux_times.reserve(rev_times.size());
 
             uint32_t total_time = 0;
@@ -148,7 +148,7 @@ protected:
     }
 
 private:
-    std::map<CylHead, std::vector<std::vector<uint16_t>>> m_data{};
+    std::map<CylHead, VectorX<VectorX<uint16_t>>> m_data{};
     bool m_normalised = false;
 };
 
@@ -174,7 +174,7 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
         throw util::exception("unsupported bit cell width (", fh.bitcell_width, ")");
 
     auto entries = (fh.end_track == MAX_TDH_ENTRIES - 1) ? MAX_TDH_ENTRIES : DEFAULT_TDH_ENTRIES;
-    std::vector<uint32_t> tdh_offsets(entries);
+    VectorX<uint32_t> tdh_offsets(entries);
     if (!file.read(tdh_offsets))
         throw util::exception("short file reading track offset index");
 
@@ -188,18 +188,18 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
         if (!tdh_offsets[tracknr])
             continue;
 
-        if (!file.seek(tdh_offsets[tracknr]) || !file.read(&tdh, sizeof(tdh)))
+        if (!file.seek(static_cast<int>(tdh_offsets[tracknr])) || !file.read(&tdh, sizeof(tdh)))
             throw util::exception("short file reading ", cylhead, " track header");
         else if (std::string(tdh.signature, 3) != "TRK")
             throw util::exception("invalid track signature on ", cylhead);
         else if (tdh.tracknr != tracknr)
             throw util::exception("track number mismatch (", tdh.tracknr, " != ", tracknr, ") in ", cylhead, " header");
 
-        std::vector<uint32_t> rev_index(fh.revolutions * 3);
+        VectorX<uint32_t> rev_index(fh.revolutions * 3);
         if (!file.read(rev_index))
             throw util::exception("short file reading ", cylhead, " track index");
 
-        std::vector<std::vector<uint16_t>> revs_data;
+        VectorX<VectorX<uint16_t>> revs_data;
         revs_data.reserve(fh.revolutions);
 
         for (uint8_t rev = 0; rev < fh.revolutions; ++rev)
@@ -208,8 +208,8 @@ bool ReadSCP(MemFile& file, std::shared_ptr<Disk>& disk)
             auto flux_count = util::letoh<uint32_t>(rev_index[rev * 3 + 1]);
             auto data_offset = util::letoh<uint32_t>(rev_index[rev * 3 + 2]);
 
-            std::vector<uint16_t> flux_data(flux_count);
-            if (!file.seek(tdh_offsets[tracknr] + data_offset) || !file.read(flux_data))
+            VectorX<uint16_t> flux_data(flux_count);
+            if (!file.seek(static_cast<int>(tdh_offsets[tracknr] + data_offset)) || !file.read(flux_data))
                 throw util::exception("short error reading ", cylhead, " data");
 
             revs_data.push_back(std::move(flux_data));

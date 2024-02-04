@@ -148,7 +148,7 @@ void MemFile::open(const std::string& path_, bool uncompress)
             if (m_compress == Compress::Gzip)
             {
                 std::ifstream zs(path_.c_str(), std::ios_base::binary);
-                std::vector<uint8_t> zbuf((std::istreambuf_iterator<char>(zs)),
+                Data zbuf((std::istreambuf_iterator<char>(zs)),
                     std::istreambuf_iterator<char>());
 
                 z_stream stream{};

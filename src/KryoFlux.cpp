@@ -66,9 +66,9 @@ void KryoFlux::UploadFirmware()
     if (!fwfile)
         throw posix_error(errno, fwpath.c_str());
 
-    auto fwdata = std::vector<uint8_t>(std::istreambuf_iterator<char>(fwfile),
+    auto fwdata = Data(std::istreambuf_iterator<char>(fwfile),
         std::istreambuf_iterator<char>());
-    auto fwsize = static_cast<int>(fwdata.size());
+    auto fwsize = fwdata.size();
 
     SamBaCommand(util::fmt("S%08lx,%08lx#", KF_FW_LOAD_ADDR, fwsize));
 
@@ -78,7 +78,7 @@ void KryoFlux::UploadFirmware()
 
     SamBaCommand(util::fmt("R%08lx,%08lx#", KF_FW_LOAD_ADDR, fwsize));
 
-    std::vector<uint8_t> fwverify(fwsize);
+    Data fwverify(fwsize);
     for (offset = 0; offset < fwsize; )
         offset += Read(fwverify.data() + offset, fwsize - offset);
 
@@ -101,9 +101,9 @@ void KryoFlux::SamBaCommand(const std::string& cmd, const std::string& end)
         {
             for (;;)
             {
-                auto len = Read(buf, sizeof(buf));
+                auto len = Read(buf, intsizeof(buf));
 
-                s += std::string(reinterpret_cast<char*>(buf), len);
+                s += std::string(reinterpret_cast<char*>(buf), static_cast<size_t>(len));
 
                 if (s.length() >= end.length() &&
                     s.compare(s.length() - end.length(), end.length(), end) == 0)
@@ -218,20 +218,21 @@ void KryoFlux::ReadFlux(int revs, FluxData& flux_revs, std::vector<std::string>&
 /*static*/ FluxData KryoFlux::DecodeStream(const Data& data, std::vector<std::string>& warnings)
 {
     FluxData flux_revs;
-    std::vector<uint32_t> flux_times, flux_counts;
+
+    VectorX<uint32_t> flux_times, flux_counts;
     flux_times.reserve(data.size());
     flux_counts.resize(data.size());
 
     uint32_t time = 0, stream_pos = 0;
     uint32_t ps_per_tick = PS_PER_TICK(SAMPLE_FREQ);
-    std::vector<uint32_t> index_offsets;
+    VectorX<uint32_t> index_offsets;
     int hard_indexes = 0;
 
     auto itBegin = data.begin(), it = itBegin, itEnd = data.end();
     while (it != itEnd)
     {
         // Store current flux count at each stream position
-        flux_counts[stream_pos] = static_cast<int>(flux_times.size());
+        flux_counts[stream_pos] = static_cast<uint32_t>(flux_times.size());
 
         auto type = *it++;
         switch (type)
@@ -367,7 +368,7 @@ void KryoFlux::ReadFlux(int revs, FluxData& flux_revs, std::vector<std::string>&
                 --index_offset;
 
             // Extract flux segment for current revolution
-            flux_revs.emplace_back(std::vector<uint32_t>(
+            flux_revs.emplace_back(VectorX<uint32_t>(
                 flux_times.begin() + last_pos,
                 flux_times.begin() + flux_counts[index_offset]));
         }

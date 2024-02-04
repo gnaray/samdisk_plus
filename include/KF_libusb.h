@@ -50,9 +50,9 @@ private:
     int m_readret{ LIBUSB_SUCCESS };
     bool m_reading{ false };
     std::mutex m_readmutex{};
-    std::vector<uint8_t> m_readbuf{};
-    std::vector<std::array<uint8_t, BUFFER_SIZE>> m_bufpool{ BUFFER_COUNT };
-    std::vector<libusb_transfer*> m_xferpool{};
+    Data m_readbuf{};
+    VectorX<std::array<uint8_t, BUFFER_SIZE>> m_bufpool{ BUFFER_COUNT };
+    VectorX<libusb_transfer*> m_xferpool{};
 };
 
 #endif // HAVE_LIBUSB1

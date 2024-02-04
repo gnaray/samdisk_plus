@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PlatformConfig.h"
+#include "VectorX.h"
 
 #ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>   // include before windows.h to avoid winsock.h
@@ -36,12 +37,12 @@ public:
     ~Trinity();
 
     static std::unique_ptr<Trinity> Open();
-    const std::vector<std::string> devices() const;
+    const VectorX<std::string> devices() const;
 
     void cls();
     void select_record(int record);
-    std::vector<uint8_t> read_sector(int cyl, int head, int sector);
-    std::vector<uint8_t> read_track(int cyl, int head);
+    Data read_sector(int cyl, int head, int sector);
+    Data read_track(int cyl, int head);
     void send_file(const void* pv_, int len, int start_addr, int exec_addr);
 
 private:
@@ -52,5 +53,5 @@ private:
     SOCKET m_socket = static_cast<SOCKET>(-1);
     sockaddr_in m_addr_from{};
     sockaddr_in m_addr_to{};
-    std::vector<std::string> m_devices{};
+    VectorX<std::string> m_devices{};
 };

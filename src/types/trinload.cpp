@@ -18,7 +18,7 @@ public:
 
 protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
-        int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
+        int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) override
     {
         auto data = m_trinity->read_track(cylhead.cyl, cylhead.head);
 

@@ -2,6 +2,7 @@
 
 #include "KF_libusb.h"
 #include "KryoFlux.h"
+#include "utils.h"
 
 #include <cstring>
 
@@ -197,7 +198,7 @@ void KF_libusb::StartAsyncRead()
             m_hdev,
             KF_EP_BULK_IN,
             m_bufpool[i++].data(),
-            m_bufpool[0].size(),
+            static_cast<int>(m_bufpool[0].size()),
             read_callback,
             this,
             KF_TIMEOUT_MS);

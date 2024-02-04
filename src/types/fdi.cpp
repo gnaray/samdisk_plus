@@ -174,7 +174,7 @@ bool ReadFDI(MemFile& file, std::shared_ptr<Disk>& disk)
     {
         // Read the comment block
         auto len = (data_pos > desc_pos) ? (data_pos - desc_pos) : 256;
-        std::vector<char> comment(len);
+        VectorX<char, size_t> comment(len);
         if (!file.read(comment))
             throw util::exception("short file reading comment");
         std::string str = std::string(comment.data(), comment.size());

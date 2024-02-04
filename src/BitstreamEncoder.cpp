@@ -143,14 +143,14 @@ void generate_flux(TrackData& trackdata)
 
     uint32_t flux_time{ 0 };
     FluxData flux_data{};
-    std::vector<uint32_t> flux_times{};
+    VectorX<uint32_t> flux_times{};
     flux_times.reserve(bitbuf.size());
 
     while (!bitbuf.wrapped())
     {
         auto next_bit{ bitbuf.read1() };
 
-        flux_time += ns_per_bitcell;
+        flux_time += static_cast<uint32_t>(ns_per_bitcell);
         if (curr_bit)
         {
             if (trackdata.cylhead.cyl < 40)

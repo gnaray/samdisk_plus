@@ -24,7 +24,7 @@ public:
         }
     }
 
-    ~KFDevDisk()
+    ~KFDevDisk() override
     {
         m_kryoflux->Seek(0);
         m_kryoflux->EnableMotor(0);
@@ -32,7 +32,7 @@ public:
 
 protected:
     TrackData load(const CylHead& cylhead, bool first_read,
-        int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
+        int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) override
     {
         FluxData flux_revs;
         auto revs = first_read ? FIRST_READ_REVS : REMAIN_READ_REVS;

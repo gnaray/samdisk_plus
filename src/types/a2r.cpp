@@ -56,7 +56,7 @@ constexpr uint32_t id_value(const char* str)
 class A2RDisk final : public DemandDisk
 {
 public:
-    void add_track_data(const CylHead& cylhead, std::vector<uint8_t>&& trackdata, uint32_t loop_point)
+    void add_track_data(const CylHead& cylhead, Data&& trackdata, uint32_t loop_point)
     {
         m_data[cylhead] = std::move(trackdata);
         m_loop_point[cylhead] = std::move(loop_point);
@@ -70,7 +70,7 @@ public:
 
 protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
-        int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
+        int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) override
     {
         const auto& data = m_data[cylhead];
         if (data.empty())
@@ -78,7 +78,7 @@ protected:
 
         FluxData flux_revs;
 
-        std::vector<uint32_t> flux_times;
+        VectorX<uint32_t> flux_times;
         flux_times.reserve(data.size());
 
         uint32_t total_time = 0, ticks = 0;
@@ -108,7 +108,7 @@ protected:
     }
 
 private:
-    std::map<CylHead, std::vector<uint8_t>> m_data{};
+    std::map<CylHead, Data> m_data{};
     std::map<CylHead, uint32_t> m_loop_point{};
 };
 
@@ -149,12 +149,12 @@ bool ReadA2R(MemFile& file, std::shared_ptr<Disk>& disk)
 
         case id_value("STRM"):
         {
-            std::vector<uint8_t> strm(chunk_size);
+            Data strm(chunk_size);
             if (!file.read(strm))
                 throw util::exception("short file reading strm chunk");
 
             STRM_CHUNK sc{};
-            for (size_t pos = 0; pos < strm.size() && strm[pos] != 0xff;)
+            for (auto pos = 0; pos < strm.size() && strm[pos] != 0xff;)
             {
                 memcpy(&sc, &strm[pos], sizeof(sc));
                 auto data_length = util::le_value(sc.data_length);
@@ -180,7 +180,7 @@ bool ReadA2R(MemFile& file, std::shared_ptr<Disk>& disk)
 
         case id_value("META"):
         {
-            std::vector<char> meta(chunk_size);
+            VectorX<char, size_t> meta(chunk_size);
             if (!file.read(meta))
                 throw util::exception("short file reading meta chunk");
 

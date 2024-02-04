@@ -18,7 +18,7 @@ public:
 
 protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
-        int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
+        int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) override
     {
         auto lba = (cylhead.cyl * fmt().heads + cylhead.head) * fmt().sectors;
         std::vector<int> error_ids;

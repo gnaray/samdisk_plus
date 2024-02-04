@@ -54,7 +54,7 @@ public:
     bool RamTest();
     bool SetPin33(bool high);
     bool ReadFlux(int revs, FluxData& flux_revs);
-    bool WriteFlux(const std::vector<uint32_t>& flux_times);
+    bool WriteFlux(const VectorX<uint32_t>& flux_times);
     bool GetInfo(int& hwversion, int& fwversion);
 
     uint8_t GetErrorStatus() const { return m_error; }

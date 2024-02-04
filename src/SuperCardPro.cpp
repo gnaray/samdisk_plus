@@ -3,7 +3,6 @@
 #include "PlatformConfig.h"
 #include "SuperCardPro.h"
 #include "Options.h"
-#include "Sector.h"
 
 #include <cstring>
 #ifdef HAVE_UNISTD_H
@@ -99,7 +98,7 @@ bool SuperCardPro::SendCmd(uint8_t cmd, void* buf, int len, void* bulkbuf, int b
     Data data(2 + len + 1);
     data[0] = cmd;
     data[1] = static_cast<uint8_t>(len);
-    if (len) memcpy(&data[2], buf, len);
+    if (len) memcpy(&data[2], buf, static_cast<size_t>(len));
     data[2 + len] = data[0] + data[1] + datasum;
 
     if (!WriteExact(&data[0], data.size()))
@@ -267,15 +266,15 @@ bool SuperCardPro::ReadFlux(int revs, FluxData& flux_revs)
         auto flux_count = util::betoh(rev_index[i * 2 + 1]);
         auto flux_bytes = static_cast<uint32_t>(flux_count * sizeof(uint16_t));
 
-        std::vector<uint16_t> flux_data(flux_count);    // NB: time values are big-endian
+        VectorX<uint16_t> flux_data(flux_count);    // NB: time values are big-endian
 
         uint32_t start_len[2]{ util::htobe(flux_offset), util::htobe(flux_bytes) };
-        if (!SendCmd(CMD_SENDRAM_USB, &start_len, sizeof(start_len), flux_data.data(), flux_bytes))
+        if (!SendCmd(CMD_SENDRAM_USB, &start_len, sizeof(start_len), flux_data.data(), static_cast<int>(flux_bytes)))
             return false;
 
         flux_offset += flux_bytes;
 
-        std::vector<uint32_t> flux_times;
+        VectorX<uint32_t> flux_times;
         flux_times.reserve(flux_count);
 
         uint32_t total_time = 0;
@@ -297,14 +296,14 @@ bool SuperCardPro::ReadFlux(int revs, FluxData& flux_revs)
     return true;
 }
 
-bool SuperCardPro::WriteFlux(const std::vector<uint32_t>& flux_times)
+bool SuperCardPro::WriteFlux(const VectorX<uint32_t>& flux_times)
 {
-    std::vector<uint16_t> flux_data;
+    VectorX<uint16_t, size_t> flux_data;
     flux_data.reserve(flux_times.size());
     for (auto time_ns : flux_times)
     {
-        auto time_ticks{ (time_ns + (NS_PER_TICK / 2)) / NS_PER_TICK };
-        time_ticks = time_ticks * opt_scale / 100;
+        auto time_ticks = (time_ns + (NS_PER_TICK / 2)) / NS_PER_TICK;
+        time_ticks = time_ticks * static_cast<unsigned>(opt_scale) / 100;
         time_ticks |= 1;
 
         while (time_ticks >= 0x10000)
@@ -319,8 +318,8 @@ bool SuperCardPro::WriteFlux(const std::vector<uint32_t>& flux_times)
     if (flux_data.empty())
         flux_data.push_back(4'000 / NS_PER_TICK);
 
-    auto flux_count{ flux_data.size() };
-    auto flux_bytes{ flux_count * sizeof(flux_data[0]) };
+    auto flux_count = flux_data.size();
+    auto flux_bytes = flux_count * sizeof(flux_data[0]);
 
     uint32_t start_len[2];
     start_len[0] = 0;

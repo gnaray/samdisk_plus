@@ -43,9 +43,9 @@ public:
             // Oddly, the clock frequency isn't stored in the image, so guess it.
             for (auto mhz = 25; !m_tick_ns && mhz <= 100; mhz *= 2)
             {
-                auto rpm = 60'000'000ULL * mhz / index_pos;
+                auto rpm = 60'000'000ULL * static_cast<unsigned>(mhz) / index_pos;
                 if (rpm >= 285 && rpm <= 380)
-                    m_tick_ns = 1000 / mhz;
+                    m_tick_ns = static_cast<uint32_t>(1000 / mhz);
             }
 
             // Fail if we couldn't determine the clock rate
@@ -59,14 +59,14 @@ public:
 
 protected:
     TrackData load(const CylHead& cylhead, bool /*first_read*/,
-        int /*with_head_seek_to*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) override
+        int /*with_head_seek_to*/, const DeviceReadingPolicy& /*deviceReadingPolicy*//* = DeviceReadingPolicy{}*/) override
     {
         const auto& data = m_data[cylhead];
         if (data.empty())
             return TrackData(cylhead);
 
         FluxData flux_revs;
-        std::vector<uint32_t> flux_times;
+        VectorX<uint32_t> flux_times;
         flux_times.reserve(data.size());
 
         uint32_t total_time = 0;
