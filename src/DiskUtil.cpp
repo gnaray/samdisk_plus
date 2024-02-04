@@ -450,9 +450,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
                 // Ensure the weak sector has a data CRC error, to fix broken CPCDiskXP images
                 if (!sector1.has_baddatacrc())
                 {
-                    auto data = sector1.data_copy();
-                    sector1.remove_data();
-                    sector1.add(std::move(data), true);
+                    sector1.set_baddatacrc();
                     if (opt_debug) util::cout << "added missing data CRC error to Rainbow Arts track\n";
                 }
 
