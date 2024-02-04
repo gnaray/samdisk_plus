@@ -546,13 +546,14 @@ void Sector::set_baddatacrc(bool bad/* = true*/)
         }
         else if (copies() > 1)
         {
-            m_data.resize(1);
-            m_data_read_stats.resize(1);
+            if (!opt_paranoia)
+                resize_data(1);
 
             if (data_size() < size())
             {
-                auto pad{ Data(size() - data_size(), fill_byte) };
-                m_data[0].insert(m_data[0].end(), pad.begin(), pad.end());
+                const Data pad(size() - data_size(), fill_byte);
+                for (auto& data : m_data)
+                    data.insert(data.end(), pad.begin(), pad.end());
             }
         }
     }
