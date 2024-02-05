@@ -54,7 +54,7 @@ typename std::enable_if_t<!std::numeric_limits<T>::is_integer, bool>
 constexpr approximately_equal(T x, T y)
 {
     const auto absDiff = std::fabs(x - y);
-    return absDiff <= std::numeric_limits<double>::epsilon() * std::max(std::fabs(x), std::fabs(y))
+    return absDiff <= std::numeric_limits<T>::epsilon() * std::max(std::fabs(x), std::fabs(y))
             || absDiff < std::numeric_limits<T>::min();
 }
 
@@ -80,8 +80,6 @@ inline T lossless_static_cast(U x)
 {
     return x;
 }
-
-
 
 template<typename T, typename U,
          std::enable_if_t<!std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
@@ -285,6 +283,7 @@ inline T limited_static_cast(U x)
 template<typename T, typename U,
          std::enable_if_t<!std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
 T limited_static_cast(U x);
+
 
 
 template<>
