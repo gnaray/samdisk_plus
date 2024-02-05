@@ -50,7 +50,7 @@ constexpr bool is_value_in_type_range<long, false, double>(double x)
 
 
 template<typename T>
-typename std::enable_if_t<!std::numeric_limits<T>::is_integer, bool>
+typename std::enable_if_t<std::is_floating_point<T>::value, bool>
 constexpr approximately_equal(T x, T y)
 {
     const auto absDiff = std::fabs(x - y);
