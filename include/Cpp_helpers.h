@@ -299,27 +299,27 @@ inline uint8_t limited_static_cast(int x)
 
 
 template<typename T,
-         std::enable_if_t<!std::is_floating_point<T>::value, int> = 0,
          typename U,
-         std::enable_if_t<std::is_floating_point<U>::value, int> = 0>
+         std::enable_if_t<std::is_integral<T>::value> * = nullptr,
+         std::enable_if_t<std::is_floating_point<U>::value> * = nullptr>
 inline T round_AS(U x)
 {
     return lossless_static_cast<T>(std::round(x));
 }
 
 template<typename T,
-         std::enable_if_t<!std::is_floating_point<T>::value, int> = 0,
          typename U,
-         std::enable_if_t<std::is_floating_point<U>::value, int> = 0>
+         std::enable_if_t<std::is_integral<T>::value> * = nullptr,
+         std::enable_if_t<std::is_floating_point<U>::value> * = nullptr>
 inline T floor_AS(U x)
 {
     return lossless_static_cast<T>(std::floor(x));
 }
 
 template<typename T,
-         std::enable_if_t<!std::is_floating_point<T>::value, int> = 0,
          typename U,
-         std::enable_if_t<std::is_floating_point<U>::value, int> = 0>
+         std::enable_if_t<std::is_integral<T>::value> * = nullptr,
+         std::enable_if_t<std::is_floating_point<U>::value> * = nullptr>
 inline T ceil_AS(U x)
 {
     return lossless_static_cast<T>(std::ceil(x));
