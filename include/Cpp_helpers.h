@@ -49,8 +49,8 @@ constexpr bool is_value_in_type_range<long, false, double>(double x)
 
 
 
-template<class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+template<typename T>
+typename std::enable_if_t<!std::numeric_limits<T>::is_integer, bool>
 constexpr approximately_equal(T x, T y)
 {
     const auto absDiff = std::fabs(x - y);
@@ -60,8 +60,8 @@ constexpr approximately_equal(T x, T y)
 
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 // QUESTION Will (+x, -x) return always false (except subnormal case) and is it the expected result?
-template<class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+template<typename T>
+typename std::enable_if_t<!std::numeric_limits<T>::is_integer, bool>
 constexpr almost_equal(T x, T y, int ulp)
 {
     const auto absDiff = std::fabs(x - y);
@@ -75,15 +75,19 @@ constexpr almost_equal(T x, T y, int ulp)
 
 
 template<typename T, typename U,
-         std::enable_if_t<std::is_same<T, U>::value, int> = 0>
+         std::enable_if_t<std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
 inline T lossless_static_cast(U x)
 {
     return x;
 }
 
+
+
 template<typename T, typename U,
-         std::enable_if_t<!std::is_same<T, U>::value, int> = 0>
+         std::enable_if_t<!std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
 T lossless_static_cast(U x);
+
+
 
 template<>
 constexpr int lossless_static_cast(unsigned char x)
