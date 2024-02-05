@@ -44,7 +44,7 @@ constexpr void is_value_in_type_range(ValueType x)
 template<>
 constexpr bool is_value_in_type_range<long, false, double>(double x)
 {   // Checking x >= max because long::max (9223372036854775807) becomes (9223372036854775808).
-    return (x < std::numeric_limits<long>::min() || x >= static_cast<double>(std::numeric_limits<long>::max()));
+    return !(x < std::numeric_limits<long>::min() || x >= static_cast<double>(std::numeric_limits<long>::max()));
 }
 
 
