@@ -275,8 +275,17 @@ constexpr uint64_t lossless_static_cast(uint32_t x)
 
 
 
-template<typename T, typename U>
+template<typename T, typename U,
+         std::enable_if_t<std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
+inline T limited_static_cast(U x)
+{
+    return x;
+}
+
+template<typename T, typename U,
+         std::enable_if_t<!std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
 T limited_static_cast(U x);
+
 
 template<>
 inline int limited_static_cast(size_t x)
