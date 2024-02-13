@@ -24,9 +24,13 @@ public:
     void add(OrphanDataCapableTrack&& orphanDataCapableTrack);
     int size() const;
 
-public:
-    void mergePhysicalTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedPhysicalTrack);
-    void mergePhysicalTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
+    static void MergeOrphansIntoParents(Track& orphansTrack, Track& parentsTrack, bool removeOrphanAfterMerge, const std::function<bool (const Sector &)>& considerParentSectorPredicate = nullptr);
+
+    void MergeOrphansIntoParents(bool removeOrphanAfterMerge);
+    void AddWithSyncAndBrokenEndingFix(OrphanDataCapableTrack&& orphanDataCapableTrack);
+    void MergeInto(Track& targetTrack, const std::function<bool (const Sector &)>& considerTargetSectorPredicate = nullptr);
+    void MergePhysicalTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedPhysicalTrack);
+    void MergeUnsyncedBrokenEndingTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
     void syncThisToOtherAsMulti(const int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
     int determineBestTrackLen(const int timedTrackTime) const;

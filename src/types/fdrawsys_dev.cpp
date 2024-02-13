@@ -807,7 +807,7 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
     PhysicalTrackMFM toBeMergedPhysicalTrack(mem, m_lastDataRate);
     const auto sectorIdAmountPrev = timedAndPhysicalDualTrack.physicalTrackMulti.track.size();
     const auto sectorAmountPrev = timedAndPhysicalDualTrack.physicalTrackMulti.size();
-    timedAndPhysicalDualTrack.physicalTrackMulti.mergePhysicalTrack(cylhead, toBeMergedPhysicalTrack);
+    timedAndPhysicalDualTrack.physicalTrackMulti.MergePhysicalTrack(cylhead, toBeMergedPhysicalTrack);
     const bool foundNewSectorId = timedAndPhysicalDualTrack.physicalTrackMulti.track.size() > sectorIdAmountPrev;
     const bool foundNewSector = timedAndPhysicalDualTrack.physicalTrackMulti.size() > sectorAmountPrev;
     if (m_trackInfo[cylhead].trackLenIdeal <= 0 && foundNewSectorId)
