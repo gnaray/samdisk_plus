@@ -137,7 +137,7 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     usingScanner112 &= m_lastEncoding == Encoding::MFM; // Currently it supports only MFM encoding.
     if (!usingScanner112)
         trackBefore112 = BlindReadHeaders(cylhead, firstSectorSeen);
-    auto& track = usingScanner112 ? timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack : trackBefore112;
+    auto& track = usingScanner112 ? timedAndPhysicalDualTrack.finalAllInTrack : trackBefore112;
 
     if (opt_debug)
         for (int i = 0; i < track.size(); i++)
@@ -583,10 +583,12 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
 
     TimedAndPhysicalDualTrack timedAndPhysicalDualTrack;
     // Find the sectors by scanning the floppy disk both timed and physical.
-    auto physicalTrackRescans = std::max(opt_rescans, opt_retries);
+    const auto physicalTrackRescansInit = std::max(opt_rescans, opt_retries);
+    auto physicalTrackRescans = physicalTrackRescansInit + 1; // +1 for the initial scanning.
+    const auto timedTrackRescansInit = opt_rescans;
     DeviceReadingPolicy deviceReadingPolicyForScanning = deviceReadingPolicy;
-    auto timedTrackRescans = opt_rescans;
-    do
+    auto timedTrackRescans = timedTrackRescansInit;
+    do // The scanning loop.
     {
         MultiScanResult multiScanResult(MAX_SECTORS);
         if (!ScanAndDetectIfNecessary(cylhead, multiScanResult))
@@ -605,8 +607,12 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
         {
             if (m_trackInfo[cylhead].trackLenIdeal <= 0)
             {
-                ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack);
                 physicalTrackRescans--;
+                if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new sector.
+                {
+                    if (physicalTrackRescans.sinceLastChange)
+                        physicalTrackRescans = physicalTrackRescansInit;
+                }
             }
             Track newTimedTrack = multiScanResult.DecodeResult(cylhead, m_lastDataRate, m_lastEncoding, m_trackInfo[cylhead].trackLenIdeal);
             if (m_trackInfo[cylhead].trackLenIdeal > 0)
@@ -619,26 +625,52 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
                 deviceReadingPolicyForScanning = deviceReadingPolicy;
                 deviceReadingPolicyForScanning.AddSkippableSectors(timedAndPhysicalDualTrack.timedIdTrack.good_idcrc_sectors());
                 if (timedTrackRescans.sinceLastChange)
-                    timedTrackRescans = opt_rescans;
+                    timedTrackRescans = timedTrackRescansInit;
             }
         }
     } while (timedTrackRescans-- > 0 && deviceReadingPolicyForScanning.WantMoreSectors());
+    // Out of space sectors at track end are not normal, discard them if option normal disk is specified.
+    DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdTrack);
 
-    // If more scanning is required then try to find sectors from the physical track.
-    do
+    timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack = timedAndPhysicalDualTrack.timedIdTrack;
+
+    // If more sectors are required then try to find sectors in the physical track as well.
+    bool initialRound = true;
+    do // The reading and scanning loop.
     {
-        bool foundNewSector = physicalTrackRescans >= 0 && ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack);
-        if (m_trackInfo[cylhead].trackLenIdeal > 0 && (foundNewSector || timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.empty()))
+        const auto endingRound = !initialRound && physicalTrackRescans <= 0;
+        if (endingRound || !deviceReadingPolicyForScanning.WantMoreSectors()) // Ending round or do not want more sectors.
+        {
+            ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy);
+            if (timedAndPhysicalDualTrack.finalAllInTrack.has_all_stable_data(deviceReadingPolicy.SkippableSectors()))
+                break; // Scanning and reading is complete, all data is stable.
+            if (endingRound)
+                break; // Ending round so reading is finished.
+        }
+        if (!initialRound && physicalTrackRescans > 0)
+        {
+            physicalTrackRescans--;
+            if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new sector.
+            {
+                if (physicalTrackRescans.sinceLastChange)
+                    physicalTrackRescans = physicalTrackRescansInit;
+            }
+        }
+        if (m_trackInfo[cylhead].trackLenIdeal > 0)
         {
             if (timedAndPhysicalDualTrack.SyncAndDemultiPhysicalToTimed(m_trackInfo[cylhead].trackLenIdeal)) // Updates lastTimeSyncedPhysicalTrackSingle.
             {
+                // Out of space sectors at track end are not normal, discard them if option normal disk is specified.
+                DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.track);
                 const auto sectorAmountPrev = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size();
-                // Merging last timed and physical track with timed track and orphan ids into final timed and physical track.
-                auto finalTimedAndAndPhysicalTrackLocal = timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.track;
-                finalTimedAndAndPhysicalTrackLocal.add(Track(timedAndPhysicalDualTrack.timedIdTrack));
-                GuessAndAddSectorIdsOfOrphans(finalTimedAndAndPhysicalTrackLocal, timedAndPhysicalDualTrack);
-                finalTimedAndAndPhysicalTrackLocal.add(std::move(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack));
-                timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack = finalTimedAndAndPhysicalTrackLocal;
+                // Merging ids of last time synced physical track single with ids of timed id data and physical track (timed track included) and with orphan guessed ids.
+                auto timedIdDataAndPhysicalIdTrackLocal = timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.track.CopyWithoutSectorData();
+                timedIdDataAndPhysicalIdTrackLocal.add(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.CopyWithoutSectorData());
+                GuessAndAddSectorIdsOfOrphans(timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle, timedIdDataAndPhysicalIdTrackLocal);
+                //Merging whole (ids and data of) timed id data and physical id track.
+                timedIdDataAndPhysicalIdTrackLocal.add(std::move(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack));
+                // The merged result becomes the new timed id data and physical track.
+                timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack = std::move(timedIdDataAndPhysicalIdTrackLocal);
                 if (timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size() > sectorAmountPrev)
                 {
                     deviceReadingPolicyForScanning = deviceReadingPolicy;
@@ -646,21 +678,8 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
                 }
             }
         }
-        if (!deviceReadingPolicyForScanning.WantMoreSectors())
-        {
-            DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack);
-            if (ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy))
-                break; // Scanning and reading is complete.
-        }
-        if (foundNewSector)
-        {
-            if (physicalTrackRescans.sinceLastChange)
-                physicalTrackRescans = std::max(opt_rescans, opt_retries);
-        }
-    } while (physicalTrackRescans-- > 0);
-
-    DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack);
-    ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy);
+        initialRound = false;
+    } while (true);
 
     return timedAndPhysicalDualTrack;
 }
@@ -684,24 +703,26 @@ void FdrawSysDevDisk::DiscardOutOfSpaceSectorsAtTrackEnd(Track& track) const
     }
 }
 
-void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack) const
+void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(const OrphanDataCapableTrack& timeSyncedPhysicalTrackSingle, Track& track) const
 {
     // If there is no cylhead mismatch and there are orphan datas then guess their sector id.
-    if (timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.cylheadMismatch || timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.empty())
+    if (timeSyncedPhysicalTrackSingle.cylheadMismatch || timeSyncedPhysicalTrackSingle.orphanDataTrack.empty())
         return;
+
     IdAndOffsetVector idAndOffsetVector;
-    for (const auto& orphanDataSector : timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack)
+    for (const auto& orphanDataSector : timeSyncedPhysicalTrackSingle.orphanDataTrack)
     {
 
         if (opt_debug)
-            util::cout << "GuessAndAddSectorIdsOfOrphans: processing sector, offset=" << orphanDataSector.offset << ", ID=" << orphanDataSector.header.sector << "\n";
+            util::cout << "GuessAndAddSectorIdsOfOrphans: processing orphan sector (offset=" << orphanDataSector.offset << ", id.sector=" << orphanDataSector.header.sector << ")\n";
 
-        // Find any sector id which coheres, it does not matter if closest or not.
-        const auto it = track.findSectorForDataFmOrMfm(orphanDataSector.offset, orphanDataSector.header.size);
+        // Find any sector which coheres, it does not matter if closest or not.
+        const auto it = track.findSectorForDataFmOrMfm(orphanDataSector.offset, orphanDataSector.header.size, false);
         // If not found sector id then let us guess it.
         if (it == track.end()) // The end is dynamic since adding sector to track.
         {
-            util::cout << "GuessAndAddSectorIdsOfOrphans: Orphan has no parent, offset=" << orphanDataSector.offset << "\n";
+            if (opt_debug)
+                util::cout << "GuessAndAddSectorIdsOfOrphans: Orphan has no parent (offset=" << orphanDataSector.offset << ")\n";
             if (idAndOffsetVector.empty())
             {
                 // Let us discover the track sector scheme if possible.
@@ -713,87 +734,51 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysic
             const auto sectorId = orphanDataSector.FindParentSectorIdByOffset(idAndOffsetVector);
             if (sectorId >= 0)
             {
-                auto parentSector = orphanDataSector;
+                // The data will be referred later by the parent sector so skip data.
+                auto parentSector = orphanDataSector.CopyWithoutData(false); // Resets read_attempts.
                 parentSector.header.sector = sectorId;
-                parentSector.offset = track.findReasonableIdOffsetForDataFmOrMfm(orphanDataSector.offset);
                 parentSector.header.size = track[0].header.size;
-                parentSector.remove_data();
+                parentSector.offset = track.findReasonableIdOffsetForDataFmOrMfm(orphanDataSector.offset);
                 if (opt_debug)
-                    util::cout << "GuessAndAddSectorIdsOfOrphans: added sector as parent, offset=" << parentSector.offset << ", ID=" << parentSector.header.sector << "\n";
+                    util::cout << "GuessAndAddSectorIdsOfOrphans: added sector as parent (offset=" << parentSector.offset << ", id.sector=" << parentSector.header.sector << ")\n";
                 track.add(std::move(parentSector));
-                // Not removing orphan sector, it will be read later as parent sector.
             }
         }
     }
 }
 
-/*static*/ bool FdrawSysDevDisk::GetSectorDataFromPhysicalTrack(TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const int index)
-{
-    auto& finalTrack = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack;
-    auto& sector = finalTrack[index];
-
-    if (sector.has_badidcrc())
-        return false;
-    if (sector.has_good_data(false, opt_normal_disk))
-        return true;
-
-    if (opt_debug)
-        util::cout << "GetSectorDataFromPhysicalTrack: reading " << index << ". sector having ID " << sector.header.sector << "\n";
-
-    // If there is no cylhead mismatch and there are orphan datas then try to find the orphan data of sector.
-    if (timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.cylheadMismatch || timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.empty())
-        return false;
-    const auto it = timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.findDataForSectorIdFmOrMfm(sector.offset, sector.header.size);
-    if (it != timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.end())
-    {
-        // If there is next sector id which finds the same orphan data then the orphan data does not belong to current sector id. Very rare case.
-        if (index < finalTrack.size() - 1)
-        {
-            const auto& sectorNext = finalTrack[index + 1];
-            if (sectorNext.offset < it->offset) // Bit of optimisation for speed.
-            {
-                const auto it2 = timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.findDataForSectorIdFmOrMfm(sectorNext.offset, sectorNext.header.size);
-                if (it2 == it)
-                    return false;
-            }
-        }
-        auto sectorData = SectorDataFromPhysicalTrack::GetGoodDataUpToSize(*it, sector.size());
-        const bool badCrc = sectorData.empty();
-        const auto dam = it->dam;
-        if (!badCrc)
-        {
-            sector.add(std::move(sectorData), badCrc, dam);
-            timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.sectors().erase(it); // Remove it so it will not be counted again in readstats.
-            return true;
-        }
-    }
-    return false;
-}
-
-bool FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const DeviceReadingPolicy& deviceReadingPolicy)
+void FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const DeviceReadingPolicy& deviceReadingPolicy)
 {
     // Limiting sector reading as specified in case of normal disk request.
     const auto normal_sector_id_begin = opt_base > 0 ? opt_base : 1;
-    const auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
+    const auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + static_cast<int>(opt_sectors)) : 256;
 
-    bool allDataGood = true;
-    const auto iSup = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size();
+    auto& track = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack;
+    const auto sectorFilterPredicate = [&deviceReadingPolicy, &track, normal_sector_id_begin, normal_sector_id_end](const Sector& sector)
+    {
+        return !deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
+                && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end));
+    };
+    const auto iSup = track.size();
     for (int j = 0; j < 2; j++)
     {
         for (int i = j; i < iSup; i += 2)
         {
-            const auto& sector = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack[i];
-            if ((!deviceReadingPolicy.SkippableSectors().Contains(sector, timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.tracklen)
-                 && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
+            const auto& sector = track[i];
+            if (sectorFilterPredicate(sector))
             {
-                if (sector.read_attempts() == 0)
-                    ReadSector(cylhead, timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack, i, 0);
-                if (!GetSectorDataFromPhysicalTrack(timedAndPhysicalDualTrack, i))
-                    allDataGood = false; // Sector is still not good.
+                if (sector.read_attempts() == 0) // Read only if did not read earlier, it will read opt_retries times.
+                {
+                    if (opt_debug)
+                        util::cout << "ReadSectors: reading officially " << i << ". sector (id.sector=" << sector.header.sector << ")\n";
+                    ReadSector(cylhead, track, i, 0);
+                }
             }
         }
     }
-    return allDataGood;
+    timedAndPhysicalDualTrack.finalAllInTrack = track;
+    if (!timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.cylheadMismatch && !timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.empty())
+        timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.MergeInto(timedAndPhysicalDualTrack.finalAllInTrack, sectorFilterPredicate);
 }
 
 bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack)
