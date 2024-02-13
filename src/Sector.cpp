@@ -55,6 +55,7 @@ bool Sector::operator== (const Sector& sector) const
         return false;
 
     assert(header.size != SIZECODE_UNKNOWN);
+    // This size and sector size are the same since headers are the same.
     // Both first sectors must have at least the natural size to compare
     if (sector.data_size() < sector.size() || data_size() < size())
         return false;
@@ -342,6 +343,8 @@ Sector::Merge Sector::add_original(Data&& new_data, bool bad_crc/*=false*/, uint
         // Resize any existing copies to match
         for (auto& d : m_data)
             d.resize(new_size);
+        // TODO It can happen that copies are full and the new data will not be added.
+        // Still the existing data might be resized to the shorter new data length. Misleading.
     }
 
     // If copies are full then discard the new data and copies above max and return unchanged.
@@ -462,7 +465,7 @@ Sector::Merge Sector::merge(Sector&& sector)
                 sector.m_data_read_stats[i],
                 !sector.is_constant_disk(), false);
         if (add_ret != Merge::Unchanged)
-        {
+        {   // Set the most important return result.
             if (ret == Merge::Unchanged || ret == Merge::Matched || (ret == Merge::Improved && add_ret == Merge::NewData))
                 ret = add_ret;
         }
