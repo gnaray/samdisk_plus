@@ -223,7 +223,8 @@ BitBuffer PhysicalTrackMFM::AsMFMBitstream()
 
 // ====================================
 
-void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const PhysicalTrackContext& physicalTrackContext)
+// Process sector data refs, storing the data either in parent sector or orphan sector depending on if there are coherent parent and orphan pairs.
+void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack)
 {
     Track& parentsTrack = orphanDataCapableTrack.track;
     Track& orphansTrack = orphanDataCapableTrack.orphanDataTrack;
@@ -329,7 +330,7 @@ OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
     if (!orphanDataCapableTrack.empty())
     {
         orphanDataCapableTrack.setTrackLen(DataBitPositionAsBitOffset(m_physicalTrackContent.BytesBitSize())); // Counted in mfmbits.
-        ProcessSectorDataRefs(orphanDataCapableTrack, physicalTrackContext);
+        ProcessSectorDataRefs(orphanDataCapableTrack);
     }
     return orphanDataCapableTrack;
 }

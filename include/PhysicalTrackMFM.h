@@ -291,7 +291,7 @@ public:
 
     void Rewind();
     BitBuffer AsMFMBitstream();
-    void ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const PhysicalTrackContext& physicalTrackContext);
+    void ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead);
     OrphanDataCapableTrack DecodeTrack(const CylHead& cylHead) const;
 
