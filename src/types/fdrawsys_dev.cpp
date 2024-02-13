@@ -337,7 +337,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
     if (opt_debug)
         util::cout << "ReadSector: reading " << index << ". sector having ID " << sector.header.sector << "\n";
 
-    if (sector.has_badidcrc() || sector.has_good_data(false, opt_normal_disk))
+    if (sector.has_badidcrc() || sector.has_stable_data()) // Originally this was has_good_data(false, opt_normal_disk)) which did not consider 8k checksummable sector.
         return;
 
     auto size = Sector::SizeCodeToRealLength(sector.header.size);
@@ -412,7 +412,11 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
 
         // If the read command was successful we're all done.
         if ((result.st0 & STREG0_INTERRUPT_CODE) == 0)
-            break;
+        {
+            if (sector.has_stable_data())
+                break;
+            continue;
+        }
 
         // Accept sectors that overlap the next field, as they're unlikely to succeed.
         if (track.data_overlap(sector))
