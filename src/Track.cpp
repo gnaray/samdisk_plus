@@ -337,7 +337,7 @@ void Track::add(Sectors&& sectors, const std::function<bool (const Sector &)>& s
 Track::AddResult Track::add(Sector&& sector, int* affectedSectorIndex/* = nullptr*/, bool dryrun/* = false*/)
 {
     // Check the new datarate against any existing sector.
-    if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
+    if (!m_sectors.empty() && getDataRate() != sector.datarate)
         throw util::exception("can't mix datarates on a track");
 
     // If there's no positional information, simply append.
