@@ -685,7 +685,7 @@ std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
     std::ostringstream ss;
     if (!onlyRelevantData || !header.empty())
     {
-        ss << header;
+        ss << header.ToString(onlyRelevantData);
     }
     return ss.str();
 }
@@ -703,7 +703,7 @@ std::string Sectors::ToString(bool onlyRelevantData/* = true*/) const
                 ss << ' ';
             else
                 writingStarted = true;
-            ss << sector;
+            ss << sector.ToString(onlyRelevantData);
         });
     }
     return ss.str();
@@ -777,7 +777,7 @@ std::string UniqueSectors::ToString(bool onlyRelevantData/* = true*/) const
                 ss << ' ';
             else
                 writingStarted = true;
-            ss << sector;
+            ss << sector.ToString(onlyRelevantData);
         });
     }
     return ss.str();
