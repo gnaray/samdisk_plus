@@ -692,52 +692,6 @@ std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
 
 //////////////////////////////////////////////////////////////////////////////
 
-void Sectors::push_back(const Sectors& sectors)
-{
-    insert(end(), sectors.begin(), sectors.end());
-}
-
-bool Sectors::HasIdSequence(const int first_id, const int length) const
-{
-    return GoodHeaders().HasIdSequence(first_id, length);
-}
-
-const std::set<int> Sectors::NotContainedIds(const Interval<int>& id_interval) const
-{
-    return GoodHeaders().NotContainedIds(id_interval);
-}
-
-class Headers Sectors::GoodHeaders() const
-{
-    class Headers headers;
-    std::for_each(begin(), end(), [&](const Sector& sector) {
-        if (!sector.has_badidcrc())
-            headers.push_back(sector.header);
-    });
-    return headers;
-}
-
-bool Sectors::Contains(const Sector& other_sector, const int other_tracklen) const
-{
-    return std::any_of(cbegin(), cend(), [&](const Sector& sectorI) {
-        return sectorI.has_same_record_properties(other_sector, other_tracklen);
-    });
-}
-
-std::string Sectors::SectorIdsToString() const
-{
-    std::ostringstream ss;
-    bool writingStarted = false;
-    std::for_each(cbegin(), cend(), [&](const Sector& sector) {
-        if (writingStarted)
-            ss << ' ';
-        else
-            writingStarted = true;
-        ss << sector.header.sector;
-    });
-    return ss.str();
-}
-
 std::string Sectors::ToString(bool onlyRelevantData/* = true*/) const
 {
     std::ostringstream ss;

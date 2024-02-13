@@ -192,15 +192,7 @@ class Sectors : public VectorX<Sector>
 {
 public:
     using VectorX<Sector>::VectorX;
-    using VectorX<Sector>::push_back;
 
-    void push_back(const Sectors& sectors);
-    bool HasIdSequence(const int first_id, const int length) const;
-    const std::set<int> NotContainedIds(const Interval<int> &id_interval) const;
-    class Headers GoodHeaders() const;
-
-    bool Contains(const Sector& other_sector, const int other_tracklen) const;
-    std::string SectorIdsToString() const;
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Sectors& sectors, bool onlyRelevantData = true)
     {

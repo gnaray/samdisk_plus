@@ -197,7 +197,6 @@ public:
     Headers() = default;
 
     bool Contains(const Header& header) const;
-    std::set<int> NotContainedIds(const Interval<int>& id_interval) const;
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Headers& headers, bool onlyRelevantData = true)
     {
