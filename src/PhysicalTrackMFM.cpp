@@ -293,10 +293,10 @@ OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
     OrphanDataCapableTrack orphanDataCapableTrack;
     const PhysicalTrackContext physicalTrackContext(cylHead, dataRate);
 
-    const auto readLengthMin = intsizeof(AddressMarkSyncInTrack);
-    Data addressMarkSyncInPhysicalTrackBytes(readLengthMin);
+    constexpr const auto addressMarkSyncInPhysicalTrackLength = intsizeof(AddressMarkSyncInTrack);
+    Data addressMarkSyncInPhysicalTrackBytes(addressMarkSyncInPhysicalTrackLength);
     const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(addressMarkSyncInPhysicalTrackBytes.data());
-    while (m_physicalTrackContent.RemainingByteLength() >= readLengthMin)
+    while (m_physicalTrackContent.RemainingByteLength() >= addressMarkSyncInPhysicalTrackLength)
     {
         if (AddressMarkSyncInTrack::IsValid(m_physicalTrackContent.PeekByte())) // Bit of optimisation for speed.
         {
