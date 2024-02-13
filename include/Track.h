@@ -38,7 +38,7 @@ public:
 
     void clear();
     void add(Track&& track);
-    void add(Sectors&& sectors);
+    void add(Sectors&& sectors, const std::function<bool (const Sector &)>& sectorFilterPredicate = nullptr);
     AddResult add(Sector&& sector, int* affectedSectorIndex = nullptr, bool dryrun = false);
     void insert(int index, Sector&& sector);
     Sector remove(int index);

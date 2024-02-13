@@ -309,7 +309,7 @@ void Track::add(Track&& track)
     add(std::move(track.sectors()));
 }
 
-void Track::add(Sectors&& sectors)
+void Track::add(Sectors&& sectors, const std::function<bool (const Sector &)>& sectorFilterPredicate/* = nullptr*/)
 {
     // Ignore if no sectors to add.
     if (sectors.empty())
@@ -318,8 +318,11 @@ void Track::add(Sectors&& sectors)
     // Merge supplied sectors into existing track.
     for (auto& sector : sectors)
     {
-        assert(sector.offset != 0);
-        add(std::move(sector));
+        if (!sectorFilterPredicate || sectorFilterPredicate(sector))
+        {
+            assert(sector.offset != 0);
+            add(std::move(sector));
+        }
     }
 }
 
