@@ -255,14 +255,17 @@ bool Track::has_all_stable_data(const UniqueSectors& stable_sectors) const
     if (empty())
         return true;
 
-    auto it = std::find_if(begin(), end(), [&](const Sector& sector) {
-        if (!sector.has_badidcrc() && stable_sectors.Contains(sector, tracklen))
+    auto it = std::find_if(begin(), end(), [&](const Sector& sector)
+    { // Find not stable.
+        if (sector.has_badidcrc())
+            return true;
+        if (stable_sectors.Contains(sector, tracklen))
             return false;
         // Checksummable 8k sector is considered in has_stable_data method.
         return !sector.has_stable_data();
     });
 
-    return it == end();
+    return it == end(); // Not found not stable thus all sectors are stable.
 }
 
 int Track::normal_probable_size() const
