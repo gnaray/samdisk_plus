@@ -225,42 +225,55 @@ BitBuffer PhysicalTrackMFM::AsMFMBitstream()
 
 void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataCapableTrack, const PhysicalTrackContext& physicalTrackContext)
 {
-    const auto sectorIdsIndexSup = orphanDataCapableTrack.track.size();
-    auto sectorIdsIndex = 0;
-    auto orphanIt = orphanDataCapableTrack.orphanDataTrack.begin();
-    while (orphanIt != orphanDataCapableTrack.orphanDataTrack.end())
-    {
-        auto& orphanSector = *orphanIt;
-        m_physicalTrackContent.SetByteBitPosition(BitOffsetAsDataBitPosition(orphanSector.offset)); // mfmbits to databits
+    Track& parentsTrack = orphanDataCapableTrack.track;
+    Track& orphansTrack = orphanDataCapableTrack.orphanDataTrack;
+    if (parentsTrack.empty() || orphansTrack.empty())
+        return;
 
-        auto parentSectorIndexFound = false;
-        int sectorOffset;
+    auto itParent = parentsTrack.begin();
+    auto itOrphan = orphansTrack.begin();
+    const auto dataRate = orphansTrack.getDataRate();
+    const auto encoding = orphansTrack.getEncoding();
+    const auto itParentEnd = parentsTrack.end(); // The parents end is constant since merging sector data to parent does not change the parents.
+    // An orphan data and a parent sector are matched if they cohere and there is no closer to one of them that also coheres.
+    while (itParent != itParentEnd && itOrphan != orphansTrack.end()) // The orphans end is variable since possibly erasing sector from orphans.
+    {
+        auto& orphanDataSector = *itOrphan;
+        auto& parentSector = *itParent;
+        m_physicalTrackContent.SetByteBitPosition(BitOffsetAsDataBitPosition(orphanDataSector.offset)); // mfmbits to databits
         // Find the closest sector id which coheres.
-        while (sectorIdsIndex < sectorIdsIndexSup && (sectorOffset = orphanDataCapableTrack.track[sectorIdsIndex].offset) < orphanSector.offset)
+        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(parentSector.offset, orphanDataSector.offset, dataRate, encoding);
+        if (cohereResult == CohereResult::DataCoheres)
         {
-            if (physicalTrackContext.DoSectorIdAndDataOffsetsCohere(sectorOffset, orphanSector.offset, orphanSector.encoding) == CohereResult::DataCoheres)
-                parentSectorIndexFound = true;
-            sectorIdsIndex++;
-        }
-        if (parentSectorIndexFound) // Data belongs to sector id thus its size is provided by the sector id.
-        {
-            auto& sector = orphanDataCapableTrack.track[sectorIdsIndex - 1]; // The previous is found.
-            const auto dataSize = sector.header.size;
+            const auto itParentNext = itParent + 1;
+            if (itParentNext != itParentEnd &&
+                    DoSectorIdAndDataOffsetsCohere(itParentNext->offset, orphanDataSector.offset, dataRate, encoding) == CohereResult::DataCoheres)
+            {
+                itParent = itParentNext;
+                continue;
+            }
+            // Orphan data belongs to parent sector thus it is not orphan anymore and its size is provided by the id.sector.
+            const auto dataSize = parentSector.size();
             const auto availableBytes = m_physicalTrackContent.RemainingByteLength();
             if (!SectorDataFromPhysicalTrack::IsSuitable(dataSize, availableBytes))
-                goto NextOrphan; // Not enough bytes thus crc is bad, and we do not provide bad data from physical track.
-            SectorDataFromPhysicalTrack::ProcessInto(sector, m_physicalTrackContent, orphanSector.encoding);
-            orphanIt = orphanDataCapableTrack.orphanDataTrack.sectors().erase(orphanIt);
-            continue; // Continuing from current orphan which was the next orphan before erasing.
+                itOrphan++; // Not enough bytes thus crc is bad, and we do not provide broken (too short) data from physical track.
+            else
+            {
+                SectorDataFromPhysicalTrack::ProcessInto(parentSector, m_physicalTrackContent, orphanDataSector.encoding);
+                itOrphan = orphansTrack.sectors().erase(itOrphan);
+            }
+        }
+        else if (cohereResult == CohereResult::DataTooEarly)
+        {   // Sector id not found, setting orphan's data from first byte after DAM until first overhead byte of next ?AM (or track end if there is no next ?AM).
+            const auto itParentNext = itParent + 1;
+            const auto itOrphanNext = itOrphan + 1;
+            SectorDataFromPhysicalTrack::ProcessInto(orphanDataSector, m_physicalTrackContent, orphanDataSector.encoding,
+                                                itParentNext != itParentEnd ? itParentNext->offset : 0,
+                                                itOrphanNext != orphansTrack.end() ? itOrphanNext->offset : 0);
+            itOrphan = itOrphanNext;
         }
         else
-        {   // Sector id not found, setting orphan's data from first byte after DAM until first overhead byte of next ?AM (or track end if there is no next ?AM).
-            SectorDataFromPhysicalTrack::ProcessInto(orphanSector, m_physicalTrackContent, orphanSector.encoding,
-                                                sectorIdsIndex < sectorIdsIndexSup ? orphanDataCapableTrack.track[sectorIdsIndex].offset : 0,
-                                                (orphanIt + 1) != orphanDataCapableTrack.orphanDataTrack.end() ? (orphanIt + 1)->offset : 0);
-        }
-NextOrphan:
-        orphanIt++;
+            itParent++;
     }
 }
 // ====================================
