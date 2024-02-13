@@ -138,6 +138,16 @@ int Header::sector_size() const
     return Sector::SizeCodeToLength(size);
 }
 
+std::string Header::ToString(bool onlyRelevantData/* = true*/) const
+{
+    std::ostringstream ss;
+    if (!onlyRelevantData || !empty())
+    {
+        ss << "cyl=" << cyl << ", head=" << head << ", sector=" << sector << ", size=" << size;
+    }
+    return ss.str();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 bool Headers::Contains(const Header& header) const

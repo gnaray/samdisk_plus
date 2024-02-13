@@ -157,6 +157,14 @@ public:
         return cyl == 0 && head == 0 && sector == 0 && size == 0;
     }
 
+    std::string ToString(bool onlyRelevantData = true) const;
+    friend std::string to_string(const Header& header, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << header.ToString(onlyRelevantData);
+        return ss.str();
+    }
+
     int cyl = 0, head = 0, sector = 0, size = 0;
 };
 
@@ -188,6 +196,8 @@ constexpr bool operator <=(const Header& lhs, const Header& rhs)
 {
     return !(lhs > rhs);
 }
+
+inline std::ostream& operator<<(std::ostream& os, const Header& header) { return os << to_string(header); }
 
 //////////////////////////////////////////////////////////////////////////////
 
