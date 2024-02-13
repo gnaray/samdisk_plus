@@ -213,6 +213,8 @@ private:
 class SectorDataFromPhysicalTrack
 {
 public:
+    static constexpr const auto PHYSICAL_DATA_OVERHEAD = intsizeof(AddressMarkInTrack) + intsizeof(CrcInTrack);
+
     // Constructor for the case when physical data is processed first time.
     SectorDataFromPhysicalTrack(const Encoding& encoding, const ByteBitPosition& byteBitPositionFound, Data&& physicalData, bool dataSizeKnown)
         : physicalData(physicalData), encoding(encoding), byteBitPositionFound(byteBitPositionFound),
@@ -228,7 +230,7 @@ public:
 
     static constexpr int PhysicalSizeOf(const int dataSize)
     {
-        return intsizeof(AddressMarkInTrack) + dataSize + intsizeof(CrcInTrack);
+        return PHYSICAL_DATA_OVERHEAD + dataSize;
     }
 
     static constexpr bool IsSuitable(const int dataSize, const int availableBytes)
@@ -245,7 +247,7 @@ protected:
     // Select real data from physical data.
     static Data GetData(const Data& physicalData, const int physicalSize)
     {
-        if (physicalSize <= intsizeof(AddressMarkInTrack) + intsizeof(CrcInTrack))
+        if (physicalSize <= PHYSICAL_DATA_OVERHEAD)
             return Data();
         return Data(physicalData.begin() + intsizeof(AddressMarkInTrack), physicalData.begin() + physicalSize - intsizeof(CrcInTrack));
     }
