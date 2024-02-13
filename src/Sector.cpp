@@ -754,3 +754,79 @@ std::string Sectors::ToString(bool onlyRelevantData/* = true*/) const
     }
     return ss.str();
 }
+
+//////////////////////////////////////////////////////////////////////////////
+
+const UniqueSectors UniqueSectors::StableSectors() const
+{
+    UniqueSectors stableSectors;
+    std::copy_if(begin(), end(), std::inserter(stableSectors, stableSectors.end()),
+                 [&](const Sector& sector) {
+        if (sector.has_badidcrc())
+            return false;
+        // Checksummable 8k sector is considered in has_stable_data method.
+        return sector.has_stable_data();
+    });
+
+    return stableSectors;
+}
+
+bool UniqueSectors::Contains(const Sector& other_sector, const int other_tracklen) const
+{
+    return std::any_of(cbegin(), cend(), [&](const Sector& sectorI) {
+        return sectorI.has_same_record_properties(other_sector, other_tracklen);
+    });
+}
+
+bool UniqueSectors::AnyIdsNotContainedInThis(const Interval<int>& id_interval) const
+{
+    assert(id_interval.IsEmpty());
+
+    if (empty())
+        return true;
+
+    UniqueSectors not_contained_ids;
+    std::set<int> contained_ids;
+    std::for_each(begin(), end(), [&](const Sector& sector)
+    {
+        if (id_interval.Where(sector.header.sector) == BaseInterval::Within)
+            contained_ids.emplace(sector.header.sector);
+    });
+    for (auto id = id_interval.Left(); id <= id_interval.Right() ; id++)
+        if (contained_ids.find(id) == contained_ids.end())
+            return true;
+    return false;
+}
+
+std::string UniqueSectors::SectorIdsToString() const
+{
+    std::ostringstream ss;
+    bool writingStarted = false;
+    std::for_each(cbegin(), cend(), [&](const Sector& sector) {
+        if (writingStarted)
+            ss << ' ';
+        else
+            writingStarted = true;
+        ss << sector.header.sector;
+    });
+    return ss.str();
+}
+
+std::string UniqueSectors::ToString(bool onlyRelevantData/* = true*/) const
+{
+    std::ostringstream ss;
+    if (!onlyRelevantData || !empty())
+    {
+        bool writingStarted = false;
+        std::for_each(cbegin(), cend(), [&](const Sector& sector) {
+            if (writingStarted)
+                ss << ' ';
+            else
+                writingStarted = true;
+            ss << sector;
+        });
+    }
+    return ss.str();
+}
+
+//////////////////////////////////////////////////////////////////////////////

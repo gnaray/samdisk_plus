@@ -211,3 +211,37 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Sectors& sectors) { return os << to_string(sectors); }
+
+//////////////////////////////////////////////////////////////////////////////
+
+// A lhs sector is less than a rhs sector if its header is less or if the headers are same and its offset is less.
+struct SectorPreciseLess
+{
+    constexpr bool operator()(const Sector& lhs, const Sector& rhs) const
+    {
+        return lhs.header < rhs.header || (!(lhs.header > rhs.header) && lhs.offset < rhs.offset);
+    }
+};
+
+// Unique sectors based on the SectorPreciseLess method.
+class UniqueSectors : public std::set<Sector, SectorPreciseLess>
+{
+public:
+    using std::set<Sector, SectorPreciseLess>::set;
+
+    const UniqueSectors StableSectors() const;
+    bool Contains(const Sector& other_sector, const int other_tracklen) const;
+    bool AnyIdsNotContainedInThis(const Interval<int>& id_interval) const;
+    std::string SectorIdsToString() const;
+    std::string ToString(bool onlyRelevantData = true) const;
+    friend std::string to_string(const UniqueSectors& sectors, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << sectors.ToString(onlyRelevantData);
+        return ss.str();
+    }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const UniqueSectors& sectors) { return os << to_string(sectors); }
+
+//////////////////////////////////////////////////////////////////////////////
