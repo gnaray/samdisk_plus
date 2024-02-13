@@ -134,6 +134,8 @@ int Track::data_extent_bytes(const Sector& sector) const
 {
     // We only support real data extent for MFM and FM sectors.
     if (sector.encoding != Encoding::MFM && sector.encoding != Encoding::FM)
+    {
+        assert(sector.header.size != SIZECODE_UNKNOWN);
         return sector.size();
 
     const auto encoding_shift = (sector.encoding == Encoding::FM) ? 5 : 4;
@@ -146,6 +148,9 @@ int Track::data_extent_bytes(const Sector& sector) const
 bool Track::data_overlap(const Sector& sector) const
 {
     if (!sector.offset)
+        return false;
+
+    if (sector.header.size == SIZECODE_UNKNOWN)
         return false;
 
     return data_extent_bytes(sector) < sector.size();
@@ -413,6 +418,7 @@ Sector Track::remove(int index)
 const Sector& Track::get_sector(const Header& header) const
 {
     auto it = find(header);
+    assert(it == end() || it->header.size != SIZECODE_UNKNOWN);
     if (it == end() || it->data_size() < header.sector_size())
         throw util::exception(CylHead(header.cyl, header.head), " sector ", header.sector, " not found");
 
@@ -599,6 +605,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     sectorIdsAndOffsets.reserve(size()); // Size will be more if holes are found at the track end.
 
     const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time);
+    assert(operator[](0).header.size != SIZECODE_UNKNOWN);
     const auto sectorSize = operator[](0).size();
     const auto encoding = getEncoding();
     const auto predictedOverheadedSectorWithoutSyncAndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithoutSync(getDataRate(), encoding));
@@ -610,6 +617,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     for (int i = 0; i < iSup; i++)
     {
         const auto& sector = operator[](i);
+        assert(sector.header.size != SIZECODE_UNKNOWN);
         if (sector.size() != sectorSize) // Only same sized sectors are supported.
             return sectorIdsAndOffsets;
         if (opt_debug)
@@ -727,6 +735,7 @@ Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterat
     for (auto sector : ptrs)
     {
         assert(sector->copies() == 1);
+        assert(sector->header.size != SIZECODE_UNKNOWN);
         auto bytes = std::min(sector->size(), static_cast<int>(std::distance(it, itEnd)));
         std::copy_n(it, bytes, sector->data_copy(0).begin());
         it += bytes;

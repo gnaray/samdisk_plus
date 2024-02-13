@@ -3,6 +3,7 @@
 #include "Options.h"
 #include "CRC16.h"
 #include "DiskUtil.h"
+#include "Util.h"
 #include "PhysicalTrackMFM.h"
 
 #include <algorithm>
@@ -53,6 +54,7 @@ bool Sector::operator== (const Sector& sector) const
     if (sector.copies() == 0 || copies() == 0)
         return false;
 
+    assert(header.size != SIZECODE_UNKNOWN);
     // Both first sectors must have at least the natural size to compare
     if (sector.data_size() < sector.size() || data_size() < size())
         return false;
@@ -63,6 +65,8 @@ bool Sector::operator== (const Sector& sector) const
 
 int Sector::size() const
 {
+    assert(header.size != SIZECODE_UNKNOWN);
+
     return header.sector_size();
 }
 
@@ -216,7 +220,7 @@ Sector::Merge Sector::add_original(Data&& new_data, bool bad_crc/*=false*/, uint
 #ifdef _DEBUG
     // If there's enough data, check the CRC
     if ((encoding == Encoding::MFM || encoding == Encoding::FM) &&
-        new_data.size() >= size() + 2)
+            header.size != SIZECODE_UNKNOWN && new_data.size() >= size() + 2)
     {
         CRC16 crc;
         if (encoding == Encoding::MFM) crc.init(CRC16::A1A1A1);
@@ -551,16 +555,19 @@ bool Sector::has_good_data(bool consider_checksummable_8K/* = false*/, bool cons
 
 bool Sector::has_gapdata() const
 {
+    assert(header.size != SIZECODE_UNKNOWN);
     return data_size() > size();
 }
 
 bool Sector::has_shortdata() const
 {
+    assert(header.size != SIZECODE_UNKNOWN);
     return data_size() < size();
 }
 
 bool Sector::has_normaldata() const
 {
+    assert(header.size != SIZECODE_UNKNOWN);
     return data_size() == size();
 }
 
@@ -603,6 +610,7 @@ void Sector::set_baddatacrc(bool bad/* = true*/)
     {   // Convert set of bad data to good data or create new good data.
         const auto fill_byte = lossless_static_cast<uint8_t>((opt_fill >= 0) ? opt_fill : 0);
 
+        assert(header.size != SIZECODE_UNKNOWN);
         if (!has_data())
         {
             m_data.push_back(Data(size(), fill_byte));
@@ -704,6 +712,7 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
 
     for (auto& data : m_data)
     {
+        assert(header.size != SIZECODE_UNKNOWN);
         // If requested, attempt to preserve CRC bytes on bad sectors.
         if (keep_crc && has_baddatacrc() && data.size() >= (size() + 2))
             data.resize(size() + 2);
