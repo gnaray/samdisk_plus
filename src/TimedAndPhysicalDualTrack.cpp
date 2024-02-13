@@ -11,9 +11,9 @@ bool TimedAndPhysicalDualTrack::SyncAndDemultiPhysicalToTimed(const int trackLen
     lastTimedAndPhysicalTrackSingleLocal.syncAndDemultiThisTrackToOffset(0, trackLen, false); // Only demulting here.
     // Sync by Time and Physical diff.
     int syncOffset;
-    if (!lastTimedAndPhysicalTrackSingleLocal.track.findSyncOffsetComparedTo(timedTrack, syncOffset)) // Can not sync.
+    if (!lastTimedAndPhysicalTrackSingleLocal.track.findSyncOffsetComparedTo(timedIdTrack, syncOffset)) // Can not sync.
         return false;
     lastTimedAndPhysicalTrackSingleLocal.syncAndDemultiThisTrackToOffset(syncOffset, trackLen, true); // Only syncing here.
-    lastTimedAndPhysicalTrackSingle = std::move(lastTimedAndPhysicalTrackSingleLocal);
+    lastTimeSyncedPhysicalTrackSingle = std::move(lastTimedAndPhysicalTrackSingleLocal);
     return true;
 }

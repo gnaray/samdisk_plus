@@ -612,12 +612,12 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
             if (m_trackInfo[cylhead].trackLenIdeal > 0)
                 newTimedTrack.setTrackLenAndNormaliseTrackTimeAndSectorOffsets(m_trackInfo[cylhead].trackLenIdeal);
 
-            const auto sectorAmountPrev = timedAndPhysicalDualTrack.timedTrack.size();
-            timedAndPhysicalDualTrack.timedTrack.add(std::move(newTimedTrack));
-            if (timedAndPhysicalDualTrack.timedTrack.size() > sectorAmountPrev)
+            const auto sectorAmountPrev = timedAndPhysicalDualTrack.timedIdTrack.size();
+            timedAndPhysicalDualTrack.timedIdTrack.add(std::move(newTimedTrack));
+            if (timedAndPhysicalDualTrack.timedIdTrack.size() > sectorAmountPrev)
             {
                 deviceReadingPolicyForScanning = deviceReadingPolicy;
-                deviceReadingPolicyForScanning.AddSkippableSectors(timedAndPhysicalDualTrack.timedTrack.good_idcrc_sectors());
+                deviceReadingPolicyForScanning.AddSkippableSectors(timedAndPhysicalDualTrack.timedIdTrack.good_idcrc_sectors());
                 if (timedTrackRescans.sinceLastChange)
                     timedTrackRescans = opt_rescans;
             }
@@ -630,25 +630,25 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
         bool foundNewSector = physicalTrackRescans >= 0 && ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack);
         if (m_trackInfo[cylhead].trackLenIdeal > 0 && (foundNewSector || timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.empty()))
         {
-            if (timedAndPhysicalDualTrack.SyncAndDemultiPhysicalToTimed(m_trackInfo[cylhead].trackLenIdeal)) // Updates lastTimedAndPhysicalTrackSingle.
+            if (timedAndPhysicalDualTrack.SyncAndDemultiPhysicalToTimed(m_trackInfo[cylhead].trackLenIdeal)) // Updates lastTimeSyncedPhysicalTrackSingle.
             {
-                const auto sectorAmountPrev = timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack.size();
+                const auto sectorAmountPrev = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size();
                 // Merging last timed and physical track with timed track and orphan ids into final timed and physical track.
-                auto finalTimedAndAndPhysicalTrackLocal = timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.track;
-                finalTimedAndAndPhysicalTrackLocal.add(Track(timedAndPhysicalDualTrack.timedTrack));
+                auto finalTimedAndAndPhysicalTrackLocal = timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.track;
+                finalTimedAndAndPhysicalTrackLocal.add(Track(timedAndPhysicalDualTrack.timedIdTrack));
                 GuessAndAddSectorIdsOfOrphans(finalTimedAndAndPhysicalTrackLocal, timedAndPhysicalDualTrack);
-                finalTimedAndAndPhysicalTrackLocal.add(std::move(timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack));
-                timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack = finalTimedAndAndPhysicalTrackLocal;
-                if (timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack.size() > sectorAmountPrev)
+                finalTimedAndAndPhysicalTrackLocal.add(std::move(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack));
+                timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack = finalTimedAndAndPhysicalTrackLocal;
+                if (timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size() > sectorAmountPrev)
                 {
                     deviceReadingPolicyForScanning = deviceReadingPolicy;
-                    deviceReadingPolicyForScanning.AddSkippableSectors(timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack.good_idcrc_sectors());
+                    deviceReadingPolicyForScanning.AddSkippableSectors(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.good_idcrc_sectors());
                 }
             }
         }
         if (!deviceReadingPolicyForScanning.WantMoreSectors())
         {
-            DiscardOufOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack);
+            DiscardOufOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack);
             if (ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy))
                 break; // Scanning and reading is complete.
         }
@@ -659,7 +659,7 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
         }
     } while (physicalTrackRescans-- > 0);
 
-    DiscardOufOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack);
+    DiscardOufOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack);
     ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy);
 
     return timedAndPhysicalDualTrack;
@@ -729,7 +729,7 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysic
 
 /*static*/ bool FdrawSysDevDisk::GetSectorDataFromPhysicalTrack(TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const int index)
 {
-    auto& finalTrack = timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack;
+    auto& finalTrack = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack;
     auto& sector = finalTrack[index];
 
     if (sector.has_badidcrc())
@@ -777,17 +777,17 @@ bool FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTr
     const auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
 
     bool allDataGood = true;
-    const auto iSup = timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack.size();
+    const auto iSup = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size();
     for (int j = 0; j < 2; j++)
     {
         for (int i = j; i < iSup; i += 2)
         {
-            const auto& sector = timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack[i];
-            if ((!deviceReadingPolicy.SkippableSectors().Contains(sector, timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack.tracklen)
+            const auto& sector = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack[i];
+            if ((!deviceReadingPolicy.SkippableSectors().Contains(sector, timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.tracklen)
                  && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end))))
             {
                 if (sector.read_attempts() == 0)
-                    ReadSector(cylhead, timedAndPhysicalDualTrack.finalTimedAndPhysicalTrack, i, 0);
+                    ReadSector(cylhead, timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack, i, 0);
                 if (!GetSectorDataFromPhysicalTrack(timedAndPhysicalDualTrack, i))
                     allDataGood = false; // Sector is still not good.
             }
@@ -816,8 +816,8 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
         if (bestTrackLen > 0)
         {
             m_trackInfo[cylhead].trackLenIdeal = bestTrackLen;
-            if (timedAndPhysicalDualTrack.timedTrack.tracklen > 0)
-                timedAndPhysicalDualTrack.timedTrack.setTrackLenAndNormaliseTrackTimeAndSectorOffsets(m_trackInfo[cylhead].trackLenIdeal);
+            if (timedAndPhysicalDualTrack.timedIdTrack.tracklen > 0)
+                timedAndPhysicalDualTrack.timedIdTrack.setTrackLenAndNormaliseTrackTimeAndSectorOffsets(m_trackInfo[cylhead].trackLenIdeal);
         }
     }
     return foundNewSector;

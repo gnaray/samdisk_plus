@@ -10,10 +10,11 @@ class TimedAndPhysicalDualTrack
 public:
     bool SyncAndDemultiPhysicalToTimed(const int trackLen);
 
-    Track timedTrack{};
+    Track timedIdTrack{};
     OrphanDataCapableTrack physicalTrackMulti{};
-    OrphanDataCapableTrack lastTimedAndPhysicalTrackSingle{}; // It is the last result of SyncAndDemultiAndPhysicalToTimed created from physicalTrackMulti.
-    Track finalTimedAndPhysicalTrack{};
+    OrphanDataCapableTrack lastTimeSyncedPhysicalTrackSingle{}; // It is the last result of SyncAndDemultiAndPhysicalToTimed created from physicalTrackMulti.
+    Track timedIdDataAndPhysicalIdTrack{};
+    Track finalAllInTrack{};
 };
 
 //---------------------------------------------------------------------------
