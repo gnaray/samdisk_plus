@@ -8,33 +8,33 @@ class DeviceReadingPolicy
 public:
     DeviceReadingPolicy() = default;
 
-    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds)
-        : DeviceReadingPolicy(wantedSectorHeaderIds, true)
+    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderSectors)
+        : DeviceReadingPolicy(wantedSectorHeaderSectors, true)
     {
     }
 
-    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds, bool lookForPossibleSectors)
-        : m_wantedSectorHeaderIds(wantedSectorHeaderIds), m_lookForPossibleSectors(lookForPossibleSectors)
+    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderSectors, bool lookForPossibleSectors)
+        : m_wantedSectorHeaderSectors(wantedSectorHeaderSectors), m_lookForPossibleSectors(lookForPossibleSectors)
     {
-        assert(!m_wantedSectorHeaderIds.IsEmpty() || lookForPossibleSectors);
+        assert(!m_wantedSectorHeaderSectors.IsEmpty() || lookForPossibleSectors);
     }
 
-    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds, const UniqueSectors& skippableSectors, bool lookForPossibleSectors = true)
-        : DeviceReadingPolicy(wantedSectorHeaderIds, lookForPossibleSectors)
+    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderSectors, const UniqueSectors& skippableSectors, bool lookForPossibleSectors = true)
+        : DeviceReadingPolicy(wantedSectorHeaderSectors, lookForPossibleSectors)
     {
         m_skippableSectors = skippableSectors;
     }
 
-    const Interval<int>& WantedSectorHeaderIds() const
+    const Interval<int>& WantedSectorHeaderSectors() const
     {
-        return m_wantedSectorHeaderIds;
+        return m_wantedSectorHeaderSectors;
     }
 
-    void SetWantedSectorHeaderIds(const Interval<int>& wantedSectorHeaderIds)
+    void SetWantedSectorHeaderSectors(const Interval<int>& wantedSectorHeaderSectors)
     {
-        m_wantedSectorHeaderIds = wantedSectorHeaderIds;
-        m_unskippableWantedSectorHeaderIdsValid = false;
-        if (m_wantedSectorHeaderIds.IsEmpty())
+        m_wantedSectorHeaderSectors = wantedSectorHeaderSectors;
+        m_unskippableWantedSectorHeaderSectorsValid = false;
+        if (m_wantedSectorHeaderSectors.IsEmpty())
             m_lookForPossibleSectors = true;
     }
 
@@ -46,19 +46,19 @@ public:
     void SetSkippableSectors(const UniqueSectors& skippableSectors)
     {
         m_skippableSectors = skippableSectors;
-        m_unskippableWantedSectorHeaderIdsValid = false;
+        m_unskippableWantedSectorHeaderSectorsValid = false;
     }
 
     void AddSkippableSectors(const UniqueSectors& skippableSectors)
     {
         m_skippableSectors.insert(skippableSectors.begin(), skippableSectors.end());
-        m_unskippableWantedSectorHeaderIdsValid = false;
+        m_unskippableWantedSectorHeaderSectorsValid = false;
     }
 
     void ClearSkippableSectors()
     {
         m_skippableSectors.clear();
-        m_unskippableWantedSectorHeaderIdsValid = false;
+        m_unskippableWantedSectorHeaderSectorsValid = false;
     }
 
     bool LookForPossibleSectors() const
@@ -74,18 +74,18 @@ public:
 protected:
     bool UnskippableWantedSectorHeaderIdsEmpty() const
     {
-        if (!m_unskippableWantedSectorHeaderIdsValid)
+        if (!m_unskippableWantedSectorHeaderSectorsValid)
         {
-            m_unskippableWantedSectorHeaderIdsEmpty = m_skippableSectors.AnyIdsNotContainedInThis(m_wantedSectorHeaderIds);
-            m_unskippableWantedSectorHeaderIdsValid = true;
+            m_unskippableWantedSectorHeaderSectorsEmpty = m_skippableSectors.AnyIdsNotContainedInThis(m_wantedSectorHeaderSectors);
+            m_unskippableWantedSectorHeaderSectorsValid = true;
         }
-        return m_unskippableWantedSectorHeaderIdsEmpty;
+        return m_unskippableWantedSectorHeaderSectorsEmpty;
     }
 
 public:
     bool WantMoreSectors() const
     {
-        return (LookForPossibleSectors() // else m_wantedSectorHeaderIds is not empty.
+        return (LookForPossibleSectors() // else m_wantedSectorHeaderSectors is not empty.
                 || !UnskippableWantedSectorHeaderIdsEmpty());
     }
 
@@ -93,10 +93,10 @@ public:
     {
         std::ostringstream ss;
         bool writingStarted = false;
-        std::string s = to_string(deviceReadingPolicy.m_wantedSectorHeaderIds, onlyRelevantData);
+        std::string s = to_string(deviceReadingPolicy.m_wantedSectorHeaderSectors, onlyRelevantData);
         if (!onlyRelevantData || !s.empty())
         {
-            ss << "Wanted sector ids = " << s;
+            ss << "Wanted sector header sectors = {" << s << "}";
             writingStarted = true;
         }
         s = to_string(deviceReadingPolicy.m_skippableSectors, onlyRelevantData);
@@ -117,10 +117,10 @@ public:
     }
 
 protected:
-    Interval<int> m_wantedSectorHeaderIds{};
+    Interval<int> m_wantedSectorHeaderSectors{};
     UniqueSectors m_skippableSectors{};
-    mutable bool m_unskippableWantedSectorHeaderIdsEmpty = false; // Dynamically calculated.
-    mutable bool m_unskippableWantedSectorHeaderIdsValid = false; // Dynamically signs that corresponding value is valid.
+    mutable bool m_unskippableWantedSectorHeaderSectorsEmpty = false; // Dynamically calculated.
+    mutable bool m_unskippableWantedSectorHeaderSectorsValid = false; // Dynamically signs that corresponding value is valid.
     bool m_lookForPossibleSectors = true;
 };
 

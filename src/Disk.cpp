@@ -346,7 +346,7 @@ const Sector* Disk::find_ignoring_size(const Header& header)
 
     const bool repairMode = transferMode == Repair;
     const bool skip_stable_sectors = opt_skip_stable_sectors && !src_disk.is_constant_disk() ? true : false;
-    DeviceReadingPolicy deviceReadingPolicyLocal{deviceReadingPolicy.WantedSectorHeaderIds(), deviceReadingPolicy.LookForPossibleSectors()};
+    DeviceReadingPolicy deviceReadingPolicyLocal{deviceReadingPolicy.WantedSectorHeaderSectors(), deviceReadingPolicy.LookForPossibleSectors()};
 
     TrackData dst_data;
     if (repairMode) // Read dst track early so we can check if it has bad sectors.

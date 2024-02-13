@@ -109,8 +109,8 @@ void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDet
     }
     if (transferDiskFormatPriority >= FormatPriority::NormalDstImage)
     {
-        deviceReadingPolicy.SetLookForPossibleSectors(false); // TODO What should turn this on if user wants?
-        deviceReadingPolicy.SetWantedSectorHeaderIds(Interval<int>{transferDiskFormat.base, transferDiskFormat.sectors, BaseInterval::LeftAndSize});
+        deviceReadingPolicy.SetLookForPossibleSectors(false); // TODO What should turn this on if user wants (reading a known format but with special disk protection sector)?
+        deviceReadingPolicy.SetWantedSectorHeaderSectors(Interval<int>{transferDiskFormat.base, transferDiskFormat.sectors, BaseInterval::LeftAndSize});
         if (transferDiskFormatPriority >= FormatPriority::SrcDevFS)
         {
             if (!diskRangeCylsOverriden)
