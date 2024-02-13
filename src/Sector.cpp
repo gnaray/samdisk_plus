@@ -721,15 +721,16 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
     }
 }
 
+// Looking for parent sector id by offset. It means this sector is orphan and its offset is data offset.
 int Sector::FindParentSectorIdByOffset(const IdAndOffsetVector& sectorIdsAndOffsets) const
 {
-    const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time);
     for (const auto& idAndOffset : sectorIdsAndOffsets)
     {
-        if (idAndOffset.offset >= offset)
-            break;
-        if (offset - idAndOffset.offset <= optByteToleranceBits)
+        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(idAndOffset.offset, offset, datarate, encoding);
+        if (cohereResult == CohereResult::DataCoheres)
             return idAndOffset.id;
+        if (cohereResult == CohereResult::DataTooEarly)
+            break;
     }
 
     return -1;
