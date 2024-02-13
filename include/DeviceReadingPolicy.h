@@ -2,26 +2,27 @@
 
 #include "Sector.h"
 
+// If wanted sector header ids is empty then it implies looking for possible sectors.
 class DeviceReadingPolicy
 {
 public:
     DeviceReadingPolicy() = default;
 
     DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds)
-        : m_wantedSectorHeaderIds(wantedSectorHeaderIds)
+        : DeviceReadingPolicy(wantedSectorHeaderIds, true)
     {
     }
 
     DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds, bool lookForPossibleSectors)
         : m_wantedSectorHeaderIds(wantedSectorHeaderIds), m_lookForPossibleSectors(lookForPossibleSectors)
     {
+        assert(!m_wantedSectorHeaderIds.IsEmpty() || lookForPossibleSectors);
     }
 
     DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds, const UniqueSectors& skippableSectors, bool lookForPossibleSectors = true)
-        : m_wantedSectorHeaderIds(wantedSectorHeaderIds), m_skippableSectors(skippableSectors),
-          m_unskippableWantedSectorHeaderIdsValid(false), m_lookForPossibleSectors(lookForPossibleSectors)
-
+        : DeviceReadingPolicy(wantedSectorHeaderIds, lookForPossibleSectors)
     {
+        m_skippableSectors = skippableSectors;
     }
 
     const Interval<int>& WantedSectorHeaderIds() const
@@ -33,6 +34,8 @@ public:
     {
         m_wantedSectorHeaderIds = wantedSectorHeaderIds;
         m_unskippableWantedSectorHeaderIdsValid = false;
+        if (m_wantedSectorHeaderIds.IsEmpty())
+            m_lookForPossibleSectors = true;
     }
 
     const UniqueSectors& SkippableSectors() const
