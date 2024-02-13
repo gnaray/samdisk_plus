@@ -115,7 +115,7 @@ constexpr bool PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
         const SectorDataFromPhysicalTrack sectorData(encoding, byteBitPositionDAM, std::move(sectorDataInPhysicalTrackBytes), true);
         const bool data_crc_error = sectorData.badCrc;
         const auto dam = sectorData.addressMark;
-        sector.add_with_readstats(sectorData.GetData(), data_crc_error, dam);
+        sector.add(sectorData.GetData(), data_crc_error, dam);
     }
     else
     {   // Sector id not found, setting orphan's data from DAM until first overhead byte of next ?AM (or track end if there is no next ?AM).
@@ -145,7 +145,7 @@ constexpr bool PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
         const auto dam = sectorData.addressMark;
         if (opt_debug)
             util::cout << "physical_track_mfm_fm " << encoding << " DAM (am=" << dam << ") at offset " << orphanSector.offset << " without IDAM\n";
-        orphanSector.add_with_readstats(std::move(sectorData.physicalData), data_crc_error, dam);
+        orphanSector.add(std::move(sectorData.physicalData), data_crc_error, dam);
     }
 }
 // ====================================

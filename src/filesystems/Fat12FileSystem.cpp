@@ -514,7 +514,7 @@ bool Fat12FileSystem::EnsureBootSector()
     {
         Data new_boot_sector_data(format.sector_size(), format.fill);
         std::copy(MISSING_SECTOR_SIGN.begin(), MISSING_SECTOR_SIGN.end(), new_boot_sector_data.begin()); // Signing sector with MISS.
-        bootSectorNew.add_with_readstats(std::move(new_boot_sector_data), true); // Flagging sector as bad so it can be repaired in the future.
+        bootSectorNew.add(std::move(new_boot_sector_data), true); // Flagging sector as bad so it can be repaired in the future.
     }
     disk.write(BOOT_SECTOR_CYLHEAD, std::move(track00));
     return true;

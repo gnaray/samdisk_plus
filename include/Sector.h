@@ -128,9 +128,12 @@ public:
     void set_constant_disk(bool constant_disk);
     void fix_readstats();
 
-    Merge add(Data&& data, bool bad_crc = false, uint8_t dam = IBM_DAM, int* affected_data_index = nullptr, DataReadStats* improved_data_read_stats = nullptr);
-    Merge add_with_readstats(Data&& new_data, bool new_bad_crc = false, uint8_t new_dam = IBM_DAM,
+protected:
+    Merge add_original(Data&& data, bool bad_crc = false, uint8_t dam = IBM_DAM, int* affected_data_index = nullptr, DataReadStats* improved_data_read_stats = nullptr);
+
+public:
     void assign(Data&& data);
+    Merge add(Data&& new_data, bool new_bad_crc = false, uint8_t new_dam = IBM_DAM,
         int new_read_attempts = 1, const DataReadStats& new_data_read_stats = DataReadStats(1), bool readstats_counter_mode = true, bool update_this_read_attempts = true);
     int copies() const;
     void add_read_stats(int instance, DataReadStats&& data_read_stats);

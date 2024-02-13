@@ -544,7 +544,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
             {
                 if (file_has_readstats)
                     EdskReadstatsElement::TransferFromFileToSector(file, cylhead, sector);
-                else if (opt_readstats)
+                else
                     sector.fix_readstats();
             }
 

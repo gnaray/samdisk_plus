@@ -408,7 +408,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? IBM_DAM_DELETED : IBM_DAM;
 
         Data data(mem.pb, mem.pb + mem.size);
-        sector.add_with_readstats(std::move(data), data_crc_error, dam);
+        sector.add(std::move(data), data_crc_error, dam);
 
         // If the read command was successful we're all done.
         if ((result.st0 & STREG0_INTERRUPT_CODE) == 0)
@@ -762,7 +762,7 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysic
         const auto dam = it->dam;
         if (!badCrc)
         {
-            sector.add_with_readstats(std::move(sectorData), badCrc, dam);
+            sector.add(std::move(sectorData), badCrc, dam);
             timedAndPhysicalDualTrack.lastTimedAndPhysicalTrackSingle.orphanDataTrack.sectors().erase(it); // Remove it so it will not be counted again in readstats.
             return true;
         }

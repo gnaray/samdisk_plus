@@ -13,7 +13,6 @@ static auto& opt_fill = getOpt<int>("fill");
 static auto& opt_maxcopies = getOpt<int>("maxcopies");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_paranoia = getOpt<bool>("paranoia");
-static auto& opt_readstats = getOpt<bool>("readstats");
 static auto& opt_stability_level = getOpt<int>("stability_level");
 
 Sector::Sector(DataRate datarate_, Encoding encoding_, const Header& header_, int gap3_)
@@ -127,8 +126,6 @@ int Sector::get_data_best_copy_index() const
 {
     if (!has_data())
         return -1;
-    if (!opt_readstats)
-        return 0;
 
     return static_cast<int>(std::max_element(m_data_read_stats.begin(), m_data_read_stats.end(),
                             [](const DataReadStats& a, const DataReadStats& b) { return a.ReadCount() < b.ReadCount(); })
@@ -173,10 +170,11 @@ void Sector::set_constant_disk(bool constant_disk)
 
 void Sector::fix_readstats()
 {
-    // Trying to upgrade sector to have data read stats as if the datas were read once in case readstats is requested
-    // but sectors do not have read stats yet. This case is detectable by existing copies but no read stats.
+    // Fixing sector to have data read stats in case it does not have. Older
+    // image files know nothing about readstats thus fixing is necessary.
+    // This case is detectable by existing copies but no read stats.
     const auto data_copies = copies();
-    if (opt_readstats && data_copies > 0 && m_data_read_stats.size() == 0)
+    if (data_copies > 0 && m_data_read_stats.size() == 0)
     {
         m_data_read_stats.resize(static_cast<size_t>(data_copies), DataReadStats(1));
         m_read_attempts = data_copies;
@@ -198,7 +196,13 @@ void Sector::set_read_stats(int instance, DataReadStats&& data_read_stats)
     m_data_read_stats[instance] = std::move(data_read_stats);
 }
 
-Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/, int* affected_data_index/*=nullptr*/,
+/* Return values.
+ * - Unchanged: The new data is ignored, it is not counted in read stats.
+ * - Matched: The new data is not added because it exists but counted in read stats.
+ * - Improved: The new data is replacing an old data, counted in read stats.
+ * - NewData: The new data is added and all old data is discarded, counted in read stats.
+ */
+Sector::Merge Sector::add_original(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/, int* affected_data_index/*=nullptr*/,
     DataReadStats* improved_data_read_stats/*=nullptr*/)
 {
     Merge ret = Merge::NewData;
@@ -262,8 +266,6 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
     // The goal is keeping only 1 optimal sized data amongst those having matching content.
     // Optimal sized: complete size else smallest above complete size else biggest below complete size.
     const auto i_sup = m_data.size();
-    auto affected_data_index_local = -1;
-    DataReadStats improved_data_read_stats_local;
     for (auto i = 0; i < i_sup; i++)
     {
         const auto& data = m_data[i];
@@ -272,21 +274,21 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
         {
             if (data.size() == new_data.size())
             {
-                affected_data_index_local = i;
-                ret = Merge::Matched; // was Unchanged;
-                break;
+                if (affected_data_index != nullptr)
+                    *affected_data_index = i;
+                return Merge::Matched; // was Unchanged;
             }
             if (new_data.size() < data.size())
             {
                 if (new_data.size() < complete_size)
                 {
-                    affected_data_index_local = i;
-                    ret = Merge::Matched; // was Unchanged;
-                    break;
+                    if (affected_data_index != nullptr)
+                        *affected_data_index = i;
+                    return Merge::Matched; // was Unchanged;
                 }
                 // The new shorter complete copy replaces the existing data.
                 if (improved_data_read_stats != nullptr)
-                    improved_data_read_stats_local = m_data_read_stats[i];
+                    *improved_data_read_stats = m_data_read_stats[i];
                 erase_data(i--);
                 ret = Merge::Improved;
                 break; // Not continuing. See the goal above.
@@ -295,24 +297,18 @@ Sector::Merge Sector::add(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_d
             {
                 if (data.size() >= complete_size)
                 {
-                    affected_data_index_local = i;
-                    ret = Merge::Matched; // was Unchanged;
-                    break;
+                    if (affected_data_index != nullptr)
+                        *affected_data_index = i;
+                    return Merge::Matched; // was Unchanged;
                 }
                 // The new longer complete copy replaces the existing data.
                 if (improved_data_read_stats != nullptr)
-                    improved_data_read_stats_local = m_data_read_stats[i];
+                    *improved_data_read_stats = m_data_read_stats[i];
                 erase_data(i--);
                 ret = Merge::Improved;
                 break; // Not continuing. See the goal above.
             }
         }
-    }
-    if (ret == Merge::Matched)
-    {
-        if (affected_data_index != nullptr)
-            *affected_data_index = affected_data_index_local;
-        return ret;
     }
 
     // Will we now have multiple copies?
@@ -371,22 +367,18 @@ void Sector::assign(Data&& data)
     m_data_read_stats.resize(data_copies, DataReadStats(1));
 }
 
-Sector::Merge Sector::add_with_readstats(Data&& new_data, bool new_bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/,
+Sector::Merge Sector::add(Data&& new_data, bool new_bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/,
     int new_read_attempts/*=1*/, const DataReadStats& new_data_read_stats/*=DataReadStats(1)*/,
     bool readstats_counter_mode/*= true*/, bool update_this_read_attempts/*=true*/)
 {
-    if (opt_readstats)
-    {
-        auto affected_data_index = -1;
-        DataReadStats improved_data_read_stats;
-        auto ret = add(std::move(new_data), new_bad_crc, new_dam, &affected_data_index, &improved_data_read_stats);
-        process_merge_result(ret, new_read_attempts, new_data_read_stats, readstats_counter_mode,
-            affected_data_index, improved_data_read_stats);
-        if (update_this_read_attempts)
-            m_read_attempts += new_read_attempts;
-        return ret;
-    }
-    return add(std::move(new_data), new_bad_crc, new_dam);
+    auto affected_data_index = -1;
+    DataReadStats improved_data_read_stats;
+    const auto ret = add_original(std::move(new_data), new_bad_crc, new_dam, &affected_data_index, &improved_data_read_stats);
+    process_merge_result(ret, new_read_attempts, new_data_read_stats, readstats_counter_mode,
+        affected_data_index, improved_data_read_stats);
+    if (update_this_read_attempts)
+        m_read_attempts += new_read_attempts;
+    return ret;
 }
 
 void Sector::process_merge_result(const Merge& ret, int new_read_attempts, const DataReadStats& new_data_read_stats,
@@ -450,8 +442,7 @@ Sector::Merge Sector::merge(Sector&& sector)
     // We can't repair good data with bad
     if (!has_baddatacrc() && sector.has_baddatacrc())
     {
-        if (opt_readstats)
-            m_read_attempts += sector.m_read_attempts;
+        m_read_attempts += sector.m_read_attempts;
         return ret;
     }
 
@@ -459,26 +450,18 @@ Sector::Merge Sector::merge(Sector&& sector)
     const auto i_sup = sector.copies();
     for (auto i = 0; i < i_sup; i++)
     {
-        Sector::Merge add_ret;
         // Move the data into place, passing on the existing data CRC status and DAM
-        if (opt_readstats)
-            add_ret = add_with_readstats(std::move(sector.m_data[i]),
-                    sector.has_baddatacrc(), sector.dam, sector.m_read_attempts,
-                    sector.m_data_read_stats[i],
-                    !sector.is_constant_disk(), false);
-        else
-            add_ret = add(std::move(sector.m_data[i]), sector.has_baddatacrc(), sector.dam);
+        const auto add_ret = add(std::move(sector.m_data[i]),
+                sector.has_baddatacrc(), sector.dam, sector.m_read_attempts,
+                sector.m_data_read_stats[i],
+                !sector.is_constant_disk(), false);
         if (add_ret != Merge::Unchanged)
         {
             if (ret == Merge::Unchanged || ret == Merge::Matched || (ret == Merge::Improved && add_ret == Merge::NewData))
                 ret = add_ret;
         }
     }
-    if (opt_readstats)
-        m_read_attempts += sector.m_read_attempts;
-
-    sector.m_data.clear();
-    sector.m_data_read_stats.clear();
+    m_read_attempts += sector.m_read_attempts;
 
     return ret;
 }
@@ -574,8 +557,7 @@ void Sector::set_baddatacrc(bool bad/* = true*/)
 void Sector::erase_data(int instance)
 {
     m_data.erase(m_data.begin() + instance);
-    if (!m_data_read_stats.empty()) // It can be empty if readstats are not requested by user.
-        m_data_read_stats.erase(m_data_read_stats.begin() + instance);
+    m_data_read_stats.erase(m_data_read_stats.begin() + instance);
 }
 
 void Sector::resize_data(int count)
