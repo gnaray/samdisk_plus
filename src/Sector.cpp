@@ -178,7 +178,7 @@ void Sector::fix_readstats()
     const auto data_copies = copies();
     if (data_copies > 0 && m_data_read_stats.size() == 0)
     {
-        m_data_read_stats.resize(static_cast<size_t>(data_copies), DataReadStats(1));
+        m_data_read_stats.resize(data_copies, DataReadStats(1));
         m_read_attempts = data_copies;
     }
 }
