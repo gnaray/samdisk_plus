@@ -786,7 +786,7 @@ Sectors::const_iterator Track::find(const Header& header, const DataRate datarat
         });
 }
 
-Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const int sizeCode, bool findClosest/* = true*/) const
+Sectors::const_iterator Track::findSectorForDataFmOrMfm(const int dataOffset, const int sizeCode, bool findClosest/* = true*/) const
 {
     if (empty())
         return end();

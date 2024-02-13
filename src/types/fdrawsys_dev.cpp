@@ -697,7 +697,7 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysic
             util::cout << "GuessAndAddSectorIdsOfOrphans: processing sector, offset=" << orphanDataSector.offset << ", ID=" << orphanDataSector.header.sector << "\n";
 
         // Find any sector id which coheres, it does not matter if closest or not.
-        const auto it = track.findForDataFmOrMfm(orphanDataSector.offset, orphanDataSector.header.size);
+        const auto it = track.findSectorForDataFmOrMfm(orphanDataSector.offset, orphanDataSector.header.size);
         // If not found sector id then let us guess it.
         if (it == track.end()) // The end is dynamic since adding sector to track.
         {
