@@ -419,7 +419,7 @@ const Sector& Track::get_sector(const Header& header) const
 {
     auto it = find(header);
     assert(it == end() || it->header.size != SIZECODE_UNKNOWN);
-    if (it == end() || it->data_size() < header.sector_size())
+    if (it == end() || it->data_size() < it->size())
         throw util::exception(CylHead(header.cyl, header.head), " sector ", header.sector, " not found");
 
     return *it;
