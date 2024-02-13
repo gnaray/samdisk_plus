@@ -248,11 +248,13 @@ inline int GetFmOrMfmSectorOverheadWithGap3(const DataRate& datarate, const Enco
     return GetFmOrMfmSectorOverhead(datarate, encoding, dataSize, short_mfm_gap) + GetFmOrMfmGap3Length(short_mfm_gap);
 }
 
-constexpr bool DoSectorIdAndDataOffsetsCohere(
+enum class CohereResult { DataTooEarly, DataCoheres, DataTooLate };
+
+constexpr CohereResult DoSectorIdAndDataOffsetsCohere(
         const int sectorIdOffset, const int dataOffset, const DataRate& dataRate, const Encoding& encoding)
 {
     if (sectorIdOffset >= dataOffset) // The data must be behind the sector id.
-        return false;
+        return CohereResult::DataTooEarly;
     // This code is taken from Samdisk/BitstreamDecoder where every databit is
     // stored as two bits (in addition every FM encoded bit is stored as two rawbits).
     // We also calculate with bits here though the code is slightly modified.
@@ -262,5 +264,9 @@ constexpr bool DoSectorIdAndDataOffsetsCohere(
     const auto max_distance = DataBytePositionAsBitOffset(idam_am_distance + 8); // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
 
     const auto sectorIdAndDataOffsetDistance = dataOffset - sectorIdOffset;
-    return sectorIdAndDataOffsetDistance >= min_distance && sectorIdAndDataOffsetDistance <= max_distance;
+    if (sectorIdAndDataOffsetDistance < min_distance)
+        return CohereResult::DataTooEarly;
+    if (sectorIdAndDataOffsetDistance > max_distance)
+        return CohereResult::DataTooLate;
+    return CohereResult::DataCoheres;
 }

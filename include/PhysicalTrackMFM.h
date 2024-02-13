@@ -111,7 +111,7 @@ public:
     {
     }
 
-    constexpr bool DoSectorIdAndDataOffsetsCohere(const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const;
+    constexpr CohereResult DoSectorIdAndDataOffsetsCohere(const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const;
 
     CylHead cylHead;
     DataRate dataRate = DataRate::Unknown;

@@ -16,7 +16,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 // ====================================
 
-constexpr bool PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
+constexpr CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
         const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const
 {
     return ::DoSectorIdAndDataOffsetsCohere(sectorIdOffset, dataOffset, dataRate, encoding);
@@ -238,7 +238,7 @@ void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataC
         // Find the closest sector id which coheres.
         while (sectorIdsIndex < sectorIdsIndexSup && (sectorOffset = orphanDataCapableTrack.track[sectorIdsIndex].offset) < orphanSector.offset)
         {
-            if (physicalTrackContext.DoSectorIdAndDataOffsetsCohere(sectorOffset, orphanSector.offset, orphanSector.encoding))
+            if (physicalTrackContext.DoSectorIdAndDataOffsetsCohere(sectorOffset, orphanSector.offset, orphanSector.encoding) == CohereResult::DataCoheres)
                 parentSectorIndexFound = true;
             sectorIdsIndex++;
         }
