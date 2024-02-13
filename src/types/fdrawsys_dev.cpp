@@ -697,6 +697,7 @@ void FdrawSysDevDisk::DiscardOutOfSpaceSectorsAtTrackEnd(Track& track) const
         {
             auto it = track.rbegin();
             const auto& sector = *it;
+            assert(sector.header.size != SIZECODE_UNKNOWN);
             const auto lengthWithoutOuterGaps = GetFmOrMfmSectorOverheadFromOffsetToDataCrcEnd(sector.datarate, sector.encoding, sector.size());
             if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps) < track.tracklen) // It fits, no more problem.
                 break;
