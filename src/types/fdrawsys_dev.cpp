@@ -404,7 +404,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
             continue;
         }
 
-        bool data_crc_error{ (result.st2 & STREG2_DATA_ERROR_IN_DATA_FIELD) != 0 };
+        bool data_crc_error =(result.st2 & STREG2_DATA_ERROR_IN_DATA_FIELD) != 0;
         uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? IBM_DAM_DELETED : IBM_DAM;
 
         Data data(mem.pb, mem.pb + mem.size);
@@ -701,7 +701,7 @@ void FdrawSysDevDisk::DiscardOutOfSpaceSectorsAtTrackEnd(Track& track) const
             if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps) < track.tracklen) // It fits, no more problem.
                 break;
             if (opt_debug)
-                util::cout << "DiscardOutOfSpaceSectorsAtTrackEnd: discarding sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
+                util::cout << "DiscardOutOfSpaceSectorsAtTrackEnd: discarding sector (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
             track.sectors().erase(std::next(it).base());
         }
     }
