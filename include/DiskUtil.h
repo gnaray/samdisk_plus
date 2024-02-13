@@ -31,10 +31,10 @@ constexpr int DUMP_OFFSETS = 1;
 constexpr int DUMP_DIFF = 2;
 constexpr int DUMP_READSTATS = 4;
 
-void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags = 0, const Sectors& ignored_sectors = Sectors{});
+void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags = 0, const UniqueSectors &ignored_sectors = UniqueSectors{});
 bool NormaliseTrack(const CylHead& cylhead, Track& track);
 bool NormaliseBitstream(BitBuffer& bitbuf);
-int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Sectors& ignored_sectors = Sectors{});
+int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const UniqueSectors& ignored_sectors = UniqueSectors{});
 
 VectorX<std::pair<char, size_t>> DiffSectorCopies(const Sector& sector);
 

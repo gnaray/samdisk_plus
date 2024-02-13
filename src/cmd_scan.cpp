@@ -14,7 +14,7 @@ static auto& opt_readstats = getOpt<bool>("readstats");
 static auto& opt_step = getOpt<int>("step");
 static auto& opt_verbose = getOpt<int>("verbose");
 
-void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context, const Sectors &ignored_sectors/* = Sectors{}*/)
+void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context, const UniqueSectors &ignored_sectors/* = UniqueSectors{}*/)
 {
     // Reset the context if the cylinder is before the last (such as at a head change)
     if (cylhead.cyl < context.last_cylhead.cyl)

@@ -214,10 +214,10 @@ bool Track::has_any_good_data() const
     return it != end();
 }
 
-const Sectors Track::good_idcrc_sectors() const
+const UniqueSectors Track::good_idcrc_sectors() const
 {
-    Sectors good_idcrc_sectors;
-    std::copy_if(begin(), end(), std::back_inserter(good_idcrc_sectors), [&](const Sector& sector) {
+    UniqueSectors good_idcrc_sectors;
+    std::copy_if(begin(), end(), std::inserter(good_idcrc_sectors, good_idcrc_sectors.end()), [&](const Sector& sector) {
         return !sector.has_badidcrc();
     });
 
@@ -237,10 +237,10 @@ const Sectors Track::good_sectors() const
     return good_sectors;
 }
 
-const Sectors Track::stable_sectors() const
+const UniqueSectors Track::stable_sectors() const
 {
-    Sectors stable_sectors;
-    std::copy_if(begin(), end(), std::back_inserter(stable_sectors), [&](const Sector& sector) {
+    UniqueSectors stable_sectors;
+    std::copy_if(begin(), end(), std::inserter(stable_sectors, stable_sectors.end()), [&](const Sector& sector) {
         if (sector.has_badidcrc())
             return false;
         // Checksummable 8k sector is considered in has_stable_data method.
@@ -250,7 +250,7 @@ const Sectors Track::stable_sectors() const
     return stable_sectors;
 }
 
-bool Track::has_all_stable_data(const Sectors& stable_sectors) const
+bool Track::has_all_stable_data(const UniqueSectors& stable_sectors) const
 {
     if (empty())
         return true;

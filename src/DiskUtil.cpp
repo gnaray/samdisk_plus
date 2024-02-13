@@ -45,7 +45,7 @@ static void item_separator(int items)
         util::cout << ',';
 }
 
-void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const Sectors& ignored_sectors/* = Sectors{}*/)
+void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& context, int flags, const UniqueSectors& ignored_sectors/* = UniqueSectors{}*/)
 {
     if (opt_hex != 1)
         util::cout << util::fmt(" %2u.%u  ", cylhead.cyl, cylhead.head);
@@ -654,7 +654,7 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
 }
 
 // Attempt to repair a track, given another copy of the same track.
-int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const Sectors &ignored_sectors/*=Headers{}*/)
+int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const UniqueSectors &ignored_sectors/*=UniqueSectors{}*/)
 {
     int changed_amount = 0;
 

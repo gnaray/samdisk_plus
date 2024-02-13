@@ -17,7 +17,7 @@ public:
     {
     }
 
-    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds, const Sectors& skippableSectors, bool lookForPossibleSectors = true)
+    DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderIds, const UniqueSectors& skippableSectors, bool lookForPossibleSectors = true)
         : m_wantedSectorHeaderIds(wantedSectorHeaderIds), m_skippableSectors(skippableSectors),
           m_unskippableWantedSectorHeaderIdsValid(false), m_lookForPossibleSectors(lookForPossibleSectors)
 
@@ -35,21 +35,20 @@ public:
         m_unskippableWantedSectorHeaderIdsValid = false;
     }
 
-    const Sectors& SkippableSectors() const
+    const UniqueSectors& SkippableSectors() const
     {
         return m_skippableSectors;
     }
 
-    void SetSkippableSectors(const Sectors& skippableSectors)
+    void SetSkippableSectors(const UniqueSectors& skippableSectors)
     {
         m_skippableSectors = skippableSectors;
         m_unskippableWantedSectorHeaderIdsValid = false;
     }
 
-    void AddSkippableSectors(const Sectors& skippableSectors)
+    void AddSkippableSectors(const UniqueSectors& skippableSectors)
     {
-        // No problem if inserted sector exists though more elegant if there are no duplicates.
-        m_skippableSectors.insert(m_skippableSectors.end(), skippableSectors.begin(), skippableSectors.end());
+        m_skippableSectors.insert(skippableSectors.begin(), skippableSectors.end());
         m_unskippableWantedSectorHeaderIdsValid = false;
     }
 
@@ -69,21 +68,22 @@ public:
         m_lookForPossibleSectors = lookForPossibleSectors;
     }
 
-    const std::set<int>& UnskippableWantedSectorHeaderIds() const
+protected:
+    bool UnskippableWantedSectorHeaderIdsEmpty() const
     {
         if (!m_unskippableWantedSectorHeaderIdsValid)
         {
-            m_unskippableWantedSectorHeaderIds = m_skippableSectors.NotContainedIds(m_wantedSectorHeaderIds);
+            m_unskippableWantedSectorHeaderIdsEmpty = m_skippableSectors.AnyIdsNotContainedInThis(m_wantedSectorHeaderIds);
             m_unskippableWantedSectorHeaderIdsValid = true;
         }
-        return m_unskippableWantedSectorHeaderIds;
+        return m_unskippableWantedSectorHeaderIdsEmpty;
     }
 
+public:
     bool WantMoreSectors() const
     {
-        return (LookForPossibleSectors()
-                || WantedSectorHeaderIds().IsEmpty()
-                || !UnskippableWantedSectorHeaderIds().empty());
+        return (LookForPossibleSectors() // else m_wantedSectorHeaderIds is not empty.
+                || !UnskippableWantedSectorHeaderIdsEmpty());
     }
 
     friend std::string to_string(const DeviceReadingPolicy& deviceReadingPolicy, bool onlyRelevantData = true)
@@ -115,8 +115,8 @@ public:
 
 protected:
     Interval<int> m_wantedSectorHeaderIds{};
-    Sectors m_skippableSectors{};
-    mutable std::set<int> m_unskippableWantedSectorHeaderIds{}; // Dynamically calculated.
+    UniqueSectors m_skippableSectors{};
+    mutable bool m_unskippableWantedSectorHeaderIdsEmpty = false; // Dynamically calculated.
     mutable bool m_unskippableWantedSectorHeaderIdsValid = false; // Dynamically signs that corresponding value is valid.
     bool m_lookForPossibleSectors = true;
 };

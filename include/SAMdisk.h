@@ -30,7 +30,7 @@ void ListDrive(const std::string& path, const HDD& hdd, int verbose);
 
 // scan
 bool ScanImage(const std::string& path, Range range);
-void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context, const Sectors& ignored_sectors = Sectors{});
+void ScanTrack(const CylHead& cylhead, const Track& track, ScanContext& context, const UniqueSectors& ignored_sectors = UniqueSectors{});
 
 // format, verify
 bool FormatHdd(const std::string& path);
