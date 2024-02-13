@@ -52,7 +52,7 @@ public:
     static int findMostPopularToleratedDiff(VectorX<int>& diffs);
 
     bool findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const;
-    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly, bool ignoreEndingDataCopy = false);
+    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
     int determineBestTrackLen(const int timedTrackLen) const;
     void setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen);
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;

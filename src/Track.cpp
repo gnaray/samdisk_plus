@@ -499,11 +499,12 @@ bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffse
     return true;
 }
 
-void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly, bool ignoreEndingDataCopy/* = false*/)
+void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly)
 {
     assert(trackLenSingle > 0 && tracklen > 0 && syncOffset < tracklen);
 
-    auto sectorsEarlier = std::move(m_sectors); // m_sectors become empty.
+    auto sectorsEarlier = std::move(m_sectors);
+    m_sectors.clear();
     const auto trackLenMulti = tracklen;
     tracklen = trackLenSingle;
     tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / trackLenMulti);
@@ -511,15 +512,6 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
     {
         const auto offsetEarlier = sectorEarlier.offset;
         sectorEarlier.offset = modulo(offsetEarlier - syncOffset, static_cast<unsigned>(trackLenSingle));
-        // If demulti and ignore ending data copy and the actual sector ends at track end ...
-        if (!syncOnly && ignoreEndingDataCopy && BitOffsetAsDataBytePosition(trackLenMulti - offsetEarlier) == sectorEarlier.data_size())
-        {
-            int affectedSectorIndexDryrun;
-            const auto addResultDryrun = add(std::move(sectorEarlier), &affectedSectorIndexDryrun, true);
-            // ... and another copy exists and it is not shorter then the actual sector is a broken one, ignore it.
-            if (addResultDryrun == Track::AddResult::Merge && sectorEarlier.data_size() <= operator[](affectedSectorIndexDryrun).data_size())
-                continue;
-        }
 
         int affectedSectorIndex;
         const auto addResult = add(std::move(sectorEarlier), &affectedSectorIndex);
