@@ -814,17 +814,3 @@ Sectors::const_iterator Track::findSectorForDataFmOrMfm(const int dataOffset, co
     }
     return itFound;
 }
-
-Sectors::const_iterator Track::findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int sizeCode) const
-{
-    if (empty())
-        return end();
-    assert(sectorIdOffset > 0);
-
-    // Find data close enough to the sector id offset to be the same one.
-    auto it = std::find_if(begin(), end(), [&](const Sector& s) {
-        return DoSectorIdAndDataOffsetsCohere(sectorIdOffset, s.offset, getDataRate(), getEncoding()) == CohereResult::DataCoheres &&
-                (s.header.size == SIZECODE_UNKNOWN || s.header.size == sizeCode);
-        });
-    return it;
-}

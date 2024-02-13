@@ -225,8 +225,8 @@ public:
     static void ProcessInto(Sector& sector, BitPositionableByteVector& physicalTrackContent, const Encoding& encoding,
                             const int nextIdamOffset = 0, const int nextDamOffset = 0);
 
-    // Method for the case when good data of physical data is requested because its size became known.
-    static Data GetGoodDataUpToSize(const Sector& physicalSector, const int sectorSize);
+    // Method for the case when sector size became known and the orphan data sector can be resized.
+//    static void ResizeOrphanDataSectorUpToSize(Sector& orphanDataSector, const int sectorSize);
 
     static constexpr int PhysicalSizeOf(const int dataSize)
     {

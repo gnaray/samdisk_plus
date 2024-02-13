@@ -104,11 +104,6 @@ public:
         auto it = static_cast<const Track&>(*this).findSectorForDataFmOrMfm(dataOffset, sizeCode, findClosest);
         return m_sectors.erase(it, it);
     }
-    Sectors::iterator findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int sizeCode)
-    {
-        auto it = static_cast<const Track&>(*this).findDataForSectorIdFmOrMfm(sectorIdOffset, sizeCode);
-        return m_sectors.erase(it, it);
-    }
 
     Sectors::const_reverse_iterator rbegin() const { return m_sectors.rbegin(); }
     Sectors::const_iterator begin() const { return m_sectors.begin(); }
@@ -121,7 +116,6 @@ public:
     Sectors::const_iterator findIgnoringSize(const Header& header) const;
     Sectors::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
     Sectors::const_iterator findSectorForDataFmOrMfm(const int dataOffset, const int sizeCode, bool findClosest = true) const;
-    Sectors::const_iterator findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int sizeCode) const;
 
     int tracklen = 0;   // track length in MFM bits
     int tracktime = 0;  // track time in us
