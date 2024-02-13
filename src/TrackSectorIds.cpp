@@ -47,8 +47,7 @@
     {
         const auto foundLastValidId = std::find_if(incompleteSectorIds.rbegin(), incompleteSectorIds.rend(),
                                                  [](int id) { return id >= 0; });
-        // -1 + 1: -1 because reverse iterator gives next to found, +1 because size = found + 1.
-        sectorsMinLocal = std::max(static_cast<int>(std::distance(foundLastValidId, incompleteSectorIds.rend())) - 1 + 1,
+        sectorsMinLocal = std::max(static_cast<int>(incompleteSectorIds.rend() - foundLastValidId),
                                    *std::max_element(incompleteSectorIds.begin(), incompleteSectorIds.end()));
     }
     TrackSectorIds resultCompleteTrackSectorIds;
