@@ -378,7 +378,7 @@ const Sector* Disk::find_ignoring_size(const Header& header)
                 if (opt_verbose && !deviceReadingPolicyLocal.SkippableSectors().empty())
                 {
                     Message(msgInfoAlways, "Ignoring already good sectors on %s: %s",
-                            CH(cylhead.cyl, cylhead.head), deviceReadingPolicyLocal.SkippableSectors().SectorIdsToString().c_str());
+                            CH(cylhead.cyl, cylhead.head), deviceReadingPolicyLocal.SkippableSectors().SectorHeaderSectorsToString().c_str());
                 }
             }
         }

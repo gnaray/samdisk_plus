@@ -752,7 +752,7 @@ bool UniqueSectors::AnyIdsNotContainedInThis(const Interval<int>& id_interval) c
     return false;
 }
 
-std::string UniqueSectors::SectorIdsToString() const
+std::string UniqueSectors::SectorHeaderSectorsToString() const
 {
     std::ostringstream ss;
     bool writingStarted = false;

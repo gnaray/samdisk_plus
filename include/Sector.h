@@ -224,7 +224,7 @@ public:
     const UniqueSectors StableSectors() const;
     bool Contains(const Sector& other_sector, const int other_tracklen) const;
     bool AnyIdsNotContainedInThis(const Interval<int>& id_interval) const;
-    std::string SectorIdsToString() const;
+    std::string SectorHeaderSectorsToString() const;
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const UniqueSectors& sectors, bool onlyRelevantData = true)
     {
