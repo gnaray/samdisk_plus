@@ -734,7 +734,7 @@ bool UniqueSectors::Contains(const Sector& other_sector, const int other_trackle
 
 bool UniqueSectors::AnyIdsNotContainedInThis(const Interval<int>& id_interval) const
 {
-    assert(id_interval.IsEmpty());
+    assert(!id_interval.IsEmpty());
 
     if (empty())
         return true;
