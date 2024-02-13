@@ -60,6 +60,10 @@ public:
     bool operator==(const Sector& sector) const;
 
     Merge merge(Sector&& sector);
+    bool AcceptOrphanDataSectorSizeForMerging(const int orphanDataPhysicalSize) const;
+    void ConvertOrphanDataSectorLikeParentSector(const Sector& parentSector);
+    void MergeOrphanDataSector(Sector&& orphanDataSector);
+    void MergeOrphanDataSector(const Sector& orphanDataSector);
 
     bool has_data() const;
     bool has_good_data(bool consider_checksummable_8K = false, bool consider_normal_disk = false) const;

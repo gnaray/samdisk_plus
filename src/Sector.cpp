@@ -3,12 +3,14 @@
 #include "Options.h"
 #include "CRC16.h"
 #include "DiskUtil.h"
+#include "PhysicalTrackMFM.h"
 
 #include <algorithm>
 #include <cstring>
 #include <cmath>
 
 static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
+static auto& opt_debug = getOpt<int>("debug");
 static auto& opt_fill = getOpt<int>("fill");
 static auto& opt_maxcopies = getOpt<int>("maxcopies");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
@@ -464,6 +466,73 @@ Sector::Merge Sector::merge(Sector&& sector)
     m_read_attempts += sector.m_read_attempts;
 
     return ret;
+}
+
+// This can be orphan data or not orphan data sector.
+bool Sector::AcceptOrphanDataSectorSizeForMerging(const int orphanDataPhysicalSize) const
+{
+    const auto thisDataPhysicalSize = header.sector == OrphanDataCapableTrack::ORPHAN_SECTOR_ID ? data_size() : SectorDataFromPhysicalTrack::PhysicalSizeOf(data_size());
+    return thisDataPhysicalSize <= orphanDataPhysicalSize;
+}
+
+// Method for the case when sector size and parent sector became known and this orphan data sector can be converted.
+void Sector::ConvertOrphanDataSectorLikeParentSector(const Sector& parentSector)
+{
+    assert(parentSector.header.size != SIZECODE_UNKNOWN);
+    const int sectorSize = parentSector.size();
+
+    header = parentSector.header;
+    offset = parentSector.offset;
+
+    const auto iSup = copies();
+    if (iSup == 0)
+        return;
+
+    const auto physicalDataSize = std::min(data_size(), SectorDataFromPhysicalTrack::PhysicalSizeOf(sectorSize)); // The data_size is the same for each data.
+    auto data = std::move(m_data);
+    const auto dataReadStats = std::move(m_data_read_stats);
+    remove_data();
+
+    for (int i = 0; i < iSup; i++)
+    {
+        auto& physicalData = data[i];
+        /* TODO If the physical data size is less than physical sector size then the data ends at next AM or track end.
+         * It means the data contains gap3 and sync thus its crc will be bad.
+         * I am not sure which bytes the FDC reads latest but theoretically we could find the end of good data
+         * by calculating crc for each data length and if it becomes 0 then probably we found the correct length,
+         * and the last two bytes are the crc.
+         */
+        physicalData.resize(physicalDataSize);
+        const SectorDataFromPhysicalTrack sectorData(encoding, 0, std::move(physicalData), true);
+        // Passing read attempts = 0 does not change the read_attempts so it remains correct.
+        add(sectorData.GetData(), sectorData.badCrc, sectorData.addressMark, 0, dataReadStats[i]);
+    }
+}
+
+// Merge orphan data sector into this not orphan data sector.
+void Sector::MergeOrphanDataSector(Sector&& orphanDataSector)
+{
+    if (datarate != orphanDataSector.datarate)
+        throw util::exception("can't mix datarates when merging sectors");
+
+    // Merge the orphan data sector if there is no previous data or the previous data is not longer (i.e. orphan data sector can be broken, merge it if there is no longer data).
+    if (copies() > 0 && !AcceptOrphanDataSectorSizeForMerging(orphanDataSector.data_size()))
+    {
+        if (opt_debug)
+            util::cout << "MergeOrphanDataSector: not merging orphan data sector (offset=" << orphanDataSector.offset << ", id.sector=" << orphanDataSector.header.sector << "\n";
+    }
+    else
+    {
+        orphanDataSector.ConvertOrphanDataSectorLikeParentSector(*this);
+        // The orphanDataSector is now a mergable sector and its data size is <= data size of this.
+        merge(std::move(orphanDataSector));
+    }
+}
+
+// Merge orphan data sector into this not orphan data sector.
+void Sector::MergeOrphanDataSector(const Sector& orphanDataSector)
+{
+    MergeOrphanDataSector(Sector(orphanDataSector));
 }
 
 
