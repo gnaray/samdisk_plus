@@ -129,15 +129,10 @@ int Sector::get_data_best_copy_index() const
         return -1;
     if (!opt_readstats)
         return 0;
-    int max_index = 0;
-    const auto i_sup = m_data_read_stats.size();
-    for (auto i = max_index + 1; i < i_sup; i++)
-    {
-        if (m_data_read_stats[i].ReadCount()
-                > m_data_read_stats[max_index].ReadCount())
-            max_index = i;
-    }
-    return max_index;
+
+    return static_cast<int>(std::max_element(m_data_read_stats.begin(), m_data_read_stats.end(),
+                            [](const DataReadStats& a, const DataReadStats& b) { return a.ReadCount() < b.ReadCount(); })
+            - m_data_read_stats.begin());
 }
 
 // The stable sector is good sector and in paranoia mode it is read at least stability level times.
