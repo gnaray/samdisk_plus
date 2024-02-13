@@ -51,7 +51,7 @@ private:
      */
     bool ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScanResult& multiScanResult);
     TimedAndPhysicalDualTrack BlindReadHeaders112(const CylHead& cylhead, const DeviceReadingPolicy& deviceReadingPolicy);
-    void DiscardOufOfSpaceSectorsAtTrackEnd(Track& track) const;
+    void DiscardOutOfSpaceSectorsAtTrackEnd(Track& track) const;
     void GuessAndAddSectorIdsOfOrphans(Track& track, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack) const;
     static bool GetSectorDataFromPhysicalTrack(TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const int index);
     bool ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const DeviceReadingPolicy& deviceReadingPolicy);

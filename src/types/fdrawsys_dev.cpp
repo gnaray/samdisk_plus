@@ -648,7 +648,7 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
         }
         if (!deviceReadingPolicyForScanning.WantMoreSectors())
         {
-            DiscardOufOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack);
+            DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack);
             if (ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy))
                 break; // Scanning and reading is complete.
         }
@@ -659,14 +659,14 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
         }
     } while (physicalTrackRescans-- > 0);
 
-    DiscardOufOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack);
+    DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack);
     ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy);
 
     return timedAndPhysicalDualTrack;
 }
 
 // Remove not normal sector headers at the track end.
-void FdrawSysDevDisk::DiscardOufOfSpaceSectorsAtTrackEnd(Track& track) const
+void FdrawSysDevDisk::DiscardOutOfSpaceSectorsAtTrackEnd(Track& track) const
 {
     if (opt_normal_disk)
     {
@@ -678,7 +678,7 @@ void FdrawSysDevDisk::DiscardOufOfSpaceSectorsAtTrackEnd(Track& track) const
             if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps) < track.tracklen) // It fits, no more problem.
                 break;
             if (opt_debug)
-                util::cout << "DiscardOufOfSpaceSectorsAtTrackEnd: discarding sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
+                util::cout << "DiscardOutOfSpaceSectorsAtTrackEnd: discarding sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
             track.sectors().erase(std::next(it).base());
         }
     }
