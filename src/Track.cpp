@@ -423,14 +423,14 @@ DataRate Track::getDataRate() const
 {
     assert(!empty());
 
-    return (*this)[0].datarate;
+    return operator[](0).datarate;
 }
 
 Encoding Track::getEncoding() const
 {
     assert(!empty());
 
-    return (*this)[0].encoding;
+    return operator[](0).encoding;
 }
 
 int Track::getTimeOfOffset(const int offset) const
