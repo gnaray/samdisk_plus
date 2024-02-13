@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <set>
 #include <vector>
 
 template <typename T, typename IT = int,
@@ -17,6 +18,7 @@ public:
     using std::vector<T>::vector;
     using std::vector<T>::operator[];
     using std::vector<T>::insert;
+    using std::vector<T>::push_back;
     using std::vector<T>::resize;
     using std::vector<T>::reserve;
 
@@ -111,6 +113,11 @@ public:
         return swap_at(VectorX::begin() + pos1, VectorX::begin() + pos2);
     }
 
+    void push_back(const VectorX<T>& elements)
+    {
+        insert(VectorX::end(), elements.begin(), elements.end());
+    }
+
     // Returns index of current location of moved value, >= 0 on success, -1 otherwise. Invalidates iterators like insert and erase methods.
     template <typename U = IT,
               std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
@@ -140,6 +147,59 @@ public:
         if (posIndex == -1)
             return VectorX::end();
         return VectorX::begin() + posIndex;
+    }
+
+    /* Remove duplicates from the range [first, last).
+     * This method is similar to std::unique method but this
+     * does not require sorted range, that is why this is slower than std:unique.
+     * This method requires an existing std::less<T> method when using it on
+     * VectorX<T>.
+     * Returns iterator to the new end of the range.
+     */
+    typename VectorX::iterator unique(typename VectorX::iterator first, typename VectorX::iterator last)
+    {
+        if (first == last)
+            return last;
+
+        std::set<T> s;
+
+        typename VectorX::iterator result = first;
+        auto it = first;
+        s.insert(*it);
+        while (++it != last)
+        {
+            if (s.find(*it) == s.end())
+            {
+                s.insert(*it);
+                if (++result != it)
+                    *result = std::move(*it);
+            }
+        }
+        return ++result;
+    }
+
+    /* Remove duplicates from the whole range of vector.
+     * This method is similar to std::unique method but this
+     * does not require sorted range, that is why this is slower than std:unique.
+     * This method requires an existing std::less<T> method when using it on
+     * VectorX<T>.
+     * Returns iterator to the new end of the range.
+     */
+    typename VectorX::iterator unique()
+    {
+        return unique(VectorX::begin(), VectorX::end());
+    }
+
+    // Remove duplicates from the range [first, last) using this.unique method.
+    typename VectorX::iterator RemoveDuplicates(typename VectorX::iterator first, typename VectorX::iterator last)
+    {
+        return VectorX::erase(unique(first, last), last);
+    }
+
+    // Remove duplicates from the whole range of vector using this.unique method.
+    typename VectorX::iterator RemoveDuplicates()
+    {
+        return RemoveDuplicates(VectorX::begin(), VectorX::end());
     }
 };
 
