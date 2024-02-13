@@ -786,18 +786,32 @@ Sectors::const_iterator Track::find(const Header& header, const DataRate datarat
         });
 }
 
-Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const int sizeCode) const
+Sectors::const_iterator Track::findForDataFmOrMfm(const int dataOffset, const int sizeCode, bool findClosest/* = true*/) const
 {
     if (empty())
         return end();
     assert(dataOffset > 0);
 
+    const auto dataRate = getDataRate();
+    const auto encoding = getEncoding();
+    const auto itEnd = end();
+    auto itFound = end();
     // Find a sector close enough to the data offset to be the same one.
-    auto it = std::find_if(begin(), end(), [&](const Sector& s) {
-        return DoSectorIdAndDataOffsetsCohere(s.offset, dataOffset, getDataRate(), getEncoding()) == CohereResult::DataCoheres &&
-                (sizeCode == SIZECODE_UNKNOWN || s.header.size == sizeCode);
-        });
-    return it;
+    for (auto it = begin() ; it != itEnd; it++)
+    {
+        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(it->offset, dataOffset, dataRate, encoding);
+        if (cohereResult == CohereResult::DataTooEarly)
+            break;
+        else if (cohereResult == CohereResult::DataTooLate)
+            continue;
+        if (sizeCode == SIZECODE_UNKNOWN || it->header.size == sizeCode)
+        {
+            if (!findClosest)
+                return it;
+            itFound = it;
+        }
+    }
+    return itFound;
 }
 
 Sectors::const_iterator Track::findDataForSectorIdFmOrMfm(const int sectorIdOffset, const int sizeCode) const
