@@ -373,8 +373,7 @@ const Sector* Disk::find_ignoring_size(const Header& header)
                 deviceReadingPolicyLocal.AddSkippableSectors(dst_track.stable_sectors());
                 // If repair mode and user specified skip_stable_sectors and no looking for possible sectors
                 // then do not repair track already containing all wanted sector ids (not empty) (thus those are skippable).
-                if (!deviceReadingPolicyLocal.LookForPossibleSectors() && !deviceReadingPolicyLocal.WantedSectorHeaderIds().IsEmpty()
-                        && deviceReadingPolicyLocal.UnskippableWantedSectorHeaderIds().empty())
+                if (!deviceReadingPolicyLocal.WantMoreSectors())
                     break;
                 if (opt_verbose && !deviceReadingPolicyLocal.SkippableSectors().empty())
                 {
