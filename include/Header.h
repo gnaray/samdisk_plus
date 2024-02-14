@@ -150,6 +150,8 @@ public:
     bool compare_crn(const Header& rhs) const;
     bool compare_chr(const Header& rhs) const;
 
+    std::string GetRecordAsString() const;
+
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Header& header, bool onlyRelevantData = true)
     {

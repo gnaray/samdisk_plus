@@ -147,6 +147,15 @@ bool Header::compare_chr(const Header& rhs) const
         sector == rhs.sector;
 }
 
+std::string Header::GetRecordAsString() const
+{
+    std::ostringstream ss;
+    if (opt_hex == 1)
+        ss << std::setfill('0') << std::setbase(16) << std::uppercase << std::setw(2); // setw is not sticky, usually.
+    ss << sector;
+    return ss.str();
+}
+
 int Header::sector_size() const
 {
     return Sector::SizeCodeToLength(size);
