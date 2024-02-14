@@ -41,7 +41,7 @@ int OrphanDataCapableTrack::getTrackLen() const
     return track.tracklen;
 }
 
-// In a standard Track object the tracklen is the length of one rotation. Here it is the length of read bytes which were decoded.
+// In the Track class the tracklen is the length of one rotation. Here it is the length of read bytes which were decoded.
 void OrphanDataCapableTrack::setTrackLen(const int trackLen)
 {
     track.tracklen = trackLen;
