@@ -313,13 +313,8 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
         for (int i = 0; i < scan_result->count; ++i)
         {
             const auto& scan_header = scan_result->HeaderArray(i);
-            if (opt_normal_disk && (scan_header.cyl != cylhead.cyl || scan_header.head != cylhead.head))
-            {
-                Message(msgWarning, "BlindReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
-                    CH(cylhead.cyl, cylhead.head), CHR(scan_header.cyl, scan_header.head, scan_header.sector));
-                continue;
-            }
             Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
+            VerifyCylHeadsMatch(opt_normal_disk, false, cylhead, header, false);
             Sector sector(m_lastDataRate, m_lastEncoding, header);
 
             sector.offset = round_AS<int>(scan_header.reltime / mfmbit_us);
@@ -394,12 +389,13 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         }
 
         // Unsure what result.sector is exactly. Sometimes header.sector but usually header.sector+1.
-        if (opt_normal_disk && (header.cyl != cylhead.cyl || header.head != cylhead.head
-            || result.cyl != header.cyl || result.head != header.head
-            || (result.sector != header.sector && result.sector != header.sector + 1)))
+        VerifyCylHeadsMatch(opt_normal_disk, false, cylhead, header, false);
+        Header resultHeader(result.cyl, result.head, result.sector, result.size);
+        VerifyCylHeadsMatch(opt_normal_disk, false, resultHeader, header, false);
+        if (opt_normal_disk && (result.sector != header.sector && result.sector != header.sector + 1))
         {
-            Message(msgWarning, "ReadSector: track's %s does not match sector's %s, ignoring this sector.",
-                CH(cylhead.cyl, cylhead.head), CHR(header.cyl, header.head, header.sector));
+            MessageCPP(msgWarning, "sector's id.sector (", header.GetRecordAsString(),
+                       ") does not match sector's id.sector (", resultHeader.GetRecordAsString(), "), ignoring this sector.");
             sector.add_read_attempts(1);
             continue;
         }

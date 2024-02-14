@@ -57,16 +57,11 @@ constexpr CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
     const auto addressMark = sectorIdInPhysicalTrack.m_addressMark;
     const auto badCrc = sectorIdInPhysicalTrack.CalculateCrc() != 0;
 
-    if (opt_normal_disk && !badCrc
-            && (sectorIdInPhysicalTrack.m_cyl != physicalTrackContext.cylHead.cyl || sectorIdInPhysicalTrack.m_head != physicalTrackContext.cylHead.head))
-    {
-        Message(msgWarning, "ReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
-            CH(physicalTrackContext.cylHead.cyl, physicalTrackContext.cylHead.head), CHR(sectorIdInPhysicalTrack.m_cyl, sectorIdInPhysicalTrack.m_head, sectorIdInPhysicalTrack.m_sector));
+    const Header header = sectorIdInPhysicalTrack.AsHeader();
+    if (!VerifyCylHeadsMatch(opt_normal_disk, badCrc, physicalTrackContext.cylHead, header, true))
         orphanDataCapableTrack.cylheadMismatch = true;
-    }
     else
     {
-        const Header header = sectorIdInPhysicalTrack.AsHeader();
         Sector sector(physicalTrackContext.dataRate, encoding, header);
 
         sector.offset = DataBitPositionAsBitOffset(byteBitPositionIDAM.TotalBitPosition()); // Counted in mfmbits.

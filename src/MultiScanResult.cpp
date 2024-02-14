@@ -22,13 +22,8 @@ Track MultiScanResult::DecodeResult(const CylHead& cylhead, const DataRate& data
     for (int i = 0; i < iSup; ++i)
     {
         const auto& scan_header = HeaderArray(i);
-        if (opt_normal_disk && (scan_header.cyl != cylhead.cyl || scan_header.head != cylhead.head))
-        {
-            Message(msgWarning, "ReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
-                CH(cylhead.cyl, cylhead.head), CHR(scan_header.cyl, scan_header.head, scan_header.sector));
-            continue;
-        }
         Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
+        VerifyCylHeadsMatch(opt_normal_disk, false, cylhead, header, false);
         Sector sector(dataRate, encoding, header);
 
         sector.offset = round_AS<int>(scan_header.reltime / mfmbit_us);
