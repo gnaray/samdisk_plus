@@ -107,16 +107,11 @@ CylHead operator * (const CylHead& cylhead, int cyl_step)
 std::string CylHead::ToString(bool /*onlyRelevantData*//* = true*/) const
 {
     std::ostringstream ss;
-#if 0   // ToDo
-        if (opt_hex == 1)
-        {
-            ss << "cyl " << std::setw(2) << std::setfill('0') << std::setbase(16) << cyl << " head " << head;
-            return ss.str();
-        }
-#endif
-
-        ss << "cyl " << cyl << " head " << head;
-        return ss.str();
+    ss << "cyl ";
+    if (opt_hex == 1)
+        ss << std::setfill('0') << std::setbase(16) << std::uppercase << std::setw(2); // setw is not sticky, usually.
+    ss << cyl << " head " << head;
+    return ss.str();
 }
 
 //////////////////////////////////////////////////////////////////////////////
