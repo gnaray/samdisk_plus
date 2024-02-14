@@ -772,6 +772,28 @@ bool DiskHasMBR(const HDD& hdd)
     return CheckSig(hdd, 0, 510, "\x55\xaa");
 }
 
+/* Verify if cylhead expected equals cylhead result.
+ * Verification requires badCrc = false and optNormalDisk = true.
+ * If the verification passed then the returned value is true.
+ * Otherwise: if noReaction is true then the returned value is false
+ * else (when noReaction is false) then an diskforeigncylhead_exception is thrown.
+ */
+bool VerifyCylHeadsMatch(bool optNormalDisk, bool badCrc, const CylHead& cylHeadExpected, const Header& headerResult, bool noReaction)
+{
+    if (optNormalDisk && !badCrc && (cylHeadExpected.cyl != headerResult.cyl || cylHeadExpected.head != headerResult.head))
+    {
+        if (noReaction)
+            return false;
+        throw util::diskforeigncylhead_exception(util::make_string(
+                                                     "track's ", cylHeadExpected.ToString(),
+                                                     " does not match sector's {", headerResult.ToString(),
+                                                     "}, ignoring this whole track to avoid data corruption."));
+    }
+    return true;
+}
+
+
+
 MEMORY::~MEMORY()
 {
     if (size > 0)
