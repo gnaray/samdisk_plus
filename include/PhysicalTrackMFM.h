@@ -113,8 +113,8 @@ public:
 
     constexpr CohereResult DoSectorIdAndDataOffsetsCohere(const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const;
 
-    CylHead cylHead;
-    DataRate dataRate = DataRate::Unknown;
+    const CylHead cylHead;
+    const DataRate dataRate = DataRate::Unknown;
 };
 
 
