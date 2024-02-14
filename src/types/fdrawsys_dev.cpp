@@ -315,7 +315,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             const auto& scan_header = scan_result->HeaderArray(i);
             if (opt_normal_disk && (scan_header.cyl != cylhead.cyl || scan_header.head != cylhead.head))
             {
-                Message(msgWarning, "ReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
+                Message(msgWarning, "BlindReadHeaders: track's %s does not match sector's %s, ignoring this sector.",
                     CH(cylhead.cyl, cylhead.head), CHR(scan_header.cyl, scan_header.head, scan_header.sector));
                 continue;
             }
