@@ -18,13 +18,13 @@ std::set<std::string> seen_messages;
 
 static uint32_t adwUsed[2][3];
 
-const char* ValStr(int val, const char* pcszDec_, const char* pcszHex_, bool fForceDecimal_)
+const char* ValStr(int val, const char* pcszDec_, const char* pcszHex_, bool fForceDecimal_/* = false*/)
 {
     static char strs[8][32];
     static int idx;
 
     // Next slot
-    idx = (idx + 1) % arraysize(strs);
+    idx = (idx + 1) % arrayintsizeof(strs);
 
     // Format in the current base using the supplied format string
     snprintf(strs[idx], sizeof(strs[idx]), (opt_hex == 0 || fForceDecimal_) ? pcszDec_ : pcszHex_, val);
@@ -177,7 +177,7 @@ int GetMemoryPageSize()
     GetNativeSystemInfo(&si);
     return si.dwPageSize;
 #elif defined(HAVE_SYSCONF)
-    return sysconf(_SC_PAGESIZE);
+    return static_cast<int>(sysconf(_SC_PAGESIZE));
 #else
     return 0x1000;
 #endif
@@ -335,15 +335,15 @@ bool IsRecord(const std::string& path, int* pRecord)
         return false;
 
     // Extract the record number
-    char* pEnd = nullptr;
-    auto record = std::strtoul(strRecord.c_str(), &pEnd, 0);
+    size_t pos;
+    const auto record = lossless_static_cast<int>(std::stoul(strRecord, &pos, 0));
 
     // Pass record number to caller if required
     if (pRecord)
         *pRecord = record;
 
     // Valid if nothing remaining in string
-    return !*pEnd;
+    return pos == strRecord.length();
 }
 
 bool IsTrinity(const std::string& path)
@@ -437,9 +437,9 @@ uint8_t* AllocMem(int len)
 #ifdef _WIN32
     auto pb = reinterpret_cast<uint8_t*>(VirtualAlloc(nullptr, len, MEM_COMMIT, PAGE_READWRITE));
 #else
-    auto size = len + align - 1 + sizeof(void*);
-    auto pv = calloc(1, size);
-    void** ppv = (void**)(((uintptr_t)pv + size - len) & ~(align - 1));
+    auto size = len + align - 1 + longsizeof(void*);
+    auto pv = calloc(1, static_cast<size_t>(size));
+    void** ppv = reinterpret_cast<void**>((reinterpret_cast<uintptr_t>(pv) + static_cast<uintptr_t>(size - len)) & static_cast<uintptr_t>(~(align - 1)));
     ppv[-1] = pv;
     auto pb = reinterpret_cast<uint8_t*>(ppv);
 
@@ -761,10 +761,10 @@ bool ReadSector(const HDD& hdd, int sector, MEMORY& pm_)
 bool CheckSig(const HDD& hdd, int sector, int offset, const char* sig, int len)
 {
     MEMORY mem(hdd.sector_size);
-    if (!len) len = static_cast<int>(strlen(sig));
+    const auto uLen = len == 0 ? strlen(sig) : lossless_static_cast<size_t>(len);
 
     return ReadSector(hdd, sector, mem) &&
-        !memcmp(mem + offset, reinterpret_cast<const uint8_t*>(sig), len);
+        !memcmp(mem + offset, reinterpret_cast<const uint8_t*>(sig), uLen);
 }
 
 bool DiskHasMBR(const HDD& hdd)
