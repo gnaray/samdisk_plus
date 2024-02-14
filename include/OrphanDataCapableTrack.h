@@ -23,6 +23,7 @@ public:
     void addTrackTime(const int trackTime);
     void add(OrphanDataCapableTrack&& orphanDataCapableTrack);
     int size() const;
+    int Score() const;
 
     static void MergeOrphansIntoParents(Track& orphansTrack, Track& parentsTrack, bool removeOrphanAfterMerge, const std::function<bool (const Sector &)>& considerParentSectorPredicate = nullptr);
 

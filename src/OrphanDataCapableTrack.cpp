@@ -91,6 +91,38 @@ int OrphanDataCapableTrack::size() const
     return track.size() + orphanDataTrack.size();
 }
 
+int OrphanDataCapableTrack::Score() const
+{
+    /* Data copy: a read sequence of bytes.
+     * Data: set of 1 ore more data copies.
+     * The goal is defining a scoring which prefers good ids,
+     * data connected to id (not orphan), the more good data copy,
+     * good data copy read count (stability), the more (bad) data.
+     * Good id: 1 point.
+     * Good id's data exist: 2 point.
+     * Each good data copy: read count point.
+     * Orphan's (bad) data exist: 1 point.
+     */
+    auto score = 0;
+    for (const auto& sector : track.sectors())
+        if (!sector.has_badidcrc())
+        {
+            score++; // Good id.
+            const auto iSup = sector.copies();
+            if (iSup > 0)
+            {
+                score += 2; // Good id's data exist
+                if (sector.has_good_data())
+                {
+                    for (auto i = 0; i < iSup; i++)
+                        score += sector.data_copy_read_stats(i).ReadCount(); // Good data read count.
+                }
+            }
+        }
+    score += orphanDataTrack.size();
+    return score;
+}
+
 // Merge the orphans track into parents track. An orphan can be merged if a coherent parent is found.
 /*static*/ void OrphanDataCapableTrack::MergeOrphansIntoParents(Track& orphansTrack, Track& parentsTrack, bool removeOrphanAfterMerge, const std::function<bool (const Sector &)>& considerParentSectorPredicate/* = nullptr*/)
 {
