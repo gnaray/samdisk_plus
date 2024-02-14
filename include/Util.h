@@ -140,41 +140,18 @@ const char* CHSR(int cyl, int head, int sector, int record);
 
 extern std::set<std::string> seen_messages;
 
+void MessageCore(MsgType type, const std::string& msg);
+
 template <typename ...Args>
 void Message(MsgType type, const char* pcsz_, Args&& ...args)
 {
-    std::string msg = util::fmt(pcsz_, std::forward<Args>(args)...);
+    MessageCore(type, util::fmt(pcsz_, std::forward<Args>(args)...));
+}
 
-    if (type == msgError)
-        throw util::exception(msg);
-
-    if (type == msgInfo || type == msgFix || type == msgWarning)
-    {
-        if (seen_messages.find(msg) != seen_messages.end())
-            return;
-
-        seen_messages.insert(msg);
-    }
-
-    switch (type)
-    {
-    case msgStatus: break;
-    case msgInfo:
-    case msgInfoAlways:
-        util::cout << "Info: "; break;
-    case msgFix:
-    case msgFixAlways:
-        util::cout << colour::GREEN << "Fixed: "; break;
-    case msgWarning:
-    case msgWarningAlways:
-        util::cout << colour::YELLOW << "Warning: "; break;
-    case msgError:   util::cout << colour::RED << "Error: "; break;
-    }
-
-    if (type == msgStatus)
-        util::cout << ttycmd::statusbegin << "\r" << msg << ttycmd::statusend;
-    else
-        util::cout << msg << colour::none << '\n';
+template <typename ...Args>
+void MessageCPP(MsgType type, Args&& ...args)
+{
+    MessageCore(type, util::make_string(std::forward<Args>(args)...));
 }
 
 const char* LastError();

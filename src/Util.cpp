@@ -105,6 +105,41 @@ const char* CHSR(int cyl, int head, int sector, int record)
 
 #undef HEX
 
+void MessageCore(MsgType type, const std::string& msg)
+{
+    if (type == msgError)
+        throw util::exception(msg);
+
+    if (type == msgInfo || type == msgFix || type == msgWarning)
+    {
+        if (seen_messages.find(msg) != seen_messages.end())
+            return;
+
+        seen_messages.insert(msg);
+    }
+
+    switch (type)
+    {
+    case msgStatus: break;
+    case msgInfo:
+    case msgInfoAlways:
+        util::cout << "Info: "; break;
+    case msgFix:
+    case msgFixAlways:
+        util::cout << colour::GREEN << "Fixed: "; break;
+    case msgWarning:
+    case msgWarningAlways:
+        util::cout << colour::YELLOW << "Warning: "; break;
+    case msgError:
+        util::cout << colour::RED << "Error: "; break;
+    }
+
+    if (type == msgStatus)
+        util::cout << ttycmd::statusbegin << "\r" << msg << ttycmd::statusend;
+    else
+        util::cout << msg << colour::none << '\n';
+}
+
 const char* LastError()
 {
 #ifdef _WIN32
