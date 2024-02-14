@@ -787,7 +787,7 @@ bool VerifyCylHeadsMatch(bool optNormalDisk, bool badCrc, const CylHead& cylHead
         throw util::diskforeigncylhead_exception(util::make_string(
                                                      "track's ", cylHeadExpected.ToString(),
                                                      " does not match sector's {", headerResult.ToString(),
-                                                     "}, ignoring this whole track to avoid data corruption."));
+                                                     "}, ignoring this whole track to avoid data corruption"));
     }
     return true;
 }
