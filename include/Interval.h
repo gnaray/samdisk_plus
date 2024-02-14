@@ -132,6 +132,6 @@ public:
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Interval<int>& interval) { return os << to_string(interval); }
+inline std::ostream& operator<<(std::ostream& os, const Interval<int>& interval) { return os << interval.ToString(); }
 
 #endif // INTERVAL_H

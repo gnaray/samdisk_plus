@@ -1,9 +1,13 @@
 #include "Header.h"
+#include "Options.h"
 #include "Sector.h"
 
 #include <iterator>
 #include <algorithm>
+#include <iomanip>
 #include <map>
+
+static auto& opt_hex = getOpt<int>("hex");
 
 std::string to_string(const DataRate& datarate)
 {
@@ -100,6 +104,21 @@ CylHead operator * (const CylHead& cylhead, int cyl_step)
     return CylHead(cylhead.cyl * cyl_step, cylhead.head);
 }
 
+std::string CylHead::ToString(bool /*onlyRelevantData*//* = true*/) const
+{
+    std::ostringstream ss;
+#if 0   // ToDo
+        if (opt_hex == 1)
+        {
+            ss << "cyl " << std::setw(2) << std::setfill('0') << std::setbase(16) << cyl << " head " << head;
+            return ss.str();
+        }
+#endif
+
+        ss << "cyl " << cyl << " head " << head;
+        return ss.str();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 Header::Header(int cyl_, int head_, int sector_, int size_)
@@ -138,13 +157,10 @@ int Header::sector_size() const
     return Sector::SizeCodeToLength(size);
 }
 
-std::string Header::ToString(bool onlyRelevantData/* = true*/) const
+std::string Header::ToString(bool /*onlyRelevantData*//* = true*/) const
 {
     std::ostringstream ss;
-    if (!onlyRelevantData || !empty())
-    {
-        ss << "cyl=" << cyl << ", head=" << head << ", sector=" << sector << ", size=" << size;
-    }
+    ss << "cyl=" << cyl << ", head=" << head << ", sector=" << sector << ", size=" << size;
     return ss.str();
 }
 

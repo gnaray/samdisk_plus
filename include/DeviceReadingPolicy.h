@@ -89,17 +89,17 @@ public:
                 || !UnskippableWantedSectorHeaderIdsEmpty());
     }
 
-    friend std::string to_string(const DeviceReadingPolicy& deviceReadingPolicy, bool onlyRelevantData = true)
+    std::string ToString(bool onlyRelevantData = true) const
     {
         std::ostringstream ss;
         bool writingStarted = false;
-        std::string s = to_string(deviceReadingPolicy.m_wantedSectorHeaderSectors, onlyRelevantData);
+        std::string s = to_string(m_wantedSectorHeaderSectors, onlyRelevantData);
         if (!onlyRelevantData || !s.empty())
         {
             ss << "Wanted sector header sectors = {" << s << "}";
             writingStarted = true;
         }
-        s = to_string(deviceReadingPolicy.m_skippableSectors, onlyRelevantData);
+        s = to_string(m_skippableSectors, onlyRelevantData);
         if (!onlyRelevantData || !s.empty())
         {
             if (writingStarted)
@@ -112,7 +112,14 @@ public:
             ss << ", ";
         else
             writingStarted = true;
-        ss << "Look for possible sectors = " << deviceReadingPolicy.m_lookForPossibleSectors;
+        ss << "Look for possible sectors = " << m_lookForPossibleSectors;
+        return ss.str();
+    }
+
+    friend std::string to_string(const DeviceReadingPolicy& deviceReadingPolicy, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << deviceReadingPolicy.ToString(onlyRelevantData);
         return ss.str();
     }
 
@@ -124,4 +131,4 @@ protected:
     bool m_lookForPossibleSectors = true;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const DeviceReadingPolicy& deviceReadingPolicy) { return os << to_string(deviceReadingPolicy); }
+inline std::ostream& operator<<(std::ostream& os, const DeviceReadingPolicy& deviceReadingPolicy) { return os << deviceReadingPolicy.ToString(); }

@@ -106,16 +106,6 @@ struct CylHead
 
     operator int() const;
 
-    std::string to_string() const
-    {
-#if 0   // ToDo
-        if (opt_hex == 1) // TODO: former opt.hex is now opt_hex and not available, because Options.h should be included which includes Header.h, cyclic dependency.
-            return util::format("cyl %02X head %u", cyl, head);
-#endif
-
-        return util::fmt("cyl %u head %u", cyl, head);
-    }
-
     CylHead next_cyl()
     {
         CylHead cylhead(*this);
@@ -124,11 +114,19 @@ struct CylHead
         return cylhead;
     }
 
+    std::string ToString(bool onlyRelevantData = true) const;
+    friend std::string to_string(const CylHead& header, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << header.ToString(onlyRelevantData);
+        return ss.str();
+    }
+
     int cyl = -1, head = -1;
 };
 
 CylHead operator * (const CylHead& cylhead, int cyl_step);
-inline std::ostream& operator<<(std::ostream& os, const CylHead& cylhead) { return os << cylhead.to_string(); }
+inline std::ostream& operator<<(std::ostream& os, const CylHead& cylhead) { return os << cylhead.ToString(); }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -151,11 +149,6 @@ public:
     }
     bool compare_crn(const Header& rhs) const;
     bool compare_chr(const Header& rhs) const;
-
-    inline bool empty() const
-    {
-        return cyl == 0 && head == 0 && sector == 0 && size == 0;
-    }
 
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Header& header, bool onlyRelevantData = true)
@@ -197,7 +190,7 @@ constexpr bool operator <=(const Header& lhs, const Header& rhs)
     return !(lhs > rhs);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Header& header) { return os << to_string(header); }
+inline std::ostream& operator<<(std::ostream& os, const Header& header) { return os << header.ToString(); }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -217,3 +210,5 @@ public:
     std::string SectorIdsToString() const;
     bool HasIdSequence(const int first_id, const int length) const;
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Headers& headers) { return os << headers.ToString(); }

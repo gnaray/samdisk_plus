@@ -41,7 +41,7 @@ public:
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const TrackSectorIds& trackSectorIds) { return os << to_string(trackSectorIds); }
+inline std::ostream& operator<<(std::ostream& os, const TrackSectorIds& trackSectorIds) { return os << trackSectorIds.ToString(); }
 
 
 

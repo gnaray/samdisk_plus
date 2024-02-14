@@ -56,29 +56,20 @@ public:
         return FS::Name();
     }
 
-    std::string ToString(bool onlyRelevantData = true) const override
+    std::string ToString(bool /*onlyRelevantData*/ = true) const override
     {
         return Name();
     }
-/*
+
     friend std::string to_string(const FileSystemWrapper<FS>& fileSystemWrapper, bool onlyRelevantData = true)
     {
         std::ostringstream ss;
         ss << fileSystemWrapper.ToString(onlyRelevantData);
         return ss.str();
     }
-*/
-/*
-    inline friend std::ostream& operator<<(std::ostream& os, const FileSystemWrapper<FS>& fileSystemWrapper)
-    {
-        return os << to_string(fileSystemWrapper);
-    }
-*/
 };
 
-template<typename FS> inline std::string to_string(const FileSystemWrapper<FS>& fileSystemWrapper, bool onlyRelevantData = true) { return fileSystemWrapper.ToString(onlyRelevantData); }
-//template<typename T> inline std::ostream& operator<<(std::ostream& os, const FileSystemWrapper<T>& fileSystemWrapper) { return os << to_string(fileSystemWrapper); }
-template<typename FS> inline std::ostream& operator<<(std::ostream& os, const FileSystemWrapper<FS>& fileSystemWrapper) { return os << to_string(fileSystemWrapper); }
+template<typename FS> inline std::ostream& operator<<(std::ostream& os, const FileSystemWrapper<FS>& fileSystemWrapper) { return os << fileSystemWrapper.ToString(); }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -97,6 +88,8 @@ public:
         return ss.str();
     }
 };
+
+inline std::ostream& operator<<(std::ostream& os, const FileSystemWrappers& fileSystemWrappers) { return os << fileSystemWrappers.ToString(); }
 
 extern FileSystemWrappers fileSystemWrappers;
 

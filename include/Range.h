@@ -17,9 +17,16 @@ public:
     bool contains(const CylHead& cylhead);
     void each(const std::function<void(const CylHead & cylhead)>& func, bool cyls_first = false) const;
 
+    std::string ToString(bool onlyRelevantData = true) const;
+    friend std::string to_string(const Range& r, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << r.ToString(onlyRelevantData);
+        return ss.str();
+    }
+
     int cyl_begin = 0, cyl_end = 0;
     int head_begin = 0, head_end = 0;
 };
 
-std::string to_string(const Range& r);
-inline std::ostream& operator<<(std::ostream& os, const Range& r) { return os << to_string(r); }
+inline std::ostream& operator<<(std::ostream& os, const Range& r) { return os << r.ToString(); }

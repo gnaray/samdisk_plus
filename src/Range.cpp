@@ -3,35 +3,6 @@
 
 #include <iomanip>
 
-std::string to_string(const Range& range)
-{
-    if (range.empty())
-        return "All Tracks";
-
-    std::ostringstream ss;
-    auto separator = ", ";
-
-    if (range.cyls() == 1)
-        ss << "Cyl " << CylStr(range.cyl_begin);
-    else if (range.cyl_begin == 0)
-    {
-        ss << std::setw(2) << range.cyl_end << " Cyls";
-        separator = " ";
-    }
-    else
-        ss << "Cyls " << CylStr(range.cyl_begin) << '-' << CylStr(range.cyl_end - 1);
-
-    if (range.heads() == 1)
-        ss << " Head " << range.head_begin;
-    else if (range.head_begin == 0)
-        ss << separator << range.head_end << " Heads";
-    else
-        ss << " Heads " << range.head_begin << '-' << (range.head_end - 1);
-
-    return ss.str();
-}
-
-
 Range::Range(int num_cyls, int num_heads)
     : Range(0, num_cyls, 0, num_heads)
 {
@@ -79,4 +50,32 @@ void Range::each(const std::function<void(const CylHead & cylhead)>& func, bool 
             for (auto head = head_begin; head < head_end; ++head)
                 func(CylHead(cyl, head));
     }
+}
+
+std::string Range::ToString(bool /*onlyRelevantData*//* = true*/) const
+{
+    if (empty())
+        return "All Tracks";
+
+    std::ostringstream ss;
+    auto separator = ", ";
+
+    if (cyls() == 1)
+        ss << "Cyl " << CylStr(cyl_begin);
+    else if (cyl_begin == 0)
+    {
+        ss << std::setw(2) << cyl_end << " Cyls";
+        separator = " ";
+    }
+    else
+        ss << "Cyls " << CylStr(cyl_begin) << '-' << CylStr(cyl_end - 1);
+
+    if (heads() == 1)
+        ss << " Head " << head_begin;
+    else if (head_begin == 0)
+        ss << separator << head_end << " Heads";
+    else
+        ss << " Heads " << head_begin << '-' << (head_end - 1);
+
+    return ss.str();
 }

@@ -86,4 +86,4 @@ struct Format
     RegularFormat regular_format = RegularFormat::None; // The regular format used at constructing.
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Format& format) { return os << to_string(format); }
+inline std::ostream& operator<<(std::ostream& os, const Format& format) { return os << format.ToString(); }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <sstream>
 
 class RetryPolicy
 {
@@ -67,12 +68,19 @@ public:
         return lhs; // return the result by value (uses move constructor)
     }
 
+    std::string ToString(bool onlyRelevantData = true) const;
+    friend std::string to_string(const RetryPolicy& retryPolicy, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << retryPolicy.ToString(onlyRelevantData);
+        return ss.str();
+    }
+
     int retryTimes = 0;
     bool sinceLastChange = false;
 };
 
-std::string to_string(const RetryPolicy& retryPolicy);
-inline std::ostream& operator<<(std::ostream& os, const RetryPolicy& r) { return os << to_string(r); }
+inline std::ostream& operator<<(std::ostream& os, const RetryPolicy& r) { return os << r.ToString(); }
 
 constexpr bool operator ==(const RetryPolicy& lhs, const RetryPolicy& rhs)
 {

@@ -742,10 +742,7 @@ int Sector::FindParentSectorIdByOffset(const IdAndOffsetVector& sectorIdsAndOffs
 std::string Sector::ToString(bool onlyRelevantData/* = true*/) const
 {
     std::ostringstream ss;
-    if (!onlyRelevantData || !header.empty())
-    {
-        ss << header.ToString(onlyRelevantData);
-    }
+    ss << header.ToString(onlyRelevantData);
     return ss.str();
 }
 

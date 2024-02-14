@@ -191,7 +191,7 @@ private:
     bool m_constant_disk = true; // If this sector is part of disk image then true, else it comes from physical device so false.
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Sector& sector) { return os << to_string(sector); }
+inline std::ostream& operator<<(std::ostream& os, const Sector& sector) { return os << sector.ToString(); }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -209,7 +209,7 @@ public:
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Sectors& sectors) { return os << to_string(sectors); }
+inline std::ostream& operator<<(std::ostream& os, const Sectors& sectors) { return os << sectors.ToString(); }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -241,6 +241,6 @@ public:
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const UniqueSectors& sectors) { return os << to_string(sectors); }
+inline std::ostream& operator<<(std::ostream& os, const UniqueSectors& sectors) { return os << sectors.ToString(); }
 
 //////////////////////////////////////////////////////////////////////////////

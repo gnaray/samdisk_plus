@@ -2,23 +2,6 @@
 
 #include <iomanip>
 
-std::string to_string(const RetryPolicy& retryPolicy)
-{
-    std::ostringstream ss;
-
-    if (retryPolicy.retryTimes == 0)
-        ss << "No retry";
-    else
-    {
-        ss << "Retry " << retryPolicy.retryTimes << " time";
-        if (retryPolicy.retryTimes > 1)
-            ss << 's';
-        ss << ' ' << (retryPolicy.sinceLastChange ? "since last change" : "total");
-    }
-    return ss.str();
-}
-
-
 RetryPolicy::RetryPolicy(const int retryTimesOption)
 {
     if (retryTimesOption >= 0)
@@ -38,3 +21,18 @@ RetryPolicy::RetryPolicy(const int retryTimes, const bool sinceLastChange)
 {
 }
 
+std::string RetryPolicy::ToString(bool /*onlyRelevantData*//* = true*/) const
+{
+    std::ostringstream ss;
+
+    if (retryTimes == 0)
+        ss << "No retry";
+    else
+    {
+        ss << "Retry " << retryTimes << " time";
+        if (retryTimes > 1)
+            ss << 's';
+        ss << ' ' << (sinceLastChange ? "since last change" : "total");
+    }
+    return ss.str();
+}
