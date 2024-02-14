@@ -625,7 +625,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
         if (sector.size() != sectorSize) // Only same sized sectors are supported.
             return sectorIdsAndOffsets;
         if (opt_debug)
-            util::cout << "DiscoverTrackSectorScheme: processing sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
+            util::cout << "DiscoverTrackSectorScheme: processing sector (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
         if (i < iSup - 1)
         {
             const auto offsetDiff = operator[](i + 1).offset - sector.offset;
@@ -650,7 +650,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
         remainingStartOffset -= overheadedSectorWithGap3AndDataBitsAbout;
         sectorIdsAndOffsets.push_back(IdAndOffset(-1, remainingStartOffset));
         if (opt_debug)
-            util::cout << "DiscoverTrackSectorScheme: pushed hole sector, offset=" << remainingStartOffset << "\n";
+            util::cout << "DiscoverTrackSectorScheme: pushed hole sector (offset=" << remainingStartOffset << ")\n";
     }
 
     // Determine and add holes between sectors.
@@ -659,7 +659,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
         const auto& sector = operator[](i);
         sectorIdsAndOffsets.push_back(IdAndOffset(sector.header.sector, sector.offset));
         if (opt_debug)
-            util::cout << "DiscoverTrackSectorScheme: pushed sector, offset=" << sector.offset << ", ID=" << sector.header.sector << "\n";
+            util::cout << "DiscoverTrackSectorScheme: pushed sector (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
         if (i < iSup - 1)
         {
             const auto offsetDiff = operator[](i + 1).offset - sector.offset;
@@ -673,7 +673,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
                 {
                     sectorIdsAndOffsets.push_back(IdAndOffset(-1, holeOffset));
                     if (opt_debug)
-                        util::cout << "DiscoverTrackSectorScheme: pushed hole sector, offset=" << holeOffset << "\n";
+                        util::cout << "DiscoverTrackSectorScheme: pushed hole sector (offset=" << holeOffset << ")\n";
                     holeOffset += overheadedSectorWithGap3AndDataBits;
                 }
             }
@@ -687,7 +687,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
     {
         sectorIdsAndOffsets.push_back(IdAndOffset(-1, remainingEndOffset));
         if (opt_debug)
-            util::cout << "DiscoverTrackSectorScheme: pushed hole sector, offset=" << remainingEndOffset << "\n";
+            util::cout << "DiscoverTrackSectorScheme: pushed hole sector (offset=" << remainingEndOffset << ")\n";
         remainingEndOffset += overheadedSectorWithGap3AndDataBitsAbout;
     }
     if (sectorIdsAndOffsets.ReplaceMissingIdsByFindingTrackSectorIds())
@@ -697,9 +697,9 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
             const auto iSup = sectorIdsAndOffsets.size();
             for (int i = 0; i < iSup; i++)
             {
-                    util::cout << "DiscoverTrackSectorScheme: sectorIdsAndOffsets[" << i << "] has id=" <<
+                    util::cout << "DiscoverTrackSectorScheme: sectorIdsAndOffsets[" << i << "] has (id=" <<
                                   sectorIdsAndOffsets[i].id << ", offset=" <<
-                                  sectorIdsAndOffsets[i].offset << "\n";
+                                  sectorIdsAndOffsets[i].offset << ")\n";
             }
         }
         return sectorIdsAndOffsets;
