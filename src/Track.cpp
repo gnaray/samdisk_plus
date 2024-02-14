@@ -109,7 +109,8 @@ int Track::index_of(const Sector& sector) const
 }
 
 /* The data extent bits of a sector are the bits between offset of next sector
- * (if exists otherwise tracklen) and offset of this sector.
+ * (if exists otherwise tracklen + offset of first sector) and offset of this
+ * sector.
  */
 int Track::data_extent_bits(const Sector& sector) const
 {
@@ -125,10 +126,11 @@ int Track::data_extent_bits(const Sector& sector) const
 }
 
 /* The data extent bytes of a sector are the bytes between offset of next sector
- * (if exists otherwise tracklen) and offset of this sector without the parts
- * before data bytes and without idam overhead of next sector, i.e. they are
- * the bytes from the first data byte until idam overhead of next sector,
- * i.e. data bytes + data crc + gap3 + sync.
+ * (if exists otherwise tracklen + offset of first sector) and offset of this
+ * sector without the parts (id overhead without idam overhead, gap2, sync,
+ * d overhead) before data bytes and without idam overhead of next
+ * sector, i.e. they are the bytes from the first data byte until idam overhead
+ * of next sector, i.e. data bytes + data crc + gap3 + sync.
  */
 int Track::data_extent_bytes(const Sector& sector) const
 {
@@ -137,9 +139,11 @@ int Track::data_extent_bytes(const Sector& sector) const
     {
         assert(sector.header.size != SIZECODE_UNKNOWN);
         return sector.size();
+    }
 
     const auto encoding_shift = (sector.encoding == Encoding::FM) ? 5 : 4;
     const auto gap_bytes = data_extent_bits(sector) >> encoding_shift;
+    // The overhead_bytes are the sum of bytes of id overhead, gap2, sync, d overhead without data crc.
     const auto overhead_bytes = GetFmOrMfmSectorOverheadWithoutSyncAndDataCrc(sector.datarate, sector.encoding);
     const auto extent_bytes = (gap_bytes > overhead_bytes) ? gap_bytes - overhead_bytes : 0;
     return extent_bytes;
@@ -334,10 +338,14 @@ void Track::add(Sectors&& sectors, const std::function<bool (const Sector &)>& s
     }
 }
 
-/* If dryrun is true then one of {Append, Insert, Merge} is returned and sector is unchanged.
- * If dryrun is false then one of {Append, Insert, Merge, Unchanged} is returned where
- * the Unchanged value is a subcase of Merge when the data was ignored (unchanged) or matched.
- * The returned affectedSectorIndex is the index of added sector (even if dryrun is true).
+/* If dryrun is true then one of {Append, Insert, Merge} is returned and sector
+ * is unchanged.
+ * If dryrun is false then one of {Append, Insert, Merge, Unchanged} is
+ * returned where the Unchanged value is a subcase of Merge value when the data
+ * was ignored (unchanged) or matched. In case of returned Unchanged value the
+ * sector is unchanged.
+ * The returned affectedSectorIndex is the index of added sector (even if
+ * dryrun is true).
  */
 Track::AddResult Track::add(Sector&& sector, int* affectedSectorIndex/* = nullptr*/, bool dryrun/* = false*/)
 {
@@ -415,6 +423,7 @@ Sector Track::remove(int index)
 }
 
 
+// The track must not be orphan data track.
 const Sector& Track::get_sector(const Header& header) const
 {
     auto it = find(header);
@@ -525,6 +534,7 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
               [](const Sector& s1, const Sector& s2) { return s1.offset < s2.offset; });
 }
 
+// Determine best track length. This method is for multi revolution track.
 int Track::determineBestTrackLen(const int timedTrackLen) const
 {
     assert(timedTrackLen > 0);
@@ -586,7 +596,9 @@ int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
     return modulo(dataOffset - offsetDiff, static_cast<unsigned>(tracklen));
 }
 
-// Guess track sector ids based on discovered gap3s and track sector scheme recognition.
+/* Guess track sector ids based on discovered gap3s and track sector scheme recognition.
+ * The track must not be orphan data track.
+ */
 IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
 {
     IdAndOffsetVector sectorIdsAndOffsets;
@@ -594,7 +606,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
         return sectorIdsAndOffsets;
     if (!opt_normal_disk) // There can be different sector sizes and can not tell if one big or more small sectors fill in a hole.
         util::cout << "DiscoverTrackSectorScheme is called but normal disk option is not set. This method supports normal disk so setting that option is recommended.\n";
-    sectorIdsAndOffsets.reserve(size()); // Size will be more if holes are found at the track end.
+    sectorIdsAndOffsets.reserve(size()); // Size will be more if holes are found.
 
     const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time);
     assert(operator[](0).header.size != SIZECODE_UNKNOWN);
@@ -715,6 +727,7 @@ Track& Track::format(const CylHead& cylhead, const Format& fmt)
     return *this;
 }
 
+// The track must not be orphan data track.
 Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterator itEnd)
 {
     assert(std::distance(it, itEnd) >= 0);
