@@ -792,14 +792,14 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
         throw win32_error(GetLastError_MP(), "ReadTrack");
     PhysicalTrackMFM toBeMergedPhysicalTrack(mem, m_lastDataRate);
     const auto sectorIdAmountPrev = timedAndPhysicalDualTrack.physicalTrackMulti.track.size();
-    const auto sectorAmountPrev = timedAndPhysicalDualTrack.physicalTrackMulti.size();
+    const auto scorePrev = timedAndPhysicalDualTrack.physicalTrackMulti.Score();
     timedAndPhysicalDualTrack.physicalTrackMulti.MergePhysicalTrack(cylhead, toBeMergedPhysicalTrack);
     if (timedAndPhysicalDualTrack.physicalTrackMulti.cylheadMismatch)
         throw util::diskforeigncylhead_exception(util::make_string(
                                                      "cyl head mismatch found during processing physical track, ignoring this whole track to avoid data corruption"));
     const bool foundNewSectorId = timedAndPhysicalDualTrack.physicalTrackMulti.track.size() > sectorIdAmountPrev;
-    const bool foundNewSector = timedAndPhysicalDualTrack.physicalTrackMulti.size() > sectorAmountPrev;
-    if (m_trackInfo[cylhead].trackLenIdeal <= 0 && foundNewSectorId)
+    const bool foundValuable = timedAndPhysicalDualTrack.physicalTrackMulti.Score() > scorePrev;
+    if (m_trackInfo[cylhead].trackLenIdeal <= 0 && foundNewSectorId) // Found new sector id so there is a chance for determining best tracklen.
     {
         const auto bestTrackLen = timedAndPhysicalDualTrack.physicalTrackMulti.determineBestTrackLen(GetFmOrMfmTimeBitsAsRounded(m_lastDataRate, m_lastEncoding, m_trackInfo[cylhead].trackTime));
         if (bestTrackLen > 0)
@@ -809,7 +809,7 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
                 timedAndPhysicalDualTrack.timedIdTrack.setTrackLenAndNormaliseTrackTimeAndSectorOffsets(m_trackInfo[cylhead].trackLenIdeal);
         }
     }
-    return foundNewSector;
+    return foundValuable;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
