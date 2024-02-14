@@ -119,9 +119,23 @@ const char* RecordStr(int record);
 const char* SizeStr(int size);
 
 
+std::string strCH(int cyl, int head);
+
+// The sector is an index value.
+std::string strCHS(int cyl, int head, int sector);
+
+std::string strCHR(int cyl, int head, int record);
+
+// The sector is an index value.
+std::string strCHSR(int cyl, int head, int sector, int record);
+
+[[deprecated("use strCH instead")]]
 const char* CH(int cyl, int head);
+[[deprecated("use strCH instead")]]
 const char* CHS(int cyl, int head, int sector);
+[[deprecated("use strCH instead")]]
 const char* CHR(int cyl, int head, int record);
+[[deprecated("use strCH instead")]]
 const char* CHSR(int cyl, int head, int sector, int record);
 
 extern std::set<std::string> seen_messages;

@@ -43,31 +43,63 @@ const char* HeadStr(int head) { return ValStr(head, "%d", "%" HEXCASE, opt_hex =
 const char* RecordStr(int record) { return ValStr(record, "%d", "%02" HEXCASE); }
 const char* SizeStr(int size) { return ValStr(size, "%d", "%" HEXCASE); }
 
+std::string strCH(int cyl, int head)
+{
+    std::ostringstream ss;
+    ss << "cyl " << CylStr(cyl) << " head " << HeadStr(head);
+    return ss.str();
+}
+
+// The sector is an index value.
+std::string strCHS(int cyl, int head, int sector)
+{
+    std::ostringstream ss;
+    ss << "cyl " << CylStr(cyl) << " head " << HeadStr(head) << " sector index " << sector;
+    return ss.str();
+}
+
+std::string strCHR(int cyl, int head, int record)
+{
+    std::ostringstream ss;
+    ss << "cyl " << CylStr(cyl) << " head " << HeadStr(head) << " sector id " << RecordStr(record);
+    return ss.str();
+}
+
+// The sector is an index value.
+std::string strCHSR(int cyl, int head, int sector, int record)
+{
+    std::ostringstream ss;
+    ss << "cyl " << CylStr(cyl) << " head " << HeadStr(head) << " sector index " << sector << " sector id " << RecordStr(record);
+    return ss.str();
+}
+
 const char* CH(int cyl, int head)
 {
     static char sz[64];
-    snprintf(sz, sizeof(sz), "cyl %s head %s", CylStr(cyl), HeadStr(head));
+    snprintf(sz, sizeof(sz), "%s", strCH(cyl, head).c_str());
     return sz;
 }
 
+// The sector is an index value.
 const char* CHS(int cyl, int head, int sector)
 {
     static char sz[64];
-    snprintf(sz, sizeof(sz), "cyl %s head %s sector %d", CylStr(cyl), HeadStr(head), sector);
+    snprintf(sz, sizeof(sz), "%s", strCHS(cyl, head, sector).c_str());
     return sz;
 }
 
 const char* CHR(int cyl, int head, int record)
 {
     static char sz[64];
-    snprintf(sz, sizeof(sz), "cyl %s head %s sector %s", CylStr(cyl), HeadStr(head), RecordStr(record));
+    snprintf(sz, sizeof(sz), "%s", strCHR(cyl, head, record).c_str());
     return sz;
 }
 
+// The sector is an index value.
 const char* CHSR(int cyl, int head, int sector, int record)
 {
     static char sz[128];
-    snprintf(sz, sizeof(sz), "cyl %s head %s sector %d (id=%s)", CylStr(cyl), HeadStr(head), sector, RecordStr(record));
+    snprintf(sz, sizeof(sz), "%s", strCHSR(cyl, head, sector, record).c_str());
     return sz;
 }
 
