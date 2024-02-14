@@ -349,7 +349,7 @@ void scan_bitstream_apple(TrackData& trackdata)
             {
                 Message(msgWarning, "unknown %s address mark epilogue (%02X%02X%02X) at offset %u on %s",
                     to_string(bitbuf.encoding).c_str(), idraw[8], idraw[9], idraw[10],
-                    am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+                    am_offset, strCH(trackdata.cylhead.cyl, trackdata.cylhead.head).c_str());
             }
             break;
         }
@@ -601,7 +601,7 @@ void scan_bitstream_gcr(TrackData& trackdata)
         default:
             // Only complain about bad address marks if we've already found a header.
             if (!track.empty() || opt_encoding == Encoding::GCR)
-                Message(msgWarning, "  s_b_gcr unknown AM (%02X) at offset %u on %s", am, am_offset, CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+                Message(msgWarning, "  s_b_gcr unknown AM (%02X) at offset %u on %s", am, am_offset, strCH(trackdata.cylhead.cyl, trackdata.cylhead.head).c_str());
             break;
         }
     }
@@ -806,9 +806,9 @@ void scan_bitstream_ace(TrackData& trackdata)
                 dataerror = true;
 
                 if (!clock || !bit)
-                    Message(msgWarning, "framing error at offset %u on on %s", block.size(), CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+                    Message(msgWarning, "framing error at offset %u on on %s", block.size(), strCH(trackdata.cylhead.cyl, trackdata.cylhead.head).c_str());
                 else if (!parity) // inverted due to inclusion of stop bit above
-                    Message(msgWarning, "parity error at offset %u on on %s", block.size(), CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+                    Message(msgWarning, "parity error at offset %u on on %s", block.size(), strCH(trackdata.cylhead.cyl, trackdata.cylhead.head).c_str());
             }
         }
         else
@@ -853,7 +853,7 @@ void scan_bitstream_ace(TrackData& trackdata)
         // Skip header bytes
         if (!IsValidDeepThoughtData(block))
         {
-            Message(msgWarning, "block checksum error on %s", CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+            Message(msgWarning, "block checksum error on %s", strCH(trackdata.cylhead.cyl, trackdata.cylhead.head).c_str());
             dataerror = true;
         }
 
@@ -1087,7 +1087,7 @@ void scan_bitstream_amiga(TrackData& trackdata)
 
         // Warn if the label field isn't empty
         if (*std::max_element(label.begin(), label.end()) != 0)
-            Message(msgWarning, "%s label field is not empty", CHS(trackdata.cylhead.cyl, trackdata.cylhead.head, (info >> 8) & 0xff));
+            Message(msgWarning, "%s label field is not empty", strCHS(trackdata.cylhead.cyl, trackdata.cylhead.head, (info >> 8) & 0xff).c_str());
 
         // Read the header checksum, and combine with checksum so far
         uint32_t disksum;
@@ -1573,7 +1573,7 @@ void scan_bitstream_agat(TrackData& trackdata)
             {
                 Message(msgWarning, "unknown %s address mark epilogue (%02X) at offset %u on %s",
                     to_string(bitbuf.encoding).c_str(), id[3], am_offset,
-                    CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+                    strCH(trackdata.cylhead.cyl, trackdata.cylhead.head).c_str());
             }
             break;
         }
@@ -1591,7 +1591,7 @@ void scan_bitstream_agat(TrackData& trackdata)
             {
                 Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s",
                     to_string(bitbuf.encoding).c_str(), am, am_offset,
-                    CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+                    strCH(trackdata.cylhead.cyl, trackdata.cylhead.head).c_str());
             }
             break;
         }
@@ -1853,7 +1853,7 @@ void scan_bitstream_victor(TrackData& trackdata)
             {
                 Message(msgWarning, "unknown %s address mark (%04X) at offset %u on %s",
                     to_string(bitbuf.encoding).c_str(), am, am_offset,
-                    CH(trackdata.cylhead.cyl, trackdata.cylhead.head));
+                    strCH(trackdata.cylhead.cyl, trackdata.cylhead.head).c_str());
             }
             break;
         }

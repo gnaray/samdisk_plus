@@ -144,7 +144,7 @@ bool ReadFDI(MemFile& file, std::shared_ptr<Disk>& disk)
 
                             // Ensure the CRC status matches the flags
                             if (!!(fs.bFlags & (1 << size)) != (crc ? 0 : 1))
-                                Message(msgWarning, "inconsistent CRC flag for size=%d for %s", sector_size, CHR(cyl, head, fs.bSector));
+                                Message(msgWarning, "inconsistent CRC flag for size=%d for %s", sector_size, strCHR(cyl, head, fs.bSector).c_str());
                         }
                     }
                     else
@@ -159,7 +159,7 @@ bool ReadFDI(MemFile& file, std::shared_ptr<Disk>& disk)
 
                 // Warn about any remaining flags, in case we're missing something
                 if (fs.bFlags & ~0xc0)
-                    Message(msgWarning, "unexpected flags (%02X) on %s", fs.bFlags, CHSR(cyl, head, i, fs.bSector));
+                    Message(msgWarning, "unexpected flags (%02X) on %s", fs.bFlags, strCHSR(cyl, head, i, fs.bSector).c_str());
 
                 sector.add(std::move(data), bad_data, dam);
                 track.add(std::move(sector));
@@ -220,7 +220,7 @@ bool WriteFDI(FILE* /*f_*/, std::shared_ptr<Disk>&/*disk*/)
                                 // Fail if the track isn't double-density
                 if (pt->sectors && pt->encrate != (FD_OPTION_MFM | FD_RATE_250K) && pt->encrate != (FD_OPTION_MFM | FD_RATE_300K))
                 {
-                    throw util::exception(CH(cyl, head), " is not double-density");
+                    throw util::exception(strCH(cyl, head).c_str(), " is not double-density");
                     return retUnsuitableTarget;
                 }
 
@@ -288,14 +288,14 @@ bool WriteFDI(FILE* /*f_*/, std::shared_ptr<Disk>&/*disk*/)
                     {
                         if (track_size >= 0x10000)
                         {
-                            throw util::exception(CH(cyl, head), " is too big for FDI's 16-bit sector offsets");
+                            throw util::exception(strCH(cyl, head).c_str(), " is too big for FDI's 16-bit sector offsets");
                             return retUnsuitableTarget;
                         }
 
                         // Warn if the 2-bit size will truncate a non-error sector
                         if (!ps->IsDataCRC() && ps->size > 3)
                         {
-                            Message(msgWarning, "clipping %s size from %u to %u bytes", CHR(cyl, head, ps->sector), Sector::SizeCodeToLength(ps->size), u1793Size);
+                            Message(msgWarning, "clipping %s size from %u to %u bytes", strCHR(cyl, head, ps->sector).c_str(), Sector::SizeCodeToLength(ps->size), u1793Size);
                         }
 
                         // Write the offset to the sector's data within the track data

@@ -45,7 +45,7 @@ protected:
         std::vector<std::string> warnings;
         m_kryoflux->ReadFlux(revs + 1, flux_revs, warnings);
         for (auto& w : warnings)
-            Message(msgWarning, "%s on %s", w.c_str(), CH(cylhead.cyl, cylhead.head));
+            Message(msgWarning, "%s on %s", w.c_str(), strCH(cylhead.cyl, cylhead.head).c_str());
 
         return TrackData(cylhead, std::move(flux_revs));
     }

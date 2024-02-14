@@ -36,7 +36,7 @@ protected:
                 if (!m_blockdev->Seek(lba + i) || !m_blockdev->Read(p, 1))
                 {
                     Message(msgWarning, "error reading %s",
-                        CHR(cylhead.cyl, cylhead.head, fmt().base + i));
+                        strCHR(cylhead.cyl, cylhead.head, fmt().base + i).c_str());
                     error_ids.push_back(fmt().base + i);
                 }
             }

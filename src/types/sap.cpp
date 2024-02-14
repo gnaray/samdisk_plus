@@ -146,7 +146,7 @@ bool ReadSAP(MemFile& file, std::shared_ptr<Disk>& disk)
                 if (bad_crc)
                 {
                     Message(msgWarning, "bad CRC on %s, found %02X %02X expected %02X %02X",
-                        CHS(cyl, head, ss.sector), data_crc[0], data_crc[1], crc >> 8, crc & 0xff);
+                        strCHS(cyl, head, ss.sector).c_str(), data_crc[0], data_crc[1], crc >> 8, crc & 0xff);
                 }
 #endif
 

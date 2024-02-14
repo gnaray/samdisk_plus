@@ -732,7 +732,7 @@ bool DirCpm(Disk& disk, const Sector& s)
 
             auto sector = disk.find(Header(cyl, head, sec, 2));
             if (sector == nullptr || sector->has_shortdata())
-                throw util::exception(CHR(cyl, head, sec), " not found");
+                throw util::exception(strCHR(cyl, head, sec).c_str(), " not found");
 
             // Process the sector data, ignoring gap data.
             auto data = sector->data_copy();

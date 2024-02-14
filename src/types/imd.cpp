@@ -202,13 +202,13 @@ bool WriteIMD(FILE* /*f_*/, std::shared_ptr<Disk>&/*disk*/)
                 // Ensure the sector size is legal
                 if (ps->size > 7)
                 {
-                    throw util::exception(CHSR(pt->cyl, pt->head, i, ps->sector), " uses an extended size code, which IMD doesn't support");
+                    throw util::exception(strCHSR(pt->cyl, pt->head, i, ps->sector).c_str(), " uses an extended size code, which IMD doesn't support");
                     // ToDo!    ScanTrack(pt, true);
                     return retUnsuitableTarget;
                 }
                 else if (pt->IsMFM() && ps->IsFM())
                 {
-                    throw util::exception(CH(pt->cyl, pt->head), " is mixed-density, which IMD doesn't support");
+                    throw util::exception(strCH(pt->cyl, pt->head).c_str(), " is mixed-density, which IMD doesn't support");
                     // ToDo!    ScanTrack(pt, true);
                     return retUnsuitableTarget;
                 }

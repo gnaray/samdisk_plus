@@ -359,7 +359,7 @@ const Sector* Disk::find_ignoring_size(const Header& header)
     {
         const bool is_track_retried = track_round > 0; // First reading is not retry.
 
-        Message(msgStatus, "%seading %s", (is_track_retried ? "Rer" : "R"), CH(cylhead.cyl, cylhead.head));
+        Message(msgStatus, "%seading %s", (is_track_retried ? "Rer" : "R"), strCH(cylhead.cyl, cylhead.head).c_str());
         Track dst_track;
         if (repairMode) // Read dst track early so we can check if it has bad sectors.
         {
@@ -378,7 +378,7 @@ const Sector* Disk::find_ignoring_size(const Header& header)
                 if (opt_verbose && !deviceReadingPolicyLocal.SkippableSectors().empty())
                 {
                     Message(msgInfoAlways, "Ignoring already good sectors on %s: %s",
-                            CH(cylhead.cyl, cylhead.head), deviceReadingPolicyLocal.SkippableSectors().SectorHeaderSectorsToString().c_str());
+                            strCH(cylhead.cyl, cylhead.head).c_str(), deviceReadingPolicyLocal.SkippableSectors().SectorHeaderSectorsToString().c_str());
                 }
             }
         }
@@ -418,7 +418,7 @@ const Sector* Disk::find_ignoring_size(const Header& header)
             trackFixesNumber += repair_track_changed_amount;
             if (opt_verbose && trackFixesNumber > 0)
                 Message(msgInfoAlways, "Destination disk's track %s was repaired %u times",
-                    CH(cylhead.cyl, cylhead.head), trackFixesNumber);
+                    strCH(cylhead.cyl, cylhead.head).c_str(), trackFixesNumber);
         }
         else
         {

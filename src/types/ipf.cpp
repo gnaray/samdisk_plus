@@ -162,7 +162,7 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
                     if (ret == imgeIncompatible)
                         throw util::exception("failed to lock track, please upgrade capsimg");
 
-                    Message(msgWarning, "failed to lock %s (%s)", CH(cyl, head), error_string(ret).c_str());
+                    Message(msgWarning, "failed to lock %s (%s)", strCH(cyl, head).c_str(), error_string(ret).c_str());
                     break;
                 }
 

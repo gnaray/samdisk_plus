@@ -182,7 +182,7 @@ bool WriteSuperCardPro(const std::string& path, std::shared_ptr<Disk>& disk)
     opt_range.each([&](const CylHead& cylhead)
         {
             auto trackdata = disk->read(cylhead);
-            Message(msgStatus, "Writing %s", CH(cylhead.cyl, cylhead.head));
+            Message(msgStatus, "Writing %s", strCH(cylhead.cyl, cylhead.head).c_str());
             scp_dev_disk->write(std::move(trackdata));
         });
 

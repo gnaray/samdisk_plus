@@ -347,7 +347,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
             GetDataExtent(i) > uSize &&
             (ps->offset + GetSectorOverhead(encrate) + uSize) > tracklen)
         {
-            Message(msgWarning, "%s truncated at end of track data", CHSR(cyl, head, i, ps->sector));
+            Message(msgWarning, "%s truncated at end of track data", str.CHSR(cyl, head, i, ps->sector).c_str());
         }
 #endif
     }
@@ -389,7 +389,7 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
         {
             // Ignore the first sector and size in case of a placeholder sector
             if (!memcmp(&ah[1], ps->apbData[0] + sizeof(ah[0]), sizeof(ah) - sizeof(ah[0])))
-                Message(msgWarning, "possible FDC data corruption on %s", CHSR(cyl, head, i, ps->sector));
+                Message(msgWarning, "possible FDC data corruption on %s", strCHSR(cyl, head, i, ps->sector).c_str());
         }
 #endif
     }
@@ -609,12 +609,12 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
             if (data.size() >= 0x1802 && (data[0x1800] != data[0x1801]))
             {
                 Message(msgWarning, "unknown or invalid 6K checksum [%02X %02X] on %s",
-                    data[0x1800], data[0x1801], CH(cylhead.cyl, cylhead.head));
+                    data[0x1800], data[0x1801], strCH(cylhead.cyl, cylhead.head).c_str());
             }
             else if (data.size() >= 0x1801 && data[0x1800])
             {
                 Message(msgWarning, "unknown or invalid 6K checksum [%02X] on %s",
-                    data[0x1800], CH(cylhead.cyl, cylhead.head));
+                    data[0x1800], strCH(cylhead.cyl, cylhead.head).c_str());
             }
         }
         else if (disk_methods.size() == 1 && common_methods.empty() &&
@@ -627,13 +627,13 @@ bool NormaliseTrack(const CylHead& cylhead, Track& track)
             if (checksum_len == 1 || data.size() < 0x1802)
             {
                 Message(msgWarning, "invalid %s checksum [%02X] on %s",
-                    str_method.c_str(), data[0x1800], CH(cylhead.cyl, cylhead.head));
+                    str_method.c_str(), data[0x1800], strCH(cylhead.cyl, cylhead.head).c_str());
             }
             else if (checksum_len == 2)
             {
                 Message(msgWarning, "invalid %s checksum [%02X %02X] on %s",
                     str_method.c_str(), data[0x1800], data[0x1801],
-                    CH(cylhead.cyl, cylhead.head));
+                    strCH(cylhead.cyl, cylhead.head).c_str());
             }
         }
     }
@@ -694,12 +694,12 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
                     if (it->has_good_data())
                     {
                         if (had_good_data && opt_paranoia)
-                            Message(msgFix, "improved good %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                            Message(msgFix, "improved good %s", strCHR(cylhead.cyl, cylhead.head, it->header.sector).c_str());
                         else
-                            Message(msgFix, "repaired bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                            Message(msgFix, "repaired bad %s", strCHR(cylhead.cyl, cylhead.head, it->header.sector).c_str());
                     }
                     else
-                        Message(msgFix, "improved bad %s", CHR(cylhead.cyl, cylhead.head, it->header.sector));
+                        Message(msgFix, "improved bad %s", strCHR(cylhead.cyl, cylhead.head, it->header.sector).c_str());
                 }
             }
         }
@@ -755,7 +755,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
             else
                 details += "no data";
             details += ")";
-            Message(msgFix, "added missing %s %s", CHR(cylhead.cyl, cylhead.head, src_sector_copy.header.sector), details.c_str());
+            Message(msgFix, "added missing %s %s", strCHR(cylhead.cyl, cylhead.head, src_sector_copy.header.sector).c_str(), details.c_str());
             track.insert(insert_idx, std::move(src_sector_copy));
             changed_amount++;
         }
@@ -946,7 +946,7 @@ bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
                 if (!(*it).has_good_data())
                 {
                     std::copy(BAD_SECTOR_SIGN.begin(), BAD_SECTOR_SIGN.end(), buf.begin()); // Signing sector with BADS.
-                    Message(msgWarning, "bad sector at %s sector %u", CH(cylhead.cyl, cylhead.head), header.sector);
+                    Message(msgWarning, "bad sector at %s sector %u", strCH(cylhead.cyl, cylhead.head).c_str(), header.sector);
                 }
             }
             else

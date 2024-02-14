@@ -69,7 +69,7 @@ bool ReadSTREAM(MemFile& file, std::shared_ptr<Disk>& disk)
             std::vector<std::string> warnings;
             auto flux_revs = KryoFlux::DecodeStream(f.data(), warnings);
             for (auto& w : warnings)
-                Message(msgWarning, "%s on %s", w.c_str(), CH(cylhead.cyl, cylhead.head));
+                Message(msgWarning, "%s on %s", w.c_str(), strCH(cylhead.cyl, cylhead.head).c_str());
 
             disk->write(cylhead, std::move(flux_revs));
         }

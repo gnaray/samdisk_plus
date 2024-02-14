@@ -81,12 +81,12 @@ bool ReadDSC(MemFile& file, std::shared_ptr<Disk>& disk)
         {
             DSC_SECTOR ds;
             if (!pfileHeader->read(&ds, sizeof(ds), 1))
-                throw util::exception("short file reading %s", CHS(cylhead.cyl, cylhead.head, i));
+                throw util::exception("short file reading %s", strCHS(cylhead.cyl, cylhead.head, i).c_str());
 
             Sector sector(DataRate::_250K, Encoding::MFM, Header(ds.cyl, ds.head, ds.sector, ds.size));
 
             if (ds.flags & ~0x02)
-                Message(msgWarning, "unknown flags [%02X] for %s", ds.flags & ~0x02, CHSR(cylhead.cyl, cylhead.head, i, ds.sector));
+                Message(msgWarning, "unknown flags [%02X] for %s", ds.flags & ~0x02, strCHSR(cylhead.cyl, cylhead.head, i, ds.sector).c_str());
 
             // b1 of flags indicates fill byte
             if (ds.flags & 0x02)
@@ -95,7 +95,7 @@ bool ReadDSC(MemFile& file, std::shared_ptr<Disk>& disk)
             {
                 DSC_DATA dd;
                 if (!pfileHeader->read(&dd, sizeof(dd)))
-                    throw util::exception("short file reading ", CHSR(cylhead.cyl, cylhead.head, i, sector.header.sector));
+                    throw util::exception("short file reading ", strCHSR(cylhead.cyl, cylhead.head, i, sector.header.sector).c_str());
 
                 auto offset = (dd.bOff16M << 24) | (dd.bOff64K << 16) | (dd.bOff256 << 8);
                 if (offset != pfileData->tell())
@@ -103,7 +103,7 @@ bool ReadDSC(MemFile& file, std::shared_ptr<Disk>& disk)
 
                 Data data(sector.size());
                 if (!pfileData->read(data))
-                    throw util::exception("short file reading %s data", CHSR(cylhead.cyl, cylhead.head, i, sector.header.sector));
+                    throw util::exception("short file reading %s data", strCHSR(cylhead.cyl, cylhead.head, i, sector.header.sector).c_str());
                 sector.add(std::move(data));
             }
 

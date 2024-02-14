@@ -84,7 +84,7 @@ bool FormatImage(const std::string& path, Range range)
     range.each([&](const CylHead& cylhead) {
         Track track;
         track.format(cylhead, fmt);
-        Message(msgStatus, "Formatting %s", CH(cylhead.cyl, cylhead.head));
+        Message(msgStatus, "Formatting %s", strCH(cylhead.cyl, cylhead.head).c_str());
         disk->write(cylhead, std::move(track));
         }, fmt.cyls_first);
 
@@ -99,7 +99,7 @@ bool UnformatImage(const std::string& path, Range range)
     ValidateRange(range, MAX_TRACKS, MAX_SIDES, 1, disk->cyls(), disk->heads());
 
     range.each([&](const CylHead& cylhead) {
-        Message(msgStatus, "Unformatting %s", CH(cylhead.cyl, cylhead.head));
+        Message(msgStatus, "Unformatting %s", strCH(cylhead.cyl, cylhead.head).c_str());
         disk->write(cylhead, Track());
         });
 

@@ -136,7 +136,7 @@ bool ReadD88(MemFile& file, std::shared_ptr<Disk>& disk)
             // Seek the start of the file data
             if (current_offset <= last_offset || !file.seek(current_offset))
             {
-                Message(msgWarning, "invalid offset (%lu) for %s", current_offset, CH(cyl, head));
+                Message(msgWarning, "invalid offset (%lu) for %s", current_offset, strCH(cyl, head).c_str());
                 stop = true;
                 break;
             }

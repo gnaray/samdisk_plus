@@ -279,7 +279,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
             // SugarBox (<= 0.22) doesn't write blank tracks at the end of the disk.
             if (cyl >= 40 && file.tell() == file.size())
             {
-                Message(msgWarning, "%s track header is missing, assuming blank track", CH(cyl, head));
+                Message(msgWarning, "%s track header is missing, assuming blank track", strCH(cyl, head).c_str());
                 disk->write(cylhead, Track());
                 continue;
             }
@@ -294,7 +294,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
 
             // Warn if the track sector size is invalid
             if (!fEDSK && th.size > SIZE_MASK_765)
-                Message(msgWarning, "invalid sector size code (%s) on %s", SizeStr(th.size), CH(cyl, head));
+                Message(msgWarning, "invalid sector size code (%s) on %s", SizeStr(th.size), strCH(cyl, head).c_str());
 
             if (th.track != cyl || th.side != head)
             {
@@ -309,7 +309,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
 
             // Warn if the unused fields are used
             if (th.unused[0] || th.unused[1] || th.unused[2])
-                Message(msgWarning, "unused fields are non-zero (%02X %02X %02X) on %s", th.unused[0], th.unused[1], th.unused[2], CH(cyl, head));
+                Message(msgWarning, "unused fields are non-zero (%02X %02X %02X) on %s", th.unused[0], th.unused[1], th.unused[2], strCH(cyl, head).c_str());
 
             DataRate datarate = (th.rate >= 1 && th.rate <= 3) ? abEDSKRates[th.rate] : DataRate::_250K;
             Encoding encoding = (th.encoding != 1) ? Encoding::MFM : Encoding::FM;
@@ -324,7 +324,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
             // CPCDiskXP writes a truncated track header if the final track is blank.
             // Check if only the minimum header size has been supplied.
             if (uMinimum < uSectorHeaders && (file.size() - file.tell()) == uMinimum)
-                Message(msgWarning, "%s track header is shorter than index size", CH(cyl, head));
+                Message(msgWarning, "%s track header is shorter than index size", strCH(cyl, head).c_str());
             else if (!file.read(mem, uSectorHeaders))
                 throw util::exception("short file reading ", cylhead, " sector headers");
 
@@ -360,7 +360,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                 // Check for an impossible flag combo, used for storing placeholder sectors (Logo Professor test)
                 if (status1 & SR1_CRC_ERROR && status2 & SR2_MISSING_ADDRESS_MARK)
                 {
-                    Message(msgWarning, "unsupported placeholder sector on %s", CHSR(cyl, head, sec, sector.header.sector));
+                    Message(msgWarning, "unsupported placeholder sector on %s", strCHSR(cyl, head, sec, sector.header.sector).c_str());
                     status2 &= ~SR2_MISSING_ADDRESS_MARK;
                 }
 
@@ -368,7 +368,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                 if ((status1 & (SR1_WRITE_PROTECT_DETECTED | SR1_RESERVED1 | SR1_RESERVED2)) ||
                     (status2 & (SR2_SCAN_COMMAND_FAILED | SR2_SCAN_COMMAND_EQUAL | SR2_RESERVED)))
                 {
-                    Message(msgWarning, "invalid status (ST1=%02X ST2=%02X) for %s", status1, status2, CHSR(cyl, head, sec, sector.header.sector));
+                    Message(msgWarning, "invalid status (ST1=%02X ST2=%02X) for %s", status1, status2, strCHSR(cyl, head, sec, sector.header.sector).c_str());
 
                     // Clear the unexpected bits and continue
                     status1 &= ~(SR1_WRITE_PROTECT_DETECTED | SR1_RESERVED1 | SR1_RESERVED2);
@@ -389,7 +389,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                     (status1 == SR1_CANNOT_FIND_SECTOR_ID && status2 == SR2_WRONG_CYLINDER_DETECTED)        // CHRN mismatch, including wrong cylinder
                     ))
                 {
-                    Message(msgWarning, "unusual status flags (ST1=%02X ST2=%02X) for %s", status1, status2, CHSR(cyl, head, sec, sector.header.sector));
+                    Message(msgWarning, "unusual status flags (ST1=%02X ST2=%02X) for %s", status1, status2, strCHSR(cyl, head, sec, sector.header.sector).c_str());
                 }
 
                 auto native_size = sector.size();
@@ -435,7 +435,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                         data_size > native_size && !data_crc_error && !(data_size % native_size))
                     {
                         // Example: Discology +3.dsk (SDP)
-                        Message(msgFix, "dropping suspicious excess data on %s", CHSR(cyl, head, sec, sector.header.sector));
+                        Message(msgFix, "dropping suspicious excess data on %s", strCHSR(cyl, head, sec, sector.header.sector).c_str());
                         data.resize(native_size);
                     }
 
@@ -460,12 +460,12 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                     }
 
                     if (id_crc_error || data_not_found)
-                        Message(msgWarning, "ignoring stored data on %s, which has no data field", CHSR(cyl, head, sec, sector.header.sector));
+                        Message(msgWarning, "ignoring stored data on %s, which has no data field", strCHSR(cyl, head, sec, sector.header.sector).c_str());
                     else
                     {
                         auto res = sector.add(std::move(data), data_crc_error, deleted_dam ? IBM_DAM_DELETED : IBM_DAM);
                         if (res == Sector::Merge::Unchanged)
-                            Message(msgInfo, "ignored identical data copy of %s", CHSR(cyl, head, sec, sector.header.sector));
+                            Message(msgInfo, "ignored identical data copy of %s", strCHSR(cyl, head, sec, sector.header.sector).c_str());
                     }
                 }
 
@@ -483,11 +483,11 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
             {
                 // If the low 16-bits are different, we'll stick with trusting the index size
                 if (((uTrackEnd - uTrackStart) & 0xffff) != uTrackSize)
-                    Message(msgWarning, "%s size (%u) does not match index entry (%u)", CH(cyl, head), uTrackEnd - uTrackStart, uTrackSize);
+                    Message(msgWarning, "%s size (%u) does not match index entry (%u)", strCH(cyl, head).c_str(), uTrackEnd - uTrackStart, uTrackSize);
                 else
                 {
                     // The track size probably overflowed (some WinAPE images), so trust the used size
-                    Message(msgWarning, "%s size (%u) does not match index entry (%u)", CH(cyl, head), uTrackEnd - uTrackStart, uTrackSize);
+                    Message(msgWarning, "%s size (%u) does not match index entry (%u)", strCH(cyl, head).c_str(), uTrackEnd - uTrackStart, uTrackSize);
                     file.seek(uTrackEnd);
                 }
             }
@@ -568,7 +568,7 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
         if (!memcmp(pth->signature, EDSK_TRACK_SIG, 10) && !pth->sectors)
         {
             // Example: Fun School 2 For The Over-8s.dsk (SDP +3)
-            Message(msgWarning, "blank %s should not have EDSK track block", CH(pth->track, pth->side));
+            Message(msgWarning, "blank %s should not have EDSK track block", strCH(pth->track, pth->side).c_str());
         }
         else
         {
@@ -732,7 +732,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                     if (sector.dam != IBM_DAM && sector.dam != IBM_DAM_DELETED)
                     {
                         Message(msgWarning, "discarding data from %s due to non-standard DAM %02x",
-                            CHR(cyl, head, sector.header.sector), sector.dam);
+                            strCHR(cyl, head, sector.header.sector).c_str(), sector.dam);
                         sector.remove_data();
                     }
 
@@ -758,9 +758,9 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                     if (num_copies > 1 && data_size != real_size)
                     {
                         if (data_size > real_size)
-                            Message(msgWarning, "discarding gaps from multiple copies of %s", CHR(cyl, head, sector.header.sector));
+                            Message(msgWarning, "discarding gaps from multiple copies of %s", strCHR(cyl, head, sector.header.sector).c_str());
                         else if (sector.offset && sector.offset + real_size < track.tracklen)
-                            Message(msgWarning, "short data field in multiple copies of %s", CHR(cyl, head, sector.header.sector));
+                            Message(msgWarning, "short data field in multiple copies of %s", strCHR(cyl, head, sector.header.sector).c_str());
 
                         data_size = real_size;
                     }

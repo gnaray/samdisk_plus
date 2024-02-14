@@ -247,7 +247,7 @@ bool UnwrapCPM(std::shared_ptr<Disk>&/*olddisk*/, std::shared_ptr<Disk>&/*newdis
                 continue;
 
             if (olddisk->ReadRegularTrack(cyl, head, &fmtMGT, pb))
-                throw util::exception("CP/M track on ", CH(cyl, head), " is incomplete");
+                throw util::exception("CP/M track on ", strCH(cyl, head).c_str(), " is incomplete");
 
             pb += MGT_TRACK_SIZE;
         }

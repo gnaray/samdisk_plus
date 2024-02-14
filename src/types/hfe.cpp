@@ -167,7 +167,7 @@ bool ReadHFE(MemFile& file, std::shared_ptr<Disk>& disk)
 
                 // Read the next interleaved chunk
                 if (!file.seek(uTrackDataOffset + (uRead * 2)) || !file.read(pbTrack + uRead, chunk))
-                    throw util::exception("EOF reading track data for ", CH(cyl, head));
+                    throw util::exception("EOF reading track data for ", strCH(cyl, head).c_str());
 
                 uRead += chunk;
             }

@@ -72,7 +72,7 @@ bool ReadDMK(MemFile& file, std::shared_ptr<Disk>& disk)
             Data data(tracklen);
 
             if (!file.read(index) || !file.read(data))
-                Message(msgWarning, "short file reading %s", CH(cyl, head));
+                Message(msgWarning, "short file reading %s", strCH(cyl, head).c_str());
 
             std::transform(index.begin(), index.end(), index.begin(),
                 [](uint16_t w) { return util::letoh(w); });

@@ -258,7 +258,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
         {
             TD0_SECTOR ts;
             if (!file.read(&ts, sizeof(ts)))
-                throw util::exception("short file reading header for %s", CHS(tt.cyl, tt.head & 1, i));
+                throw util::exception("short file reading header for %s", strCHS(tt.cyl, tt.head & 1, i).c_str());
 
             Sector sector(datarate, encoding, Header(ts.cyl, ts.head, ts.sector, ts.size));
 
@@ -269,7 +269,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
             bool no_id = (ts.flags & 0x40) != 0;
 
             if (ts.flags & 0x88)
-                Message(msgWarning, "invalid flags (%#02x) on %s", ts.flags, CHSR(cylhead.cyl, cylhead.head, i, sector.header.sector));
+                Message(msgWarning, "invalid flags (%#02x) on %s", ts.flags, strCHSR(cylhead.cyl, cylhead.head, i, sector.header.sector).c_str());
 
             // Does this sector have a data field with a valid size?
             if (!no_data && !(ts.size & 0xf8))
@@ -281,11 +281,11 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
                 if (!(ts.flags & 0x10))
                 {
                     if (!UnpackData(file, data.data(), static_cast<int>(data.size())))
-                        throw util::exception("failed to unpack %s", CHSR(cylhead.cyl, cylhead.head, i, sector.header.sector));
+                        throw util::exception("failed to unpack %s", strCHSR(cylhead.cyl, cylhead.head, i, sector.header.sector).c_str());
 
                     crc = CrcTd0Block(data.data(), data.size()) & 0xff;
                     if (crc != ts.data_crc)
-                        throw util::exception("CRC bad for %s", CHSR(cylhead.cyl, cylhead.head, i, sector.header.sector));
+                        throw util::exception("CRC bad for %s", strCHSR(cylhead.cyl, cylhead.head, i, sector.header.sector).c_str());
                 }
 
                 sector.add(std::move(data), bad_data, deleted_data ? IBM_DAM_DELETED : IBM_DAM);
@@ -333,7 +333,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
 
             // If dups were removed, warn of the modification
             if (dups_removed)
-                Message(msgFix, "ignored %u duplicate sectors on oversized %s", dups_removed, CH(cylhead.cyl, cylhead.head));
+                Message(msgFix, "ignored %u duplicate sectors on oversized %s", dups_removed, strCH(cylhead.cyl, cylhead.head).c_str());
         }
 
         disk->write(cylhead, std::move(track));

@@ -289,7 +289,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             constexpr auto tracktimeTolerance = 0.01;
             if (tracktime < tracktimeCorrect * (1 - tracktimeTolerance) || tracktime > tracktimeCorrect * (1 + tracktimeTolerance))
             {
-                Message(msgWarning, "track time of %s is corrupted by older driver, upgrade it if possible. Retrying", CH(cylhead.cyl, cylhead.head));
+                Message(msgWarning, "track time of %s is corrupted by older driver, upgrade it if possible. Retrying", strCH(cylhead.cyl, cylhead.head).c_str());
                 continue; // Try again.
             }
         }
@@ -471,7 +471,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
             const auto data = sector.data_copy();
             if (std::memcmp(data.data(), mem.pb, static_cast<size_t>(data.size())))
             {
-                Message(msgWarning, "track read of %s doesn't match first sector content", CH(cylhead.cyl, cylhead.head));
+                Message(msgWarning, "track read of %s doesn't match first sector content", strCH(cylhead.cyl, cylhead.head).c_str());
                 break;
             }
         }
