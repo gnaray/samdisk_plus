@@ -105,7 +105,7 @@ int TrackSectorIds::MatchSectorIds(const TrackSectorIds& incompleteSectorIds) co
 
 
 
-TrackSectorIds IdAndOffsetVector::GetSectorIds() const
+TrackSectorIds IdAndOffsetPairs::GetSectorIds() const
 {
     TrackSectorIds sectorIds;
     std::transform(begin(), end(), std::back_inserter(sectorIds),
@@ -114,7 +114,7 @@ TrackSectorIds IdAndOffsetVector::GetSectorIds() const
     return sectorIds;
 }
 
-void IdAndOffsetVector::ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackSectorIds)
+void IdAndOffsetPairs::ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackSectorIds)
 {
     assert(trackSectorIds.size() >= size());
 
@@ -126,7 +126,7 @@ void IdAndOffsetVector::ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackS
     }
 }
 
-bool IdAndOffsetVector::ReplaceMissingIdsByFindingTrackSectorIds(const int sectorsMin/* = 0*/)
+bool IdAndOffsetPairs::ReplaceMissingIdsByFindingTrackSectorIds(const int sectorsMin/* = 0*/)
 {
     const auto completeTrackSectorIds = TrackSectorIds::FindCompleteTrackSectorIdsFor(GetSectorIds(), sectorsMin);
     if (completeTrackSectorIds.empty())

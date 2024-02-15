@@ -57,7 +57,7 @@ public:
     int offset = -1;
 };
 
-class IdAndOffsetVector : public VectorX<IdAndOffset>
+class IdAndOffsetPairs : public VectorX<IdAndOffset>
 {
 public:
     using VectorX<IdAndOffset>::VectorX;

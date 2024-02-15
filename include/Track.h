@@ -56,7 +56,7 @@ public:
     int determineBestTrackLen(const int timedTrackLen) const;
     void setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen);
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;
-    IdAndOffsetVector DiscoverTrackSectorScheme() const;
+    IdAndOffsetPairs DiscoverTrackSectorScheme();
 
     Track& format(const CylHead& cylhead, const Format& format);
     Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);

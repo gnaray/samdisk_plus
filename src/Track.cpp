@@ -599,9 +599,9 @@ int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 /* Guess track sector ids based on discovered gap3s and track sector scheme recognition.
  * The track must not be orphan data track.
  */
-IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
+IdAndOffsetPairs Track::DiscoverTrackSectorScheme() const
 {
-    IdAndOffsetVector sectorIdsAndOffsets;
+    IdAndOffsetPairs sectorIdsAndOffsets;
     if (empty())
         return sectorIdsAndOffsets;
     if (!opt_normal_disk) // There can be different sector sizes and can not tell if one big or more small sectors fill in a hole.
@@ -704,7 +704,7 @@ IdAndOffsetVector Track::DiscoverTrackSectorScheme() const
         }
         return sectorIdsAndOffsets;
     }
-    return IdAndOffsetVector();
+    return IdAndOffsetPairs();
 }
 
 Track& Track::format(const CylHead& cylhead, const Format& fmt)

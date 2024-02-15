@@ -164,7 +164,7 @@ public:
         return SizeCodeToLength(SizeCodeToRealSizeCode(size));
     }
 
-    int FindParentSectorIdByOffset(const IdAndOffsetVector& sectorIdsAndOffsets) const;
+    int FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const;
 
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Sector& sector, bool onlyRelevantData = true)
