@@ -339,7 +339,9 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
     auto size = Sector::SizeCodeToRealLength(sector.header.size);
     MEMORY mem(size);
 
-    for (int i = 0; i <= opt_retries; ++i)
+    const auto readRetriesInit = opt_retries;
+    auto readRetries = readRetriesInit;
+    do // The reading loop.
     {
         // If the sector id occurs more than once on the track, synchronise to the correct one
         if (track.is_repeated(sector))
@@ -412,6 +414,8 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         {
             if (sector.has_stable_data())
                 break;
+            if (readRetries.sinceLastChange)
+                readRetries = readRetriesInit;
             continue;
         }
 
@@ -422,7 +426,7 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         // Accept 8K sectors with a recognised checksum method.
         if (track.is_8k_sector() && !ChecksumMethods(mem.pb, size).empty())
             break;
-    }
+    } while (readRetries-- > 0);
 }
 
 void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
