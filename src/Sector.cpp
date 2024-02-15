@@ -133,8 +133,7 @@ DataReadStats& Sector::data_best_copy_read_stats()
 
 int Sector::get_data_best_copy_index() const
 {
-    if (!has_data())
-        return -1;
+    assert(has_data());
 
     return static_cast<int>(std::max_element(m_data_read_stats.begin(), m_data_read_stats.end(),
                             [](const DataReadStats& a, const DataReadStats& b) { return a.ReadCount() < b.ReadCount(); })
