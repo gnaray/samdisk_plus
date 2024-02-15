@@ -103,6 +103,13 @@ int TrackSectorIds::MatchSectorIds(const TrackSectorIds& incompleteSectorIds) co
     return resultNoOffset; // All IDs are unknown, nothing to match.
 }
 
+bool TrackSectorIds::ExtendableTo(const TrackSectorIds& sectorIds) const
+{
+    if (size() > sectorIds.size())
+        return false;
+    return std::mismatch(cbegin(), cend(), sectorIds.cbegin()).first == cend();
+}
+
 
 
 TrackSectorIds IdAndOffsetPairs::GetSectorIds() const

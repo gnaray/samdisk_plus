@@ -12,6 +12,7 @@ public:
     static const TrackSectorIds FindCompleteTrackSectorIdsFor(const TrackSectorIds& incompleteSectorIds, const int sectorsMin = 0);
 
     int MatchSectorIds(const TrackSectorIds& sectorIds) const;
+    bool ExtendableTo(const TrackSectorIds& sectorIds) const;
 
     std::string ToString(bool onlyRelevantData = true) const
     {
