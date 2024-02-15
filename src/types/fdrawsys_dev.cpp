@@ -21,6 +21,7 @@ static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_datarate = getOpt<DataRate>("datarate");
 static auto& opt_debug = getOpt<int>("debug");
 static auto& opt_encoding = getOpt<Encoding>("encoding");
+static auto& opt_fdraw_rescue_mode = getOpt<bool>("fdraw_rescue_mode");
 static auto& opt_gaps = getOpt<int>("gaps");
 static auto& opt_newdrive = getOpt<int>("newdrive");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
@@ -131,7 +132,7 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     TimedAndPhysicalDualTrack timedAndPhysicalDualTrack;
     Track trackBefore112;
     TrackData bitstreamTrackData;
-    bool usingScanner112 = m_fdrawcmd->GetVersion().value >= DriverVersion1_0_1_12;
+    bool usingScanner112 = opt_fdraw_rescue_mode && m_fdrawcmd->GetVersion().value >= DriverVersion1_0_1_12;
     if (usingScanner112)
         timedAndPhysicalDualTrack = BlindReadHeaders112(cylhead, deviceReadingPolicy);
     usingScanner112 &= m_lastEncoding == Encoding::MFM; // Currently it supports only MFM encoding.
