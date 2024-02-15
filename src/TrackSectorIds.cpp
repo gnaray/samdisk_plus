@@ -125,7 +125,7 @@ void IdAndOffsetPairs::ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackSe
 {
     assert(trackSectorIds.size() >= size());
 
-    const auto iSup = static_cast<int>(trackSectorIds.size());
+    const auto iSup = static_cast<int>(size());
     for (int i = 0; i < iSup; i++)
     {
         if (data()[i].id < 0)
