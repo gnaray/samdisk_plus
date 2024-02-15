@@ -41,6 +41,7 @@ struct OPTIONS
 
     bool normal_disk = false;
     bool readstats = false, paranoia = false, skip_stable_sectors = false;
+    bool fdraw_rescue_mode = false;
     std::string detect_devfs{}; // Detect device (floppy) filesystem thus use its format.
 
     RetryPolicy rescans = 0, retries = 5;
@@ -160,6 +161,7 @@ bool& getOpt(const char* key)
         {"paranoia", Options::opt.paranoia},
         {"readstats", Options::opt.readstats},
         {"skip_stable_sectors", Options::opt.skip_stable_sectors},
+        {"fdraw_rescue_mode", Options::opt.fdraw_rescue_mode},
     };
     return s_mapStringToBoolVariables.at(key);
 }
@@ -402,7 +404,8 @@ enum {
     OPT_TRACK_RETRIES, OPT_DISK_RETRIES, OPT_NORMAL_DISK,
     OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL,
     OPT_DETECT_DEVFS,
-    OPT_BYTE_TOLERANCE_OF_TIME
+    OPT_BYTE_TOLERANCE_OF_TIME,
+    OPT_FDRAW_RESCUE_MODE
 };
 
 static struct option long_options[] =
@@ -517,6 +520,7 @@ static struct option long_options[] =
     { "detect-devfs",           optional_argument, nullptr, OPT_DETECT_DEVFS },    // undocumented. Detect the device filesystem and if exists use its format.
     { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },    // undocumented. Amount of disk retries. If auto then do it while data improved.
     { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME}, // undocumented. Two things are considered at same location if their location differs <= this value. Default is 64.
+    { "fdraw-rescue-mode",            no_argument, nullptr, OPT_FDRAW_RESCUE_MODE}, // undocumented. Use the rescue method in fdrawsys_dev. Default is using the all-in method.
 
     { nullptr, 0, nullptr, 0 }
 };
@@ -777,6 +781,10 @@ bool ParseCommandLine(int argc_, char* argv_[])
             Options::opt.byte_tolerance_of_time = util::str_value<int>(optarg);
             if (Options::opt.byte_tolerance_of_time < 0 || Options::opt.byte_tolerance_of_time > 127)
                 throw util::exception("invalid byte-tolerance-of-time '", optarg, "', expected between 0 and 127 inclusive");
+            break;
+
+        case OPT_FDRAW_RESCUE_MODE:
+            Options::opt.fdraw_rescue_mode = true;
             break;
 
         case ':':
