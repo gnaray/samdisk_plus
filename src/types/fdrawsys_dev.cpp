@@ -608,7 +608,7 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
             if (m_trackInfo[cylhead].trackLenIdeal <= 0)
             {
                 physicalTrackRescans--;
-                if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new sector.
+                if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new id when trakLenIdeal was unknown.
                 {
                     if (physicalTrackRescans.sinceLastChange)
                         physicalTrackRescans = physicalTrackRescansInit;
@@ -650,7 +650,7 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
         if (!initialRound && physicalTrackRescans > 0)
         {
             physicalTrackRescans--;
-            if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new sector.
+            if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new id when trakLenIdeal was unknown.
             {
                 if (physicalTrackRescans.sinceLastChange)
                     physicalTrackRescans = physicalTrackRescansInit;
@@ -658,16 +658,22 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
         }
         if (m_trackInfo[cylhead].trackLenIdeal > 0)
         {
-            if (timedAndPhysicalDualTrack.SyncAndDemultiPhysicalToTimed(m_trackInfo[cylhead].trackLenIdeal)) // Updates lastTimeSyncedPhysicalTrackSingle.
+            // Updates timedAndPhysicalDualTrack.{lastPhysicalTrackSingle, syncedTimedAndPhysicalTracks}.
+            if (timedAndPhysicalDualTrack.SyncAndDemultiPhysicalToTimed(m_trackInfo[cylhead].trackLenIdeal)) // Found new valuable something.
+            {
+                if (physicalTrackRescans.sinceLastChange)
+                    physicalTrackRescans = physicalTrackRescansInit;
+            }
+            if (timedAndPhysicalDualTrack.syncedTimedAndPhysicalTracks)
             {
                 // Out of space sectors at track end are not normal, discard them if option normal disk is specified.
-                DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.track);
+                DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.lastPhysicalTrackSingle.track);
                 const auto sectorAmountPrev = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size();
                 // Merging ids of last time synced physical track single with ids of timed id data and physical track (timed track included) and with orphan guessed ids.
-                auto timedIdDataAndPhysicalIdTrackLocal = timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.track.CopyWithoutSectorData();
+                auto timedIdDataAndPhysicalIdTrackLocal = timedAndPhysicalDualTrack.lastPhysicalTrackSingle.track.CopyWithoutSectorData();
                 timedIdDataAndPhysicalIdTrackLocal.add(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.CopyWithoutSectorData());
-                GuessAndAddSectorIdsOfOrphans(timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle, timedIdDataAndPhysicalIdTrackLocal);
-                //Merging whole (ids and data of) timed id data and physical id track.
+                GuessAndAddSectorIdsOfOrphans(timedAndPhysicalDualTrack.lastPhysicalTrackSingle, timedIdDataAndPhysicalIdTrackLocal);
+                //Merging whole (ids (done earlier) and data of) timed id data and physical id track.
                 timedIdDataAndPhysicalIdTrackLocal.add(std::move(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack));
                 // The merged result becomes the new timed id data and physical track.
                 timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack = std::move(timedIdDataAndPhysicalIdTrackLocal);
@@ -778,8 +784,8 @@ void FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTr
         }
     }
     timedAndPhysicalDualTrack.finalAllInTrack = track;
-    if (!timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.cylheadMismatch && !timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.empty())
-        timedAndPhysicalDualTrack.lastTimeSyncedPhysicalTrackSingle.MergeInto(timedAndPhysicalDualTrack.finalAllInTrack, sectorFilterPredicate);
+    if (!timedAndPhysicalDualTrack.lastPhysicalTrackSingle.cylheadMismatch && timedAndPhysicalDualTrack.syncedTimedAndPhysicalTracks)
+        timedAndPhysicalDualTrack.lastPhysicalTrackSingle.MergeInto(timedAndPhysicalDualTrack.finalAllInTrack, sectorFilterPredicate);
 }
 
 bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack)
@@ -792,14 +798,12 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
         throw win32_error(GetLastError_MP(), "ReadTrack");
     PhysicalTrackMFM toBeMergedPhysicalTrack(mem, m_lastDataRate);
     const auto sectorIdAmountPrev = timedAndPhysicalDualTrack.physicalTrackMulti.track.size();
-    const auto scorePrev = timedAndPhysicalDualTrack.physicalTrackMulti.Score();
     timedAndPhysicalDualTrack.physicalTrackMulti.MergePhysicalTrack(cylhead, toBeMergedPhysicalTrack);
     if (timedAndPhysicalDualTrack.physicalTrackMulti.cylheadMismatch)
         throw util::diskforeigncylhead_exception(util::make_string(
                                                      "cyl head mismatch found during processing physical track, ignoring this whole track to avoid data corruption"));
     const bool foundNewSectorId = timedAndPhysicalDualTrack.physicalTrackMulti.track.size() > sectorIdAmountPrev;
-    const bool foundValuable = timedAndPhysicalDualTrack.physicalTrackMulti.Score() > scorePrev;
-    if (m_trackInfo[cylhead].trackLenIdeal <= 0 && foundNewSectorId) // Found new sector id so there is a chance for determining best tracklen.
+    if (foundNewSectorId && m_trackInfo[cylhead].trackLenIdeal <= 0) // Found new sector id so there is a chance for determining best tracklen.
     {
         const auto bestTrackLen = timedAndPhysicalDualTrack.physicalTrackMulti.determineBestTrackLen(GetFmOrMfmTimeBitsAsRounded(m_lastDataRate, m_lastEncoding, m_trackInfo[cylhead].trackTime));
         if (bestTrackLen > 0)
@@ -808,8 +812,9 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
             if (timedAndPhysicalDualTrack.timedIdTrack.tracklen > 0)
                 timedAndPhysicalDualTrack.timedIdTrack.setTrackLenAndNormaliseTrackTimeAndSectorOffsets(m_trackInfo[cylhead].trackLenIdeal);
         }
+        return true;
     }
-    return foundValuable;
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
