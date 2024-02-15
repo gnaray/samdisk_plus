@@ -51,7 +51,7 @@ bool Sector::operator== (const Sector& sector) const
         return true;
 
     // Both sectors must have some data
-    if (sector.copies() == 0 || copies() == 0)
+    if (!sector.has_data() || !has_data())
         return false;
 
     assert(header.size != SIZECODE_UNKNOWN);
@@ -73,7 +73,7 @@ int Sector::size() const
 
 int Sector::data_size() const
 {
-    return copies() ? m_data[0].size() : 0;
+    return has_data() ? m_data[0].size() : 0;
 }
 
 const DataList& Sector::datas() const
@@ -83,14 +83,16 @@ const DataList& Sector::datas() const
 
 const Data& Sector::data_copy(int copy/*=0*/) const
 {
-    assert(m_data.size() != 0);
+    assert(has_data());
+
     copy = std::max(std::min(copy, m_data.size() - 1), 0);
     return m_data[copy];
 }
 
 Data& Sector::data_copy(int copy/*=0*/)
 {
-    assert(m_data.size() != 0);
+    assert(has_data());
+
     copy = std::max(std::min(copy, m_data.size() - 1), 0);
     return m_data[copy];
 }
@@ -328,7 +330,7 @@ Sector::Merge Sector::add_original(Data&& new_data, bool bad_crc/*=false*/, uint
     }
 
     // Will we now have multiple copies?
-    if (copies() > 0)
+    if (has_data())
     {
         // Damage can cause us to see different DAM values for a sector.
         // Favour normal over deleted, and deleted over anything else.
@@ -532,7 +534,7 @@ void Sector::MergeOrphanDataSector(Sector&& orphanDataSector)
         throw util::exception("can't mix datarates when merging sectors");
 
     // Merge the orphan data sector if there is no previous data or the previous data is not longer (i.e. orphan data sector can be broken, merge it if there is no longer data).
-    if (copies() > 0 && !AcceptOrphanDataSectorSizeForMerging(orphanDataSector.data_size()))
+    if (has_data() && !AcceptOrphanDataSectorSizeForMerging(orphanDataSector.data_size()))
     {
         if (opt_debug)
             util::cout << "MergeOrphanDataSector: not merging orphan data sector (offset=" << orphanDataSector.offset << ", id.sector=" << orphanDataSector.header.sector << "\n";
