@@ -253,7 +253,7 @@ const UniqueSectors Track::stable_sectors() const
         if (sector.has_badidcrc())
             return false;
         // Checksummable 8k sector is considered in has_stable_data method.
-        return sector.has_stable_data();
+        return sector.has_stable_data(true);
     });
 
     return stable_sectors;
@@ -271,7 +271,7 @@ bool Track::has_all_stable_data(const UniqueSectors& stable_sectors) const
         if (stable_sectors.Contains(sector, tracklen))
             return false;
         // Checksummable 8k sector is considered in has_stable_data method.
-        return !sector.has_stable_data();
+        return !sector.has_stable_data(true);
     });
 
     return it == end(); // Not found not stable thus all sectors are stable.
