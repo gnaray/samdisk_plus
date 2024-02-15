@@ -2,6 +2,7 @@
 #include "Options.h"
 
 static auto& opt_debug = getOpt<int>("debug");
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 bool OrphanDataCapableTrack::empty() const
 {
@@ -95,12 +96,12 @@ int OrphanDataCapableTrack::Score() const
 {
     /* Data copy: a read sequence of bytes.
      * Data: set of 1 ore more data copies.
-     * The goal is defining a scoring which prefers good ids,
+     * The goal is defining a scoring which values good ids,
      * data connected to id (not orphan), the more good data copy,
-     * good data copy read count (stability), the more (bad) data.
+     * good data copy read count (up to stability), the more (bad) data.
      * Good id: 1 point.
-     * Good id's data exist: 2 point.
-     * Each good data copy: read count point.
+     * Good id's data exist: 2 point. (Id and data connection is valued as well.)
+     * Each good data copy: read count (at most stability level) point.
      * Orphan's (bad) data exist: 1 point.
      */
     auto score = 0;
@@ -112,10 +113,10 @@ int OrphanDataCapableTrack::Score() const
             if (iSup > 0)
             {
                 score += 2; // Good id's data exist
-                if (sector.has_good_data())
+                if (sector.has_good_data(!opt_normal_disk, opt_normal_disk))
                 {
                     for (auto i = 0; i < iSup; i++)
-                        score += sector.data_copy_read_stats(i).ReadCount(); // Good data read count.
+                        score += sector.GetGoodDataCopyStabilityScore(i);
                 }
             }
         }
