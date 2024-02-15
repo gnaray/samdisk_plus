@@ -141,7 +141,7 @@ public:
     int copies() const;
     void add_read_stats(int instance, DataReadStats&& data_read_stats);
     void set_read_stats(int instance, DataReadStats&& data_read_stats);
-    bool has_stable_data() const;
+    bool has_stable_data(bool consider_checksummable_8K = false) const;
     int GetGoodDataCopyStabilityScore(int instance) const;
 
     // Map a size code to how it's treated by the uPD765 FDC on the PC

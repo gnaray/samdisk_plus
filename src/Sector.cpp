@@ -194,9 +194,9 @@ void Sector::set_read_stats(int instance, DataReadStats&& data_read_stats)
 }
 
 // The stable sector is good sector and in paranoia mode it is read at least stability level times.
-bool Sector::has_stable_data() const
+bool Sector::has_stable_data(bool consider_checksummable_8K/* = false*/) const
 {
-    const bool result = has_good_data(!opt_normal_disk, opt_normal_disk);
+    const bool result = has_good_data(consider_checksummable_8K && !opt_normal_disk, opt_normal_disk);
     // Backward compatibility: if no paranoia then good data is also stable data.
     if (!opt_paranoia || !result)
         return result;
