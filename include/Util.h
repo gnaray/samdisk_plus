@@ -215,7 +215,7 @@ bool DiskHasMBR(const HDD& hdd);
 #define S_ISREG(mode)           _S_ISTYPE((mode), _S_IFREG)
 #endif
 
-bool VerifyCylHeadsMatch(bool optNormalDisk, bool badCrc, const CylHead& cylHeadExpected, const Header& headerResult, bool noReaction);
+bool VerifyCylHeadsMatch(const CylHead& cylHeadExpected, const Header& headerResult, bool badCrc = false, bool optNormalDisk = false, bool noReaction = false);
 
 
 

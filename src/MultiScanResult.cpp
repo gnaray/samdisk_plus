@@ -23,7 +23,7 @@ Track MultiScanResult::DecodeResult(const CylHead& cylhead, const DataRate& data
     {
         const auto& scan_header = HeaderArray(i);
         Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
-        VerifyCylHeadsMatch(opt_normal_disk, false, cylhead, header, false);
+        VerifyCylHeadsMatch(cylhead, header, false, opt_normal_disk);
         Sector sector(dataRate, encoding, header);
 
         sector.offset = round_AS<int>(scan_header.reltime / mfmbit_us);

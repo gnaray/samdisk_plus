@@ -58,7 +58,7 @@ constexpr CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
     const auto badCrc = sectorIdInPhysicalTrack.CalculateCrc() != 0;
 
     const Header header = sectorIdInPhysicalTrack.AsHeader();
-    if (!VerifyCylHeadsMatch(opt_normal_disk, badCrc, physicalTrackContext.cylHead, header, true))
+    if (!VerifyCylHeadsMatch(physicalTrackContext.cylHead, header, badCrc, opt_normal_disk, true))
         orphanDataCapableTrack.cylheadMismatch = true;
     else
     {

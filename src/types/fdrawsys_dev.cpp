@@ -314,7 +314,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
         {
             const auto& scan_header = scan_result->HeaderArray(i);
             Header header(scan_header.cyl, scan_header.head, scan_header.sector, scan_header.size);
-            VerifyCylHeadsMatch(opt_normal_disk, false, cylhead, header, false);
+            VerifyCylHeadsMatch(cylhead, header, false, opt_normal_disk);
             Sector sector(m_lastDataRate, m_lastEncoding, header);
 
             sector.offset = round_AS<int>(scan_header.reltime / mfmbit_us);
@@ -389,9 +389,9 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         }
 
         // Unsure what result.sector is exactly. Sometimes header.sector but usually header.sector+1.
-        VerifyCylHeadsMatch(opt_normal_disk, false, cylhead, header, false);
+        VerifyCylHeadsMatch(cylhead, header, false, opt_normal_disk);
         Header resultHeader(result.cyl, result.head, result.sector, result.size);
-        VerifyCylHeadsMatch(opt_normal_disk, false, resultHeader, header, false);
+        VerifyCylHeadsMatch(resultHeader, header, false, opt_normal_disk);
         if (opt_normal_disk && (result.sector != header.sector && result.sector != header.sector + 1))
         {
             MessageCPP(msgWarning, "sector's id.sector (", header.GetRecordAsString(),

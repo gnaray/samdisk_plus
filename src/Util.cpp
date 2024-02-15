@@ -778,7 +778,7 @@ bool DiskHasMBR(const HDD& hdd)
  * Otherwise: if noReaction is true then the returned value is false
  * else (when noReaction is false) then an diskforeigncylhead_exception is thrown.
  */
-bool VerifyCylHeadsMatch(bool optNormalDisk, bool badCrc, const CylHead& cylHeadExpected, const Header& headerResult, bool noReaction)
+bool VerifyCylHeadsMatch(const CylHead& cylHeadExpected, const Header& headerResult, bool badCrc/* = false*/, bool optNormalDisk/* = false*/, bool noReaction/* = false*/)
 {
     if (optNormalDisk && !badCrc && (cylHeadExpected.cyl != headerResult.cyl || cylHeadExpected.head != headerResult.head))
     {
