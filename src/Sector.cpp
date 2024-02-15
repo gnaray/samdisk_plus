@@ -109,15 +109,15 @@ Data& Sector::data_best_copy()
 
 const DataReadStats& Sector::data_copy_read_stats(int instance/*=0*/) const
 {
-    assert(m_data_read_stats.size() != 0);
-    instance = std::max(std::min(instance, m_data_read_stats.size() - 1), 0);
+    assert(!m_data_read_stats.empty());
+
     return m_data_read_stats[instance];
 }
 
 DataReadStats& Sector::data_copy_read_stats(int instance/*=0*/)
 {
-    assert(m_data_read_stats.size() != 0);
-    instance = std::max(std::min(instance, m_data_read_stats.size() - 1), 0);
+    assert(!m_data_read_stats.empty());
+
     return m_data_read_stats[instance];
 }
 
