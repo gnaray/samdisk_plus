@@ -56,7 +56,7 @@ public:
     int determineBestTrackLen(const int timedTrackLen) const;
     void setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen);
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;
-    IdAndOffsetPairs DiscoverTrackSectorScheme();
+    bool DiscoverTrackSectorScheme();
 
     Track& format(const CylHead& cylhead, const Format& format);
     Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);
@@ -119,6 +119,7 @@ public:
 
     int tracklen = 0;   // track length in MFM bits
     int tracktime = 0;  // track time in us
+    IdAndOffsetPairs idAndOffsetPairs{};
 
 private:
     Sectors m_sectors{};

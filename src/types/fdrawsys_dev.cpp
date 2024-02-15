@@ -721,7 +721,6 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(const OrphanDataCapableTrack
     if (timeSyncedPhysicalTrackSingle.cylheadMismatch || timeSyncedPhysicalTrackSingle.orphanDataTrack.empty())
         return;
 
-    IdAndOffsetPairs idAndOffsetPairs;
     for (const auto& orphanDataSector : timeSyncedPhysicalTrackSingle.orphanDataTrack)
     {
 
@@ -735,15 +734,11 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(const OrphanDataCapableTrack
         {
             if (opt_debug)
                 util::cout << "GuessAndAddSectorIdsOfOrphans: Orphan has no parent (offset=" << orphanDataSector.offset << ")\n";
-            if (idAndOffsetPairs.empty())
-            {
-                // Let us discover the track sector scheme if possible.
-                idAndOffsetPairs = track.DiscoverTrackSectorScheme();
-                if (idAndOffsetPairs.empty())
-                    return;
-            }
-            // Missing sector ID, try to find it in the found track sector scheme.
-            const auto sectorId = orphanDataSector.FindParentSectorIdByOffset(idAndOffsetPairs);
+            // Let us discover the track sector scheme once if possible.
+            if (track.idAndOffsetPairs.empty() && !track.DiscoverTrackSectorScheme())
+                return;
+            // Missing sector id, try to find it in the found track sector scheme.
+            const auto sectorId = orphanDataSector.FindParentSectorIdByOffset(track.idAndOffsetPairs);
             if (sectorId >= 0)
             {
                 // The data will be referred later by the parent sector so skip data.

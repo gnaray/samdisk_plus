@@ -599,14 +599,15 @@ int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 /* Guess track sector ids based on discovered gap3s and track sector scheme recognition.
  * The track must not be orphan data track.
  */
-IdAndOffsetPairs Track::DiscoverTrackSectorScheme() const
+bool Track::DiscoverTrackSectorScheme()
 {
-    IdAndOffsetPairs sectorIdsAndOffsets;
+    idAndOffsetPairs.clear();
     if (empty())
-        return sectorIdsAndOffsets;
+        return false;
     if (!opt_normal_disk) // There can be different sector sizes and can not tell if one big or more small sectors fill in a hole.
         util::cout << "DiscoverTrackSectorScheme is called but normal disk option is not set. This method supports normal disk so setting that option is recommended.\n";
-    sectorIdsAndOffsets.reserve(size()); // Size will be more if holes are found.
+    IdAndOffsetPairs idAndOffsetPairsLocal;
+    idAndOffsetPairsLocal.reserve(size()); // Size will be more if holes are found.
 
     const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time);
     assert(operator[](0).header.size != SIZECODE_UNKNOWN);
@@ -623,7 +624,7 @@ IdAndOffsetPairs Track::DiscoverTrackSectorScheme() const
         const auto& sector = operator[](i);
         assert(sector.header.size != SIZECODE_UNKNOWN);
         if (sector.size() != sectorSize) // Only same sized sectors are supported.
-            return sectorIdsAndOffsets;
+            return false;
         if (opt_debug)
             util::cout << "DiscoverTrackSectorScheme: processing sector (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
         if (i < iSup - 1)
@@ -648,7 +649,7 @@ IdAndOffsetPairs Track::DiscoverTrackSectorScheme() const
     while (remainingStartOffset - 0 >= overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits) // Could subtract a minimal gap4a instead of 0.
     {
         remainingStartOffset -= overheadedSectorWithGap3AndDataBitsAbout;
-        sectorIdsAndOffsets.push_back(IdAndOffset(-1, remainingStartOffset));
+        idAndOffsetPairsLocal.push_back(IdAndOffset(-1, remainingStartOffset));
         if (opt_debug)
             util::cout << "DiscoverTrackSectorScheme: pushed hole sector (offset=" << remainingStartOffset << ")\n";
     }
@@ -657,7 +658,7 @@ IdAndOffsetPairs Track::DiscoverTrackSectorScheme() const
     for (int i = 0; i < iSup; i++)
     {
         const auto& sector = operator[](i);
-        sectorIdsAndOffsets.push_back(IdAndOffset(sector.header.sector, sector.offset));
+        idAndOffsetPairsLocal.push_back(IdAndOffset(sector.header.sector, sector.offset));
         if (opt_debug)
             util::cout << "DiscoverTrackSectorScheme: pushed sector (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
         if (i < iSup - 1)
@@ -671,7 +672,7 @@ IdAndOffsetPairs Track::DiscoverTrackSectorScheme() const
                 auto holeOffset = sector.offset + overheadedSectorWithGap3AndDataBits;
                 for (int j = 0; j < sectorsFittingHole; j++)
                 {
-                    sectorIdsAndOffsets.push_back(IdAndOffset(-1, holeOffset));
+                    idAndOffsetPairsLocal.push_back(IdAndOffset(-1, holeOffset));
                     if (opt_debug)
                         util::cout << "DiscoverTrackSectorScheme: pushed hole sector (offset=" << holeOffset << ")\n";
                     holeOffset += overheadedSectorWithGap3AndDataBits;
@@ -685,26 +686,27 @@ IdAndOffsetPairs Track::DiscoverTrackSectorScheme() const
     auto remainingEndOffset = operator[](iSup - 1).offset + overheadedSectorWithGap3AndDataBits;
     while (tracklen - remainingEndOffset >= overheadedSectorFromOffsetToDataCrcEndBits)
     {
-        sectorIdsAndOffsets.push_back(IdAndOffset(-1, remainingEndOffset));
+        idAndOffsetPairsLocal.push_back(IdAndOffset(-1, remainingEndOffset));
         if (opt_debug)
             util::cout << "DiscoverTrackSectorScheme: pushed hole sector (offset=" << remainingEndOffset << ")\n";
         remainingEndOffset += overheadedSectorWithGap3AndDataBitsAbout;
     }
-    if (sectorIdsAndOffsets.ReplaceMissingIdsByFindingTrackSectorIds())
+    if (idAndOffsetPairsLocal.ReplaceMissingIdsByFindingTrackSectorIds())
     {
+        idAndOffsetPairs = std::move(idAndOffsetPairsLocal);
         if (opt_debug)
         {
-            const auto iSup = sectorIdsAndOffsets.size();
+            const auto iSup = idAndOffsetPairs.size();
             for (int i = 0; i < iSup; i++)
             {
                     util::cout << "DiscoverTrackSectorScheme: sectorIdsAndOffsets[" << i << "] has (id=" <<
-                                  sectorIdsAndOffsets[i].id << ", offset=" <<
-                                  sectorIdsAndOffsets[i].offset << ")\n";
+                                  idAndOffsetPairs[i].id << ", offset=" <<
+                                  idAndOffsetPairs[i].offset << ")\n";
             }
         }
-        return sectorIdsAndOffsets;
+        return true;
     }
-    return IdAndOffsetPairs();
+    return false;
 }
 
 Track& Track::format(const CylHead& cylhead, const Format& fmt)
