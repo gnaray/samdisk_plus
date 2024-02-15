@@ -105,7 +105,6 @@ public:
     void resize_data(int count);
     void remove_data();
     void remove_gapdata(bool keep_crc = false);
-    bool has_stable_data() const;
     bool are_copies_full(int max_copies) const;
     void limit_copies(int max_copies);
     bool is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int tracklen) const;
@@ -142,6 +141,7 @@ public:
     int copies() const;
     void add_read_stats(int instance, DataReadStats&& data_read_stats);
     void set_read_stats(int instance, DataReadStats&& data_read_stats);
+    bool has_stable_data() const;
     int GetGoodDataCopyStabilityScore(int instance) const;
 
     // Map a size code to how it's treated by the uPD765 FDC on the PC
