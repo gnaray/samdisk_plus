@@ -60,8 +60,8 @@
             const auto offset = trackSectorIds.MatchSectorIds(incompleteSectorIds);
             if (offset >= 0)
             {
-                if (!resultCompleteTrackSectorIds.empty()) // Ambiguous results.
-                    return TrackSectorIds{}; // Returning empty.
+                if (!resultCompleteTrackSectorIds.empty() && !resultCompleteTrackSectorIds.ExtendableTo(trackSectorIds)) // Ambiguous result, not extendable.
+                        return TrackSectorIds{}; // Return empty.
                 resultCompleteTrackSectorIds = trackSectorIds;
                 if (offset > 0)
                     std::rotate(resultCompleteTrackSectorIds.rbegin(), resultCompleteTrackSectorIds.rbegin() + offset, resultCompleteTrackSectorIds.rend());
