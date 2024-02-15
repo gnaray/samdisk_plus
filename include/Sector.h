@@ -142,6 +142,7 @@ public:
     int copies() const;
     void add_read_stats(int instance, DataReadStats&& data_read_stats);
     void set_read_stats(int instance, DataReadStats&& data_read_stats);
+    int GetGoodDataCopyStabilityScore(int instance) const;
 
     // Map a size code to how it's treated by the uPD765 FDC on the PC
     static constexpr int SizeCodeToRealSizeCode(int size)

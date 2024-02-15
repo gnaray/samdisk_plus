@@ -203,6 +203,15 @@ void Sector::set_read_stats(int instance, DataReadStats&& data_read_stats)
     m_data_read_stats[instance] = std::move(data_read_stats);
 }
 
+int Sector::GetGoodDataCopyStabilityScore(int instance) const
+{
+    // Backward compatibility: if no paranoia then good data has stability level 1.
+    if (!opt_paranoia)
+        return 1;
+    const auto read_count = data_copy_read_stats(instance).ReadCount();
+    return std::min(read_count, opt_stability_level);
+}
+
 /* Return values.
  * - Unchanged: The new data is ignored, it is not counted in read stats.
  * - Matched: The new data is not added because it exists but counted in read stats.
