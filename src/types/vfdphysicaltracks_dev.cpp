@@ -45,29 +45,25 @@ TrackData VfdPhysicalTracksDevDisk::load(const CylHead& cylhead, bool /*first_re
 
 TrackData VfdPhysicalTracksDevDisk::LoadPhysicalTrack(const CylHead& cylhead)
 {
-    MemFile file;
     PhysicalTrackMFM physicalTrackMFM;
     const auto pattern = " Raw track (track %02d, head %1d).floppy_raw_track";
     const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
     const auto physicalTrackFilePath = FindFirstFile(fileNamePart, m_path);
+    Data physicalTrackContent;
 
-    do
+    if (!physicalTrackFilePath.empty())
     {
-        if (physicalTrackFilePath.empty())
-            break;
         try
         {
-            file.open(physicalTrackFilePath);
+            ReadBinaryFile(physicalTrackFilePath, physicalTrackContent);
         }
-        catch (...)
+        catch (std::exception & e)
         {
-            break;
+            util::cout << "File read error: " << e.what() << "\n";
         }
-        VectorX<uint8_t> physicalTrackContent(file.size());
-        if (file.rewind() && file.read(physicalTrackContent))
-            physicalTrackMFM = PhysicalTrackMFM(file.data(), DataRate::_250K);
-    } while (false);
+    }
 
+    physicalTrackMFM = PhysicalTrackMFM(physicalTrackContent, DataRate::_250K);
     auto physicalTrack = physicalTrackMFM;
     auto bitstream = physicalTrack.AsMFMBitstream();
     auto trackdata = TrackData(cylhead, std::move(bitstream));
