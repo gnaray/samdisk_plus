@@ -193,6 +193,9 @@ std::string FindFirstFile(const std::string& fileNamePart, const std::string& di
 std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr);
 std::string FindNextFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr);
 void CloseFindFile(DIR*& dir_ptr);
+void ReadBinaryFile(const std::string& filePath, Data& data);
+void WriteBinaryFile(const std::string& filePath, const Data& data);
+
 void ByteSwap(void* pv, size_t nSize_);
 int TPeek(const uint8_t* buf, int offset = 0);
 void TrackUsedInit(Disk& disk);

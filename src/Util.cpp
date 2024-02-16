@@ -572,6 +572,31 @@ void CloseFindFile(DIR*& dir_ptr)
     dir_ptr = nullptr;
 }
 
+void ReadBinaryFile(const std::string& filePath, Data& data)
+{
+    std::ifstream myfile;
+    myfile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    myfile.open(filePath, std::ios::in | std::ios::binary);
+    const auto begin = myfile.tellg();
+    myfile.seekg(0, std::ios::end);
+    const auto size = myfile.tellg() - begin;
+    myfile.seekg(begin, std::ios::beg);
+    data.resize(size);
+    myfile.read(reinterpret_cast<char*>(data.data()), data.size());
+    myfile.close();
+}
+
+void WriteBinaryFile(const std::string& filePath, const Data& data)
+{
+    std::ofstream myfile;
+    myfile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+    myfile.open(filePath, std::ios::out | std::ios::binary | std::ios::trunc);
+    myfile.write(reinterpret_cast<const char*>(data.data()), data.size());
+    myfile.close();
+}
+
+
+
 void ByteSwap(void* pv, size_t len)
 {
     assert((len & 1) == 0);
