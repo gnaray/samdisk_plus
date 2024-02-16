@@ -612,9 +612,9 @@ bool Fat12FileSystem::Dir() /*override*/
                     continue;
                 }
                 auto dir_entry_deleted = dir_entry.name[0] == DIR_ENTRY_DELETED_FLAG;
-                const bool attr_readonly = dir_entry.attr & DIR_ENTRY_ATTR_READ_ONLY;
-                const bool attr_hidden = dir_entry.attr & DIR_ENTRY_ATTR_HIDDEN;
-                const bool attr_system = dir_entry.attr & DIR_ENTRY_ATTR_SYSTEM;
+                const bool attr_readonly = (dir_entry.attr & DIR_ENTRY_ATTR_READ_ONLY) != 0;
+                const bool attr_hidden = (dir_entry.attr & DIR_ENTRY_ATTR_HIDDEN) != 0;
+                const bool attr_system = (dir_entry.attr & DIR_ENTRY_ATTR_SYSTEM) != 0;
                 const auto dateTime = DateTimeString(util::le_value(dir_entry.date), util::le_value(dir_entry.time), DATE_MAX);
                 const auto file_size = util::le_value(dir_entry.size);
                 const auto fileSizeString = file_size > static_cast<uint32_t>(format.disk_size()) ? "INVALID" : util::fmt("%7u", file_size);
