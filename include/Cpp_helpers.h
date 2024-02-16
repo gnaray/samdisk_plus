@@ -234,6 +234,14 @@ inline unsigned long lossless_static_cast(int x)
 }
 
 template<>
+inline unsigned long lossless_static_cast(long x)
+{
+    if (x < 0)
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
+    return static_cast<unsigned long>(x);
+}
+
+template<>
 constexpr double lossless_static_cast(int x)
 {
     return static_cast<double>(x);
