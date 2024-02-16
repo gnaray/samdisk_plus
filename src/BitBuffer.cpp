@@ -22,16 +22,21 @@ BitBuffer::BitBuffer(DataRate datarate_, Encoding encoding_, int revs)
 BitBuffer::BitBuffer(DataRate datarate_, const uint8_t* pb, int bitlen)
     : datarate(datarate_)
 {
+    assert(bitlen >= 0);
+
     auto bytelen = (bitlen + 7) / 8;
-    m_data.resize(bytelen);
-    std::memcpy(m_data.data(), pb, bytelen);
+    if (bitlen > 0)
+    {
+        m_data.resize(bytelen);
+        std::memcpy(m_data.data(), pb, static_cast<size_t>(bytelen));
+    }
     m_bitsize = bitlen;
 }
 
 BitBuffer::BitBuffer(DataRate datarate_, FluxDecoder& decoder)
     : datarate(datarate_), m_data(decoder.flux_count())
 {
-    auto bitlen{ bits_per_second(datarate) * decoder.flux_revs() * 60 / 300 * 2 * 120 / 100 };
+    auto bitlen = bits_per_second(datarate) * decoder.flux_revs() * 60 / 300 * 2 * 120 / 100;
     m_data.resize((bitlen + 7) / 8);
 
     for (;;)
@@ -136,7 +141,7 @@ void BitBuffer::clear()
 
 void BitBuffer::add(uint8_t bit)
 {
-    size_t offset = m_bitpos / 8;
+    auto offset = m_bitpos / 8;
     uint32_t bit_value = 1 << (m_bitpos & 7);
 
     // Double the size if we run out of space
@@ -177,7 +182,7 @@ uint8_t BitBuffer::read1()
 
 uint8_t BitBuffer::read2()
 {
-    return (read1() << 1) | read1();
+    return static_cast<uint8_t>((read1() << 1) | read1());
 }
 
 uint8_t BitBuffer::read8_msb()
@@ -185,7 +190,7 @@ uint8_t BitBuffer::read8_msb()
     uint8_t byte = 0;
 
     for (auto i = 0; i < 8; ++i)
-        byte = (byte << 1) | read1();
+        byte = static_cast<uint8_t>((byte << 1) | read1());
 
     return byte;
 }
@@ -205,7 +210,7 @@ uint16_t BitBuffer::read16()
     uint16_t word = 0;
 
     for (auto i = 0; i < 16; ++i)
-        word = (word << 1) | read1();
+        word = static_cast<uint16_t>((word << 1) | read1());
 
     return word;
 }
@@ -239,7 +244,7 @@ uint8_t BitBuffer::read_byte()
         {
             read1();
             read1();
-            data = (data << 1) | read1();
+            data = static_cast<uint8_t>((data << 1) | read1());
             read1();
         }
         break;
@@ -248,19 +253,19 @@ uint8_t BitBuffer::read_byte()
         for (auto i = 0; i < 8; ++i)
         {
             read1();
-            data = (data << 1) | read1();
+            data = static_cast<uint8_t>((data << 1) | read1());
         }
         break;
 
     case Encoding::Apple:
         for (auto i = 0; i < 8; ++i)
         {
-            data = (data << 1) | read1();
+            data = static_cast<uint8_t>((data << 1) | read1());
         }
         // Disk ][ keeps reading until bit 7 is 1
         for (; (data & 0x80) == 0;)
         {
-            data = (data << 1) | read1();
+            data = static_cast<uint8_t>((data << 1) | read1());
         }
         break;
 
@@ -268,15 +273,15 @@ uint8_t BitBuffer::read_byte()
     case Encoding::Victor:
         for (auto i = 0; i < 10; ++i)
         {
-            gcr = (gcr << 1) | read1();
+            gcr = static_cast<uint16_t>((gcr << 1) | read1());
         }
-        data = (gcr5char[gcr >> 5] << 4) | gcr5char[gcr & 0x1f];
+        data = static_cast<uint8_t>((gcr5char[gcr >> 5] << 4) | gcr5char[gcr & 0x1f]);
         break;
 
     default:
         for (auto i = 0; i < 8; ++i)
         {
-            data = (data << 1) | read1();
+            data = static_cast<uint8_t>((data << 1) | read1());
         }
         break;
     }
