@@ -17,7 +17,9 @@ public:
 
     using std::vector<T>::vector;
     using std::vector<T>::operator[];
+    using std::vector<T>::capacity;
     using std::vector<T>::insert;
+    using std::vector<T>::max_size;
     using std::vector<T>::push_back;
     using std::vector<T>::resize;
     using std::vector<T>::reserve;
@@ -76,6 +78,20 @@ public:
     U size() const
     {
         return lossless_static_cast<U>(std::vector<T>::size());
+    }
+
+    template <typename U = IT,
+              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+    U max_size() const
+    {
+        return lossless_static_cast<U>(std::vector<T>::max_size());
+    }
+
+    template <typename U = IT,
+              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+    U capacity() const
+    {
+        return lossless_static_cast<U>(std::vector<T>::capacity());
     }
 
     template <typename U = IT,
