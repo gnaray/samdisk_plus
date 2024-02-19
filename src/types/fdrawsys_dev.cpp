@@ -801,7 +801,7 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
     timedAndPhysicalDualTrack.physicalTrackMulti.MergePhysicalTrack(cylhead, toBeMergedPhysicalTrack);
     if (timedAndPhysicalDualTrack.physicalTrackMulti.cylheadMismatch)
         throw util::diskforeigncylhead_exception(make_string(
-                                                     "cyl head mismatch found during processing physical track, ignoring this whole track to avoid data corruption"));
+                                                     "cyl head mismatch found during processing physical track"));
     const bool foundNewSectorId = timedAndPhysicalDualTrack.physicalTrackMulti.track.size() > sectorIdAmountPrev;
     if (foundNewSectorId && m_trackInfo[cylhead].trackLenIdeal <= 0) // Found new sector id so there is a chance for determining best tracklen.
     {
