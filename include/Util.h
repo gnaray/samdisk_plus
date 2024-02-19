@@ -151,7 +151,7 @@ void Message(MsgType type, const char* pcsz_, Args&& ...args)
 template <typename ...Args>
 void MessageCPP(MsgType type, Args&& ...args)
 {
-    MessageCore(type, util::make_string(std::forward<Args>(args)...));
+    MessageCore(type, make_string(std::forward<Args>(args)...));
 }
 
 const char* LastError();

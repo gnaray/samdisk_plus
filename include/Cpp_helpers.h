@@ -10,7 +10,7 @@
 #include <sstream>
 
 template <typename ... Args>
-std::string make_string2(Args&& ... args)
+std::string make_string(Args&& ... args)
 {
     std::ostringstream ss;
     (void)std::initializer_list<bool> {(ss << args, false)...};
@@ -20,7 +20,7 @@ std::string make_string2(Args&& ... args)
 template <typename T, typename ... Args>
 T make_error(Args&& ... args)
 {
-    return T(make_string2(std::forward<Args>(args)...));
+    return T(make_string(std::forward<Args>(args)...));
 }
 
 

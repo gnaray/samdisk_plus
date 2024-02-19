@@ -96,14 +96,6 @@ inline std::ostream& operator<<(std::ostream& os, uint8_t val)
     return os << lossless_static_cast<int>(val);
 }
 
-template <typename ... Args>
-std::string make_string(Args&& ... args)
-{
-    std::ostringstream ss;
-    (void)std::initializer_list<bool> {(ss << args, false)...};
-    return ss.str();
-}
-
 inline uint8_t reverse_byte_cpu(uint8_t byte)
 {
     return lossless_static_cast<uint8_t>(((byte & 1) << 7) |
