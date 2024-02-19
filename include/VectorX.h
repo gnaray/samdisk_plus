@@ -8,7 +8,7 @@
 #include <set>
 #include <vector>
 
-template <typename T, typename IT = int,
+template <typename T, typename IT = int, typename Allocator = std::allocator<T>,
           std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
 class VectorX : public std::vector<T>
 {
@@ -26,15 +26,17 @@ public:
 
     template <typename U = IT,
               std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
-    explicit VectorX(U count)
-        : std::vector<T>(lossless_static_cast<ST>(count))
+    VectorX(U count, const T& value,
+            const Allocator& alloc = Allocator() )
+        : std::vector<T>(lossless_static_cast<ST>(count), value, alloc)
     {
     }
 
     template <typename U = IT,
               std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
-    VectorX(U count, const T& value)
-        : std::vector<T>(lossless_static_cast<ST>(count), value)
+    explicit VectorX(U count,
+                     const Allocator& alloc = Allocator() )
+    : std::vector<T>(lossless_static_cast<ST>(count), alloc)
     {
     }
 
