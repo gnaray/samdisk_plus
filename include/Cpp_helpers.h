@@ -25,26 +25,138 @@ T make_error(Args&& ... args)
 
 
 
-template<typename TargetType, bool Throw, typename ValueType,
-         std::enable_if_t<Throw == false> * = nullptr>
-constexpr bool is_value_in_type_range(ValueType x)
+// Checking if value in type range (arithmetic in same arithmetic).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_same<TargetType, ValueType>::value && std::is_arithmetic<TargetType>::value> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType /*x*/)
 {
-    return !(x > std::numeric_limits<TargetType>::max() || x < std::numeric_limits<TargetType>::min());
+    return false;
 }
 
-template<typename TargetType, bool Throw, typename ValueType,
-         std::enable_if_t<Throw == true> * = nullptr>
-constexpr void is_value_in_type_range(ValueType x)
+// Checking if value in type range: extending (signed integer in signed integer, unsigned integer in unsigned integer, unsigned integer in signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && ((std::is_signed<TargetType>::value && std::is_signed<ValueType>::value)
+                              || (std::is_unsigned<TargetType>::value && std::is_unsigned<ValueType>::value)
+                              || (std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value))
+                          && (sizeof(TargetType) > sizeof(ValueType))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType /*x*/)
 {
-    if (!is_value_in_type_range<TargetType, false>(x))
-        throw make_error<std::runtime_error>("value ", x, " is out of range");
+    return false;
 }
 
+// Checking if value in type range: extending (signed integer in unsigned integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value
+                          && (sizeof(TargetType) > sizeof(ValueType))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{
+    return x < static_cast<ValueType>(std::numeric_limits<TargetType>::min()); // Unsigned.min = 0.
+}
+
+// Checking if value in type range: keeping (signed integer in unsigned integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value
+                          && (sizeof(TargetType) == sizeof(ValueType))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{
+    return x < static_cast<ValueType>(std::numeric_limits<TargetType>::min()); // Unsigned.min = 0.
+}
+
+// Checking if value in type range: keeping (unsigned integer in signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value
+                          && (sizeof(TargetType) == sizeof(ValueType))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{
+    return x > std::numeric_limits<TargetType>::max();
+}
+
+// Checking if value in type range: narrowing (unsigned integer in unsigned integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_unsigned<TargetType>::value && std::is_unsigned<ValueType>::value
+                          && (sizeof(TargetType) < sizeof(ValueType))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{
+    return x > std::numeric_limits<TargetType>::max();
+}
+
+// Checking if value in type range: narrowing (signed integer in signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_signed<TargetType>::value && std::is_signed<ValueType>::value
+                          && (sizeof(TargetType) < sizeof(ValueType))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{
+    return x > std::numeric_limits<TargetType>::max() || x < std::numeric_limits<TargetType>::min();
+}
+
+// Checking if value in type range: narrowing (signed integer in unsigned integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value
+                          && (sizeof(TargetType) < sizeof(ValueType))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{
+    return x > std::numeric_limits<TargetType>::max() || x < std::numeric_limits<TargetType>::min(); // Unsigned.min = 0.
+}
+
+// Checking if value in type range: narrowing (unsigned integer in signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value
+                          && (sizeof(TargetType) < sizeof(ValueType))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{
+    return x > (std::numeric_limits<TargetType>::max());
+}
+
+// Checking if value in type range: (floating point in integer) except (double in long), (double in unsigned long).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_floating_point<ValueType>::value
+                          && !(sizeof(ValueType) == 8 && sizeof(TargetType) == sizeof(long))
+                          && !(sizeof(ValueType) == 4 && (sizeof(TargetType) == sizeof(long) || sizeof(TargetType) == sizeof(int)))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{
+    return x > std::numeric_limits<TargetType>::max() || x < std::numeric_limits<TargetType>::min();
+}
+
+// Checking if value in type range: (double in long), (double in unsigned long).
 // Required separately because of the long::max to double conversion warning.
-template<>
-constexpr bool is_value_in_type_range<long, false, double>(double x)
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_floating_point<ValueType>::value
+                          && sizeof(ValueType) == 8 && sizeof(TargetType) == sizeof(long)> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
 {   // Checking x >= max because long::max (9223372036854775807) becomes (9223372036854775808).
-    return !(x < std::numeric_limits<long>::min() || x >= static_cast<double>(std::numeric_limits<long>::max()));
+    // Checking x >= max because unsigned long::max (18446744073709551615) becomes (18446744073709551616).
+    return x >= static_cast<ValueType>(std::numeric_limits<TargetType>::max()) || x < std::numeric_limits<TargetType>::min();
+}
+
+// Checking if value in type range: (float in int, long, unsigned int, unsigned long).
+// Required separately because of the {int, long, unsigned int, unsigned long}::max to double conversion warning.
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_floating_point<ValueType>::value
+                          && sizeof(ValueType) == 4 && (sizeof(TargetType) == sizeof(long) || sizeof(TargetType) == sizeof(int))> * = nullptr>
+inline constexpr bool value_out_of_type_range(ValueType x)
+{   // Checking x >= max because int::max (2147483647) becomes (2147483647).
+    // Checking x >= max because unsigned int::max (4294967295) becomes (4294967296).
+    // Checking x >= max because long::max (9223372036854775807) becomes (9223372036854775808).
+    // Checking x >= max because unsigned long::max (18446744073709551615) becomes (18446744073709551616).
+         //static_cast<ValueType>
+    return x >= static_cast<ValueType>(std::numeric_limits<TargetType>::max()) || x < std::numeric_limits<TargetType>::min();
+}
+
+
+
+template<typename TargetType, typename ValueType>
+inline void assert_value_in_type_range(ValueType x)
+{
+    if (value_out_of_type_range<TargetType>(x))
+        throw make_error<std::runtime_error>("value ", x, " is out of type range");
 }
 
 
@@ -74,242 +186,196 @@ constexpr almost_equal(T x, T y, int ulp)
 
 
 
-template<typename T, typename U,
-         std::enable_if_t<std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
-inline T lossless_static_cast(U x)
+// Keeping cast for (arithmetic to same arithmetic).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_same<TargetType, ValueType>::value && std::is_arithmetic<TargetType>::value> * = nullptr>
+inline constexpr TargetType lossless_static_cast(ValueType x)
 {
     return x;
 }
 
+// Keeping cast for (signed integer to unsigned integer, unsigned integer to signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && ((std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value)
+                              || (std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value))
+                          && (sizeof(TargetType) == sizeof(ValueType))> * = nullptr>
+inline constexpr TargetType lossless_static_cast(ValueType x)
+{
+    assert_value_in_type_range<TargetType>(x);
+    return static_cast<TargetType>(x);
+}
+
+// Extending cast for (signed integer to signed integer, unsigned integer to unsigned integer, unsigned integer to signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && ((std::is_signed<TargetType>::value && std::is_signed<ValueType>::value)
+                              || (std::is_unsigned<TargetType>::value && std::is_unsigned<ValueType>::value)
+                              || (std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value))
+                          && (sizeof(TargetType) > sizeof(ValueType))> * = nullptr>
+inline constexpr TargetType lossless_static_cast(ValueType x)
+{
+    return static_cast<TargetType>(x);
+}
+
+// Everything else cast for (integer to integer), i.e. extending cast for (signed integer to unsigned integer) or narrowing cast.
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && ((std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value && (sizeof(TargetType) > sizeof(ValueType)))
+                              || (sizeof(TargetType) < sizeof(ValueType)))> * = nullptr>
+inline constexpr TargetType lossless_static_cast(ValueType x)
+{
+    assert_value_in_type_range<TargetType>(x);
+    return static_cast<TargetType>(x);
+}
+
+// Cast for (integer to floating point).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_floating_point<TargetType>::value && std::is_integral<ValueType>::value> * = nullptr>
+inline TargetType lossless_static_cast(ValueType x)
+{
+    const auto result = static_cast<TargetType>(x);
+    if (x != static_cast<ValueType>(result))
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
+    return result;
+}
+
+// Cast for (floating point to integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_floating_point<ValueType>::value> * = nullptr>
+inline TargetType lossless_static_cast(ValueType x)
+{
+    ValueType xIntegralPart;
+    if (!approximately_equal(std::modf(x, &xIntegralPart), ValueType(0)))
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
+    assert_value_in_type_range<TargetType>(xIntegralPart);
+    return static_cast<TargetType>(xIntegralPart);
+}
+
+// Cast for (float to double).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_floating_point<TargetType>::value && std::is_floating_point<ValueType>::value
+                          && sizeof(ValueType) == 4 && sizeof(TargetType) == 8> * = nullptr>
+inline TargetType lossless_static_cast(ValueType x)
+{
+    return static_cast<TargetType>(x);
+}
+
+// Cast for (double to float).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_floating_point<TargetType>::value && std::is_floating_point<ValueType>::value
+                          && sizeof(ValueType) == 8 && sizeof(TargetType) == 4> * = nullptr>
+inline TargetType lossless_static_cast(ValueType x)
+{
+    const auto result = static_cast<TargetType>(x);
+    if ((std::isinf(result) && !std::isinf(x)) || !approximately_equal(x, static_cast<ValueType>(result)))
+        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
+    return result;
+}
+
+
+
+// Keeping cast for (integer to same integer).
 template<typename T, typename U,
-         std::enable_if_t<!std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
-T lossless_static_cast(U x);
-
-
-
-template<>
-constexpr int lossless_static_cast(unsigned char x)
-{
-    return static_cast<int>(x);
-}
-
-template<>
-constexpr int lossless_static_cast(unsigned short x)
-{
-    return static_cast<int>(x);
-}
-
-template<>
-inline int lossless_static_cast(uint32_t x)
-{
-    if (x > static_cast<uint32_t>(std::numeric_limits<int>::max()))
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<int>(x);
-}
-
-template<>
-inline int lossless_static_cast(long x)
-{
-    is_value_in_type_range<int, true>(x);
-    return static_cast<int>(x);
-}
-
-template<>
-inline int lossless_static_cast(unsigned long x)
-{
-    if (x > static_cast<unsigned long>(std::numeric_limits<int>::max()))
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<int>(x);
-}
-
-template<>
-inline long lossless_static_cast(unsigned long x)
-{
-    if (x > static_cast<unsigned long>(std::numeric_limits<long>::max()))
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<long>(x);
-}
-
-template<>
-inline double lossless_static_cast(unsigned int x)
-{
-    const auto result = static_cast<double>(x);
-    if (x != static_cast<unsigned int>(result))
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
-    return result;
-}
-
-template<>
-inline double lossless_static_cast(long x)
-{
-    const auto result = static_cast<double>(x);
-    if (x != static_cast<long>(result))
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
-    return result;
-}
-
-template<>
-inline double lossless_static_cast(unsigned long x)
-{
-    const auto result = static_cast<double>(x);
-    if (x != static_cast<unsigned long>(result))
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
-    return result;
-}
-
-template<>
-inline int8_t lossless_static_cast(int x)
-{
-    if (x < std::numeric_limits<int8_t>::min() || x > std::numeric_limits<int8_t>::max())
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<int8_t>(x);
-}
-
-template<>
-inline uint8_t lossless_static_cast(int x)
-{
-    if (x < 0 || x > std::numeric_limits<uint8_t>::max())
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<uint8_t>(x);
-}
-
-template<>
-inline uint8_t lossless_static_cast(long x)
-{
-    if (x < 0 || x > std::numeric_limits<uint8_t>::max())
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<uint8_t>(x);
-}
-
-template<>
-inline uint8_t lossless_static_cast(uint16_t x)
-{
-    if (x > std::numeric_limits<uint8_t>::max())
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<uint8_t>(x);
-}
-
-template<>
-inline uint16_t lossless_static_cast(int x)
-{
-    if (x < 0 || x > std::numeric_limits<uint16_t>::max())
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<uint16_t>(x);
-}
-
-template<>
-inline uint32_t lossless_static_cast(int x)
-{
-    if (x < 0)
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<uint32_t>(x);
-}
-
-template<>
-inline unsigned long lossless_static_cast(int16_t x)
-{
-    if (x < 0)
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<unsigned long>(x);
-}
-
-template<>
-inline unsigned long lossless_static_cast(uint8_t x)
-{
-    return static_cast<unsigned long>(x);
-}
-
-template<>
-inline unsigned long lossless_static_cast(uint16_t x)
-{
-    return static_cast<unsigned long>(x);
-}
-
-template<>
-inline unsigned long lossless_static_cast(int x)
-{
-    if (x < 0)
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<unsigned long>(x);
-}
-
-template<>
-inline unsigned long lossless_static_cast(long x)
-{
-    if (x < 0)
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " is out of range");
-    return static_cast<unsigned long>(x);
-}
-
-template<>
-constexpr double lossless_static_cast(int x)
-{
-    return static_cast<double>(x);
-}
-
-template<>
-inline int lossless_static_cast(double x)
-{
-    double xIntegralPart;
-    if (std::modf(x, &xIntegralPart) != 0)
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
-    is_value_in_type_range<int, true>(xIntegralPart);
-    return static_cast<int>(xIntegralPart);
-}
-
-template<>
-inline long lossless_static_cast(double x)
-{
-    double xIntegralPart;
-    if (std::modf(x, &xIntegralPart) != 0)
-        throw make_error<std::runtime_error>("Can not convert: value ", x, " loses precision");
-    is_value_in_type_range<long, true>(xIntegralPart);
-    return static_cast<long>(xIntegralPart);
-}
-
-template<>
-constexpr uint32_t lossless_static_cast(uint16_t x)
-{
-    return static_cast<uint16_t>(x);
-}
-
-template<>
-constexpr uint64_t lossless_static_cast(uint32_t x)
-{
-    return static_cast<uint64_t>(x);
-}
-
-
-
-template<typename T, typename U,
-         std::enable_if_t<std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
+         std::enable_if_t<std::is_same<T, U>::value && std::is_integral<T>::value> * = nullptr>
 inline T limited_static_cast(U x)
 {
     return x;
 }
 
-template<typename T, typename U,
-         std::enable_if_t<!std::is_same<T, U>::value && std::is_arithmetic<T>::value && std::is_arithmetic<U>::value> * = nullptr>
-T limited_static_cast(U x);
-
-
-
-template<>
-inline int limited_static_cast(size_t x)
+// Keeping cast for (signed integer to unsigned integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value
+                          && (sizeof(TargetType) == sizeof(ValueType))> * = nullptr>
+inline constexpr TargetType limited_static_cast(ValueType x)
 {
-    if (x > static_cast<size_t>(std::numeric_limits<int>::max()))
-        return std::numeric_limits<int>::max();
-    return static_cast<int>(x);
+    if (x < static_cast<ValueType>(std::numeric_limits<TargetType>::min()))
+        return std::numeric_limits<TargetType>::min();
+    return static_cast<TargetType>(x);
 }
 
-template<>
-inline uint8_t limited_static_cast(int x)
+// Keeping cast for (unsigned integer to signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value
+                          && (sizeof(TargetType) == sizeof(ValueType))> * = nullptr>
+inline constexpr TargetType limited_static_cast(ValueType x)
 {
-    if (x > static_cast<int>(std::numeric_limits<uint8_t>::max()))
-        return std::numeric_limits<uint8_t>::max();
-    if (x < static_cast<int>(std::numeric_limits<uint8_t>::min()))
-        return std::numeric_limits<uint8_t>::min();
-    return static_cast<uint8_t>(x);
+    if (x > static_cast<ValueType>(std::numeric_limits<TargetType>::max()))
+        return std::numeric_limits<TargetType>::max();
+    return static_cast<TargetType>(x);
+}
+
+// Extending cast for (signed integer to signed integer, unsigned integer to unsigned integer, unsigned integer to signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && ((std::is_signed<TargetType>::value && std::is_signed<ValueType>::value)
+                              || (std::is_unsigned<TargetType>::value && std::is_unsigned<ValueType>::value)
+                              || (std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value))
+                          && (sizeof(TargetType) > sizeof(ValueType))> * = nullptr>
+inline constexpr TargetType limited_static_cast(ValueType x)
+{
+    return static_cast<TargetType>(x);
+}
+
+// Extending cast for (signed integer to unsigned integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value && (sizeof(TargetType) > sizeof(ValueType))> * = nullptr>
+inline constexpr TargetType limited_static_cast(ValueType x)
+{
+    if (x < static_cast<ValueType>(std::numeric_limits<TargetType>::min())) // Unsigned.min = 0.
+        return std::numeric_limits<TargetType>::min();
+    return static_cast<TargetType>(x);
+}
+
+// Narrowing cast for (signed integer to signed integer, signed integer to unsigned integer, unsigned integer to unsigned integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && !(std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value)
+                          && (sizeof(TargetType) < sizeof(ValueType))> * = nullptr>
+inline constexpr TargetType limited_static_cast(ValueType x)
+{
+    if (x > static_cast<ValueType>(std::numeric_limits<TargetType>::max()))
+        return std::numeric_limits<TargetType>::max();
+    if (x < static_cast<ValueType>(std::numeric_limits<TargetType>::min()))
+        return std::numeric_limits<TargetType>::min();
+    return static_cast<TargetType>(x);
+}
+
+// Narrowing cast for (unsigned integer to signed integer).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                          && std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value
+                          && (sizeof(TargetType) < sizeof(ValueType))> * = nullptr>
+inline constexpr TargetType limited_static_cast(ValueType x)
+{
+    if (x > static_cast<ValueType>(std::numeric_limits<TargetType>::max()))
+        return std::numeric_limits<TargetType>::max();
+    return static_cast<TargetType>(x);
+}
+
+// Cast for (float to double).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_floating_point<TargetType>::value && std::is_floating_point<ValueType>::value
+                          && sizeof(ValueType) == 4 && sizeof(TargetType) == 8> * = nullptr>
+inline TargetType limited_static_cast(ValueType x)
+{
+    return static_cast<TargetType>(x);
+}
+
+// Cast for (double to float).
+template<typename TargetType, typename ValueType,
+         std::enable_if_t<std::is_floating_point<TargetType>::value && std::is_floating_point<ValueType>::value
+                          && sizeof(ValueType) == 8 && sizeof(TargetType) == 4> * = nullptr>
+inline TargetType limited_static_cast(ValueType x)
+{
+    if (x > static_cast<ValueType>(std::numeric_limits<TargetType>::max()))
+        return std::numeric_limits<TargetType>::max();
+    if (x < static_cast<ValueType>(std::numeric_limits<TargetType>::min()))
+        return std::numeric_limits<TargetType>::min();
+    return static_cast<TargetType>(x);
 }
 
 
