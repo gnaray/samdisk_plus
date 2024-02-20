@@ -278,7 +278,7 @@ inline TargetType lossless_static_cast(ValueType x)
 // Keeping cast for (integer to same integer).
 template<typename T, typename U,
          std::enable_if_t<std::is_same<T, U>::value && std::is_integral<T>::value> * = nullptr>
-inline T limited_static_cast(U x)
+inline constexpr T limited_static_cast(U x)
 {
     return x;
 }
