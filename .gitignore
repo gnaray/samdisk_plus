@@ -9,3 +9,13 @@ Thumbs.db
 /out
 /CMakeSettings.json
 /make_release.bat
+
+/CMakeFiles
+/Win32
+/samdisk.dir
+/samdisk.*
+/*.vcxproj*
+/CMakeCache.txt
+/cmake_install.cmake
+/config.h
+/Debug
