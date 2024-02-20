@@ -1,5 +1,6 @@
 // High-level disk image/device reading and writing
 
+#include "PlatformConfig.h" // For disabling fopen deprecation.
 #include "Image.h"
 #include "FileSystem.h"
 #include "Options.h"

@@ -1,5 +1,6 @@
 // VfdrawcmdSys driver alias virtual fdrawcmd driver.
 
+#include "Platform.h" // STATUS_BUFFER_TOO_SMALL
 #include "VfdrawcmdSys.h"
 #include "BitstreamTrackBuilder.h"
 #include "IBMPCBase.h"

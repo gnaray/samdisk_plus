@@ -1,5 +1,6 @@
 // Copy command
 
+#include "PlatformConfig.h" // For disabling fopen deprecation.
 #include "FileSystem.h"
 #include "Interval.h"
 #include "Options.h"
