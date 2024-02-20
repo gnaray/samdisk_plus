@@ -58,7 +58,7 @@ void scan_flux(TrackData& trackdata)
     trackdata.add(std::move(track));
 
 
-    VectorX<Encoding> encodings;
+    VectorX<Encoding> encodings{};
     if (opt_encoding != Encoding::Unknown)
     {
         // Just the one requested format.
@@ -145,7 +145,7 @@ void scan_bitstream(TrackData& trackdata)
 {
     static Encoding last_encoding = Encoding::MFM;
 
-    VectorX<Encoding> encodings;
+    VectorX<Encoding> encodings{};
     if (opt_encoding != Encoding::Unknown)
     {
         // Just the one requested format.
@@ -274,10 +274,10 @@ static const uint8_t gcr6and2[256] =
 void scan_bitstream_apple(TrackData& trackdata)
 {
     Track track;
-    Data block;
+    Data block{};
     uint32_t dword = 0;
     uint8_t cksum = 0, invalid = 0;
-    VectorX<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields{};
 
     auto& bitbuf = trackdata.bitstream();
     bitbuf.seek(0);
@@ -518,7 +518,7 @@ void scan_bitstream_gcr(TrackData& trackdata)
     Track track;
     uint32_t dword = 0;
     uint8_t stored_cksum = 0;
-    VectorX<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields{};
 
     auto& bitbuf = trackdata.bitstream();
     bitbuf.seek(0);
@@ -741,7 +741,7 @@ void scan_bitstream_ace(TrackData& trackdata)
 
     enum State { stateWant255, stateWant42, stateData };
     State state = stateWant255;
-    Data block;
+    Data block{};
     int idle = 0;
     bool dataerror = false;
     int bit;
@@ -897,7 +897,7 @@ void scan_flux_ace(TrackData& trackdata)
 void scan_bitstream_mx(TrackData& trackdata)
 {
     Track track;
-    Data block;
+    Data block{};
     uint64_t dword = 0;
     uint16_t stored_cksum = 0, cksum = 0, stored_track = 0, extra = 0;
     bool zero_cksum = false;
@@ -1013,7 +1013,7 @@ void scan_flux_mx(TrackData& trackdata, DataRate last_datarate)
 
 static bool amiga_read_dwords(BitBuffer& bitbuf, uint32_t* pdw, size_t dwords, uint32_t& checksum)
 {
-    VectorX<uint32_t> evens;
+    VectorX<uint32_t> evens{};
     evens.reserve(dwords);
     size_t i;
 
@@ -1151,7 +1151,7 @@ void scan_bitstream_mfm_fm(TrackData& trackdata)
     track.tracklen = bitbuf.track_bitsize();
 
     CRC16 crc;
-    VectorX<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields{};
 
     uint32_t dword = 0;
     uint8_t last_fm_am = 0;
@@ -1512,10 +1512,10 @@ void scan_flux_mfm_fm(TrackData& trackdata, DataRate last_datarate)
 void scan_bitstream_agat(TrackData& trackdata)
 {
     Track track;
-    Data block;
+    Data block{};
     uint64_t dword = 0;
     uint16_t stored_cksum = 0, cksum = 0;
-    VectorX<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields{};
 
     auto& bitbuf = trackdata.bitstream();
     bitbuf.seek(0);
@@ -1768,7 +1768,7 @@ void scan_bitstream_victor(TrackData& trackdata)
     Track track;
     uint32_t dword = 0;
     uint16_t stored_cksum, cksum;
-    VectorX<std::pair<int, Encoding>> data_fields;
+    VectorX<std::pair<int, Encoding>> data_fields{};
 
     auto& bitbuf = trackdata.bitstream();
     bitbuf.seek(0);

@@ -308,7 +308,7 @@ bool BlockDevice::SafetyCheck()
 
 VectorX<std::string> BlockDevice::GetVolumeList() const
 {
-    VectorX<std::string> lVolumes;
+    VectorX<std::string> lVolumes{};
 
 #ifdef _WIN32
     STORAGE_DEVICE_NUMBER sdn;
@@ -446,7 +446,7 @@ bool BlockDevice::ReadIdentifyData(HANDLE h_, IDENTIFYDEVICE& identify_)
 
 /*static*/ VectorX<std::string> BlockDevice::GetDeviceList()
 {
-    VectorX<std::string> vDevices;
+    VectorX<std::string> vDevices{};
 
 #ifdef _WIN32
     for (int i = 0; i < 20; ++i)
