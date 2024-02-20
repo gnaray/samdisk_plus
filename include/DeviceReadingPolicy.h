@@ -76,7 +76,7 @@ protected:
     {
         if (!m_unskippableWantedSectorHeaderSectorsValid)
         {
-            m_unskippableWantedSectorHeaderSectorsEmpty = m_skippableSectors.AnyIdsNotContainedInThis(m_wantedSectorHeaderSectors);
+            m_unskippableWantedSectorHeaderSectorsEmpty = !m_skippableSectors.AnyIdsNotContainedInThis(m_wantedSectorHeaderSectors);
             m_unskippableWantedSectorHeaderSectorsValid = true;
         }
         return m_unskippableWantedSectorHeaderSectorsEmpty;
