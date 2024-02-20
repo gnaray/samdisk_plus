@@ -31,7 +31,7 @@ public:
     template <typename T>
     bool read(T& buf)
     {
-        auto total_size = intsizeof(buf[0]) * buf.size();
+        auto total_size = intsizeof(buf[0]) * static_cast<int>(buf.size());
 
         // Fail if we can't fill the target
         if (remaining() < total_size)
