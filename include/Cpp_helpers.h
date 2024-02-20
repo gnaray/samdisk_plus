@@ -188,7 +188,15 @@ constexpr almost_equal(T x, T y, int ulp)
 
 // Keeping cast for (arithmetic to same arithmetic).
 template<typename TargetType, typename ValueType,
-         std::enable_if_t<std::is_same<TargetType, ValueType>::value && std::is_arithmetic<TargetType>::value> * = nullptr>
+    std::enable_if_t<std::is_arithmetic<ValueType>::value && std::is_arithmetic<TargetType>::value
+        && (std::is_same<TargetType, ValueType>::value
+             || (std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
+                 && sizeof(TargetType) == sizeof(ValueType)
+                 && ((std::is_signed<TargetType>::value && std::is_signed<ValueType>::value)
+                     || (std::is_unsigned<TargetType>::value && std::is_unsigned<ValueType>::value))
+                )
+            )
+    > * = nullptr>
 inline constexpr TargetType lossless_static_cast(ValueType x)
 {
     return x;
