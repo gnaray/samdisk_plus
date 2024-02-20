@@ -1,5 +1,7 @@
 #include "TrackSectorIds.h"
 
+#include <iterator>
+
 /*static*/ TrackSectorIds TrackSectorIds::GetIds(const CylHead& cylhead, const int sectors, const int interleave/* = 0*/, const int skew/* = 0*/, const int offset/* = 0*/, const int base/* = 1*/)
 {
     TrackSectorIds ids;
