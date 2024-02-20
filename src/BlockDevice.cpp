@@ -277,7 +277,7 @@ bool BlockDevice::SafetyCheck()
     VectorX<std::string> lVolumes = GetVolumeList();
     std::string sRemoveList;
 
-    for (size_t i = 0; i < lVolumes.size(); ++i)
+    for (auto i = 0; i < lVolumes.size(); ++i)
     {
         char szVolName[64] = "";
 

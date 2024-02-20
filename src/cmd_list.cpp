@@ -236,7 +236,7 @@ void ListDrive(const std::string& path, const HDD& hdd, int verbose)
         if (lVolumes.size())
         {
             std::string sVolumes;
-            for (size_t i = 0; i < lVolumes.size(); ++i)
+            for (auto i = 0; i < lVolumes.size(); ++i)
             {
                 std::string sVolume = lVolumes.at(i);
 
@@ -373,7 +373,7 @@ bool ListDrives(int nVerbose_)
 
     VectorX<std::string> lDevices = BlockDevice::GetDeviceList();
 
-    for (size_t u = 0; u < lDevices.size(); ++u)
+    for (auto u = 0; u < lDevices.size(); ++u)
     {
         std::string sDevice = lDevices.at(u);
 
