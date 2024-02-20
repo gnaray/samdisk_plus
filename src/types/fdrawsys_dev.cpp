@@ -36,6 +36,9 @@ FdrawSysDevDisk::FdrawSysDevDisk(const std::string& path, std::unique_ptr<Fdrawc
     {
         try
         {
+            if (!m_fdrawcmd->FdReset())
+                throw win32_error(GetLastError(), "Reset");
+
             SetMetadata(path);
 
             auto srt = (opt_steprate >= 0) ? opt_steprate : (opt_newdrive ? 0xd : 0x8);
