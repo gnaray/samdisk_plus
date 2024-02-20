@@ -6,15 +6,16 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winioctl.h> // _MEDIA_TYPE
-#else
+#endif
 
+#include <cstdint>
+#ifndef _WIN32
 // For fdrawcmd.h the following are required (which winioctl.h provides on Windows):
 // CTL_CODE
 // FILE_DEVICE_UNKNOWN
 // DeviceIoControl()
 // METHOD_*
 
-#include <cstdint>
 typedef __int64_t __int64;
 
 // Defining things so this file can be included not only on Windows platform.
@@ -172,8 +173,6 @@ inline BOOL DeviceIoControl(HANDLE /*hDevice*/, DWORD /*dwIoControlCode*/, LPVOI
 
 
 
-typedef uint32_t NTSTATUS;
-#define STATUS_BUFFER_TOO_SMALL			static_cast<NTSTATUS>(0xC0000023L)
 #define STATUS_INVALID_PARAMETER		static_cast<DWORD>(0xC000000DL)
 
 inline HANDLE CreateFile(LPCSTR lpFileName,DWORD dwDesiredAccess,
@@ -213,5 +212,9 @@ inline BOOL QueryServiceStatus(SC_HANDLE hService, LPSERVICE_STATUS lpServiceSta
 inline BOOL CloseServiceHandle(SC_HANDLE hSCObject) { return false; }
 
 #endif // _WIN32
+
+// NTSTATUS is available when building driver but can not be included here.
+typedef uint32_t NTSTATUS;
+#define STATUS_BUFFER_TOO_SMALL static_cast<NTSTATUS>(0xC0000023L)
 
 #endif // PLATFORM_H
