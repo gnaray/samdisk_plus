@@ -833,9 +833,9 @@ bool ReadFdrawcmdSys(const std::string& path, std::shared_ptr<Disk>& disk)
 {
     const auto devidx = (util::lowercase(path) == "b:") ? 1 : 0;
     const auto virtualFloppyDevice = IsVfd(path);
-    const auto virtualFloppyDevicePath = path.substr(4);
     if (!virtualFloppyDevice && !IsFloppyDevice(path))
         return false;
+    const auto virtualFloppyDevicePath = virtualFloppyDevice && path.length() > 4 ? path.substr(4) : "";
     const auto fdrawcmdSysName = std::string(virtualFloppyDevice ? "v": "") + "fdrawcmd.sys";
     auto fdrawcmd = virtualFloppyDevice ? VfdrawcmdSys::Open(virtualFloppyDevicePath) : FdrawcmdSys::Open(devidx);
     if (!fdrawcmd)
