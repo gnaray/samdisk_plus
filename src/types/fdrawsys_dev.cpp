@@ -41,13 +41,17 @@ FdrawSysDevDisk::FdrawSysDevDisk(const std::string& path, std::unique_ptr<Fdrawc
             auto srt = (opt_steprate >= 0) ? opt_steprate : (opt_newdrive ? 0xd : 0x8);
             auto hut = 0x0f;
             auto hlt = opt_newdrive ? 0x0f : 0x7f;
-            m_fdrawcmd->Specify(srt, hut, hlt);
+            if (!m_fdrawcmd->Specify(srt, hut, hlt))
+                throw win32_error(GetLastError(), "Specify");
 
-            m_fdrawcmd->SetMotorTimeout(0);
-            m_fdrawcmd->Recalibrate();
+            if (!m_fdrawcmd->SetMotorTimeout(0))
+                throw win32_error(GetLastError(), "SetMotorTimeout");
+            if (!m_fdrawcmd->Recalibrate())
+                throw win32_error(GetLastError(), "Recalibrate");
 
             if (!opt_newdrive)
-                m_fdrawcmd->SetDiskCheck(false);
+                if (!m_fdrawcmd->SetDiskCheck(false))
+                    throw win32_error(GetLastError(), "SetDiskCheck");
         }
         catch (...)
         {
@@ -125,8 +129,10 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     const auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
 
     if (with_head_seek_to >= 0)
-        m_fdrawcmd->Seek(with_head_seek_to);
-    m_fdrawcmd->Seek(cylhead.cyl);
+        if (!m_fdrawcmd->Seek(with_head_seek_to))
+            throw win32_error(GetLastError(), "Seek");
+    if (!m_fdrawcmd->Seek(cylhead.cyl))
+        throw win32_error(GetLastError(), "Seek");
 
     auto firstSectorSeen = 0;
     const bool read_first_gap_requested = opt_gaps >= GAPS_CLEAN;
@@ -181,7 +187,8 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
     if (m_lastEncoding != Encoding::Unknown && m_lastDataRate != DataRate::Unknown)
     {
         // Try the last successful encoding and data rate.
-        m_fdrawcmd->SetEncRate(m_lastEncoding, m_lastDataRate);
+        if (!m_fdrawcmd->SetEncRate(m_lastEncoding, m_lastDataRate))
+            throw win32_error(GetLastError(), "SetEncRate");
 
         // Return if we found a sector.
         if (m_fdrawcmd->CmdReadId(head, result))
@@ -216,7 +223,8 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
                 }
             }
 
-            m_fdrawcmd->SetEncRate(encoding, datarate);
+            if (!m_fdrawcmd->SetEncRate(encoding, datarate))
+                throw win32_error(GetLastError(), "SetEncRate");
 
             // Retry in case of spurious header CRC errors.
             for (auto i = 0; i <= opt_retries; ++i) // TODO originally opt_retries(=5), could be replaced with opt_encratedetect_retries?
@@ -348,7 +356,8 @@ void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index
         if (track.is_repeated(sector))
         {
             auto offset = (index + firstSectorSeen) % track.size();
-            m_fdrawcmd->FdSetSectorOffset(offset);
+            if (!m_fdrawcmd->FdSetSectorOffset(offset))
+                throw win32_error(GetLastError(), "SetSectorOffset");
         }
 
         // Invalidate the content so misbehaving FDCs can be identififed.
