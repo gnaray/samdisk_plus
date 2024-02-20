@@ -35,12 +35,12 @@ public:
     {
     }
 
-    constexpr ByteBitPosition GetByteBitPosition() const
+    ByteBitPosition GetByteBitPosition() const
     {
         return m_byteBitPosition;
     }
 
-    constexpr void SetByteBitPosition(const ByteBitPosition& byteBitPosition)
+    void SetByteBitPosition(const ByteBitPosition& byteBitPosition)
     {
         m_byteBitPosition = byteBitPosition;
     }
@@ -272,13 +272,13 @@ public:
         }
     }
 
-    constexpr void StepBit(ByteBitPosition* byteBitPosition = nullptr)
+    void StepBit(ByteBitPosition* byteBitPosition = nullptr)
     {
         auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
         (*byteBitPositionSelected)++;
     }
 
-    constexpr void StepBytes(int bytes, ByteBitPosition* byteBitPosition = nullptr)
+    void StepBytes(int bytes, ByteBitPosition* byteBitPosition = nullptr)
     {
         auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
         (*byteBitPositionSelected).PreAddBytes(bytes);

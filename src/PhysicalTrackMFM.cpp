@@ -16,7 +16,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 // ====================================
 
-constexpr CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
+CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
         const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const
 {
     return ::DoSectorIdAndDataOffsetsCohere(sectorIdOffset, dataOffset, dataRate, encoding);

@@ -30,43 +30,15 @@ typedef struct _IOCTL_PARAMS
     DWORD returned = 0;
 } IOCTL_PARAMS;
 
+
+
 constexpr uint32_t DriverVersion1_0_1_12 = 0x0100010c;
 constexpr DataRate FDRATE_TO_DATARATE[4]{ DataRate::_500K, DataRate::_300K, DataRate::_250K, DataRate::_1M }; // FDRates to DataRates.
-constexpr uint8_t datarateToFdRate(const DataRate& datarate)
-{
-    switch (datarate)
-    {
-    case DataRate::_250K:   return FD_RATE_250K;
-    case DataRate::_300K:   return FD_RATE_300K;
-    case DataRate::_500K:   return FD_RATE_500K;
-    case DataRate::_1M:     return FD_RATE_1M;
-    case DataRate::Unknown: break;
-    }
-    throw util::exception("unsupported datarate (", datarate, ")");
-}
+uint8_t datarateToFdRate(const DataRate& datarate);
+Encoding fdEncodingToEncoding(const uint8_t fdEncoding);
+uint8_t encodingToFdEncoding(const Encoding& encoding);
 
-constexpr Encoding fdEncodingToEncoding(const uint8_t fdEncoding)
-{
-    switch (fdEncoding)
-    {
-    case FD_OPTION_MFM:   return Encoding::MFM;
-    case FD_OPTION_FM:    return Encoding::FM;
-    default: break;
-    }
-    throw util::exception("unsupported fdEncoding (", fdEncoding, ")");
-}
 
-constexpr uint8_t encodingToFdEncoding(const Encoding& encoding)
-{
-    switch (encoding)
-    {
-    case Encoding::MFM:   return FD_OPTION_MFM;
-    case Encoding::FM:    return FD_OPTION_FM;
-    default:
-    case Encoding::Unknown: break;
-    }
-    throw util::exception("unsupported encoding (", encoding, ")");
-}
 
 class FdrawcmdSys
 {

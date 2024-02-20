@@ -12,27 +12,27 @@ constexpr int UINT8_T_BIT_SIZE = sizeof(uint8_t) * 8;
 class ByteBitPosition
 {
 public:
-    constexpr ByteBitPosition()
+    ByteBitPosition()
     {
         *this = 0;
     }
 
-    constexpr ByteBitPosition(int byte_bit_position)
+    ByteBitPosition(int byte_bit_position)
     {
         *this = byte_bit_position;
     }
 
-    constexpr inline int BytePosition() const
+    inline int BytePosition() const
 	{
 		return m_byte_position;
 	}
 
-    constexpr int8_t BitPosition() const
+    inline int8_t BitPosition() const
 	{
 		return m_bit_position;
 	}
 
-    constexpr int TotalBitPosition() const
+    int TotalBitPosition() const
 	{
         return m_byte_position * UINT8_T_BIT_SIZE + m_bit_position;
 	}
@@ -56,20 +56,20 @@ public:
             < std::tie(rhs.m_byte_position, rhs.m_byte_position); // keep the same order.
     }
 
-    constexpr ByteBitPosition& operator=(int totalBitPosition)
+    ByteBitPosition& operator=(int totalBitPosition)
 	{
         m_bit_position = totalBitPosition % UINT8_T_BIT_SIZE;
         m_byte_position = totalBitPosition / UINT8_T_BIT_SIZE;
 		return *this;
 	}
 
-    constexpr ByteBitPosition& operator+=(const ByteBitPosition& rhs)
+    ByteBitPosition& operator+=(const ByteBitPosition& rhs)
 	{
 		*this = TotalBitPosition() + rhs.TotalBitPosition();
 		return *this;
 	}
 
-    constexpr ByteBitPosition& operator+=(int bits)
+    ByteBitPosition& operator+=(int bits)
 	{
 		*this = TotalBitPosition() + bits;
 		return *this;
@@ -78,14 +78,14 @@ public:
 	// Friends defined inside class body are inline and are hidden from non-ADL lookup.
 	// Passing lhs by value helps optimize chained a+b+c,
 	// otherwise both parameters may be const references.
-    constexpr friend ByteBitPosition operator+(ByteBitPosition lhs,
+    friend ByteBitPosition operator+(ByteBitPosition lhs,
 		const ByteBitPosition& rhs)
     {
         lhs += rhs; // reuse compound assignment
         return lhs; // return the result by value (uses move constructor)
     }
 
-    constexpr ByteBitPosition& operator++()
+    ByteBitPosition& operator++()
 	{
         if (m_bit_position < UINT8_T_BIT_SIZE - 1)
 			++m_bit_position;
@@ -97,7 +97,7 @@ public:
 		return *this;
 	}
 
-    constexpr ByteBitPosition operator++(int)
+    ByteBitPosition operator++(int)
 	{
 		ByteBitPosition temp = *this;
 		++*this;
@@ -105,13 +105,13 @@ public:
 		return temp;
 	}
 
-    constexpr ByteBitPosition& operator-=(const ByteBitPosition& rhs)
+    ByteBitPosition& operator-=(const ByteBitPosition& rhs)
 	{
 		*this = TotalBitPosition() - rhs.TotalBitPosition();
 		return *this;
 	}
 
-    constexpr ByteBitPosition& operator-=(int bits)
+    ByteBitPosition& operator-=(int bits)
 	{
 		*this = TotalBitPosition() - bits;
 		return *this;
@@ -120,14 +120,14 @@ public:
 	// Friends defined inside class body are inline and are hidden from non-ADL lookup.
 	// Passing lhs by value helps optimize chained a+b+c,
 	// otherwise both parameters may be const references.
-    constexpr friend ByteBitPosition operator-(ByteBitPosition lhs,
+    friend ByteBitPosition operator-(ByteBitPosition lhs,
 		const ByteBitPosition& rhs)
     {
         lhs -= rhs; // reuse compound assignment
         return lhs; // return the result by value (uses move constructor)
     }
 
-    constexpr ByteBitPosition& operator--()
+    ByteBitPosition& operator--()
 	{
 		if (m_bit_position > 0)
 			--m_bit_position;
@@ -139,7 +139,7 @@ public:
 		return *this;
 	}
 
-    constexpr ByteBitPosition operator--(int)
+    ByteBitPosition operator--(int)
 	{
 		ByteBitPosition temp = *this;
 		--*this;
@@ -147,7 +147,7 @@ public:
 		return temp;
 	}
 
-    constexpr ByteBitPosition& operator*=(const int multiplier)
+    ByteBitPosition& operator*=(const int multiplier)
     {
         *this = TotalBitPosition() * multiplier;
         return *this;
@@ -156,20 +156,20 @@ public:
     // Friends defined inside class body are inline and are hidden from non-ADL lookup.
     // Passing lhs by value helps optimize chained a*b*c,
     // otherwise both parameters may be const references.
-    constexpr friend ByteBitPosition operator*(ByteBitPosition lhs,
+    friend ByteBitPosition operator*(ByteBitPosition lhs,
         const int multiplier)
     {
         lhs *= multiplier; // reuse compound assignment
         return lhs; // return the result by value (uses move constructor)
     }
 
-    constexpr ByteBitPosition& PreAddBytes(int bytes)
+    ByteBitPosition& PreAddBytes(int bytes)
 	{
 		m_byte_position += bytes;
 		return *this;
 	}
 
-    constexpr ByteBitPosition PostAddBytes(int bytes)
+    ByteBitPosition PostAddBytes(int bytes)
 	{
 		ByteBitPosition temp = *this;
         this->PreAddBytes(bytes);
@@ -177,20 +177,20 @@ public:
 		return temp;
 	}
 
-    constexpr ByteBitPosition AddBytes(int bytes)
+    ByteBitPosition AddBytes(int bytes)
     {
         ByteBitPosition lhs = *this;
         lhs.PreAddBytes(bytes);
         return lhs;
     }
 
-    constexpr ByteBitPosition& PreSubBytes(int bytes)
+    ByteBitPosition& PreSubBytes(int bytes)
     {
         m_byte_position -= bytes;
         return *this;
     }
 
-    constexpr ByteBitPosition PostSubBytes(int bytes)
+    ByteBitPosition PostSubBytes(int bytes)
     {
         ByteBitPosition temp = *this;
         this->PreSubBytes(bytes);
@@ -198,7 +198,7 @@ public:
         return temp;
     }
 
-    constexpr ByteBitPosition SubBytes(int bytes)
+    ByteBitPosition SubBytes(int bytes)
     {
         ByteBitPosition lhs = *this;
         lhs.PreSubBytes(bytes);

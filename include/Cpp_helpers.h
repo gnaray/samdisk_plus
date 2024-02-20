@@ -163,7 +163,7 @@ inline void assert_value_in_type_range(ValueType x)
 
 template<typename T>
 typename std::enable_if_t<std::is_floating_point<T>::value, bool>
-constexpr approximately_equal(T x, T y)
+approximately_equal(T x, T y)
 {
     const auto absDiff = std::fabs(x - y);
     return absDiff <= std::numeric_limits<T>::epsilon() * std::max(std::fabs(x), std::fabs(y))
@@ -288,7 +288,7 @@ template<typename TargetType, typename ValueType,
          std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
                           && std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value
                           && (sizeof(TargetType) == sizeof(ValueType))> * = nullptr>
-inline constexpr TargetType limited_static_cast(ValueType x)
+inline TargetType limited_static_cast(ValueType x)
 {
     if (x < static_cast<ValueType>(std::numeric_limits<TargetType>::min()))
         return std::numeric_limits<TargetType>::min();
@@ -300,7 +300,7 @@ template<typename TargetType, typename ValueType,
          std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
                           && std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value
                           && (sizeof(TargetType) == sizeof(ValueType))> * = nullptr>
-inline constexpr TargetType limited_static_cast(ValueType x)
+inline TargetType limited_static_cast(ValueType x)
 {
     if (x > static_cast<ValueType>(std::numeric_limits<TargetType>::max()))
         return std::numeric_limits<TargetType>::max();
@@ -323,7 +323,7 @@ inline constexpr TargetType limited_static_cast(ValueType x)
 template<typename TargetType, typename ValueType,
          std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
                           && std::is_unsigned<TargetType>::value && std::is_signed<ValueType>::value && (sizeof(TargetType) > sizeof(ValueType))> * = nullptr>
-inline constexpr TargetType limited_static_cast(ValueType x)
+inline TargetType limited_static_cast(ValueType x)
 {
     if (x < static_cast<ValueType>(std::numeric_limits<TargetType>::min())) // Unsigned.min = 0.
         return std::numeric_limits<TargetType>::min();
@@ -335,7 +335,7 @@ template<typename TargetType, typename ValueType,
          std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
                           && !(std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value)
                           && (sizeof(TargetType) < sizeof(ValueType))> * = nullptr>
-inline constexpr TargetType limited_static_cast(ValueType x)
+inline TargetType limited_static_cast(ValueType x)
 {
     if (x > static_cast<ValueType>(std::numeric_limits<TargetType>::max()))
         return std::numeric_limits<TargetType>::max();
@@ -349,7 +349,7 @@ template<typename TargetType, typename ValueType,
          std::enable_if_t<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value
                           && std::is_signed<TargetType>::value && std::is_unsigned<ValueType>::value
                           && (sizeof(TargetType) < sizeof(ValueType))> * = nullptr>
-inline constexpr TargetType limited_static_cast(ValueType x)
+inline TargetType limited_static_cast(ValueType x)
 {
     if (x > static_cast<ValueType>(std::numeric_limits<TargetType>::max()))
         return std::numeric_limits<TargetType>::max();

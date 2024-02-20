@@ -57,7 +57,7 @@ public:
     {
     }
 
-    static constexpr bool IsValid(uint8_t byte)
+    static bool IsValid(uint8_t byte)
     {
         return AddressMark::IsValid(byte);
     }
@@ -78,7 +78,7 @@ public:
         return 128u << sizeId;
     }
 
-    constexpr size_t ByteSizeBySizeId()
+    size_t ByteSizeBySizeId()
     {
         return SectorIdInTrack::ByteSizeBySizeId(m_sizeId);
     }
@@ -111,7 +111,7 @@ public:
     {
     }
 
-    constexpr CohereResult DoSectorIdAndDataOffsetsCohere(const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const;
+    CohereResult DoSectorIdAndDataOffsetsCohere(const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const;
 
     const CylHead cylHead;
     const DataRate dataRate = DataRate::Unknown;

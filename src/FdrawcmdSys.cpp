@@ -54,6 +54,46 @@ return RESULT
 #define RETURN_IOCTL(IO_PARAMS, ...) return Ioctl(IO_PARAMS) // Second parameter is debug text, ignoring it.
 #endif
 
+
+
+uint8_t datarateToFdRate(const DataRate& datarate)
+{
+    switch (datarate)
+    {
+    case DataRate::_250K:   return FD_RATE_250K;
+    case DataRate::_300K:   return FD_RATE_300K;
+    case DataRate::_500K:   return FD_RATE_500K;
+    case DataRate::_1M:     return FD_RATE_1M;
+    case DataRate::Unknown: break;
+    }
+    throw util::exception("unsupported datarate (", datarate, ")");
+}
+
+Encoding fdEncodingToEncoding(const uint8_t fdEncoding)
+{
+    switch (fdEncoding)
+    {
+    case FD_OPTION_MFM:   return Encoding::MFM;
+    case FD_OPTION_FM:    return Encoding::FM;
+    default: break;
+    }
+    throw util::exception("unsupported fdEncoding (", fdEncoding, ")");
+}
+
+uint8_t encodingToFdEncoding(const Encoding& encoding)
+{
+    switch (encoding)
+    {
+    case Encoding::MFM:   return FD_OPTION_MFM;
+    case Encoding::FM:    return FD_OPTION_FM;
+    default:
+    case Encoding::Unknown: break;
+    }
+    throw util::exception("unsupported encoding (", encoding, ")");
+}
+
+
+
 /*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device_index)
 {
     auto path = util::format(R"(\\.\fdraw)", device_index);

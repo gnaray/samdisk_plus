@@ -26,7 +26,7 @@ public:
 
     AddressMark() = default;
 
-    constexpr AddressMark(uint8_t addressMarkValue)
+    AddressMark(uint8_t addressMarkValue)
     {
          *this = addressMarkValue;
     }
@@ -53,7 +53,7 @@ public:
         return *this;
     }
 */
-    constexpr AddressMark& operator=(const uint8_t addressMarkValue)
+    AddressMark& operator=(const uint8_t addressMarkValue)
     {
         switch (addressMarkValue) {
         case UNDEFINED:
@@ -89,7 +89,7 @@ public:
         return *this;
     }
 
-    static constexpr bool IsValid(const uint8_t addressMarkValue)
+    static bool IsValid(const uint8_t addressMarkValue)
     {
         switch (addressMarkValue) {
         case UNDEFINED:
