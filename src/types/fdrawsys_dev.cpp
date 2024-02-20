@@ -12,6 +12,7 @@
 #include "DiskUtil.h"
 #include "Options.h"
 #include "VfdrawcmdSys.h"
+#include "win32_error.h"
 
 #include <cstring>
 #include <memory>

@@ -2,7 +2,6 @@
 #define PLATFORM_H
 
 #include "PlatformConfig.h"
-#include "win32_error.h"
 
 #ifdef _WIN32
 #include <windows.h>
