@@ -159,7 +159,7 @@ bool ReadWOZ(MemFile& file, std::shared_ptr<Disk>& disk)
 
         case id_value("META"):
         {
-            std::vector<char> meta(chunk_size);
+            VectorX<char> meta(chunk_size);
             if (!file.read(meta))
                 throw util::exception("short file reading meta chunk");
 

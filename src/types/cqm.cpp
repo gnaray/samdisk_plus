@@ -119,7 +119,7 @@ bool ReadCQM(MemFile& file, std::shared_ptr<Disk>& disk)
     int comment_len = util::le_value(dh.comment_len);
     if (comment_len)
     {
-        std::vector<char> comment(comment_len);
+        VectorX<char> comment(comment_len);
         if (!file.read(comment))
             throw util::exception("short file reading comment");
         disk->metadata()["comment"] = util::trim(std::string(comment.data(), comment.size()));
