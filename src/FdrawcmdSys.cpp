@@ -457,6 +457,25 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
     if (result && output_size != static_cast<int>(ioctl_params.returned))
         if (opt_debug)
             Message(msgWarningAlways, "CmdReadTrack reports reading %u bytes instead of %d", ioctl_params.returned, output_size);
+    if (result && opt_debug)
+    {
+        std::string name;
+        time_t tt;
+        time(&tt);
+        struct tm* t = localtime(&tt);
+
+        if (t != NULL)
+        {
+            char buffer[30];
+            sprintf(buffer, "%04d-%02d-%02d %02d.%02d.%02d ",
+                t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+                t->tm_hour, t->tm_min, t->tm_sec);
+            name = std::string(buffer);
+        }
+        name += make_string("Raw track (", strCH(cyl, head), ")");
+
+        WriteBinaryFile(make_string("f:\\", name, ".pt"), Data(mem.pb, mem.pb + output_size));
+    }
     return result;
 }
 
