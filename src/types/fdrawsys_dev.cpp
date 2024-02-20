@@ -462,7 +462,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
         // Invalidate the content so misbehaving FDCs can be identififed.
         memset(mem.pb, 0xee, static_cast<size_t>(mem.size));
 
-        if (!m_fdrawcmd->CmdReadTrack(cylhead.head, 0, 0, 0, size_code, 1, mem))
+        if (!m_fdrawcmd->CmdReadTrack(cylhead.head, 0, 0, 1, size_code, 1, mem))
         {
             // Reject errors other than CRC, sector not found and missing address marks
             auto error{ GetLastError_MP() };
@@ -807,7 +807,7 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
     assert(m_lastDataRate != DataRate::Unknown);
     MEMORY mem;
 
-    if (!m_fdrawcmd->CmdReadTrack(cylhead.head, cylhead.cyl, cylhead.head, 0, 8, 1, mem)) // Read one big 32K sector.
+    if (!m_fdrawcmd->CmdReadTrack(cylhead.head, cylhead.cyl, cylhead.head, 1, 8, 1, mem)) // Read one big 32K sector.
         throw win32_error(GetLastError_MP(), "ReadTrack");
     PhysicalTrackMFM toBeMergedPhysicalTrack(mem, m_lastDataRate);
     const auto sectorIdAmountPrev = timedAndPhysicalDualTrack.physicalTrackMulti.track.size();
