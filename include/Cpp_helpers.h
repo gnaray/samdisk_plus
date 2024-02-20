@@ -72,7 +72,7 @@ template<typename TargetType, typename ValueType,
                           && (sizeof(TargetType) == sizeof(ValueType))> * = nullptr>
 inline constexpr bool value_out_of_type_range(ValueType x)
 {
-    return x > std::numeric_limits<TargetType>::max();
+    return x > static_cast<ValueType>(std::numeric_limits<TargetType>::max());
 }
 
 // Checking if value in type range: narrowing (unsigned integer in unsigned integer).
