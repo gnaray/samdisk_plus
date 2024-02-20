@@ -16,6 +16,9 @@ public:
     typedef typename VectorX::size_type ST;
 
     using std::vector<T>::vector;
+#if _MSC_VER <= 1900
+    VectorX() : std::vector<T>::vector() {}
+#endif
     using std::vector<T>::operator[];
     using std::vector<T>::capacity;
     using std::vector<T>::insert;
@@ -32,13 +35,15 @@ public:
     {
     }
 
+#if _MSC_VER > 1900
     template <typename U = IT,
               std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
     explicit VectorX(U count,
                      const Allocator& alloc = Allocator() )
-    : std::vector<T>(lossless_static_cast<ST>(count), alloc)
+        : std::vector<T>(lossless_static_cast<ST>(count), alloc)
     {
     }
+#endif
 
     template <typename U = IT,
               std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
