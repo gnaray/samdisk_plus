@@ -227,7 +227,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
 
         // Read the comment block, ensuring it's null-terminated
         size_t len = static_cast<size_t>((tc.bLenHigh << 8) | tc.bLenLow);
-        VectorX<char, size_t> comment(len);
+        VectorX<char> comment(len);
         if (!file.read(comment))
             throw util::exception("short file reading comment data");
         disk->metadata()["comment"] = std::string(comment.data(), comment.size());

@@ -180,7 +180,7 @@ bool ReadA2R(MemFile& file, std::shared_ptr<Disk>& disk)
 
         case id_value("META"):
         {
-            VectorX<char, size_t> meta(chunk_size);
+            VectorX<char> meta(chunk_size);
             if (!file.read(meta))
                 throw util::exception("short file reading meta chunk");
 
