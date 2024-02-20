@@ -2,6 +2,7 @@
 
 #ifdef _WIN32
 #include "Platform.h"
+#include <errhandlingapi.h>
 #else
 #include <cstdint>
 
