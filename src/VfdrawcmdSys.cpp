@@ -155,28 +155,24 @@ const PhysicalTrackMFM& VfdrawcmdSys::LoadPhysicalTrack(const CylHead& cylhead)
 {
     if (!m_physicalTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
-        MemFile file;
         PhysicalTrackMFM physicalTrackMFM;
         const auto pattern = " Raw track (track %02d, head %1d).floppy_raw_track";
         const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
         const auto physicalTrackFilePath = FindFirstFileOnly(fileNamePart, m_path);
+        Data physicalTrackContent;
 
-        do
+        if (!physicalTrackFilePath.empty())
         {
-            if (physicalTrackFilePath.empty())
-                break;
             try
             {
-                file.open(physicalTrackFilePath);
+                ReadBinaryFile(physicalTrackFilePath, physicalTrackContent);
             }
-            catch (...)
+            catch (std::exception & e)
             {
-                break;
+                util::cout << "File read error: " << e.what() << "\n";
             }
-            Data physicalTrackContent(file.size());
-            if (file.rewind() && file.read(physicalTrackContent))
-                physicalTrackMFM = PhysicalTrackMFM(file.data(), FDRATE_TO_DATARATE[m_fdrate]);
-        } while (false);
+        }
+        physicalTrackMFM = PhysicalTrackMFM(physicalTrackContent, FDRATE_TO_DATARATE[m_fdrate]);
         m_physicalTracks[cylhead] = std::move(physicalTrackMFM);
         m_physicalTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())] = true;
     }
