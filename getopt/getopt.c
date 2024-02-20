@@ -58,9 +58,10 @@ __RCSID("$NetBSD: getopt_long.c,v 1.17 2004/06/20 22:20:15 jmc Exp $");
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
 
+#include "getopt.h"
+
 #include <assert.h>
 #include <errno.h>
-#include "getopt_long.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
