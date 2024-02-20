@@ -9,7 +9,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#ifndef _WIN32
 #include <dirent.h>
+#endif
 #include <set>
 
 #ifndef HIWORD
@@ -188,11 +190,21 @@ std::string FileExt(const std::string& path);
 bool IsFileExt(const std::string& path, const std::string& ext);
 int64_t FileSize(const std::string& path);
 int GetFileType(const char* pcsz_);
+
+#ifdef _WIN32
+typedef HANDLE FindFileHandle;
+constexpr FindFileHandle FindFileHandleVoid = INVALID_HANDLE_VALUE;
+#else
+typedef DIR *FindFileHandle;
+constexpr FindFileHandle FindFileHandleVoid = nullptr;
+#endif
+
 VectorX<std::string> FindFiles(const std::string& fileNamePart, const std::string& dirName);
-std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName);
-std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr);
-std::string FindNextFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr);
-void CloseFindFile(DIR*& dir_ptr);
+std::string FindFirstFileOnly(const std::string& fileNamePart, const std::string& dirName);
+std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName, FindFileHandle& findFileHandle);
+std::string FindNextFile(const std::string& fileNamePart, const std::string& dirName, FindFileHandle& findFileHandle);
+void CloseFindFile(FindFileHandle& findFileHandle);
+
 void ReadBinaryFile(const std::string& filePath, Data& data);
 void WriteBinaryFile(const std::string& filePath, const Data& data);
 

@@ -494,83 +494,125 @@ int GetFileType(const char* pcsz_)
 VectorX<std::string> FindFiles(const std::string& fileNamePart, const std::string& dirName)
 {
     VectorX<std::string> result;
-    DIR *dir_ptr;
-    if ((dir_ptr = opendir(dirName.c_str())) != nullptr)
+#ifdef _WIN32
+    WIN32_FIND_DATA FindFileData;
+    // The first parameter of FindFirstFile can contain wildcard...
+    auto findFileHandle = FindFirstFile(dirName.c_str(), &FindFileData);
+    if (findFileHandle != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            const std::string fileName = FindFileData.cFileName;
+#else
+    auto findFileHandle = opendir(dirName.c_str());
+    if (findFileHandle != nullptr)
     {
         struct dirent *diread;
-        while ((diread = readdir(dir_ptr)) != nullptr)
+        while ((diread = readdir(findFileHandle)) != nullptr)
         {
             const auto fileName = std::string(diread->d_name);
+#endif
             if (fileName.find(fileNamePart) != std::string::npos)
-                result.push_back(dirName + '/' + fileName);
+                result.push_back(dirName + PATH_SEPARATOR_CHR + fileName);
+#ifdef _WIN32
+        } while (FindNextFile(findFileHandle, &FindFileData));
+        CloseFindFile(findFileHandle);
+    }
+#else
         }
-        closedir(dir_ptr);
-        dir_ptr = nullptr;
+        closedir(findFileHandle);
+        findFileHandle = nullptr;
+    }
+#endif
+    return result;
+}
+
+std::string FindFirstFileOnly(const std::string& fileNamePart, const std::string& dirName)
+{
+    FindFileHandle dir_ptr;
+    auto result = FindFirstFile(fileNamePart, dirName, dir_ptr);
+    CloseFindFile(dir_ptr);
+    return result;
+}
+
+std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName, FindFileHandle& findFileHandle)
+{
+    std::string result;
+#ifdef _WIN32
+    WIN32_FIND_DATA FindFileData;
+    // The first parameter of FindFirstFile can contain wildcard...
+    findFileHandle = FindFirstFile(dirName.c_str(), &FindFileData);
+    if (findFileHandle != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            const std::string fileName = FindFileData.cFileName;
+#else
+    findFileHandle = opendir(dirName.c_str());
+    if (findFileHandle != nullptr)
+    {
+        struct dirent *diread;
+        while ((diread = readdir(findFileHandle)) != nullptr)
+        {
+            const auto fileName = std::string(diread->d_name);
+#endif
+            if (fileName.find(fileNamePart) != std::string::npos)
+            {
+                result = dirName + PATH_SEPARATOR_CHR + fileName;
+                break;
+            }
+#ifdef _WIN32
+        } while (FindNextFile(findFileHandle, &FindFileData));
+#else
+        }
+#endif
+        if (result.empty())
+            CloseFindFile(findFileHandle);
     }
     return result;
 }
 
-std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName)
-{
-    DIR *dir_ptr;
-    return FindFirstFile(fileNamePart, dirName, dir_ptr);
-}
-
-std::string FindFirstFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr)
+std::string FindNextFile(const std::string& fileNamePart, const std::string& dirName, FindFileHandle& findFileHandle)
 {
     std::string result;
-    dir_ptr = nullptr;
-    if ((dir_ptr = opendir(dirName.c_str())) != nullptr)
+    if (findFileHandle != FindFileHandleVoid)
     {
+#ifdef _WIN32
+        WIN32_FIND_DATA FindFileData;
+        while (FindNextFile(findFileHandle, &FindFileData))
+        {
+            const std::string fileName = FindFileData.cFileName;
+#else
         struct dirent *diread;
-        while ((diread = readdir(dir_ptr)) != nullptr)
+        while ((diread = readdir(findFileHandle)) != nullptr)
         {
             const auto fileName = std::string(diread->d_name);
+#endif
             if (fileName.find(fileNamePart) != std::string::npos)
             {
-                result = dirName + '/' + fileName;
+                result = dirName + PATH_SEPARATOR_CHR + fileName;
                 break;
             }
         }
         if (result.empty())
-        {
-            closedir(dir_ptr);
-            dir_ptr = nullptr;
-        }
+            CloseFindFile(findFileHandle);
     }
     return result;
 }
 
-std::string FindNextFile(const std::string& fileNamePart, const std::string& dirName, DIR*& dir_ptr)
+void CloseFindFile(FindFileHandle& findFileHandle)
 {
-    std::string result;
-    if (dir_ptr != nullptr)
+    if (findFileHandle != FindFileHandleVoid)
     {
-        struct dirent *diread;
-        while ((diread = readdir(dir_ptr)) != nullptr)
-        {
-            const auto fileName = std::string(diread->d_name);
-            if (fileName.find(fileNamePart) != std::string::npos)
-            {
-                result = dirName + '/' + fileName;
-                break;
-            }
-        }
-        if (result.empty())
-        {
-            closedir(dir_ptr);
-            dir_ptr = nullptr;
-        }
+#ifdef _WIN32
+        FindClose(findFileHandle);
+#else
+        closedir(findFileHandle);
+#endif
+        findFileHandle = FindFileHandleVoid;
     }
-    return result;
 }
-
-void CloseFindFile(DIR*& dir_ptr)
-{
-    if (dir_ptr != nullptr)
-        closedir(dir_ptr);
-    dir_ptr = nullptr;
-}
+//#endif
 
 void ReadBinaryFile(const std::string& filePath, Data& data)
 {

@@ -48,7 +48,7 @@ TrackData VfdPhysicalTracksDevDisk::LoadPhysicalTrack(const CylHead& cylhead)
     PhysicalTrackMFM physicalTrackMFM;
     const auto pattern = " Raw track (track %02d, head %1d).floppy_raw_track";
     const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
-    const auto physicalTrackFilePath = FindFirstFile(fileNamePart, m_path);
+    const auto physicalTrackFilePath = FindFirstFileOnly(fileNamePart, m_path);
     Data physicalTrackContent;
 
     if (!physicalTrackFilePath.empty())
