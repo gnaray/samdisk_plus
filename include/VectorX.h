@@ -10,7 +10,7 @@
 
 template <typename T, typename IT = int, typename Allocator = std::allocator<T>,
           std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
-class VectorX : public std::vector<T>
+class VectorX : public std::vector<T, Allocator>
 {
 public:
     typedef typename VectorX::size_type ST;
