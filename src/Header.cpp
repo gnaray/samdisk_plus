@@ -116,16 +116,6 @@ std::string CylHead::ToString(bool /*onlyRelevantData*//* = true*/) const
 
 //////////////////////////////////////////////////////////////////////////////
 
-Header::Header(int cyl_, int head_, int sector_, int size_)
-    : cyl(cyl_), head(head_), sector(sector_), size(size_)
-{
-}
-
-Header::Header(const CylHead& cylhead, int sector_, int size_)
-    : cyl(cylhead.cyl), head(cylhead.head), sector(sector_), size(size_)
-{
-}
-
 Header::operator CylHead() const
 {
     return CylHead(cyl, head);

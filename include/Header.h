@@ -134,8 +134,15 @@ class Header
 {
 public:
     Header() = default;
-    Header(int cyl, int head, int sector, int size);
-    Header(const CylHead& cylhead, int sector, int size);
+    constexpr Header(int cyl, int head, int sector, int size)
+        : cyl(cyl), head(head), sector(sector), size(size)
+    {
+    }
+
+    constexpr Header(const CylHead& cylhead, int sector, int size)
+        : cyl(cylhead.cyl), head(cylhead.head), sector(sector), size(size)
+    {
+    }
 
     operator CylHead() const;
 
