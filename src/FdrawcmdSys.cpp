@@ -316,7 +316,9 @@ bool FdrawcmdSys::Seek(int cyl, int head /*= -1*/)
 {
     if (cyl == 0)
     {
+#if defined(_DEBUG) && (!defined(IGNORE_DEBUG) || IGNORE_DEBUG == 0)
         util::cout << util::format("FdrawcmdSys::Seek(alias recalibrate): cyl=", cyl, ", head=", head) << '\n';
+#endif
         return Recalibrate();
     }
 
