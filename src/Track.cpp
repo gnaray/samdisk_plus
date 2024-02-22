@@ -521,6 +521,8 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trac
     {
         const auto offsetEarlier = sectorEarlier.offset;
         sectorEarlier.offset = modulo(offsetEarlier - syncOffset, static_cast<unsigned>(trackLenSingle));
+        if (sectorEarlier.offset == 0) // Offset must not be 0.
+            sectorEarlier.offset++;
 
         int affectedSectorIndex;
         const auto addResult = add(std::move(sectorEarlier), &affectedSectorIndex);
