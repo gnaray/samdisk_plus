@@ -121,7 +121,8 @@ void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDet
             // Limit to the src disk tracks and heads (it is better than src format in case of device).
             ValidateRange(transferDiskRange, src_disk.cyls(), src_disk.heads(), opt_step);
         }
-        util::cout << "deviceReadingPolicy = {" << deviceReadingPolicy << "}\n";
+        if (opt_verbose)
+            Message(MsgType::msgInfoAlways, "deviceReadingPolicy = {%s", deviceReadingPolicy.ToString().c_str(), "}");
     }
 }
 
