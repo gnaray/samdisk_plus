@@ -416,6 +416,7 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
             Message(msgInfo, "Forcing sector=1 for CmdReadTrack, its passed value is %d", sector);
         sector = 1; // for 7)a)
     }
+
     FD_READ_WRITE_PARAMS rwp{};
     rwp.flags = m_encoding_flags;
     rwp.phead = lossless_static_cast<uint8_t>(phead);
@@ -456,27 +457,32 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
         "), phead=", phead, ", cyl=", cyl, ", head=", head, ", sector=", sector,
         ", size=", size, ", eot=", eot, ", (gap=", rwp.gap, "), bufferlen=", mem.size,
         ", output_size = ", output_size));
-    if (result && output_size != static_cast<int>(ioctl_params.returned))
-        if (opt_debug)
-            Message(msgWarningAlways, "CmdReadTrack reports reading %u bytes instead of %d", ioctl_params.returned, output_size);
-    if (result && opt_debug)
+    if (result)
     {
-        std::string name;
-        time_t tt;
-        time(&tt);
-        struct tm* t = localtime(&tt);
-
-        if (t != NULL)
+        if (mem.size > GetMaxTransferSize())
+            mem.size = GetMaxTransferSize(); // Hack: "resizing" without losing data.
+        if (output_size != static_cast<int>(ioctl_params.returned))
+            if (opt_debug)
+                Message(msgWarningAlways, "CmdReadTrack reports reading %u bytes instead of %d", ioctl_params.returned, output_size);
+        if (opt_debug)
         {
-            char buffer[30];
-            sprintf(buffer, "%04d-%02d-%02d %02d.%02d.%02d ",
-                t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-                t->tm_hour, t->tm_min, t->tm_sec);
-            name = std::string(buffer);
-        }
-        name += make_string("Raw track (", strCH(cyl, head), ")");
+            std::string name;
+            time_t tt;
+            time(&tt);
+            struct tm* t = localtime(&tt);
 
-        WriteBinaryFile(make_string("f:\\", name, ".pt"), Data(mem.pb, mem.pb + output_size));
+            if (t != NULL)
+            {
+                char buffer[30];
+                sprintf(buffer, "%04d-%02d-%02d %02d.%02d.%02d ",
+                    t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+                    t->tm_hour, t->tm_min, t->tm_sec);
+                name = std::string(buffer);
+            }
+            name += make_string("Raw track (", strCH(cyl, head), ")");
+
+            WriteBinaryFile(make_string("f:\\", name, ".pt"), Data(mem.pb, mem.pb + output_size));
+        }
     }
     return result;
 }
