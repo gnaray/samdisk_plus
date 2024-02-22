@@ -630,7 +630,7 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
             if (m_trackInfo[cylhead].trackLenIdeal <= 0)
             {
                 physicalTrackRescans--;
-                if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new id when trakLenIdeal was unknown.
+                if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new id when trackLenIdeal was unknown.
                 {
                     if (physicalTrackRescans.sinceLastChange)
                         physicalTrackRescans = physicalTrackRescansInit;
