@@ -132,8 +132,12 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
     const auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + opt_sectors) : 256;
 
     if (with_head_seek_to >= 0)
+    {
         if (!m_fdrawcmd->Seek(with_head_seek_to))
             throw win32_error(GetLastError(), "Seek");
+        FD_CMD_RESULT result;
+        m_fdrawcmd->CmdReadId(cylhead.head, result);
+    }
     if (!m_fdrawcmd->Seek(cylhead.cyl))
         throw win32_error(GetLastError(), "Seek");
 
