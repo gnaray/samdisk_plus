@@ -843,7 +843,8 @@ bool ParseCommandLine(int argc_, char* argv_[])
         if (Options::opt.stability_level <= 0)
         {
             Options::opt.stability_level = STABILITY_LEVEL_DEFAULT;
-            util::cout << "The stability-level is not specified, using " << Options::opt.stability_level << " by default\n";
+            Message(msgInfo, "The stability-level is not specified, using %d by default", Options::opt.stability_level);
+//            util::cout << "The stability-level is not specified, using " << Options::opt.stability_level << " by default\n";
         }
     }
 
