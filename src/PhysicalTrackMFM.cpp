@@ -56,6 +56,8 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
     const auto sectorIdInPhysicalTrack = *reinterpret_cast<SectorIdInPhysicalTrack*>(sectorIdInPhysicalTrackBytes.data());
     const auto addressMark = sectorIdInPhysicalTrack.m_addressMark;
     const auto badCrc = sectorIdInPhysicalTrack.CalculateCrc() != 0;
+    if (badCrc) // Not allowing bad crc ids.
+        return;
 
     const Header header = sectorIdInPhysicalTrack.AsHeader();
     if (!VerifyCylHeadsMatch(physicalTrackContext.cylHead, header, badCrc, opt_normal_disk, true))
