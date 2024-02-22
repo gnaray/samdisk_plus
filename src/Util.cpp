@@ -432,11 +432,11 @@ bool CheckLibrary(const char* pcszLib_, const char* pcszFunc_)
 
 uint8_t* AllocMem(int len)
 {
-    static auto align = GetMemoryPageSize();
-
 #ifdef _WIN32
     auto pb = reinterpret_cast<uint8_t*>(VirtualAlloc(nullptr, len, MEM_COMMIT, PAGE_READWRITE));
 #else
+    static auto align = GetMemoryPageSize();
+
     auto size = len + align - 1 + longsizeof(void*);
     auto pv = calloc(1, static_cast<size_t>(size));
     void** ppv = reinterpret_cast<void**>((reinterpret_cast<uintptr_t>(pv) + static_cast<uintptr_t>(size - len)) & static_cast<uintptr_t>(~(align - 1)));
