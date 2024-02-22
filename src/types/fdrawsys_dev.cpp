@@ -812,7 +812,11 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
     MEMORY mem;
 
     if (!m_fdrawcmd->CmdReadTrack(cylhead.head, cylhead.cyl, cylhead.head, 1, 8, 1, mem)) // Read one big 32K sector.
-        throw win32_error(GetLastError_MP(), "ReadTrack");
+    {
+        MessageCPP(msgWarningAlways, "Could not read ", strCH(cylhead.cyl, cylhead.head),
+            " at once, it is either blank or prevents from being read");
+        return false;
+    }
     PhysicalTrackMFM toBeMergedPhysicalTrack(mem, m_lastDataRate);
     const auto sectorIdAmountPrev = timedAndPhysicalDualTrack.physicalTrackMulti.track.size();
     timedAndPhysicalDualTrack.physicalTrackMulti.MergePhysicalTrack(cylhead, toBeMergedPhysicalTrack);
