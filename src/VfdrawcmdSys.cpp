@@ -155,7 +155,6 @@ const PhysicalTrackMFM& VfdrawcmdSys::LoadPhysicalTrack(const CylHead& cylhead)
 {
     if (!m_physicalTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
-        PhysicalTrackMFM physicalTrackMFM;
         const auto pattern = " Raw track (track %02d, head %1d).floppy_raw_track";
         const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
         const auto physicalTrackFilePath = FindFirstFileOnly(fileNamePart, m_path);
@@ -172,7 +171,7 @@ const PhysicalTrackMFM& VfdrawcmdSys::LoadPhysicalTrack(const CylHead& cylhead)
                 util::cout << "File read error: " << e.what() << "\n";
             }
         }
-        physicalTrackMFM = PhysicalTrackMFM(physicalTrackContent, FDRATE_TO_DATARATE[m_fdrate]);
+        PhysicalTrackMFM physicalTrackMFM(physicalTrackContent, FDRATE_TO_DATARATE[m_fdrate]);
         m_physicalTracks[cylhead] = std::move(physicalTrackMFM);
         m_physicalTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())] = true;
     }

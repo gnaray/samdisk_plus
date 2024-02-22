@@ -45,7 +45,6 @@ TrackData VfdPhysicalTracksDevDisk::load(const CylHead& cylhead, bool /*first_re
 
 TrackData VfdPhysicalTracksDevDisk::LoadPhysicalTrack(const CylHead& cylhead)
 {
-    PhysicalTrackMFM physicalTrackMFM;
     const auto pattern = " Raw track (track %02d, head %1d).floppy_raw_track";
     const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
     const auto physicalTrackFilePath = FindFirstFileOnly(fileNamePart, m_path);
@@ -63,7 +62,7 @@ TrackData VfdPhysicalTracksDevDisk::LoadPhysicalTrack(const CylHead& cylhead)
         }
     }
 
-    physicalTrackMFM = PhysicalTrackMFM(physicalTrackContent, DataRate::_250K);
+    PhysicalTrackMFM physicalTrackMFM(physicalTrackContent, DataRate::_250K);
     auto physicalTrack = physicalTrackMFM;
     auto bitstream = physicalTrack.AsMFMBitstream();
     auto trackdata = TrackData(cylhead, std::move(bitstream));
