@@ -37,7 +37,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
             util::cout << " ignored because found another earlier";
     }
     else
-        orphanDataCapableTrack.trackIndexOffset = DataBitPositionAsBitOffset(byteBitPositionIAM.TotalBitPosition()); // Counted in mfmbits.
+        orphanDataCapableTrack.trackIndexOffset = DataBitPositionAsBitOffset(byteBitPositionIAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
     if (opt_debug)
         util::cout << "\n";
 }
@@ -66,7 +66,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
     {
         Sector sector(physicalTrackContext.dataRate, encoding, header);
 
-        sector.offset = DataBitPositionAsBitOffset(byteBitPositionIDAM.TotalBitPosition()); // Counted in mfmbits.
+        sector.offset = DataBitPositionAsBitOffset(byteBitPositionIDAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
         sector.set_badidcrc(badCrc);
         sector.set_constant_disk(false);
         if (opt_debug)
@@ -90,7 +90,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
     const auto addressMark = sectorDataRefInPhysicalTrack.m_addressMark;
     const Header header(physicalTrackContext.cylHead.cyl, physicalTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, SIZECODE_UNKNOWN);
     Sector sector(physicalTrackContext.dataRate, encoding, header);
-    sector.offset = DataBitPositionAsBitOffset(byteBitPositionDAM.TotalBitPosition()); // Counted in mfmbits.
+    sector.offset = DataBitPositionAsBitOffset(byteBitPositionDAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
     sector.set_constant_disk(false);
     if (opt_debug)
         util::cout << "physical_track_mfm_fm " << encoding << " DAM (am=" << addressMark << ") at offset " << sector.offset << "\n";
@@ -122,14 +122,14 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
         auto availableByteLength = remainingByteLength;
         if (nextIdamOffset > 0)
         {
-            const auto availableByteLengthUntilNextIdam = BitOffsetAsDataBytePosition(nextIdamOffset - orphanSector.offset)
+            const auto availableByteLengthUntilNextIdam = BitOffsetAsDataBytePosition(nextIdamOffset - orphanSector.offset, encoding)
                     - GetIdamOverhead(encoding);
             if (availableByteLengthUntilNextIdam < availableByteLength)
                 availableByteLength = availableByteLengthUntilNextIdam;
         }
         if (nextDamOffset > 0)
         {
-            const auto availableByteLengthUntilNextDam = BitOffsetAsDataBytePosition(nextDamOffset - orphanSector.offset)
+            const auto availableByteLengthUntilNextDam = BitOffsetAsDataBytePosition(nextDamOffset - orphanSector.offset, encoding)
                     - GetDamOverhead(encoding);
             if (availableByteLengthUntilNextDam < availableByteLength)
                 availableByteLength = availableByteLengthUntilNextDam;
@@ -249,7 +249,7 @@ void PhysicalTrackMFM::ProcessSectorDataRefs(OrphanDataCapableTrack& orphanDataC
     {
         auto& orphanDataSector = *itOrphan;
         auto& parentSector = *itParent;
-        m_physicalTrackContent.SetByteBitPosition(BitOffsetAsDataBitPosition(orphanDataSector.offset)); // mfmbits to databits
+        m_physicalTrackContent.SetByteBitPosition(BitOffsetAsDataBitPosition(orphanDataSector.offset, encoding)); // mfmbits (rawbits) to databits
         // Find the closest sector id which coheres.
         const auto cohereResult = DoSectorIdAndDataOffsetsCohere(parentSector.offset, orphanDataSector.offset, dataRate, encoding);
         if (cohereResult == CohereResult::DataCoheres)
@@ -338,7 +338,7 @@ OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
 
     if (!orphanDataCapableTrack.empty())
     {
-        orphanDataCapableTrack.setTrackLen(DataBitPositionAsBitOffset(m_physicalTrackContent.BytesBitSize())); // Counted in mfmbits.
+        orphanDataCapableTrack.setTrackLen(DataBitPositionAsBitOffset(m_physicalTrackContent.BytesBitSize(), encoding)); // Counted in mfmbits (rawbits).
         ProcessSectorDataRefs(orphanDataCapableTrack);
     }
     return orphanDataCapableTrack;

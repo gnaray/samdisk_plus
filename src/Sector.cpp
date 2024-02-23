@@ -681,7 +681,7 @@ void Sector::limit_copies(int max_copies)
 bool Sector::is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int tracklen) const
 {
     // Sector must be close enough and have the same header.
-    return are_offsets_tolerated_same(offset, sector.offset, byte_tolerance_of_time, tracklen)
+    return are_offsets_tolerated_same(offset, sector.offset, encoding, byte_tolerance_of_time, tracklen)
             && header == sector.header;
 }
 
@@ -715,7 +715,7 @@ bool Sector::has_same_record_properties(const Sector& other_sector, const int ot
     auto offset_normalised = offset;
     if (other_sector.datarate != datarate && are_interchangeably_equal_datarates(other_sector.datarate, datarate))
         offset_normalised = convert_offset_by_datarate(offset, datarate, other_sector.datarate);
-    return are_offsets_tolerated_same(offset_normalised, other_sector.offset, opt_byte_tolerance_of_time, other_tracklen);
+    return are_offsets_tolerated_same(offset_normalised, other_sector.offset, encoding, opt_byte_tolerance_of_time, other_tracklen);
 }
 
 void Sector::remove_gapdata(bool keep_crc/*=false*/)

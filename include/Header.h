@@ -26,9 +26,7 @@ constexpr bool are_interchangeably_equal_datarates(const DataRate& datarate1, co
 }
 
 /* bitcell_ns = ns/bitcell = tracktime / tracklen.bit = (tracklen.bit * mfmbit_us) / tracklen.bit = mfmbit_us.
- * mfmbit_us = GetFmOrMfmDataBitTime(m_lastDataRate, m_lastEncoding).
- * Thus there is a contradict because the encoding is not used here but in GetFmOrMfmDataBitTime.
- * Probably 1 FM bit is 2 bitcells and 1 MFM bit is 1 bitcell, however bitcell time is same for FM and MFM.
+ * Basically this is the same as GetFmOrMfmBitsTime(m_lastDataRate, 1) because bitcell is a rawbit.
  */
 inline int bitcell_ns(DataRate datarate)
 {   // The result is 1000000000 / datarate / 2 = 500000000 / datarate.
@@ -56,27 +54,27 @@ constexpr int convert_offset_by_datarate(int offset, const DataRate& datarate_so
     return bits_per_second(datarate_target) / 10000 * offset / bits_per_second(datarate_source) * 10000;
 }
 
-constexpr int DataBitPositionAsBitOffset(const int bitPosition)
+constexpr int DataBitPositionAsBitOffset(const int bitPosition, const Encoding& encoding)
 {
-    return bitPosition * 2;
+    return bitPosition << (encoding == Encoding::FM ? 2 : 1);
 }
 
-constexpr int DataBytePositionAsBitOffset(const int bytePosition)
+constexpr int DataBytePositionAsBitOffset(const int bytePosition, const Encoding& encoding)
 {
-    return DataBitPositionAsBitOffset(bytePosition) * 8;
+    return DataBitPositionAsBitOffset(bytePosition, encoding) * 8;
 }
 
-constexpr int BitOffsetAsDataBitPosition(const int offset)
+constexpr int BitOffsetAsDataBitPosition(const int offset, const Encoding& encoding)
 {
-    return offset / 2;
+    return offset >> (encoding == Encoding::FM ? 2 : 1);
 }
 
-constexpr int BitOffsetAsDataBytePosition(const int offset)
+constexpr int BitOffsetAsDataBytePosition(const int offset, const Encoding& encoding)
 {
-    return BitOffsetAsDataBitPosition(offset) / 8;
+    return BitOffsetAsDataBitPosition(offset, encoding) / 8;
 }
 
-inline bool are_offsets_tolerated_same(const int offset1, const int offset2, const int byte_tolerance_of_time, const int tracklen)
+inline bool are_offsets_tolerated_same(const int offset1, const int offset2, const Encoding& encoding, const int byte_tolerance_of_time, const int tracklen)
 {
     const auto offset_min = std::min(offset1, offset2);
     const auto offset_max = std::max(offset1, offset2);
@@ -85,7 +83,7 @@ inline bool are_offsets_tolerated_same(const int offset1, const int offset2, con
         distance = std::min(distance, tracklen + offset_min - offset_max);
 
     // Offsets must be close enough.
-    return distance <= DataBytePositionAsBitOffset(byte_tolerance_of_time);
+    return distance <= DataBytePositionAsBitOffset(byte_tolerance_of_time, encoding);
 }
 
 

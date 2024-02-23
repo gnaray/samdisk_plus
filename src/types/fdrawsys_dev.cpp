@@ -323,7 +323,7 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 
     if (scan_result->count > 0)
     {
-        const auto mfmbit_us = GetFmOrMfmBitsTime(m_lastDataRate, m_lastEncoding);
+        const auto mfmbit_us = GetFmOrMfmBitsTime(m_lastDataRate);
         track.tracktime = tracktime;
         track.tracklen = round_AS<int>(track.tracktime / mfmbit_us);
 
@@ -723,7 +723,7 @@ void FdrawSysDevDisk::DiscardOutOfSpaceSectorsAtTrackEnd(Track& track) const
             const auto& sector = *it;
             assert(sector.header.size != SIZECODE_UNKNOWN);
             const auto lengthWithoutOuterGaps = GetFmOrMfmSectorOverheadFromOffsetToDataCrcEnd(sector.datarate, sector.encoding, sector.size());
-            if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps) < track.tracklen) // It fits, no more problem.
+            if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps, track.getEncoding()) < track.tracklen) // It fits, no more problem.
                 break;
             if (opt_debug)
                 util::cout << "DiscardOutOfSpaceSectorsAtTrackEnd: discarding sector (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
@@ -826,7 +826,7 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
     const bool foundNewSectorId = timedAndPhysicalDualTrack.physicalTrackMulti.track.size() > sectorIdAmountPrev;
     if (foundNewSectorId && m_trackInfo[cylhead].trackLenIdeal <= 0) // Found new sector id so there is a chance for determining best tracklen.
     {
-        const auto bestTrackLen = timedAndPhysicalDualTrack.physicalTrackMulti.determineBestTrackLen(GetFmOrMfmTimeBitsAsRounded(m_lastDataRate, m_lastEncoding, m_trackInfo[cylhead].trackTime));
+        const auto bestTrackLen = timedAndPhysicalDualTrack.physicalTrackMulti.determineBestTrackLen(GetFmOrMfmTimeBitsAsRounded(m_lastDataRate, m_trackInfo[cylhead].trackTime));
         if (bestTrackLen > 0)
         {
             m_trackInfo[cylhead].trackLenIdeal = bestTrackLen;

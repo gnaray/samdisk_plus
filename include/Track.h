@@ -49,7 +49,7 @@ public:
     int getTimeOfOffset(const int offset) const;
     int getOffsetOfTime(const int time) const;
 
-    static int findMostPopularToleratedDiff(VectorX<int>& diffs);
+    static int findMostPopularToleratedDiff(VectorX<int>& diffs, const Encoding& encoding);
 
     bool findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const;
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
@@ -131,5 +131,4 @@ public:
     // larger sync differences after weak sectors. We still require the header
     // to match, so only close repeated headers should be a problem.
     static constexpr int COMPARE_TOLERANCE_BYTES = 64;
-    static constexpr int COMPARE_TOLERANCE_BITS = DataBytePositionAsBitOffset(COMPARE_TOLERANCE_BYTES); // mfmbits
 };

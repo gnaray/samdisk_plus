@@ -452,17 +452,17 @@ int Track::getTimeOfOffset(const int offset) const
 {
     assert(!empty());
 
-    return GetFmOrMfmBitsTimeAsRounded(getDataRate(), getEncoding(), offset); // microsec
+    return GetFmOrMfmBitsTimeAsRounded(getDataRate(), offset); // microsec
 }
 
 int Track::getOffsetOfTime(const int time) const
 {
     assert(!empty());
 
-    return GetFmOrMfmTimeBitsAsRounded(getDataRate(), getEncoding(), time); // mfmbits
+    return GetFmOrMfmTimeBitsAsRounded(getDataRate(), time); // mfmbits (rawbits)
 }
 
-/*static*/ int Track::findMostPopularToleratedDiff(VectorX<int> &diffs)
+/*static*/ int Track::findMostPopularToleratedDiff(VectorX<int> &diffs, const Encoding& encoding)
 {
     assert(diffs.size() > 0);
 
@@ -474,7 +474,7 @@ int Track::getOffsetOfTime(const int time) const
     {
         const auto it0 = it;
         auto s = *(it++);
-        while (it != diffsEnd && *it < *it0 + Track::COMPARE_TOLERANCE_BITS)
+        while (it != diffsEnd && *it < *it0 + DataBytePositionAsBitOffset(Track::COMPARE_TOLERANCE_BYTES, encoding))
             s += *(it++);
         participantsAndAveragedOffsetDiffs.push_back(std::make_pair(it - it0, s / (it - it0)));
         it--;
@@ -490,6 +490,8 @@ bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffse
 {
     if (referenceTrack.empty() || empty())
         return false;
+    assert(referenceTrack.getEncoding() == getEncoding());
+
     // Find the best sync (offset diff).
     VectorX<int> offsetDiffs;
     const auto trackEnd = end();
@@ -504,7 +506,7 @@ bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffse
     }
     if (offsetDiffs.empty())
         return false;
-    syncOffset = findMostPopularToleratedDiff(offsetDiffs);
+    syncOffset = findMostPopularToleratedDiff(offsetDiffs, getEncoding());
     return true;
 }
 
@@ -559,7 +561,7 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
     }
     if (offsetDiffs.empty())
         return 0;
-    const auto offsetDiffBest = Track::findMostPopularToleratedDiff(offsetDiffs); // This can be multiple tracklen. It must be reduced.
+    const auto offsetDiffBest = Track::findMostPopularToleratedDiff(offsetDiffs, getEncoding()); // This can be multiple tracklen. It must be reduced.
     const auto multi = round_AS<int>(static_cast<double>(offsetDiffBest) / timedTrackLen);
     if (multi == 0)
     {
@@ -570,7 +572,7 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
     const auto trackLenBest = round_AS<int>(static_cast<double>(offsetDiffBest) / multi);
     if (opt_debug)
     {
-        if (std::abs(trackLenBest - timedTrackLen) > Track::COMPARE_TOLERANCE_BITS)
+        if (std::abs(trackLenBest - timedTrackLen) > DataBytePositionAsBitOffset(Track::COMPARE_TOLERANCE_BYTES, getEncoding()))
             util::cout << "determineBestTrackLen found trackLenBest " << trackLenBest << " to be outside of tolerated timedTrackLen " << timedTrackLen << "\n";
     }
     if (opt_debug)
@@ -593,7 +595,9 @@ void Track::setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen)
 
 int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 {
-    const auto offsetDiff = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndDamDistance(getDataRate(), getEncoding()));
+    assert(!empty());
+
+    const auto offsetDiff = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndDamDistance(getDataRate(), getEncoding()), getEncoding());
     // We could check if the sector overlaps something existing but unimportant now.
     return modulo(dataOffset - offsetDiff, static_cast<unsigned>(tracklen));
 }
@@ -611,12 +615,12 @@ bool Track::DiscoverTrackSectorScheme()
     IdAndOffsetPairs idAndOffsetPairsLocal;
     idAndOffsetPairsLocal.reserve(size()); // Size will be more if holes are found.
 
-    const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time);
+    const auto encoding = getEncoding();
+    const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time, encoding);
     assert(operator[](0).header.size != SIZECODE_UNKNOWN);
     const auto sectorSize = operator[](0).size();
-    const auto encoding = getEncoding();
-    const auto predictedOverheadedSectorWithoutSyncAndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithoutSync(getDataRate(), encoding));
-    const auto predictedOverheadedSectorWithGap3AndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding) + sectorSize);
+    const auto predictedOverheadedSectorWithoutSyncAndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithoutSync(getDataRate(), encoding), encoding);
+    const auto predictedOverheadedSectorWithGap3AndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding) + sectorSize, encoding);
     auto overheadedSectorWithGap3AndDataBits = 0;
     auto overheadedSectorWithGap3AndDataBitsParticipants = 0;
     auto overheadedSectorWithGap3AndDataBitsAbout = predictedOverheadedSectorWithGap3AndDataBits;
@@ -641,12 +645,13 @@ bool Track::DiscoverTrackSectorScheme()
         }
     }
     overheadedSectorWithGap3AndDataBits = overheadedSectorWithGap3AndDataBitsAbout;
-    const auto gap3PlusSyncBits = overheadedSectorWithGap3AndDataBits - predictedOverheadedSectorWithoutSyncAndDataBits - DataBytePositionAsBitOffset(sectorSize);
-    const auto sectorOverheadTolerance = DataBytePositionAsBitOffset(1);
+    const auto gap3PlusSyncBits = overheadedSectorWithGap3AndDataBits - predictedOverheadedSectorWithoutSyncAndDataBits - DataBytePositionAsBitOffset(sectorSize, encoding);
+    const auto sectorOverheadTolerance = DataBytePositionAsBitOffset(1, encoding);
 
     // Determine and add holes between track start and first sector.
     const auto overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits =
-            overheadedSectorWithGap3AndDataBitsAbout + gap3PlusSyncBits + DataBytePositionAsBitOffset(GetIdamOverheadSyncOverhead(encoding)); // gap3 should be gap4a but good enough now.
+            overheadedSectorWithGap3AndDataBitsAbout + gap3PlusSyncBits + DataBytePositionAsBitOffset(GetIdamOverheadSyncOverhead(encoding), encoding); // gap3 should be gap4a but good enough now.
+
     auto remainingStartOffset = operator[](0).offset;
     while (remainingStartOffset - 0 >= overheadedSectorPlusGap3PlusSyncPlusIdamSyncOverheadBits) // Could subtract a minimal gap4a instead of 0.
     {
@@ -684,7 +689,7 @@ bool Track::DiscoverTrackSectorScheme()
     }
 
     // Determine and add holes between last sector and track end.
-    const auto overheadedSectorFromOffsetToDataCrcEndBits = overheadedSectorWithGap3AndDataBitsAbout - gap3PlusSyncBits - DataBytePositionAsBitOffset(GetIdamOverheadSyncOverhead(encoding));
+    const auto overheadedSectorFromOffsetToDataCrcEndBits = overheadedSectorWithGap3AndDataBitsAbout - gap3PlusSyncBits - DataBytePositionAsBitOffset(GetIdamOverheadSyncOverhead(encoding), encoding);
     auto remainingEndOffset = operator[](iSup - 1).offset + overheadedSectorWithGap3AndDataBits;
     while (tracklen - remainingEndOffset >= overheadedSectorFromOffsetToDataCrcEndBits)
     {

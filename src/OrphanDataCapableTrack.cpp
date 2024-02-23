@@ -191,7 +191,7 @@ void OrphanDataCapableTrack::AddWithSyncAndBrokenEndingFix(OrphanDataCapableTrac
     {
         const auto& sector = orphanDataCapableTrack.orphanDataTrack[lastSectorIndex];
         // Does the last orphan data sector end at track end? If yes then we ignore it since it can be broken.
-        if (BitOffsetAsDataBytePosition(orphanDataCapableTrack.orphanDataTrack.tracklen - sector.offset) == sector.data_size())
+        if (BitOffsetAsDataBytePosition(orphanDataCapableTrack.orphanDataTrack.tracklen - sector.offset, orphanDataCapableTrack.getEncoding()) == sector.data_size())
         {
             if (opt_debug)
                 util::cout << "AddWithSyncAndBrokenEndingFix: ignoring possibly broken orphan data sector at track end (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";

@@ -110,34 +110,39 @@ constexpr uint8_t STREG2_MISSING_ADDRESS_MARK_IN_DATA_FIELD = 0x01; // fdrawcmd:
 
 std::string to_string(const MEDIA_TYPE& type);
 
+// Return the number of microseconds for given (default 1) mfmbits (rawbits) at the given rate.
+inline double GetFmOrMfmBitsTime(const DataRate& datarate, int len_fmormfmbits = 1)
+{
+    assert(datarate != DataRate::Unknown);
+
+    const auto uBitTime = 1'000'000. / bits_per_second(datarate) / 2;
+    return uBitTime * len_fmormfmbits;
+}
+
 // Return the number of microseconds for given (default 1) bytes at the given rate.
 // The calculation for add_drain_time is incomprehensible, luckily that parameter is never used.
-inline double GetFmOrMfmDataBytesTime(DataRate datarate, Encoding encoding, int len_bytes = 1, bool add_drain_time = false)
+inline double GetFmOrMfmDataBytesTime(const DataRate& datarate, const Encoding& encoding, int len_bytes = 1)
 {
     // Ignoring add_drain_time and considering len_bytes=1, the result is one of {8, 16, 26.666, 53.333, 32, 64}.
-    assert(datarate != DataRate::Unknown);
-    const auto uTime = 1'000'000 * (encoding == Encoding::FM ? 2 : 1) / (bits_per_second(datarate) / 8.);
-    return uTime * len_bytes + (add_drain_time ? (uTime * 69 / 100) : 0);     // 0.69 250Kbps bytes @300rpm = 86us = FDC data drain time
+    return GetFmOrMfmBitsTime(datarate, len_bytes << (encoding == Encoding::FM ? 5 : 4));
+
+    // The following lines are kept in case something misses add_drain_time.
+//    const auto uTime = 1'000'000 * (encoding == Encoding::FM ? 2 : 1) / (bits_per_second(datarate) / 8.);
+//    return uTime * len_bytes + (add_drain_time ? uTime * 69 / 100 : 0));     // 0.69 250Kbps bytes @300rpm = 86us = FDC data drain time
 }
 
-// Return the number of microseconds for given (default 1) mfmbits at the given rate.
-inline double GetFmOrMfmBitsTime(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
-{
-    return GetFmOrMfmDataBytesTime(datarate, encoding, len_fmormfmbits, add_drain_time) / DataBytePositionAsBitOffset(1);
-}
-
-// Return the number of microseconds as rounded integer for given (default 1) mfmbits at the given rate.
-inline int GetFmOrMfmBitsTimeAsRounded(DataRate datarate, Encoding encoding, int len_fmormfmbits = 1, bool add_drain_time = false)
+// Return the number of microseconds as rounded integer for given (default 1) mfmbits (rawbits) at the given rate.
+inline int GetFmOrMfmBitsTimeAsRounded(const DataRate& datarate, int len_fmormfmbits = 1)
 {
     // Rounding happens if encoding is MFM and datarate is 1 Mbps and len_fmormfmbits is odd, or if datarate is 300 Kbps and len_fmormfmbits mod 3 is not 0.
-    return round_AS<int>(GetFmOrMfmBitsTime(datarate, encoding, len_fmormfmbits, add_drain_time));
+    return round_AS<int>(GetFmOrMfmBitsTime(datarate, len_fmormfmbits));
 }
 
-// Return the number of mfmbits as rounded integer for given microseconds at the given rate.
+// Return the number of mfmbits (rawbits) as rounded integer for given microseconds at the given rate.
 // Carefully using this method because it returns a rounded result which can be much rounded at low datarate and one digit time.
-inline int GetFmOrMfmTimeBitsAsRounded(DataRate datarate, Encoding encoding, int time)
+inline int GetFmOrMfmTimeBitsAsRounded(const DataRate& datarate, int time)
 {
-    return round_AS<int>(time / GetFmOrMfmBitsTime(datarate, encoding));
+    return round_AS<int>(time / GetFmOrMfmBitsTime(datarate));
 }
 
 int GetTrackOverhead(Encoding encoding);

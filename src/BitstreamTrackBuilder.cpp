@@ -27,32 +27,32 @@ void BitstreamTrackBuilder::addRawBit(bool bit)
 
 int BitstreamTrackBuilder::gapPreIDAMBits(const bool short_mfm_gap/* = false*/) const
 {
-    return DataBytePositionAsBitOffset(getSyncLength(short_mfm_gap) + GetIdamOverheadSyncOverhead(m_buffer.encoding));
+    return DataBytePositionAsBitOffset(getSyncLength(short_mfm_gap) + GetIdamOverheadSyncOverhead(m_buffer.encoding), m_buffer.encoding);
 }
 
 void BitstreamTrackBuilder::adjustDataBitsBeforeOffset(const int sectorOffset, const int gap3_bytes/* = 0*/, const bool short_mfm_gap/* = false*/)
 {
     if (sectorOffset > m_prevSectorOffset)
     {
-        const auto currentBitpos = rawOffsetToOffset(m_buffer.tell());
+        const auto currentBitpos = m_buffer.tell();
         const auto sectorBitpos = sectorOffset - gapPreIDAMBits(short_mfm_gap);
         auto missingBitsToAdd = sectorBitpos - currentBitpos;
         if (missingBitsToAdd > 0)
         {
-            const auto gap3Bits = DataBytePositionAsBitOffset(std::min(BitOffsetAsDataBytePosition(missingBitsToAdd), gap3_bytes));
+            const auto gap3Bits = DataBytePositionAsBitOffset(std::min(BitOffsetAsDataBytePosition(missingBitsToAdd, m_buffer.encoding), gap3_bytes), m_buffer.encoding);
             while (missingBitsToAdd > gap3Bits)
             {
                 addBit(true);
-                missingBitsToAdd--;
+                missingBitsToAdd -= sectorBitpos - m_buffer.tell();
             }
-            if (missingBitsToAdd == gap3Bits && gap3Bits >= DataBytePositionAsBitOffset(1))
-                addGap(BitOffsetAsDataBytePosition(gap3Bits));
+            if (missingBitsToAdd == gap3Bits && gap3Bits >= DataBytePositionAsBitOffset(1, m_buffer.encoding))
+                addGap(BitOffsetAsDataBytePosition(gap3Bits, m_buffer.encoding));
         }
         else
         {
-            const auto idWithGap3Bits = DataBytePositionAsBitOffset(GetIdOverheadWithoutIdamOverheadSyncOverhead(m_buffer.encoding) + gap3_bytes);
+            const auto idWithGap3Bits = DataBytePositionAsBitOffset(GetIdOverheadWithoutIdamOverheadSyncOverhead(m_buffer.encoding) + gap3_bytes, m_buffer.encoding);
             const auto protectedBitpos = m_prevSectorOffset + idWithGap3Bits;
-            m_buffer.seek(offsetToRawOffset(std::max(sectorBitpos, protectedBitpos)));
+            m_buffer.seek(std::max(sectorBitpos, protectedBitpos));
         }
         m_prevSectorOffset = sectorOffset;
     }
@@ -65,16 +65,16 @@ void BitstreamTrackBuilder::justAddedImportantBits()
 
 void BitstreamTrackBuilder::cutExcessUnimportantDataBitsAtTheEnd(const int trackLen)
 {
-    const auto currentBitpos = rawOffsetToOffset(m_buffer.tell());
+    const auto currentBitpos = m_buffer.tell();
     auto excessBits = currentBitpos - trackLen;
     if (excessBits > 0)
     {
-        const auto protectedBitpos = rawOffsetToOffset(m_afterLastImportantRawBitPosition);
+        const auto protectedBitpos = m_afterLastImportantRawBitPosition;
         if (protectedBitpos < currentBitpos)
         {
             if (protectedBitpos > trackLen)
                 excessBits -= protectedBitpos - trackLen;
-            m_buffer.remove(offsetToRawOffset(excessBits));
+            m_buffer.remove(excessBits);
         }
     }
 }
@@ -82,19 +82,19 @@ void BitstreamTrackBuilder::cutExcessUnimportantDataBitsAtTheEnd(const int track
 void BitstreamTrackBuilder::addIAM()
 {
     TrackBuilder::addIAM();
-    m_iamOffset = rawOffsetToOffset(m_buffer.tell()) - DataBytePositionAsBitOffset(1);
+    m_iamOffset = m_buffer.tell() - DataBytePositionAsBitOffset(1, m_buffer.encoding);
 }
 
 int BitstreamTrackBuilder::getIAMPosition() const
 {
     // m_iamOffset is not always set, for example in case of short mfm gap or amiga encoding.
-    return m_iamOffset > 0 ? m_iamOffset : rawOffsetToOffset(m_buffer.tell());
+    return m_iamOffset > 0 ? m_iamOffset : m_buffer.tell();
 }
 
 void BitstreamTrackBuilder::addCrc(int size)
 {
-    auto old_bitpos{ m_buffer.tell() };
-    auto byte_rawbits = bitRawBits() * DataBytePositionAsBitOffset(1);
+    auto old_bitpos = m_buffer.tell();
+    auto byte_rawbits = DataBytePositionAsBitOffset(1, m_buffer.encoding);
     assert(old_bitpos >= size * byte_rawbits);
     m_buffer.seek(old_bitpos - size * byte_rawbits);
 

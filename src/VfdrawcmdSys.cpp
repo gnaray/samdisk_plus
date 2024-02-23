@@ -91,12 +91,13 @@ bool VfdrawcmdSys::AdvanceSectorIndexByFindingSectorIds(const OrphanDataCapableT
     const auto trackSectorCount = orphanDataCapableTrack.track.size();
     if (trackSectorCount <= 0)
         return false;
+    const auto encoding = orphanDataCapableTrack.getEncoding();
     const auto trackLen = orphanDataCapableTrack.getOffsetOfTime(m_trackTime);
     while ((static_cast<int>(m_currentSectorIndex) + count) >= trackSectorCount)
     {
         count -= trackSectorCount - (static_cast<int>(m_currentSectorIndex));
         const auto itlastSector = orphanDataCapableTrack.track.end() - 1;
-        auto offset = itlastSector->offset + DataBytePositionAsBitOffset(GetSectorOverhead(fdEncodingToEncoding(m_encoding_flags))); // Addition is not perfect but good enough now. mfmbits
+        auto offset = itlastSector->offset + DataBytePositionAsBitOffset(GetSectorOverhead(encoding), encoding); // Addition is not perfect but good enough now. mfmbits (rawbits)
         if (offset < trackLen)
             m_currentSectorIndex = 0;
         else
@@ -545,7 +546,7 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         TrackData trackData(cylHead, std::move(orphanDataCapableTrack.track));
         orphanDataCapableTrack.track = trackData.track(); // Copy the moved track back.
         const auto bitstream = trackData.bitstream();
-        const auto overhangingBits = bitstreamTrackBuilder.rawOffsetToOffset(bitstream.tell()) - orphanDataCapableTrack.track.tracklen;
+        const auto overhangingBits = bitstream.tell() - orphanDataCapableTrack.track.tracklen;
         if (overhangingBits > 0)
         {
             trackStartOffset = std::min(overhangingBits, bitstreamTrackBuilder.getIAMPosition());
