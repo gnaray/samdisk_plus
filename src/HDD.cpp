@@ -59,7 +59,7 @@ void HDD::Reset()
     total_sectors = total_bytes = 0;
     sector_size = data_offset = 0;
 
-    memset(&sIdentify, 0, sizeof(sIdentify));
+    sIdentify = {};
 
     strMakeModel = strSerialNumber = strFirmwareRevision = "";
 }
@@ -152,7 +152,7 @@ void HDD::SetIdentifyData(const IDENTIFYDEVICE* pIdentify_)
         CalculateGeometry(total_sectors, cyls, heads, sectors);
 
         // Clear any existing data and set the full data size
-        memset(&sIdentify, 0, sizeof(sIdentify));
+        sIdentify = {};
         sIdentify.len = sizeof(sIdentify.byte);
 
         sIdentify.word[0] = (1 << 6);     // fixed device
