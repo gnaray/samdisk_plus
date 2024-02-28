@@ -1,6 +1,7 @@
 // Utility functions
 
 #include "config.h"
+#include "Options.h"
 #include "utils.h"
 #include "Util.h"
 
@@ -15,6 +16,8 @@
 #ifdef HAVE_IO_H
 #include <io.h>
 #endif
+
+static auto& opt_tty = getOpt<int>("tty");
 
 namespace util
 {
@@ -109,7 +112,7 @@ bool is_stdout_a_tty()
 #else
     static bool ret = isatty(fileno(stdout)) != 0;
 #endif
-    return ret;
+    return ret || opt_tty;
 }
 
 
