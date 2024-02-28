@@ -11,6 +11,7 @@
 #include <memory>
 
 static auto& opt_a1sync = getOpt<int>("a1sync");
+static auto& opt_bitskip = getOpt<int>("bitskip");
 static auto& opt_bytes_begin = getOpt<int>("bytes_begin");
 static auto& opt_bytes_end = getOpt<int>("bytes_end");
 static auto& opt_datacopy = getOpt<int>("datacopy");
@@ -219,6 +220,35 @@ void ViewTrack_MFM_FM(Encoding encoding, BitBuffer& bitbuf)
     }
 }
 
+void ViewTrack_Bitstream(BitBuffer& bitbuf)
+{
+    Data track_data;
+    auto max_size = (bitbuf.track_bitsize() + 15) / 16;
+    track_data.reserve(max_size);
+
+    bitbuf.seek(opt_bitskip);
+    while (!bitbuf.wrapped())
+    {
+        uint8_t b = 0, c = 0;
+        for (int i = 0; i < 8; ++i)
+        {
+            c = static_cast<uint8_t>((c << 1) | bitbuf.read1());
+            b = static_cast<uint8_t>((b << 1) | bitbuf.read1());
+        }
+
+        track_data.push_back(b);
+    }
+
+    auto show_begin = std::max(opt_bytes_begin, 0);
+    auto show_end = (opt_bytes_end < 0) ? track_data.size() :
+        std::min(opt_bytes_end, track_data.size());
+    if (show_end > show_begin)
+    {
+        util::cout << "Bitstream Decode(" << (bitbuf.track_bitsize() - opt_bitskip) << " bits) :\n";
+        util::hex_dump(track_data.begin(), track_data.begin() + show_end, show_begin);
+    }
+}
+
 bool ViewImage(const std::string& path, Range range)
 {
     util::cout << "[" << path << "]\n";
@@ -240,20 +270,27 @@ bool ViewImage(const std::string& path, Range range)
             auto encoding = (opt_encoding == Encoding::Unknown) ?
                 bitbuf.encoding : opt_encoding;
 
-            switch (encoding)
+            if (opt_bitskip >= 0)
             {
-            case Encoding::MFM:
-            case Encoding::Amiga:
-            case Encoding::Agat:
-            case Encoding::MX:
-                ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
-                break;
-            case Encoding::FM:
-            case Encoding::RX02:
-                ViewTrack_MFM_FM(Encoding::FM, bitbuf);
-                break;
-            default:
-                throw util::exception("unsupported track view encoding");
+                ViewTrack_Bitstream(bitbuf);
+            }
+            else
+            {
+                switch (encoding)
+                {
+                case Encoding::MFM:
+                case Encoding::Amiga:
+                case Encoding::Agat:
+                case Encoding::MX:
+                    ViewTrack_MFM_FM(Encoding::MFM, bitbuf);
+                    break;
+                case Encoding::FM:
+                case Encoding::RX02:
+                    ViewTrack_MFM_FM(Encoding::FM, bitbuf);
+                    break;
+                default:
+                    throw util::exception("unsupported track view encoding");
+                }
             }
         }
         }, !opt_normal_disk);

@@ -59,6 +59,7 @@ struct OPTIONS
     int maxcopies = 3;
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
     int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
+    int bitskip = -1;
     RetryPolicy track_retries = 0, disk_retries = 0;
     int stability_level = -1, byte_tolerance_of_time = Track::COMPARE_TOLERANCE_BYTES;
 
@@ -90,6 +91,7 @@ int& getOpt(const char* key)
         {"atom", Options::opt.atom},
         {"base", Options::opt.base},
         {"bdos", Options::opt.bdos},
+        {"bitskip", Options::opt.bitskip},
         {"byte_tolerance_of_time", Options::opt.byte_tolerance_of_time},
         {"bytes_begin", Options::opt.bytes_begin},
         {"bytes_end", Options::opt.bytes_end},
@@ -413,6 +415,7 @@ enum {
     OPT_RPM = 256, OPT_LOG, OPT_VERSION, OPT_HEAD0, OPT_HEAD1, OPT_GAPMASK, OPT_MAXCOPIES,
     OPT_MAXSPLICE, OPT_CHECK8K, OPT_BYTES, OPT_HDF, OPT_ORDER, OPT_SCALE, OPT_PLLADJUST,
     OPT_PLLPHASE, OPT_ACE, OPT_MX, OPT_AGAT, OPT_NOFM, OPT_STEPRATE, OPT_PREFER, OPT_DEBUG,
+    OPT_BITSKIP,
     OPT_TRACK_RETRIES, OPT_DISK_RETRIES, OPT_NORMAL_DISK,
     OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL,
     OPT_DETECT_DEVFS,
@@ -523,6 +526,7 @@ static struct option long_options[] =
     { "scale",      required_argument, nullptr, OPT_SCALE },
     { "pll-adjust", required_argument, nullptr, OPT_PLLADJUST },
     { "pll-phase",  required_argument, nullptr, OPT_PLLPHASE },
+    { "bit-skip",   required_argument, nullptr, OPT_BITSKIP },
 
     { "normal-disk",                  no_argument, nullptr, OPT_NORMAL_DISK },     // undocumented. Expects disk as normal: all units (sectors, tracks, sides) have same size, sector ids form a sequence starting by 1.
     { "readstats",                    no_argument, nullptr, OPT_READSTATS },       // undocumented. Looking for good data by the reading statistics. Requires RDSK format image.
@@ -721,6 +725,11 @@ bool ParseCommandLine(int argc_, char* argv_[])
             Options::opt.pllphase = util::str_value<int>(optarg);
             if (Options::opt.pllphase <= 0 || Options::opt.pllphase > MAX_PLL_PHASE)
                 throw util::exception("invalid pll phase '", optarg, "', expected 1-", MAX_PLL_PHASE);
+            break;
+        case OPT_BITSKIP:
+            Options::opt.bitskip = util::str_value<int>(optarg);
+            if (Options::opt.bitskip < 0 || Options::opt.bitskip > 15)
+                throw util::exception("invalid bit skip '", optarg, "', expected 0-15");
             break;
         case OPT_STEPRATE:
             Options::opt.steprate = util::str_value<int>(optarg);
