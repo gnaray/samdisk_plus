@@ -435,16 +435,13 @@ inline int modulo2Power(int value, unsigned powerOf2)
 }
 
 // https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
-// Slightly faster than modulo(int, int).
+// Slightly faster than modulo_euclidean(int, int).
 inline int modulo(int value, unsigned m)
 {
     if (m == 0)
         throw make_error<std::runtime_error>(Module_divisor_is_0);
-    int mod = value % static_cast<int>(m);
-    if (value < 0) {
-        mod += m;
-    }
-    return mod;
+    const int mod = value % static_cast<int>(m);
+    return mod < 0 ? mod + m : mod;
 }
 
 // https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
@@ -454,10 +451,8 @@ inline int modulo_euclidean(int value, int m) // modulo_Euclidean2
         throw make_error<std::runtime_error>(Module_divisor_is_0);
     if (m == -1)
         return 0; // This test needed to prevent UB of `INT_MIN % -1`.
-    int mod = value % m;
-    if (mod < 0)
-        mod = (m < 0) ? mod - m : mod + m;
-    return mod;
+    const int mod = value % m;
+    return mod < 0 ? (m < 0 ? mod - m : mod + m) : mod;
 }
 
 #endif // CPP_HELPERS_H
