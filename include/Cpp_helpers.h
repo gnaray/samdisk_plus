@@ -489,4 +489,20 @@ inline int modulo_euclidean(int value, int m) // modulo_Euclidean2
     return mod < 0 ? (m < 0 ? mod - m : mod + m) : mod;
 }
 
+
+
+template<typename ValueType,
+    std::enable_if_t<std::is_floating_point<ValueType>::value> * = nullptr>
+ValueType ChooseCloserToInteger(ValueType a, ValueType b)
+{
+    ValueType aIntegralPart, bIntegralPart;
+    auto aFractionalPart = std::modf(a, &aIntegralPart);
+    if (aFractionalPart >= 0.5)
+        aFractionalPart = 1 - aFractionalPart;
+    auto bFractionalPart = std::modf(b, &bIntegralPart);
+    if (bFractionalPart >= 0.5)
+        bFractionalPart = 1 - bFractionalPart;
+    return aFractionalPart <= bFractionalPart ? a : b;
+}
+
 #endif // CPP_HELPERS_H
