@@ -812,7 +812,7 @@ bool UniqueSectors::AnyIdsNotContainedInThis(const Interval<int>& id_interval) c
         if (id_interval.Where(sector.header.sector) == BaseInterval::Within)
             contained_ids.emplace(sector.header.sector);
     });
-    for (auto id = id_interval.Left(); id <= id_interval.Right() ; id++)
+    for (auto id = id_interval.Start(); id <= id_interval.End() ; id++)
         if (contained_ids.find(id) == contained_ids.end())
             return true;
     return false;

@@ -11,42 +11,39 @@ class BaseInterval
 {
 public:
     enum Location { Less = -1, Within = 0, Greater = 1 };
-    enum ConstructMode { LeftAndRight, LeftAndLength, LeftAndSize };
+    enum ConstructMode { StartAndEnd, StartAndLength, StartAndSize };
 };
 
-template <class T>
+template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
 class Interval : public BaseInterval
 {
 private:
-    T _left = 0, _right = 0;
+    T _start = 0;
+    T _end = 0;
     bool _empty = true;
 
 public:
-    Interval()
-        : _left(0), _right(0), _empty(true)
-    {
-    }
+    constexpr Interval() = default;
 
-    Interval(const T left, const T other, const ConstructMode constructMode)
+    Interval(const T start, const T other, const ConstructMode constructMode)
     {
-        assert(constructMode == LeftAndRight || constructMode == LeftAndLength || constructMode == LeftAndSize);
+        assert(constructMode == StartAndEnd || constructMode == StartAndLength || constructMode == StartAndSize);
         switch (constructMode)
         {
-        case LeftAndRight:
-            // Always set left as min and right as max to simplify assumptions.
-            _left = std::min(left, other);
-            _right = std::max(left, other);
+        case StartAndEnd:
+            _start = start;
+            _end = other;
             _empty = false;
             break;
-        case LeftAndLength: // other is length.
-            _left = left;
-            _right = _left + other;
-            _empty = other < 0;
+        case StartAndLength: // other is length.
+            _start = start;
+            _end = _start + other;
+            _empty = false;
             break;
-        case LeftAndSize: // other is size.
-            _left = left;
-            _empty = other <= 0;
-            _right = _left + other - 1;
+        case StartAndSize: // other is size.
+            _start = start;
+            _end = _start + other + (other > 0 ? - 1 : 1);
+            _empty = other == 0;
             break;
         }
     }
@@ -60,11 +57,13 @@ public:
         if (_empty)
             throw std::domain_error("No location based on empty interval");
 
-        if (x > _right)
+        const auto left = std::min(_start, _end);
+        const auto right = std::max(_start, _end);
+        if (x > right)
             return Greater;
-        else if (x < _left)
+        else if (x < left)
             return Less;
-        else if (x >= _left && x <= _right)
+        else if (x >= left && x <= right)
             return Within;
 
         // It's NaN or incomparable.
@@ -75,35 +74,34 @@ public:
     {
         if (_empty)
             throw std::domain_error("No length of empty interval");
-        return _right - _left;
+        return _end - _start;
     }
 
-    template <std::enable_if_t<std::is_integral<T>::value, bool> = true>
-    constexpr T Size() const
+    constexpr T AbsLength() const
     {
-        return _empty ? 0 : _right - _left + 1;
+        return std::abs(Length());
     }
 
     /*== Accessors ==*/
 
     /**
-     * Leftmost bound.
+     * Start bound.
      */
-    constexpr T Left() const
+    constexpr T Start() const
     {
         if (_empty)
-            throw std::domain_error("No left side of empty interval");
-        return _left;
+            throw std::domain_error("No start of empty interval");
+        return _start;
     }
 
     /**
-     * Rightmost bound.
+     * End bound.
      */
-    constexpr T Right() const
+    constexpr T End() const
     {
         if (_empty)
-            throw std::domain_error("No right side of empty interval");
-        return _right;
+            throw std::domain_error("No end of empty interval");
+        return _end;
     }
 
     constexpr bool IsEmpty() const
@@ -119,7 +117,7 @@ public:
             if (IsEmpty())
                 ss << "[EMPTY]";
             else
-                ss << "[" << _left << ", " << _right << "]";
+                ss << "[" << _start << ", " << _end << "]";
         }
         return ss.str();
     }
