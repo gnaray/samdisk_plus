@@ -817,8 +817,8 @@ int SizeToCode(int sector_size)
     for (auto i = 0; i < 8; ++i)
         if (sector_size == Sector::SizeCodeToLength(i))
             return i;
-
-    return SIZECODE_UNKNOWN; // Should never hit this
+    // Should never hit this.
+    throw util::exception("Unknown sector size (", sector_size, ")");
 }
 
 bool ReadSector(const HDD& hdd, int sector, MEMORY& pm_)
