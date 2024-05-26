@@ -2,6 +2,7 @@
 #define CPP_HELPERS_H
 
 #include <algorithm>
+#include <cassert>
 #include <climits>
 #include <cmath>
 #include <cstddef>
@@ -434,6 +435,24 @@ inline int modulo2Power(int value, unsigned powerOf2)
     return value & static_cast<int>(powerOf2 - 1);
 }
 
+// Special case where diff is result of a - b where a and b are in [0, modulo].
+inline int diffModulo(int diffMod, unsigned m) // diff modulo
+{
+    assert(diffMod >= -static_cast<int>(m) && diffMod < static_cast<int>(m));
+    if (m == 0)
+        throw make_error<std::runtime_error>(Module_divisor_is_0);
+    return diffMod < 0 ? diffMod + m : diffMod;
+}
+
+// Special case where diff is result of a + b where a and b are in [0, modulo].
+inline int sumModulo(int sumMod, unsigned m) // diff modulo
+{
+    assert(sumMod >= 0 && sumMod < 2 * static_cast<int>(m));
+    if (m == 0)
+        throw make_error<std::runtime_error>(Module_divisor_is_0);
+    return sumMod >= static_cast<int>(m) ? sumMod - m : sumMod;
+}
+
 // https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
 // Slightly faster than modulo_euclidean(int, int).
 inline int modulo(int value, unsigned m)
@@ -442,6 +461,21 @@ inline int modulo(int value, unsigned m)
         throw make_error<std::runtime_error>(Module_divisor_is_0);
     const int mod = value % static_cast<int>(m);
     return mod < 0 ? mod + m : mod;
+}
+
+inline int modulodiv(int value, unsigned m)
+{
+    if (m == 0)
+        throw make_error<std::runtime_error>(Module_divisor_is_0);
+    return value >= 0 ? value / static_cast<int>(m) : (value - m + 1) / static_cast<int>(m);
+}
+
+// Special case where diff is result of a - b where a and b are in modulo.
+inline int diffModulo_euclidean(int diffMod, int m) // diff modulo_Euclidean2
+{
+    if (m == 0)
+        throw make_error<std::runtime_error>(Module_divisor_is_0);
+    return diffMod < 0 ? (m < 0 ? diffMod - m : diffMod + m) : diffMod;
 }
 
 // https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
