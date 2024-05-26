@@ -158,7 +158,19 @@ void bit_reverse(uint8_t* pb, T len)
     }
 }
 
-template <typename T> T byteswap(T x);
+// The default implementation.
+template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+T byteswap(T x)
+{
+    const iSup = sizeof(T);
+    T result = 0;
+    for (auto i = 0; i < iSup; i++)
+    {
+        result = (result << 8) | (x & 0xff);
+        x >>= 8;
+    }
+    return result;
+}
 
 template<>
 inline uint16_t byteswap<uint16_t>(uint16_t x)
@@ -179,27 +191,27 @@ inline uint64_t byteswap<uint64_t>(uint64_t x)
 }
 
 // ToDo: detect compile endian
-template <typename T>
-T betoh(T x)
+template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+T betoh(T x) // Big endian to host.
 {
     return byteswap(x);
 }
 
 // ToDo: detect compile endian
-template <typename T>
-T htobe(T x)
+template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+T htobe(T x) // Host to big endian.
 {
     return byteswap(x);
 }
 
-template <typename T>
-T htole(T x)
+template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+T htole(T x) // Host to big endian.
 {
     return x;
 }
 
-template <typename T>
-T letoh(T x)
+template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+T letoh(T x) // Little endian to host.
 {
     return x;
 }
