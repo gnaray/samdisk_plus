@@ -88,7 +88,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
 
     const auto sectorDataRefInPhysicalTrack = *reinterpret_cast<SectorDataRefInPhysicalTrack*>(sectorDataRefInPhysicalTrackBytes.data());
     const auto addressMark = sectorDataRefInPhysicalTrack.m_addressMark;
-    const Header header(physicalTrackContext.cylHead.cyl, physicalTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, Header::SIZECODE_UNKNOWN);
+    const Header header(physicalTrackContext.cylHead.cyl, physicalTrackContext.cylHead.head, Header::ORPHAN_SECTOR_ID, Header::SIZECODE_UNKNOWN);
     Sector sector(physicalTrackContext.dataRate, encoding, header);
     sector.offset = DataBitPositionAsBitOffset(byteBitPositionDAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
     sector.set_constant_disk(false);

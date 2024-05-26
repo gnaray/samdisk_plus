@@ -167,6 +167,7 @@ public:
 
     static constexpr int SIZECODE_UNKNOWN = 0xff;
     static constexpr int SIZECODE_MAX = 7;
+    static constexpr int ORPHAN_SECTOR_ID = 256;
     int cyl = 0, head = 0, sector = 0, size = 0;
 };
 

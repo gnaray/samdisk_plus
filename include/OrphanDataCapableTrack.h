@@ -36,7 +36,6 @@ public:
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
     int determineBestTrackLen(const int timedTrackTime) const;
 
-    static constexpr int ORPHAN_SECTOR_ID = 256;
     Track track{};
     Track orphanDataTrack{};
     bool cylheadMismatch = false;
