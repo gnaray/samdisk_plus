@@ -165,6 +165,8 @@ public:
         return ss.str();
     }
 
+    static constexpr int SIZECODE_UNKNOWN = 0xff;
+    static constexpr int SIZECODE_MAX = 7;
     int cyl = 0, head = 0, sector = 0, size = 0;
 };
 

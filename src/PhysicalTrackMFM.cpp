@@ -88,7 +88,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
 
     const auto sectorDataRefInPhysicalTrack = *reinterpret_cast<SectorDataRefInPhysicalTrack*>(sectorDataRefInPhysicalTrackBytes.data());
     const auto addressMark = sectorDataRefInPhysicalTrack.m_addressMark;
-    const Header header(physicalTrackContext.cylHead.cyl, physicalTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, SIZECODE_UNKNOWN);
+    const Header header(physicalTrackContext.cylHead.cyl, physicalTrackContext.cylHead.head, OrphanDataCapableTrack::ORPHAN_SECTOR_ID, Header::SIZECODE_UNKNOWN);
     Sector sector(physicalTrackContext.dataRate, encoding, header);
     sector.offset = DataBitPositionAsBitOffset(byteBitPositionDAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
     sector.set_constant_disk(false);
@@ -103,7 +103,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
                                                     const int nextIdamOffset/* = 0*/, const int nextDamOffset/* = 0*/)
 {
     const auto byteBitPositionDAM = physicalTrackContent.GetByteBitPosition();
-    if (sector.header.size != SIZECODE_UNKNOWN)
+    if (sector.header.size != Header::SIZECODE_UNKNOWN)
     {
         const auto dataSize = sector.size();
         const auto requiredByteLength = PhysicalSizeOf(dataSize);

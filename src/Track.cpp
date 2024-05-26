@@ -137,7 +137,7 @@ int Track::data_extent_bytes(const Sector& sector) const
     // We only support real data extent for MFM and FM sectors.
     if (sector.encoding != Encoding::MFM && sector.encoding != Encoding::FM)
     {
-        assert(sector.header.size != SIZECODE_UNKNOWN);
+        assert(sector.header.size != Header::SIZECODE_UNKNOWN);
         return sector.size();
     }
 
@@ -154,7 +154,7 @@ bool Track::data_overlap(const Sector& sector) const
     if (!sector.offset)
         return false;
 
-    if (sector.header.size == SIZECODE_UNKNOWN)
+    if (sector.header.size == Header::SIZECODE_UNKNOWN)
         return false;
 
     return data_extent_bytes(sector) < sector.size();
@@ -427,7 +427,7 @@ Sector Track::remove(int index)
 const Sector& Track::get_sector(const Header& header) const
 {
     auto it = find(header);
-    assert(it == end() || it->header.size != SIZECODE_UNKNOWN);
+    assert(it == end() || it->header.size != Header::SIZECODE_UNKNOWN);
     if (it == end() || it->data_size() < it->size())
         throw util::exception(CylHead(header.cyl, header.head), " sector ", header.sector, " not found");
 
@@ -617,7 +617,7 @@ bool Track::DiscoverTrackSectorScheme()
 
     const auto encoding = getEncoding();
     const auto optByteToleranceBits = DataBytePositionAsBitOffset(opt_byte_tolerance_of_time, encoding);
-    assert(operator[](0).header.size != SIZECODE_UNKNOWN);
+    assert(operator[](0).header.size != Header::SIZECODE_UNKNOWN);
     const auto sectorSize = operator[](0).size();
     const auto predictedOverheadedSectorWithoutSyncAndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithoutSync(getDataRate(), encoding), encoding);
     const auto predictedOverheadedSectorWithGap3AndDataBits = DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding) + sectorSize, encoding);
@@ -628,7 +628,7 @@ bool Track::DiscoverTrackSectorScheme()
     for (int i = 0; i < iSup; i++)
     {
         const auto& sector = operator[](i);
-        assert(sector.header.size != SIZECODE_UNKNOWN);
+        assert(sector.header.size != Header::SIZECODE_UNKNOWN);
         if (sector.size() != sectorSize) // Only same sized sectors are supported.
             return false;
         if (opt_debug)
@@ -749,7 +749,7 @@ Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterat
     for (auto sector : ptrs)
     {
         assert(sector->copies() == 1);
-        assert(sector->header.size != SIZECODE_UNKNOWN);
+        assert(sector->header.size != Header::SIZECODE_UNKNOWN);
         auto bytes = std::min(sector->size(), static_cast<int>(std::distance(it, itEnd)));
         std::copy_n(it, bytes, sector->data_copy(0).begin());
         it += bytes;
@@ -827,7 +827,7 @@ Sectors::const_iterator Track::findSectorForDataFmOrMfm(const int dataOffset, co
             break;
         else if (cohereResult == CohereResult::DataTooLate)
             continue;
-        if (sizeCode == SIZECODE_UNKNOWN || it->header.size == sizeCode)
+        if (sizeCode == Header::SIZECODE_UNKNOWN || it->header.size == sizeCode)
         {
             if (!findClosest)
                 return it;
