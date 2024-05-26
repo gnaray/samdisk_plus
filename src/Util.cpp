@@ -541,7 +541,8 @@ std::string FindFirstFile(const std::string& fileNamePart, const std::string& di
 #ifdef _WIN32
     WIN32_FIND_DATA FindFileData;
     // The first parameter of FindFirstFile can contain wildcard...
-    findFileHandle = FindFirstFile(dirName.c_str(), &FindFileData);
+    const auto winFileName = dirName + PATH_SEPARATOR_CHR + "*";
+    findFileHandle = FindFirstFile(winFileName.c_str(), &FindFileData);
     if (findFileHandle != INVALID_HANDLE_VALUE)
     {
         do
