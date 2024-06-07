@@ -25,6 +25,7 @@ struct Format
 
     int sector_size() const;
     int track_size() const;
+    int cyl_size() const;
     int side_size() const;
     int disk_size() const;
     int total_sectors() const;

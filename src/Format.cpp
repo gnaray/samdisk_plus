@@ -33,6 +33,11 @@ int Format::track_size() const
     return sector_size() * sectors;
 }
 
+int Format::cyl_size() const
+{
+    return track_size() * heads;
+}
+
 int Format::side_size() const
 {
     assert(cyls);
