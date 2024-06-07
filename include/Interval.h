@@ -223,6 +223,13 @@ public:
     }
 };
 
+template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+constexpr T Size(const Interval<T>& interval)
+{
+    const auto length = interval.Length();
+    return length + (length >= 0 ? 1 : -1);
+}
+
 inline std::ostream& operator<<(std::ostream& os, const Interval<int>& interval) { return os << interval.ToString(); }
 
 #endif // INTERVAL_H
