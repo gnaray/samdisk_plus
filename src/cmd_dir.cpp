@@ -1026,6 +1026,6 @@ bool Dir(Disk& disk)
 bool DirImage(const std::string& path)
 {
     auto disk = std::make_shared<Disk>();
-    ReadImage(path, disk, DETECT_FS_AUTO);
+    ReadImage(path, disk, true, DETECT_FS_AUTO);
     return Dir(*disk);
 }

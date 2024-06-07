@@ -97,7 +97,7 @@ bool ScanImage(const std::string& path, Range range)
     util::cout.screen->flush();
 
     auto disk = std::make_shared<Disk>();
-    ReadImage(path, disk, opt_detect_devfs);
+    ReadImage(path, disk, true, opt_detect_devfs);
     const Format& fmt = disk->fmt();
 
     // Regular format and no range specified?

@@ -21,7 +21,7 @@ static auto& opt_head1 = getOpt<int>("head1");
 static auto& opt_nozip = getOpt<int>("nozip");
 static auto& opt_range = getOpt<Range>("range");
 
-void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, const std::string& determineDeviceFileSystem/* = ""*/, bool normalise/* = true*/)
+void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, bool srcDisk, const std::string& determineDeviceFileSystem/* = ""*/, bool normalise/* = true*/)
 {
     if (path.empty())
         throw util::exception("invalid empty path");
@@ -64,7 +64,7 @@ void ReadImage(const std::string& path, std::shared_ptr<Disk>& disk, const std::
 diskRead:
     // FileSystem might exist already by image file reader.
     if (!disk->GetFileSystem() && (!determineDeviceFileSystem.empty() || disk->is_constant_disk()))
-        fileSystemWrappers.FindAndSetApprover(*disk, determineDeviceFileSystem.empty() ? DETECT_FS_AUTO : determineDeviceFileSystem);
+        fileSystemWrappers.FindAndSetApprover(*disk, srcDisk, determineDeviceFileSystem.empty() ? DETECT_FS_AUTO : determineDeviceFileSystem);
     // FileSystem format should not differ from optional image file format. Safer to check.
     if (disk->WarnIfFileSystemFormatDiffers())
         Message(msgInfo, "Overriding disk format by %s filesystem format read from image file (%s)",
@@ -174,7 +174,8 @@ bool WriteImage(const std::string& path, std::shared_ptr<Disk>& disk, const std:
 
     if (!determineDeviceFileSystem.empty() || disk->is_constant_disk())
     {
-        const bool isFileSystemApproved = fileSystemWrappers.FindAndSetApprover(*disk, determineDeviceFileSystem.empty() ? DETECT_FS_AUTO : determineDeviceFileSystem);
+        const bool isFileSystemApproved = fileSystemWrappers.FindAndSetApprover(*disk, false, determineDeviceFileSystem.empty() ? DETECT_FS_AUTO : determineDeviceFileSystem);
+        const bool isFileSystemApproved = disk->GetFileSystem()
         if (fileSystemPrev && (!isFileSystemApproved || !fileSystemPrev->IsSameNamed(*disk->GetFileSystem())))
             Message(msgWarning, "%s filesystem of disk at path (%s) has been modified",
                     fileSystemPrev->GetName().c_str(), path.c_str());

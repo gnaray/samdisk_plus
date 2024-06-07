@@ -225,7 +225,7 @@ bool ViewImage(const std::string& path, Range range)
     util::cout << "[" << path << "]\n";
 
     auto disk = std::make_shared<Disk>();
-    ReadImage(path, disk);
+    ReadImage(path, disk, true);
     ValidateRange(range, MAX_TRACKS, MAX_SIDES, opt_step, disk->cyls(), disk->heads());
 
     range.each([&](const CylHead& cylhead) {

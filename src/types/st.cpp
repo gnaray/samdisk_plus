@@ -98,7 +98,7 @@ bool WriteST(FILE* f_, std::shared_ptr<Disk>& disk)
     auto bpb_modified = false;
     const auto stFat12FileSystem = std::make_shared<StFat12FileSystem>(*disk, format);
     // If disk has no boot sector or it has any filesystem but not StFat12 or StFat12 with different format then write new BPB.
-    if (stFat12FileSystem->EnsureBootSector() || (fileSystemWrappers.FindAndSetApprover(*disk)
+    if (stFat12FileSystem->EnsureBootSector() || (fileSystemWrappers.FindAndSetApprover(*disk, false)
             && !disk->GetFileSystem()->IsSameNamedWithSameCylHeadSectorsSize(*stFat12FileSystem)))
     {
         stFat12FileSystem->ReadBpbFromDisk();

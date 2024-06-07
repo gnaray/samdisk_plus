@@ -79,7 +79,7 @@ public:
     using VectorX<std::unique_ptr<FileSystemWrapperInterface>>::VectorX;
 
     bool IsValidFSName(const std::string& detectFSHavingName) const;
-    bool FindAndSetApprover(Disk &disk, const std::string& detectFSHavingName = DETECT_FS_AUTO) const;
+    bool FindAndSetApprover(Disk &disk, bool srcDisk, const std::string& detectFSHavingName = DETECT_FS_AUTO) const;
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const FileSystemWrappers& fileSystems, bool onlyRelevantData = true)
     {

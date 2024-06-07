@@ -16,7 +16,7 @@ static auto& opt_retries = getOpt<RetryPolicy>("retries");
 bool DiskRpm(const std::string& path)
 {
     auto disk = std::make_shared<Disk>();
-    ReadImage(path, disk);
+    ReadImage(path, disk, true);
 
     // Default to using cyl 0 head 0, but allow the user to override it
     CylHead cylhead(opt_range.empty() ? 0 :

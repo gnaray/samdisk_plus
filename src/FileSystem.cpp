@@ -32,7 +32,7 @@ bool FileSystemWrappers::IsValidFSName(const std::string& detectFSHavingName) co
     return false;
 }
 
-bool FileSystemWrappers::FindAndSetApprover(Disk& disk, const std::string& detectFSHavingName/* = DETECT_FS_AUTO*/) const
+bool FileSystemWrappers::FindAndSetApprover(Disk& disk, bool srcDisk, const std::string& detectFSHavingName/* = DETECT_FS_AUTO*/) const
 {
     if (detectFSHavingName.empty())
         return false;

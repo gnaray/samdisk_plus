@@ -57,14 +57,14 @@ void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDet
 
     // Check the filesystems considering the priority of formats.
     if (!src_disk.GetFileSystem() && !src_disk.is_constant_disk() && transferDiskFormatPriority < FormatPriority::SrcDevFS
-            && !opt_detect_devfs.empty() && fileSystemWrappers.FindAndSetApprover(srcFileSystemDeterminerDisk, opt_detect_devfs))
+            && !opt_detect_devfs.empty() && fileSystemWrappers.FindAndSetApprover(srcFileSystemDeterminerDisk, true, opt_detect_devfs))
     {
         transferDiskFormat = srcFileSystemDeterminerDisk.GetFileSystem()->GetFormat();
         transferDiskFormatPriority = FormatPriority::SrcDevFS;
         util::cout << "YEEHAAWW!! We have src filesystem in cmd_copy, its format=" << transferDiskFormat << "\n";
     }
     if (!dst_disk.GetFileSystem() && dst_disk.is_constant_disk() && transferDiskFormatPriority < FormatPriority::DstImageFS
-            && fileSystemWrappers.FindAndSetApprover(dst_disk))
+            && fileSystemWrappers.FindAndSetApprover(dst_disk, false))
     {
         transferDiskFormat = dst_disk.GetFileSystem()->GetFormat();
         transferDiskFormatPriority = FormatPriority::DstImageFS;
@@ -141,7 +141,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     }
 
     // Read the source image
-    ReadImage(src_path, src_disk); // No determining filesystem here, doing it in disk_round loop.
+    ReadImage(src_path, src_disk, true); // No determining filesystem here, doing it in disk_round loop.
 
     auto transferDiskRange = opt_range;
     // Limit to our maximum geometry, and default to copy everything present in the source
@@ -154,12 +154,12 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     // For merge or repair, read any existing target image, error if that fails.
     if (opt_merge || opt_repair)
     {
-        ReadImage(dst_path, dst_disk, "", false); // The dst disk should be already normalised.
+        ReadImage(dst_path, dst_disk, false, "", false); // The dst disk should be already normalised.
         if (!dst_disk->is_constant_disk())
             throw util::exception("copying to device disk with merge or repair option is not supported");
         if (!dst_disk->GetFileSystem()) // Determining filesystem here separately so it does not affect device dst disk.
-            fileSystemWrappers.FindAndSetApprover(*dst_disk);
-        dst_disk->WarnIfFileSystemFormatDiffers();
+            fileSystemWrappers.FindAndSetApprover(*dst_disk, false);
+        dst_disk->WarnIfFileSystemFormatDiffers(); // TODO Test if this is necessary because it is done in ReadImage.
     }
 
     // tmp dst path in case of merge or repair mode.
