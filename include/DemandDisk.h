@@ -12,10 +12,11 @@ public:
     static constexpr int REMAIN_READ_REVS = 5;
 
     TrackData& readNC(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1, const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) override;
-    TrackData& writeNC(TrackData&& trackdata) override;
+    TrackData& writeNC(TrackData&& trackdata, const bool keepStoredFormat = false) override;
     void clear() override;
     void clearCache(const Range& range) override;
     bool isCached(const CylHead& cylhead) const override;
+
     void disk_is_read() override;
 
     void extend(const CylHead& cylhead);

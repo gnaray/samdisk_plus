@@ -87,11 +87,11 @@ TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
     throw util::exception("writing to this device is not currently supported");
 }
 
-/*virtual*/ TrackData& DemandDisk::writeNC(TrackData&& trackdata)
+/*virtual*/ TrackData& DemandDisk::writeNC(TrackData&& trackdata, const bool keepStoredFormat/* = false*/)
 {
     save(trackdata);
     m_loaded[lossless_static_cast<size_t>(trackdata.cylhead.operator int())] = true;
-    return Disk::writeNC(std::move(trackdata));
+    return Disk::writeNC(std::move(trackdata), keepStoredFormat);
 }
 
 void DemandDisk::clear() /*override*/

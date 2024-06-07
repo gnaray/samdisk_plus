@@ -24,10 +24,10 @@ TrackData& RepairSummaryDisk::readNC(const CylHead& cylhead, bool uncached/* = f
     return m_WriteToDisk.readNC(cylhead);
 }
 
-TrackData& RepairSummaryDisk::writeNC(TrackData&& trackdata) /*override*/
+TrackData& RepairSummaryDisk::writeNC(TrackData&& trackdata, const bool keepStoredFormat/* = false*/) /*override*/
 {
     auto trackdataCopy = m_ReadFromDisk.write(std::move(trackdata));
-    return m_WriteToDisk.writeNC(std::move(trackdataCopy));
+    return m_WriteToDisk.writeNC(std::move(trackdataCopy), keepStoredFormat);
 }
 
 void RepairSummaryDisk::clear() /*override*/

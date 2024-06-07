@@ -128,10 +128,10 @@ const FluxData& Disk::read_flux(const CylHead& cylhead, bool uncached /* = false
 }
 
 
-/*virtual*/ TrackData& Disk::writeNC(TrackData&& trackdata)
+/*virtual*/ TrackData& Disk::writeNC(TrackData&& trackdata, const bool keepStoredFormat/* = false*/)
 {
-    // Invalidate stored format, since we can no longer guarantee a match
-    fmt().sectors = 0;
+    if (!keepStoredFormat) // Invalidate stored format, since we can no longer guarantee a match
+        fmt().sectors = 0;
 
     std::lock_guard<std::mutex> lock(GetTrackDataMutex());
     auto cylhead = trackdata.cylhead;
@@ -144,9 +144,9 @@ const TrackData& Disk::write(TrackData&& trackdata)
     return writeNC(std::move(trackdata));
 }
 
-const Track& Disk::write(const CylHead& cylhead, Track&& track)
+const Track& Disk::write(const CylHead& cylhead, Track&& track, const bool keepStoredFormat/* = false*/)
 {
-    return writeNC(TrackData(cylhead, std::move(track))).track();
+    return writeNC(TrackData(cylhead, std::move(track)), keepStoredFormat).track();
 }
 
 const BitBuffer& Disk::write(const CylHead& cylhead, BitBuffer&& bitbuf)

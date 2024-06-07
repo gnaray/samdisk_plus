@@ -541,7 +541,7 @@ void Fat12FileSystem::WriteBpbToDisk()
     auto& bootSectorNew = track00.findIgnoringSize(bootSectorHeader)->data_best_copy(); // Iterator should not fail.
     auto& bpbOnDisk = *reinterpret_cast<BIOS_PARAMETER_BLOCK*>(bootSectorNew.data());
     bpbOnDisk = bpb;
-    disk.write(BOOT_SECTOR_CYLHEAD, std::move(track00));
+    disk.write(BOOT_SECTOR_CYLHEAD, std::move(track00), true);
 }
 
 std::string Fat12FileSystem::NameWithExt3(const msdos_dir_entry& dir_entry, bool accept_deleted/* = false*/, bool* p_is_name_valid/* = nullptr*/) const

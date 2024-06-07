@@ -44,9 +44,9 @@ public:
     const FluxData& read_flux(const CylHead& cylhead, bool uncached = false);
 
     // This method is for Disk implementators, avoid using it from common context. Instead use write(...).
-    virtual TrackData& writeNC(TrackData&& trackdata);
+    virtual TrackData& writeNC(TrackData&& trackdata, const bool keepStoredFormat = false);
     const TrackData& write(TrackData&& trackdata);
-    const Track& write(const CylHead& cylhead, Track&& track);
+    const Track& write(const CylHead& cylhead, Track&& track, const bool keepStoredFormat = false);
     const BitBuffer& write(const CylHead& cylhead, BitBuffer&& bitbuf);
     const FluxData& write(const CylHead& cylhead, FluxData&& flux_revs, bool normalised = false);
 

@@ -12,12 +12,14 @@ public:
     RepairSummaryDisk(Disk& ReadFromDisk, ScanContext& context);
 
     bool is_constant_disk() const override;
+
     TrackData& readNC(const CylHead& cylhead, bool uncached = false, int with_head_seek_to = -1,
                           const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{}) override;
-    TrackData& writeNC(TrackData&& trackdata) override;
+    TrackData& writeNC(TrackData&& trackdata, const bool keepStoredFormat = false) override;
     void clear() override;
     void clearCache(const Range& range) override;
     bool isCached(const CylHead& cylhead) const override;
+
     void disk_is_read() override;
 
     // Inherited Disk class members are not used, instead their related methods
