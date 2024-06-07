@@ -7,6 +7,63 @@
 #include <cmath>
 #include <stdexcept>
 
+/*
+ * First interval is [left1, right1], where left1 <= right1.
+ * Second interval is [left2, right2], where left2 <= right2.
+ */
+template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
+constexpr bool IsIntersectingLeftRight(const T left1, const T right1, const T left2, const T right2)
+{
+    return left1 <= right2 && left2 <= right1;
+}
+
+/*
+ * First interval is [s1, e1], where s1 can be > e1.
+ * Second interval is [s2, e2], where s2 can be > e2.
+ */
+template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
+constexpr bool IsIntersecting(const T s1, const T e1, const T s2, const T e2)
+{
+    const auto left1 = std::min(s1, e1);
+    const auto right1 = std::max(s1, e1);
+    const auto left2 = std::min(s2, e2);
+    const auto right2 = std::max(s2, e2);
+    return IsIntersectingLeftRight(left1, right1, left2, right2);
+}
+
+/*
+* First interval is [s1, e1], where s1 can be > e1 because of ringed interval.
+* Second interval is [s2, e2], where s2 can be > e2 because of ringed interval.
+*/
+template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
+inline bool IsRingedWithin(const T s1, const T e1, const T x)
+{
+    auto result = false;
+    if (s1 <= e1) // [s1,e1] is not ringed.
+        result = s1 <= x && x <= e1;
+    else // [s1,e1] is ringed.
+        result = s1 <= x || x <= e1;
+    return result;
+}
+
+/*
+ * First interval is [s1, e1], where s1 can be > e1 because of ringed interval.
+ * Second interval is [s2, e2], where s2 can be > e2 because of ringed interval.
+ */
+template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
+inline bool IsRingedIntersecting(const T s1, const T e1, const T s2, const T e2)
+{
+    auto result = false;
+    if (s1 <= e1 && s2 <= e2) // [s1,e1], [s2,e2] are not ringed.
+        result = s1 <= e2 && s2 <= e1;
+    else if ((s1 > e1 && s2 <= e2) || (s1 <= e1 && s2 > e2)) // [s1,e1] is ringed, [s2,e2] is not ringed or inversed.
+        result = s1 <= e2 || s2 <= e1;
+    else if (s1 > e1 && s2 > e2) // [s1,e1], [s2,e2] are ringed.
+        result = true; // Intersects at ringing.
+    return result;
+}
+
+
 class BaseInterval
 {
 public:
@@ -107,6 +164,42 @@ public:
     constexpr bool IsEmpty() const
     {
         return _empty;
+    }
+
+    inline friend bool IsIntersectingF(const Interval<T>& lhs, const Interval<T>& rhs)
+    {
+        if (lhs._empty || rhs._empty)
+            return false;
+        return ::IsIntersecting(lhs._start, lhs._end, rhs._start, rhs._end);
+    }
+
+    inline bool IsIntersecting(const Interval<T>& rhs) const
+    {
+        return IsIntersectingF(*this, rhs);
+    }
+
+    inline friend bool IsRingedWithinF(const Interval<T>& lhs, const T x)
+    {
+        if (lhs._empty)
+            return false;
+        return ::IsRingedWithin(lhs._start, lhs._end, x);
+    }
+
+    inline bool IsRingedWithin(const T x) const
+    {
+        return IsRingedWithinF(*this, x);
+    }
+
+    inline friend bool IsRingedIntersectingF(const Interval<T>& lhs, const Interval<T>& rhs)
+    {
+        if (lhs._empty || rhs._empty)
+            return false;
+        return ::IsRingedIntersecting(lhs._start, lhs._end, rhs._start, rhs._end);
+    }
+
+    inline bool IsRingedIntersecting(const Interval<T>& rhs) const
+    {
+        return IsRingedIntersectingF(*this, rhs);
     }
 
     std::string ToString(bool onlyRelevantData = true) const
