@@ -42,6 +42,11 @@ void RepairSummaryDisk::clearCache(const Range& range) /*override*/
     m_WriteToDisk.clearCache(range);
 }
 
+bool RepairSummaryDisk::isCached(const CylHead& cylhead) const /*override*/
+{
+    return m_ReadFromDisk.isCached(cylhead);
+}
+
 void RepairSummaryDisk::disk_is_read() /*override*/
 {
     m_ReadFromDisk.disk_is_read();

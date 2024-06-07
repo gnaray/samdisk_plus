@@ -39,7 +39,7 @@ void DemandDisk::disk_is_read() /*override*/
 TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
                                   int with_head_seek_to, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) /*override*/
 {
-    if (uncached || !m_loaded[lossless_static_cast<size_t>(cylhead.operator int())])
+    if (uncached || !isCached(cylhead))
     {
         // Quick first read, plus sector-based conversion.
         auto trackdata = load(cylhead, true, with_head_seek_to, deviceReadingPolicy);
@@ -106,4 +106,9 @@ void DemandDisk::clearCache(const Range& range) /*override*/
     {
         m_loaded[lossless_static_cast<size_t>(cylhead.operator int())] = false;
     }, false);
+}
+
+/*virtual*/ bool DemandDisk::isCached(const CylHead& cylhead) const
+{
+    return m_loaded[lossless_static_cast<size_t>(cylhead.operator int())];
 }

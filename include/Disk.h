@@ -27,6 +27,7 @@ public:
     virtual bool preload(const Range& range, int cyl_step);
     virtual void clear();
     virtual void clearCache(const Range& range);
+    virtual bool isCached(const CylHead& cylhead) const;
 
     virtual bool is_constant_disk() const;
     virtual void disk_is_read();

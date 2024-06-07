@@ -76,6 +76,11 @@ int Disk::heads() const
 {
 }
 
+/*virtual*/ bool Disk::isCached(const CylHead& cylhead) const
+{
+    return true;
+}
+
 
 /*virtual*/ bool Disk::is_constant_disk() const
 {

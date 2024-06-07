@@ -15,6 +15,7 @@ public:
     TrackData& writeNC(TrackData&& trackdata) override;
     void clear() override;
     void clearCache(const Range& range) override;
+    bool isCached(const CylHead& cylhead) const override;
     void disk_is_read() override;
 
     void extend(const CylHead& cylhead);

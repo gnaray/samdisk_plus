@@ -17,6 +17,7 @@ public:
     TrackData& writeNC(TrackData&& trackdata) override;
     void clear() override;
     void clearCache(const Range& range) override;
+    bool isCached(const CylHead& cylhead) const override;
     void disk_is_read() override;
 
     // Inherited Disk class members are not used, instead their related methods
