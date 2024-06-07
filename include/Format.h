@@ -4,7 +4,7 @@
 
 enum class FdcType { None, PC, WD, Amiga, Apple };
 enum class RegularFormat {
-    None,
+    None, Unspecified,
     MGT, ProDos,
     TRDOS, QDOS, OPD, D80,
     PC320, PC360, PC640, PC720, PC1200, PC1232, PC1440, PC2880,

@@ -387,6 +387,9 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.size = 1;
         break;
 
+    case RegularFormat::Unspecified:
+        break;
+
     case RegularFormat::None:
         break;
 
