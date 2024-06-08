@@ -154,6 +154,34 @@ public:
     }
     bool compare_crn(const Header& rhs) const;
     bool compare_chr(const Header& rhs) const;
+    bool IsOrphan() const
+    {
+        return sector == ORPHAN_SECTOR_ID;
+    }
+    bool HasUnknownSize() const
+    {
+        return size == SIZECODE_UNKNOWN;
+    }
+
+    void clear()
+    {
+        cyl = 0;
+        head = 0;
+        sector = 0;
+        size = 0;
+    }
+
+    bool IsNormal(const int trackSup) const
+    {
+        return head >= 0 && head < 2 && cyl >= 0 && cyl < trackSup;
+    }
+
+    bool IsNormalAndOriginatedFromNeighborCyl(const CylHead& cylHead, const int trackSup) const
+    {
+        return operator CylHead() != cylHead
+            && IsNormal(trackSup)
+            && std::abs(cyl - cylHead.cyl) <= 1;
+    }
 
     std::string GetRecordAsString() const;
 
