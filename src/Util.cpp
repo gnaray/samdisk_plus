@@ -13,6 +13,8 @@
 #include <sys/stat.h>
 
 static auto& opt_hex = getOpt<int>("hex");
+static auto& opt_time = getOpt<int>("time");
+static auto& opt_verbose = getOpt<int>("verbose");
 
 std::set<std::string> seen_messages;
 
@@ -857,6 +859,34 @@ bool VerifyCylHeadsMatch(const CylHead& cylHeadExpected, const Header& headerRes
                                                      " does not match sector's {", headerResult.ToString(), "}"));
     }
     return true;
+}
+
+std::chrono::system_clock::time_point StartStopper(const std::string& label/* = ""*/)
+{
+    if (opt_time && opt_verbose)
+    {
+        util::cout << "Stopper ";
+        if (!label.empty())
+            util::cout << '"' << label << "\" ";
+        util::cout << "started\n";
+    }
+    return std::chrono::system_clock::now();
+}
+
+std::chrono::system_clock::time_point StopStopper(const std::chrono::system_clock::time_point& startTime, const std::string& label/* = ""*/, bool isStartAlso/* = false*/)
+{
+    auto endTime = std::chrono::system_clock::now();
+    if (opt_time && opt_verbose)
+    {
+        const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+        util::cout << "Elapsed time since started ";
+        if (!label.empty())
+            util::cout << '"' << label << "\" ";
+        util::cout << "stopper: " << elapsed_ms << "ms\n";
+        if (isStartAlso)
+            StartStopper(label);
+    }
+    return endTime;
 }
 
 

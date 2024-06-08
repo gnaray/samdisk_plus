@@ -229,6 +229,8 @@ bool DiskHasMBR(const HDD& hdd);
 
 bool VerifyCylHeadsMatch(const CylHead& cylHeadExpected, const Header& headerResult, bool badCrc = false, bool optNormalDisk = false, bool noReaction = false);
 
+std::chrono::system_clock::time_point StartStopper(const std::string& label = "");
+std::chrono::system_clock::time_point StopStopper(const std::chrono::system_clock::time_point& timePoint, const std::string& label = "", bool isStartAlso = false);
 
 
 class MEMORY
