@@ -28,7 +28,7 @@ public:
     using std::vector<T>::reserve;
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     VectorX(U count, const T& value,
             const Allocator& alloc = Allocator() )
         : std::vector<T>(lossless_static_cast<ST>(count), value, alloc)
@@ -37,7 +37,7 @@ public:
 
 #if _MSC_VER > 1900
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     explicit VectorX(U count,
                      const Allocator& alloc = Allocator() )
         : std::vector<T>(lossless_static_cast<ST>(count), alloc)
@@ -46,77 +46,77 @@ public:
 #endif
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     typename VectorX::reference at(U pos)
     {
         return std::vector<T>::at(pos);
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     typename VectorX::const_reference at(U pos) const
     {
         return std::vector<T>::at(pos);
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     typename VectorX::reference operator[](U pos)
     {
         return std::vector<T>::operator[](pos);
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     typename VectorX::const_reference operator[](U pos) const
     {
         return std::vector<T>::operator[](pos);
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     typename VectorX::iterator insert(typename VectorX::const_iterator pos, U count, const T& value)
     {
         return std::vector<T>::insert(pos, count, value);
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     U size() const
     {
         return lossless_static_cast<U>(std::vector<T>::size());
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     U max_size() const
     {
         return lossless_static_cast<U>(std::vector<T>::max_size());
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     U capacity() const
     {
         return lossless_static_cast<U>(std::vector<T>::capacity());
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     void resize(U count)
     {
         std::vector<T>::resize(lossless_static_cast<ST>(count));
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     void resize(U count, const T& value)
     {
         std::vector<T>::resize(lossless_static_cast<ST>(count), value);
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     void reserve(U new_cap)
     {
         std::vector<T>::reserve(lossless_static_cast<ST>(new_cap));
@@ -129,7 +129,7 @@ public:
     }
 
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     void swap_at(const U pos1, const U pos2)
     {
         assert(pos1 >= 0 && pos1 < VectorX::size() && pos2 >= 0 && pos2 < VectorX::size());
@@ -143,7 +143,7 @@ public:
 
     // Returns index of current location of moved value, >= 0 on success, -1 otherwise. Invalidates iterators like insert and erase methods.
     template <typename U = IT,
-              std::enable_if_t<std::is_integral<IT>::value> * = nullptr>
+              std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     U findAndMove(const T& value, U pos)
     {
         assert(pos >= 0 && pos < VectorX::size());
