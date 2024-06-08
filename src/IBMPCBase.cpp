@@ -7,6 +7,7 @@
 #include <algorithm>
 
 static auto& opt_debug = getOpt<int>("debug");
+static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_verbose = getOpt<int>("verbose");
 
 std::string to_string(const MEDIA_TYPE& type)
@@ -93,4 +94,18 @@ CohereResult DoSectorIdAndDataOffsetsCohere(
     if (sectorIdAndDataOffsetDistance > max_distance)
         return CohereResult::DataTooLate;
     return CohereResult::DataCoheres;
+}
+
+void GetSectorIdAndDataOffsetDistanceMinMax(const DataRate& dataRate, const Encoding& encoding, int& distanceMin, int &distanceMax)
+{
+    // This code is taken from Samdisk/BitstreamDecoder where every databit is
+    // stored as two bits (in addition every FM encoded bit is stored as two rawbits).
+    // We also calculate with bits here though the code is slightly modified.
+    const auto gap2_size_min = GetFmOrMfmGap2Length(dataRate, encoding);
+    const auto idam_am_distance = GetFmOrMfmIdamAndDamDistance(dataRate, encoding);
+    distanceMin = DataBytePositionAsBitOffset(GetIdOverheadWithoutIdamOverheadSyncOverhead(encoding) + gap2_size_min, encoding); // IDAM, ID, gap2 (without sync and DAM.a1sync, why?)
+    distanceMax = DataBytePositionAsBitOffset(idam_am_distance + 8, encoding); // IDAM, ID, gap2, sync, DAM.a1sync (gap2: WD177x offset, +8: gap2 may be longer when formatted by different type of controller)
+    const auto toleratedOffsetDistance = tolerated_offset_distance(encoding, opt_byte_tolerance_of_time);
+    distanceMin -= DataBytePositionAsBitOffset(2, encoding);
+    distanceMax += toleratedOffsetDistance; // Experimental solution. It is required to counterbalance offset sliding when reading physical track. +26 bytes were not enough.
 }
