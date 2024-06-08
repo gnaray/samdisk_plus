@@ -11,6 +11,8 @@ constexpr uint8_t IBM_IAM = 0xfc;
 constexpr uint8_t IBM_DAM_RX02 = 0xfd;
 constexpr uint8_t IBM_IDAM = 0xfe;
 
+constexpr int GAP4A_MIN = 10;
+
 constexpr int GAP2_MFM_ED = 41;     // gap2 for MFM 1Mbps (ED)
 constexpr int GAP2_MFM_DDHD = 22;   // gap2 for MFM, except 1Mbps (ED)
 constexpr int GAP2_FM = 11;         // gap2 for FM (same bit size as MFM due to encoding)
