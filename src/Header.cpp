@@ -143,7 +143,10 @@ std::string CylHead::ToString(bool /*onlyRelevantData*//* = true*/) const
     ss << "cyl ";
     if (opt_hex == 1)
         ss << std::setfill('0') << std::setbase(16) << std::uppercase << std::setw(2); // setw is not sticky, usually.
-    ss << cyl << " head " << head;
+    ss << cyl << " head ";
+    if (opt_hex == 1)
+        ss << std::setbase(16) << std::uppercase;
+    ss << head;
     return ss.str();
 }
 
