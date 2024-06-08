@@ -51,6 +51,8 @@ class Sector
 {
 public:
     enum class Merge { Unchanged, Matched, Improved, NewData };
+    // The almost 0 offset value which does not become 0 even when encoding to file.
+    static constexpr const int OFFSET_ALMOST_0 = 16;
 
 private:
     void process_merge_result(const Merge& ret, int new_read_attempts, const DataReadStats& new_data_read_stats,
