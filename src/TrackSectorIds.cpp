@@ -46,15 +46,22 @@
 
 /*static*/ const TrackSectorIds TrackSectorIds::FindCompleteTrackSectorIdsFor(const TrackSectorIds& incompleteSectorIds, const int sectorsMin/* = 0*/)
 {
+    TrackSectorIds resultCompleteTrackSectorIds;
+    if (incompleteSectorIds.empty())
+        return resultCompleteTrackSectorIds;
+    const auto maxId = *std::max_element(incompleteSectorIds.begin(), incompleteSectorIds.end());
+    if (maxId < 0) // There is no known id thus the sector ids can not be completed.
+        return resultCompleteTrackSectorIds;
+
     auto sectorsMinLocal = sectorsMin;
     if (sectorsMin == 0)
     {
         const auto foundLastValidId = std::find_if(incompleteSectorIds.rbegin(), incompleteSectorIds.rend(),
-                                                 [](int id) { return id >= 0; });
-        sectorsMinLocal = std::max(static_cast<int>(incompleteSectorIds.rend() - foundLastValidId),
-                                   *std::max_element(incompleteSectorIds.begin(), incompleteSectorIds.end()));
+            [](int id) { return id >= 0; });
+        assert(foundLastValidId != incompleteSectorIds.rend());
+        const auto maxIndex = (incompleteSectorIds.rend() - foundLastValidId); // static_cast<int>
+        sectorsMinLocal = std::max(maxIndex, maxId);
     }
-    TrackSectorIds resultCompleteTrackSectorIds;
     const int sectorsSup = static_cast<int>(incompleteSectorIds.size()) + 1;
     for (int sectors = sectorsMinLocal; sectors < sectorsSup; sectors++)
     {
@@ -65,7 +72,7 @@
             if (offset >= 0)
             {
                 if (!resultCompleteTrackSectorIds.empty() && !resultCompleteTrackSectorIds.ExtendableTo(trackSectorIds)) // Ambiguous result, not extendable.
-                        return TrackSectorIds{}; // Return empty.
+                    return TrackSectorIds{}; // Return empty.
                 resultCompleteTrackSectorIds = trackSectorIds;
                 if (offset > 0)
                     std::rotate(resultCompleteTrackSectorIds.rbegin(), resultCompleteTrackSectorIds.rbegin() + offset, resultCompleteTrackSectorIds.rend());
