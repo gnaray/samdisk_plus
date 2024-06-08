@@ -38,6 +38,8 @@ public:
         return result += rhs;
     }
 
+    bool IsStable() const;
+
 private:
     int m_read_count = 0; // Amount of reading (good or bad) data of the owner sector (provided only by not constant (real) disks).
 };

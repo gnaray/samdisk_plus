@@ -18,6 +18,11 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_paranoia = getOpt<bool>("paranoia");
 static auto& opt_stability_level = getOpt<int>("stability_level");
 
+bool DataReadStats::IsStable() const
+{
+    return m_read_count >= opt_stability_level;
+}
+
 Sector::Sector(DataRate datarate_, Encoding encoding_, const Header& header_, int gap3_)
     : header(header_), datarate(datarate_), encoding(encoding_), gap3(gap3_)
 {
