@@ -79,6 +79,9 @@ inline int tolerated_offset_distance(const Encoding& encoding, const int byte_to
     return DataBytePositionAsBitOffset(byte_tolerance_of_time, encoding);
 }
 
+bool are_offsets_tolerated_same(const Interval<int>& offsetInterval, const int offset2,
+    const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen, bool wrapped = true);
+
 bool are_offsets_tolerated_same(const int offset1, const int offset2,
     const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen, bool wrapped = true);
 
