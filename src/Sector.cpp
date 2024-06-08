@@ -700,11 +700,17 @@ void Sector::limit_copies(int max_copies)
     }
 }
 
-bool Sector::is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int tracklen) const
+bool Sector::is_sector_tolerated_same(const Header& otherHeader, const int otherOffset, const int byte_tolerance_of_time, const int trackLen) const
 {
     // Sector must be close enough and have the same header.
-    return are_offsets_tolerated_same(offset, sector.offset, encoding, byte_tolerance_of_time, tracklen)
-            && header == sector.header;
+    return are_offsets_tolerated_same(offset, otherOffset, encoding, byte_tolerance_of_time, trackLen)
+        && header == otherHeader;
+}
+
+bool Sector::is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int trackLen) const
+{
+    // Sector must be close enough and have the same header.
+    return is_sector_tolerated_same(sector.header, sector.offset, byte_tolerance_of_time, trackLen);
 }
 
 void Sector::normalise_datarate(const DataRate& datarate_target)

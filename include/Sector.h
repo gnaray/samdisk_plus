@@ -116,7 +116,8 @@ public:
     void remove_gapdata(bool keep_crc = false);
     bool are_copies_full(int max_copies) const;
     void limit_copies(int max_copies);
-    bool is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int tracklen) const;
+    bool is_sector_tolerated_same(const Header& otherHeader, const int otherOffset, const int byte_tolerance_of_time, const int trackLen) const;
+    bool is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int trackLen) const;
     void normalise_datarate(const DataRate& datarate_target);
     bool has_same_record_properties(const Sector& other_sector, const int other_tracklen) const;
 
