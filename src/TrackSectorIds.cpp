@@ -127,13 +127,16 @@ TrackSectorIds IdAndOffsetPairs::GetSectorIds() const
 
 void IdAndOffsetPairs::ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackSectorIds)
 {
-    assert(trackSectorIds.size() >= size());
-
-    const auto iSup = static_cast<int>(size());
-    for (int i = 0; i < iSup; i++)
+    const auto iTrackSectorIdsSup = trackSectorIds.size();
+    for (auto i = size() - 1; i >= 0; i--)
     {
         if (data()[i].id < 0)
-            data()[i].id = trackSectorIds[i];
+        {
+            if (i >= iTrackSectorIdsSup)
+                erase(begin() + i);
+            else
+                data()[i].id = trackSectorIds[i];
+        }
     }
 }
 
