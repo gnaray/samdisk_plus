@@ -75,4 +75,5 @@ public:
     TrackSectorIds GetSectorIds() const;
     void ReplaceMissingSectorIdsFrom(const TrackSectorIds& trackSectorIds);
     bool ReplaceMissingIdsByFindingTrackSectorIds(const int sectorsMin = 0);
+    IdAndOffsetPairs::const_iterator FindSectorIdByOffset(const int offset) const;
 };

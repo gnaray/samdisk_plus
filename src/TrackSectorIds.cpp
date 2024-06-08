@@ -1,5 +1,7 @@
 #include "TrackSectorIds.h"
 
+#include "Util.h"
+
 #include <iterator>
 
 /*static*/ TrackSectorIds TrackSectorIds::GetIds(const CylHead& cylhead, const int sectors, const int interleave/* = 0*/, const int skew/* = 0*/, const int offset/* = 0*/, const int base/* = 1*/)
@@ -142,4 +144,31 @@ bool IdAndOffsetPairs::ReplaceMissingIdsByFindingTrackSectorIds(const int sector
         return false;
     ReplaceMissingSectorIdsFrom(completeTrackSectorIds);
     return true;
+}
+
+// Looking for sector id by offset. It means this sector is not orphan.
+IdAndOffsetPairs::const_iterator IdAndOffsetPairs::FindSectorIdByOffset(const int offset) const
+{
+    const auto sectorIdAndOffsetPairsEnd = cend();
+    auto result = sectorIdAndOffsetPairsEnd;
+    const Interval<int> dataOffsetInterval(offset, 0, BaseInterval::ConstructMode::StartAndLength);
+    const auto iSup = size();
+    for (auto i = 0; i < iSup; i++)
+    {
+        const auto& idAndOffset = operator[](i);
+        if (dataOffsetInterval.IsRingedIntersecting(idAndOffset.offsetInterval))
+        {
+            if (result == sectorIdAndOffsetPairsEnd)
+                result = begin() + i;
+            else
+            {
+                MessageCPP(msgWarningAlways, "Ambiguous results (", result->id, ", ", idAndOffset.id,
+                    ") when finding sector id for offset (", offset, ")");
+                result = sectorIdAndOffsetPairsEnd;
+                break;
+            }
+        }
+    }
+
+    return result;
 }
