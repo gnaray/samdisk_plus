@@ -120,6 +120,14 @@ public:
     bool is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int trackLen) const;
     void normalise_datarate(const DataRate& datarate_target);
     bool has_same_record_properties(const Sector& other_sector, const int other_tracklen) const;
+    bool CompareHeader(const Sector& sector) const;
+    bool CompareHeaderDatarateEncoding(const Sector& sector) const;
+    int NextSectorOffsetDistanceMin() const;
+    inline int OffsetDistanceFromThisTo(const Sector& toSector, const int trackLen) const
+    {
+        assert(trackLen > 0);
+        return diffModulo(toSector.offset - offset, static_cast<unsigned>(trackLen));
+    }
 
     int size() const;
     int data_size() const;

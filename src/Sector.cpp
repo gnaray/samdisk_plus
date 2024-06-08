@@ -744,6 +744,19 @@ bool Sector::has_same_record_properties(const Sector& other_sector, const int ot
     if (other_sector.datarate != datarate && are_interchangeably_equal_datarates(other_sector.datarate, datarate))
         offset_normalised = convert_offset_by_datarate(offset, datarate, other_sector.datarate);
     return are_offsets_tolerated_same(offset_normalised, other_sector.offset, encoding, opt_byte_tolerance_of_time, other_tracklen);
+bool Sector::CompareHeader(const Sector& sector) const
+{
+    return header == sector.header;
+}
+
+bool Sector::CompareHeaderDatarateEncoding(const Sector& sector) const
+{
+    return datarate == sector.datarate && encoding == sector.encoding && CompareHeader(sector);
+}
+
+int Sector::NextSectorOffsetDistanceMin() const
+{
+    return DataBytePositionAsBitOffset(GetFmOrMfmSectorOverheadWithGap3(datarate, encoding, size(), true), encoding);
 }
 
 void Sector::remove_gapdata(bool keep_crc/*=false*/)
