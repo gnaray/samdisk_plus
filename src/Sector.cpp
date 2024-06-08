@@ -218,6 +218,11 @@ int Sector::GetGoodDataCopyStabilityScore(int instance) const
     return std::min(read_count, opt_stability_level);
 }
 
+bool Sector::HasNormalHeaderAndMisreadFromNeighborCyl(const CylHead& cylHead, const int trackSup) const
+{
+    return header.IsNormalAndOriginatedFromNeighborCyl(cylHead, trackSup);
+}
+
 /* Return values.
  * - Unchanged: The new data is ignored, it is not counted in read stats.
  * - Matched: The new data is not added because it exists but counted in read stats.
@@ -555,6 +560,18 @@ void Sector::MergeOrphanDataSector(Sector&& orphanDataSector)
 void Sector::MergeOrphanDataSector(const Sector& orphanDataSector)
 {
     MergeOrphanDataSector(Sector(orphanDataSector));
+}
+
+bool Sector::MakeOffsetNot0(const bool warn/* = true*/)
+{
+    const auto result = offset == 0;
+    if (result) // Avoid setting offset 0.
+    {
+        offset++;
+        if (warn && !IsOrphan())
+            MessageCPP(msgWarningAlways, "Offset of sector (", header, ") is changed from 0 to 1");
+    }
+    return result;
 }
 
 

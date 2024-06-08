@@ -62,12 +62,17 @@ public:
     Sector(DataRate datarate, Encoding encoding, const Header& header = Header(), int gap3 = 0);
     Sector CopyWithoutData(bool keepReadAttempts = true) const;
     bool operator==(const Sector& sector) const;
+    static bool CompareByOffset(const Sector& s1, const Sector& s2)
+    {
+        return s1.offset < s2.offset;
+    }
 
     Merge merge(Sector&& sector);
     bool AcceptOrphanDataSectorSizeForMerging(const int orphanDataPhysicalSize) const;
     void ConvertOrphanDataSectorLikeParentSector(const Sector& parentSector);
     void MergeOrphanDataSector(Sector&& orphanDataSector);
     void MergeOrphanDataSector(const Sector& orphanDataSector);
+    bool MakeOffsetNot0(const bool warn = true);
 
     bool has_data() const;
     bool has_good_data(bool consider_checksummable_8K = false, bool consider_normal_disk = false) const;
@@ -147,6 +152,7 @@ public:
     void set_read_stats(int instance, DataReadStats&& data_read_stats);
     bool has_stable_data(bool consider_checksummable_8K = false) const;
     int GetGoodDataCopyStabilityScore(int instance) const;
+    bool HasNormalHeaderAndMisreadFromNeighborCyl(const CylHead& cylHead, const int trackSup) const;
 
     // Map a size code to how it's treated by the uPD765 FDC on the PC
     static constexpr int SizeCodeToRealSizeCode(int size)
@@ -169,6 +175,15 @@ public:
     }
 
     int FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const;
+
+    bool IsOrphan() const
+    {
+        return header.IsOrphan();
+    }
+    bool HasUnknownSize() const
+    {
+        return header.HasUnknownSize();
+    }
 
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const Sector& sector, bool onlyRelevantData = true)
