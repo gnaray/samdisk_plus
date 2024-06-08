@@ -80,7 +80,7 @@ inline int tolerated_offset_distance(const Encoding& encoding, const int byte_to
 }
 
 bool are_offsets_tolerated_same(const int offset1, const int offset2,
-    const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen);
+    const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen, bool wrapped = true);
 
 
 
