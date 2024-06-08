@@ -74,6 +74,11 @@ constexpr int BitOffsetAsDataBytePosition(const int offset, const Encoding& enco
     return BitOffsetAsDataBitPosition(offset, encoding) / 8;
 }
 
+inline int tolerated_offset_distance(const Encoding& encoding, const int byte_tolerance_of_time)
+{
+    return DataBytePositionAsBitOffset(byte_tolerance_of_time, encoding);
+}
+
 inline bool are_offsets_tolerated_same(const int offset1, const int offset2, const Encoding& encoding, const int byte_tolerance_of_time, const int tracklen)
 {
     const auto offset_min = std::min(offset1, offset2);
