@@ -5,6 +5,8 @@
 
 #include <cassert>
 #include <cstdint>
+#include <functional>
+#include <numeric>
 #include <set>
 #include <vector>
 
@@ -230,7 +232,27 @@ public:
     {
         return RemoveDuplicates(VectorX::begin(), VectorX::end());
     }
+
 };
+
+template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
+double Average(const std::vector<T>& numbers)
+{
+    if (numbers.empty())
+        throw std::domain_error("No average of empty vector");
+    return std::accumulate(numbers.begin(), numbers.end(), 0.0) / numbers.size();
+}
+
+template<typename T, typename U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+double Average(const std::vector<T>& numbers,
+    const std::function<U (const T&)>& elementToNumber)
+{
+    if (numbers.empty())
+        throw std::domain_error("No average of empty vector");
+    return std::accumulate(numbers.begin(), numbers.end(), 0.0, [&elementToNumber](const U acc, const T& element) {
+        return acc + elementToNumber(element);
+    }) / numbers.size();
+}
 
 using Data = VectorX<uint8_t>;
 
