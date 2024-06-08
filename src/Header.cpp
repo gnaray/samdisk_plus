@@ -92,6 +92,19 @@ Encoding encoding_from_string(std::string str)
     return Encoding::Unknown;
 }
 
+bool are_offsets_tolerated_same(const int offset1, const int offset2,
+    const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen)
+{
+    const auto offset_min = std::min(offset1, offset2);
+    const auto offset_max = std::max(offset1, offset2);
+    auto distance = offset_max - offset_min;
+    if (tracklen > 0)
+        distance = std::min(distance, trackLen + offset_min - offset_max);
+
+    // Offsets must be close enough.
+    return distance <= DataBytePositionAsBitOffset(byte_tolerance_of_time, encoding);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 CylHead::operator int() const
