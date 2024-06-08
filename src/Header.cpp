@@ -92,24 +92,6 @@ Encoding encoding_from_string(std::string str)
     return Encoding::Unknown;
 }
 
-// The offsetInterval can be wrapped or unwrapped but be careful if Interval is wrapped.
-bool are_offsets_tolerated_same(const Interval<int>& offsetInterval, const int offset2,
-    const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen, bool wrapped/* = true*/)
-{
-    // TODO Should use interval more, but this method is unused I think.
-    const auto offsetIntervalWrappedRight = modulo(offsetInterval.End(), static_cast<unsigned>(trackLen));
-    const auto intervalWrapped = offsetIntervalWrappedRight < offsetInterval.Start();
-    if (!intervalWrapped)
-    {
-        if (offsetInterval.Start() <= offset2 && offset2 <= offsetInterval.End())
-            return true;
-    }
-    else if (offsetInterval.Start() <= offset2 || offset2 <= offsetIntervalWrappedRight)
-        return true;
-    return are_offsets_tolerated_same(offsetInterval.Start(), offset2, encoding, byte_tolerance_of_time, trackLen, wrapped)
-        || are_offsets_tolerated_same(offsetIntervalWrappedRight, offset2, encoding, byte_tolerance_of_time, trackLen, wrapped);
-}
-
 bool are_offsets_tolerated_same(const int offset1, const int offset2,
     const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen, bool wrapped/* = true*/)
 {
