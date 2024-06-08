@@ -267,4 +267,4 @@ enum class CohereResult { DataTooEarly, DataCoheres, DataTooLate };
 
 void GetSectorIdAndDataOffsetDistanceMinMax(const DataRate& dataRate, const Encoding& encoding, int& distanceMin, int &distanceMax);
 CohereResult DoSectorIdAndDataOffsetsCohere(
-    const int sectorIdOffset, const int dataOffset, const DataRate& dataRate, const Encoding& encoding);
+    const int sectorIdOffset, const int dataOffset, const DataRate& dataRate, const Encoding& encoding, const int trackLen);
