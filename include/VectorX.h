@@ -141,6 +141,12 @@ public:
         insert(VectorX::end(), elements.begin(), elements.end());
     }
 
+    void push_back(VectorX<T>&& elements)
+    {
+        for (auto&& element : elements)
+            insert(VectorX::end(), std::move(element));
+    }
+
     // Returns index of current location of moved value, >= 0 on success, -1 otherwise. Invalidates iterators like insert and erase methods.
     template <typename U = IT,
               std::enable_if_t<std::is_integral<U>::value> * = nullptr>
