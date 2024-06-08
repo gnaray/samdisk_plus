@@ -707,8 +707,9 @@ bool Track::DiscoverTrackSectorScheme()
             for (int i = 0; i < iSup; i++)
             {
                     util::cout << "DiscoverTrackSectorScheme: sectorIdsAndOffsets[" << i << "] has (id=" <<
-                                  idAndOffsetPairs[i].id << ", offset=" <<
-                                  idAndOffsetPairs[i].offset << ")\n";
+                        idAndOffsetPairs[i].id << ", offsetMin=" <<
+                        idAndOffsetPairs[i].offsetInterval.Start() << ", offsetMax=" <<
+                        idAndOffsetPairs[i].offsetInterval.End() << ")\n";
             }
         }
         return true;

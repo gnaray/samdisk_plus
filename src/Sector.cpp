@@ -780,7 +780,7 @@ int Sector::FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffset
 {
     for (const auto& idAndOffset : sectorIdAndOffsetPairs)
     {
-        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(idAndOffset.offset, offset, datarate, encoding);
+        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(idAndOffset.offsetInterval.Start(), offset, datarate, encoding);
         if (cohereResult == CohereResult::DataCoheres)
             return idAndOffset.id;
         if (cohereResult == CohereResult::DataTooEarly)

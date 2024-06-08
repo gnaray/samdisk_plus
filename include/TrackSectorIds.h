@@ -49,14 +49,23 @@ inline std::ostream& operator<<(std::ostream& os, const TrackSectorIds& trackSec
 class IdAndOffset
 {
 public:
-    IdAndOffset() = default;
-    IdAndOffset(int id, int offset) : id(id), offset(offset)
+    constexpr IdAndOffset() = default;
+    IdAndOffset(int id, int offset)
+        : id(id), offsetInterval(offset, 0, BaseInterval::ConstructMode::StartAndLength)
+    {
+    }
+
+    // This case is for unknown id i.e. id must be negativ.
+    IdAndOffset(int id, int offset, int offsetAlt)
+        : id(id), offsetInterval(offset, offsetAlt, BaseInterval::ConstructMode::StartAndEnd)
     {
     }
 
     int id = -1;
-    int offset = -1;
+    Interval<int> offsetInterval{};
 };
+
+
 
 class IdAndOffsetPairs : public VectorX<IdAndOffset>
 {
