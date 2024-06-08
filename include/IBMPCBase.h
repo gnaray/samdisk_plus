@@ -255,6 +255,14 @@ inline int GetFmOrMfmSectorOverheadWithGap3(const DataRate& datarate, const Enco
     return GetFmOrMfmSectorOverhead(datarate, encoding, dataSize, short_mfm_gap) + GetFmOrMfmGap3Length(short_mfm_gap);
 }
 
+inline int FdrawMeasuredOffsetAdjuster(const Encoding& encoding)
+{
+    // The +3 comes from experience.
+    return DataBytePositionAsBitOffset(GetIdOverheadWithoutIdamOverheadSyncOverhead(encoding) + 3, encoding);
+}
+
+
+
 enum class CohereResult { DataTooEarly, DataCoheres, DataTooLate };
 
 void GetSectorIdAndDataOffsetDistanceMinMax(const DataRate& dataRate, const Encoding& encoding, int& distanceMin, int &distanceMax);
