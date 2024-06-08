@@ -97,8 +97,10 @@ struct CylHead
     CylHead() = default;
     CylHead(int cyl_, int head_) : cyl(cyl_), head(head_)
     {
-        assert(cyl >= 0 && cyl < MAX_DISK_CYLS);
-        assert(head >= 0 && head < MAX_DISK_HEADS);
+        // Strict asserting has no sense here because a header can contain anything.
+        // Asserting the physical geometry of floppy must be done somewhere else.
+        assert(cyl >= 0 && cyl < 256); // MAX_DISK_CYLS
+        assert(head >= 0 && head < 256); // MAX_DISK_HEADS
     }
 
     operator int() const;
