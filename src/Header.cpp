@@ -102,7 +102,7 @@ bool are_offsets_tolerated_same(const int offset1, const int offset2,
         distance = std::min(distance, trackLen + offset_min - offset_max);
 
     // Offsets must be close enough.
-    return distance <= DataBytePositionAsBitOffset(byte_tolerance_of_time, encoding);
+    return distance <= tolerated_offset_distance(encoding, byte_tolerance_of_time);
 }
 
 //////////////////////////////////////////////////////////////////////////////
