@@ -755,7 +755,7 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(const OrphanDataCapableTrack
             if (track.idAndOffsetPairs.empty() && !track.DiscoverTrackSectorScheme())
                 return;
             // Missing sector id, try to find it in the found track sector scheme.
-            const auto sectorId = orphanDataSector.FindParentSectorIdByOffset(track.idAndOffsetPairs);
+            const auto sectorId = orphanDataSector.FindParentSectorIdByOffset(track.idAndOffsetPairs, track.tracklen);
             if (sectorId >= 0)
             {
                 // The data will be referred later by the parent sector so skip data.

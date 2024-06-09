@@ -803,19 +803,30 @@ bool Sector::IsOffsetSuitableAsParent(const int parentOffset, const int trackLen
     return GetOffsetIntervalSuitableForParent(trackLen).Where(parentOffset) == BaseInterval::Location::Within;
 }
 
-// Looking for parent sector id by offset. It means this sector is orphan and its offset is data offset.
-int Sector::FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const
+// Look for parent sector id by offset. It means this sector is orphan and its offset is data offset.
+int Sector::FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs, const int trackLen) const
 {
+    assert(trackLen > 0);
+
+    auto result = -1;
+    const auto parentOffsetInterval = GetOffsetIntervalSuitableForParent(trackLen);
     for (const auto& idAndOffset : sectorIdAndOffsetPairs)
     {
-        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(idAndOffset.offsetInterval.Start(), offset, datarate, encoding);
-        if (cohereResult == CohereResult::DataCoheres)
-            return idAndOffset.id;
-        if (cohereResult == CohereResult::DataTooEarly)
-            break;
+        if (parentOffsetInterval.IsRingedIntersecting(idAndOffset.offsetInterval))
+        {
+            if (result < 0)
+                result = idAndOffset.id;
+            else
+            {
+                MessageCPP(msgWarningAlways, "Ambiguous results (", result, ", ", idAndOffset.id,
+                    ") when finding parent sector id for offset (", offset, ")");
+                result = -1;
+                break;
+            }
+        }
     }
 
-    return -1;
+    return result;
 }
 
 std::string Sector::ToString(bool onlyRelevantData/* = true*/) const

@@ -186,7 +186,7 @@ public:
     IdAndOffsetPairs::const_iterator FindSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const;
     Interval<int> GetOffsetIntervalSuitableForParent(const int trackLen) const;
     bool IsOffsetSuitableAsParent(const int parentOffset, const int trackLen) const;
-    int FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const;
+    int FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs, const int trackLen) const;
 
     bool IsOrphan() const
     {
