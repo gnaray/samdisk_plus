@@ -42,6 +42,7 @@ struct OPTIONS
     bool normal_disk = false;
     bool readstats = false, paranoia = false, skip_stable_sectors = false;
     bool fdraw_rescue_mode = false;
+    bool unhide_first_sector_by_track_end_sector = false;
     std::string detect_devfs{}; // Detect device (floppy) filesystem thus use its format.
 
     RetryPolicy rescans = 0, retries = 5;
@@ -157,6 +158,7 @@ bool& getOpt(const char* key)
 {
     static const std::map<std::string, bool&> s_mapStringToBoolVariables =
     {
+        {"unhide_first_sector_by_track_end_sector", Options::opt.unhide_first_sector_by_track_end_sector },
         {"normal_disk", Options::opt.normal_disk},
         {"paranoia", Options::opt.paranoia},
         {"readstats", Options::opt.readstats},
@@ -405,7 +407,8 @@ enum {
     OPT_READSTATS, OPT_PARANOIA, OPT_SKIP_STABLE_SECTORS, OPT_STABILITY_LEVEL,
     OPT_DETECT_DEVFS,
     OPT_BYTE_TOLERANCE_OF_TIME,
-    OPT_FDRAW_RESCUE_MODE
+    OPT_FDRAW_RESCUE_MODE,
+    OPT_UNHIDE_FIRST_SECTOR_BY_TRACK_END_SECTOR
 };
 
 static struct option long_options[] =
@@ -521,6 +524,7 @@ static struct option long_options[] =
     { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },    // undocumented. Amount of disk retries. If auto then do it while data improved.
     { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME}, // undocumented. Two things are considered at same location if their location differs <= this value. Default is 64.
     { "fdraw-rescue-mode",            no_argument, nullptr, OPT_FDRAW_RESCUE_MODE}, // undocumented. Use the rescue method in fdrawsys_dev. Default is using the all-in method.
+    { "unhide-first-sector-by-track-end-sector", no_argument, nullptr, OPT_UNHIDE_FIRST_SECTOR_BY_TRACK_END_SECTOR }, // undocumented. Unhide track starting sector by track ending sector (useful when track ending sector hides track starting sector). Default is false.
 
     { nullptr, 0, nullptr, 0 }
 };
@@ -785,6 +789,10 @@ bool ParseCommandLine(int argc_, char* argv_[])
 
         case OPT_FDRAW_RESCUE_MODE:
             Options::opt.fdraw_rescue_mode = true;
+            break;
+
+        case OPT_UNHIDE_FIRST_SECTOR_BY_TRACK_END_SECTOR:
+            Options::opt.unhide_first_sector_by_track_end_sector = true;
             break;
 
         case ':':
