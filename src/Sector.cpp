@@ -60,7 +60,7 @@ bool Sector::operator== (const Sector& sector) const
     if (!sector.has_data() || !has_data())
         return false;
 
-    assert(header.size != Header::SIZECODE_UNKNOWN);
+    assert(!HasUnknownSize());
     // This size and sector size are the same since headers are the same.
     // Both first sectors must have at least the natural size to compare
     if (sector.data_size() < sector.size() || data_size() < size())
@@ -72,7 +72,7 @@ bool Sector::operator== (const Sector& sector) const
 
 int Sector::size() const
 {
-    assert(header.size != Header::SIZECODE_UNKNOWN);
+    assert(!HasUnknownSize());
 
     return header.sector_size();
 }
@@ -243,7 +243,7 @@ Sector::Merge Sector::add_original(Data&& new_data, bool bad_crc/*=false*/, uint
 #ifdef _DEBUG
     // If there's enough data, check the CRC
     if ((encoding == Encoding::MFM || encoding == Encoding::FM) &&
-            header.size != Header::SIZECODE_UNKNOWN && new_data.size() >= size() + 2)
+        !HasUnknownSize() && new_data.size() >= size() + 2)
     {
         CRC16 crc;
         if (encoding == Encoding::MFM) crc.init(CRC16::A1A1A1);
@@ -508,7 +508,7 @@ bool Sector::AcceptOrphanDataSectorSizeForMerging(const int orphanDataPhysicalSi
 // Method for the case when sector size and parent sector became known and this orphan data sector can be converted.
 void Sector::ConvertOrphanDataSectorLikeParentSector(const Sector& parentSector)
 {
-    assert(parentSector.header.size != Header::SIZECODE_UNKNOWN);
+    assert(!parentSector.HasUnknownSize());
     const int sectorSize = parentSector.size();
 
     header = parentSector.header;
@@ -593,19 +593,19 @@ bool Sector::has_good_data(bool consider_checksummable_8K/* = false*/, bool cons
 
 bool Sector::has_gapdata() const
 {
-    assert(header.size != Header::SIZECODE_UNKNOWN);
+    assert(!HasUnknownSize());
     return data_size() > size();
 }
 
 bool Sector::has_shortdata() const
 {
-    assert(header.size != Header::SIZECODE_UNKNOWN);
+    assert(!HasUnknownSize());
     return data_size() < size();
 }
 
 bool Sector::has_normaldata() const
 {
-    assert(header.size != Header::SIZECODE_UNKNOWN);
+    assert(!HasUnknownSize());
     return data_size() == size();
 }
 
@@ -648,7 +648,7 @@ void Sector::set_baddatacrc(bool bad/* = true*/)
     {   // Convert set of bad data to good data or create new good data.
         const auto fill_byte = lossless_static_cast<uint8_t>((opt_fill >= 0) ? opt_fill : 0);
 
-        assert(header.size != Header::SIZECODE_UNKNOWN);
+        assert(!HasUnknownSize());
         if (!has_data())
         {
             m_data.push_back(Data(size(), fill_byte));
@@ -787,7 +787,7 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
 
     for (auto& data : m_data)
     {
-        assert(header.size != Header::SIZECODE_UNKNOWN);
+        assert(!HasUnknownSize());
         // If requested, attempt to preserve CRC bytes on bad sectors.
         if (keep_crc && has_baddatacrc() && data.size() >= (size() + 2))
             data.resize(size() + 2);

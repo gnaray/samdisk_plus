@@ -137,7 +137,7 @@ int Track::data_extent_bytes(const Sector& sector) const
     // We only support real data extent for MFM and FM sectors.
     if (sector.encoding != Encoding::MFM && sector.encoding != Encoding::FM)
     {
-        assert(sector.header.size != Header::SIZECODE_UNKNOWN);
+        assert(!sector.HasUnknownSize());
         return sector.size();
     }
 
@@ -154,7 +154,7 @@ bool Track::data_overlap(const Sector& sector) const
     if (!sector.offset)
         return false;
 
-    if (sector.header.size == Header::SIZECODE_UNKNOWN)
+    if (sector.HasUnknownSize())
         return false;
 
     return data_extent_bytes(sector) < sector.size();
@@ -427,7 +427,7 @@ Sector Track::remove(int index)
 const Sector& Track::get_sector(const Header& header) const
 {
     auto it = find(header);
-    assert(it == end() || it->header.size != Header::SIZECODE_UNKNOWN);
+    assert(it == end() || !it->HasUnknownSize());
     if (it == end() || it->data_size() < it->size())
         throw util::exception(CylHead(header.cyl, header.head), " sector ", header.sector, " not found");
 
@@ -750,7 +750,7 @@ Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterat
     for (auto sector : ptrs)
     {
         assert(sector->copies() == 1);
-        assert(sector->header.size != Header::SIZECODE_UNKNOWN);
+        assert(!sector->HasUnknownSize());
         auto bytes = std::min(sector->size(), static_cast<int>(std::distance(it, itEnd)));
         std::copy_n(it, bytes, sector->data_copy(0).begin());
         it += bytes;

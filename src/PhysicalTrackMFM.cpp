@@ -103,7 +103,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
                                                     const int nextIdamOffset/* = 0*/, const int nextDamOffset/* = 0*/)
 {
     const auto byteBitPositionDAM = physicalTrackContent.GetByteBitPosition();
-    if (sector.header.size != Header::SIZECODE_UNKNOWN)
+    if (!sector.HasUnknownSize())
     {
         const auto dataSize = sector.size();
         const auto requiredByteLength = PhysicalSizeOf(dataSize);
