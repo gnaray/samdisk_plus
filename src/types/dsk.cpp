@@ -465,7 +465,9 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
                     {
                         auto res = sector.add(std::move(data), data_crc_error, deleted_dam ? IBM_DAM_DELETED : IBM_DAM);
                         if (res == Sector::Merge::Unchanged)
-                            Message(msgInfo, "ignored identical data copy of %s", strCHSR(cyl, head, sec, sector.header.sector).c_str());
+                            MessageCPP(msgInfo, "ignoring identical data copy of ", strCHSR(cyl, head, sec, sector.header.sector));
+                        else if (res == Sector::Merge::NewDataOverLimit)
+                            MessageCPP(msgWarning, "ignoring excess data copy of ", strCHSR(cyl, head, sec, sector.header.sector));
                     }
                 }
 

@@ -228,6 +228,7 @@ bool Sector::HasNormalHeaderAndMisreadFromNeighborCyl(const CylHead& cylHead, co
  * - Matched: The new data is not added because it exists but counted in read stats.
  * - Improved: The new data is replacing an old data, counted in read stats.
  * - NewData: The new data is added and all old data is discarded, counted in read stats.
+ * - NewDataOverLimit: The new data could not be added due to copies limit.
  */
 Sector::Merge Sector::add_original(Data&& new_data, bool bad_crc/*=false*/, uint8_t new_dam/*=IBM_DAM*/, int* affected_data_index/*=nullptr*/,
     DataReadStats* improved_data_read_stats/*=nullptr*/)
@@ -371,7 +372,7 @@ Sector::Merge Sector::add_original(Data&& new_data, bool bad_crc/*=false*/, uint
     if (are_copies_full(opt_maxcopies))
     {
         limit_copies(opt_maxcopies);
-        ret = Merge::Unchanged;
+        ret = Merge::NewDataOverLimit;
     }
     else
     {
@@ -413,7 +414,7 @@ Sector::Merge Sector::add(Data&& new_data, bool new_bad_crc/*=false*/, uint8_t n
 void Sector::process_merge_result(const Merge& ret, int new_read_attempts, const DataReadStats& new_data_read_stats,
     bool readstats_counter_mode, int affected_data_index, const DataReadStats& improved_data_read_stats)
 {
-    if (ret == Merge::Unchanged)
+    if (ret == Merge::Unchanged || ret == Merge::NewDataOverLimit)
         return;
     if (ret == Merge::NewData)
     {
@@ -486,7 +487,8 @@ Sector::Merge Sector::merge(Sector&& sector)
                 !sector.is_constant_disk(), false);
         if (add_ret != Merge::Unchanged)
         {   // Set the most important return result.
-            if (ret == Merge::Unchanged || ret == Merge::Matched || (ret == Merge::Improved && add_ret == Merge::NewData))
+            if (ret == Merge::Unchanged || ret == Merge::Matched
+                || (ret == Merge::Improved && (add_ret == Merge::NewData || add_ret == Merge::NewDataOverLimit)))
                 ret = add_ret;
         }
     }

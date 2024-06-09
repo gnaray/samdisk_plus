@@ -50,7 +50,7 @@ typedef VectorX<DataReadStats> DataReadStatsList;
 class Sector
 {
 public:
-    enum class Merge { Unchanged, Matched, Improved, NewData };
+    enum class Merge { Unchanged, Matched, Improved, NewData, NewDataOverLimit };
     // The almost 0 offset value which does not become 0 even when encoding to file.
     static constexpr const int OFFSET_ALMOST_0 = 16;
 

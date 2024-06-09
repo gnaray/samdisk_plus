@@ -687,7 +687,8 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
             const auto had_good_data = it->has_good_data();
             // Merge the two sectors to give the best version.
             const auto merge_status = it->merge(std::move(src_sector_copy));
-            if (merge_status != Sector::Merge::Unchanged)
+            if (merge_status != Sector::Merge::Unchanged
+                && merge_status != Sector::Merge::NewDataOverLimit)
             {
                 changed_amount++;
                 if (merge_status != Sector::Merge::Matched)
