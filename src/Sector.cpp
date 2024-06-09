@@ -471,7 +471,7 @@ Sector::Merge Sector::merge(Sector&& sector)
     }
 
     // We can't repair good data with bad
-    if (!has_baddatacrc() && sector.has_baddatacrc())
+    if (has_data() && !has_baddatacrc() && sector.has_baddatacrc())
     {
         m_read_attempts += sector.m_read_attempts;
         return ret;
