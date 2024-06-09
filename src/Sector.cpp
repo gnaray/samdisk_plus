@@ -645,22 +645,17 @@ void Sector::set_baddatacrc(bool bad/* = true*/)
     m_bad_data_crc = bad;
 
     if (!bad)
-    {   // Convert set of bad data to good data or create new good data.
-        const auto fill_byte = lossless_static_cast<uint8_t>((opt_fill >= 0) ? opt_fill : 0);
-
-        assert(!HasUnknownSize());
-        if (!has_data())
+    {   // Convert set of bad data to good data.
+        if (has_data())
         {
-            m_data.push_back(Data(size(), fill_byte));
-            m_data_read_stats.emplace_back(DataReadStats()); // This is a newly created (not read) data.
-        }
-        else if (copies() > 1)
-        {
-            if (!opt_paranoia)
-                resize_data(1);
+            assert(!HasUnknownSize());
+            if (copies() > 1)
+                if (!opt_paranoia)
+                    resize_data(1);
 
             if (data_size() < size())
             {
+                const auto fill_byte = lossless_static_cast<uint8_t>((opt_fill >= 0) ? opt_fill : 0);
                 const Data pad(size() - data_size(), fill_byte);
                 for (auto& data : m_data)
                     data.insert(data.end(), pad.begin(), pad.end());
