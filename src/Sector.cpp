@@ -724,26 +724,44 @@ void Sector::normalise_datarate(const DataRate& datarate_target)
     }
 }
 
-// The sector and tracklen is from same track, this sector is from another.
-bool Sector::has_same_record_properties(const Sector& other_sector, const int other_tracklen) const
+// This sector is from a track, the otherSector and otherTrackLen is from another same track.
+bool Sector::has_same_record_properties(const int thisTrackLen, const Sector& otherSector, const int otherTrackLen, const bool ignoreOffsets/* = false*/) const
 {
     // Headers must match.
-    if (other_sector.has_badidcrc() || has_badidcrc() || other_sector.header != header)
+    if (otherSector.has_badidcrc() || has_badidcrc() || otherSector.header != header)
         return false;
 
     // Encodings must match.
-    if (other_sector.encoding != encoding)
+    if (otherSector.encoding != encoding)
         return false;
 
     // Datarates must match interchangeably.
-    if (other_sector.datarate != datarate && !are_interchangeably_equal_datarates(other_sector.datarate, datarate))
+    if (otherSector.datarate != datarate && !are_interchangeably_equal_datarates(otherSector.datarate, datarate))
         return false;
+
+    // If this and other tracklen is 0 then the offsets are matching.
+    if (thisTrackLen == 0 && otherTrackLen == 0)
+        return true;
+
+    // If this xor other tracklen is 0 then the offsets are not matching.
+    if (thisTrackLen == 0 || otherTrackLen == 0)
+    {
+        util::cout << "Comparing two sectors while exactly one has 0 tracklen is suspicious!\n";
+        return false;
+    }
+
+    if (ignoreOffsets)
+        return true;
 
     // Offsets must match interchangeably.
     auto offset_normalised = offset;
-    if (other_sector.datarate != datarate && are_interchangeably_equal_datarates(other_sector.datarate, datarate))
-        offset_normalised = convert_offset_by_datarate(offset, datarate, other_sector.datarate);
-    return are_offsets_tolerated_same(offset_normalised, other_sector.offset, encoding, opt_byte_tolerance_of_time, other_tracklen);
+    if (otherSector.datarate != datarate && are_interchangeably_equal_datarates(otherSector.datarate, datarate))
+        offset_normalised = convert_offset_by_datarate(offset, datarate, otherSector.datarate);
+    // Offsets can be compared if normalising this offset from this tracklen to other tracklen.
+    offset_normalised = round_AS<int>(static_cast<double>(offset_normalised) * otherTrackLen / thisTrackLen);
+    return are_offsets_tolerated_same(offset_normalised, otherSector.offset, encoding, opt_byte_tolerance_of_time, otherTrackLen);
+}
+
 bool Sector::CompareHeader(const Sector& sector) const
 {
     return header == sector.header;
@@ -871,10 +889,10 @@ const UniqueSectors UniqueSectors::StableSectors() const
     return stableSectors;
 }
 
-bool UniqueSectors::Contains(const Sector& other_sector, const int other_tracklen) const
+bool UniqueSectors::Contains(const Sector& other_sector, const int other_tracklen, const bool ignoreOffsets/* = false*/) const
 {
     return std::any_of(cbegin(), cend(), [&](const Sector& sectorI) {
-        return sectorI.has_same_record_properties(other_sector, other_tracklen);
+        return sectorI.has_same_record_properties(trackLen, other_sector, other_tracklen, ignoreOffsets);
     });
 }
 

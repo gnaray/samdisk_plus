@@ -119,7 +119,7 @@ public:
     bool is_sector_tolerated_same(const Header& otherHeader, const int otherOffset, const int byte_tolerance_of_time, const int trackLen) const;
     bool is_sector_tolerated_same(const Sector& sector, const int byte_tolerance_of_time, const int trackLen) const;
     void normalise_datarate(const DataRate& datarate_target);
-    bool has_same_record_properties(const Sector& other_sector, const int other_tracklen) const;
+    bool has_same_record_properties(const int thisTrackLen, const Sector& otherSector, const int otherTrackLen, const bool ignoreOffsets = false) const;
     bool CompareHeader(const Sector& sector) const;
     bool CompareHeaderDatarateEncoding(const Sector& sector) const;
     int NextSectorOffsetDistanceMin() const;
@@ -266,7 +266,7 @@ public:
     }
 
     const UniqueSectors StableSectors() const;
-    bool Contains(const Sector& other_sector, const int other_tracklen) const;
+    bool Contains(const Sector& other_sector, const int other_tracklen, const bool ignoreOffsets = false) const;
     bool AnyIdsNotContainedInThis(const Interval<int>& id_interval) const;
     std::string SectorHeaderSectorsToString() const;
     std::string ToString(bool onlyRelevantData = true) const;
