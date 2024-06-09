@@ -1143,12 +1143,10 @@ int main(int argc_, char* argv_[])
     {
         util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
     }
-#ifndef _WIN32
     catch (std::exception & e)
     {
         util::cout << colour::RED << "Error: " << e.what() << colour::none << '\n';
     }
-#endif
 
     if (Options::opt.time)
     {
