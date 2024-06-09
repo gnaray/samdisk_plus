@@ -260,6 +260,11 @@ class UniqueSectors : public std::set<Sector, SectorPreciseLess>
 public:
     using std::set<Sector, SectorPreciseLess>::set;
 
+    UniqueSectors(const int trackLen = 0)
+        : trackLen(trackLen)
+    {
+    }
+
     const UniqueSectors StableSectors() const;
     bool Contains(const Sector& other_sector, const int other_tracklen) const;
     bool AnyIdsNotContainedInThis(const Interval<int>& id_interval) const;
@@ -271,6 +276,8 @@ public:
         ss << sectors.ToString(onlyRelevantData);
         return ss.str();
     }
+
+    int trackLen = 0;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const UniqueSectors& sectors) { return os << sectors.ToString(); }
