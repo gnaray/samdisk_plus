@@ -783,8 +783,10 @@ bool ParseCommandLine(int argc_, char* argv_[])
         case OPT_BYTE_TOLERANCE_OF_TIME:
             // This parameter is used for matching sectors if difference of their time is within this tolerance.
             Options::opt.byte_tolerance_of_time = util::str_value<int>(optarg);
-            if (Options::opt.byte_tolerance_of_time < 0 || Options::opt.byte_tolerance_of_time > 127)
-                throw util::exception("invalid byte-tolerance-of-time '", optarg, "', expected between 0 and 127 inclusive");
+            if (Options::opt.byte_tolerance_of_time < 0)
+                throw util::exception("invalid byte-tolerance-of-time '", optarg, "', expected >= 0");
+            if (Options::opt.byte_tolerance_of_time > 127)
+                MessageCPP(msgWarning, "byte-tolerance-of-time '", optarg, "' is > 127 but the driver will use 127 as its max value");
             break;
 
         case OPT_FDRAW_RESCUE_MODE:
