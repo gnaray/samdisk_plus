@@ -183,6 +183,9 @@ public:
         return SizeCodeToLength(SizeCodeToRealSizeCode(size));
     }
 
+    IdAndOffsetPairs::const_iterator FindSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const;
+    Interval<int> GetOffsetIntervalSuitableForParent(const int trackLen) const;
+    bool IsOffsetSuitableAsParent(const int parentOffset, const int trackLen) const;
     int FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const;
 
     bool IsOrphan() const

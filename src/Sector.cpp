@@ -775,6 +775,34 @@ void Sector::remove_gapdata(bool keep_crc/*=false*/)
     }
 }
 
+// Look for sector id by offset. It means this sector is not orphan.
+IdAndOffsetPairs::const_iterator Sector::FindSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const
+{
+    return sectorIdAndOffsetPairs.FindSectorIdByOffset(offset);
+}
+
+// Return offset interval suitable for parent sector. It means this sector is orphan and its offset is data offset.
+Interval<int> Sector::GetOffsetIntervalSuitableForParent(const int trackLen) const
+{
+    assert(trackLen > 0);
+
+    int min_distance, max_distance;
+    GetSectorIdAndDataOffsetDistanceMinMax(datarate, encoding, min_distance, max_distance);
+    const auto uTrackLen = static_cast<unsigned>(trackLen);
+    const auto dataOffsetMin = modulo(offset - max_distance, uTrackLen);
+    const auto dataOffsetMax = modulo(offset - min_distance, uTrackLen);
+    const Interval<int> dataOffsetInterval(dataOffsetMin, dataOffsetMax, BaseInterval::ConstructMode::StartAndEnd);
+    return dataOffsetInterval;
+}
+
+// Check if parent sector is suitable by offset. It means this sector is orphan and its offset is data offset.
+bool Sector::IsOffsetSuitableAsParent(const int parentOffset, const int trackLen) const
+{
+    assert(trackLen > 0);
+
+    return GetOffsetIntervalSuitableForParent(trackLen).Where(parentOffset) == BaseInterval::Location::Within;
+}
+
 // Looking for parent sector id by offset. It means this sector is orphan and its offset is data offset.
 int Sector::FindParentSectorIdByOffset(const IdAndOffsetPairs& sectorIdAndOffsetPairs) const
 {
