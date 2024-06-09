@@ -654,6 +654,7 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
 }
 
 // Attempt to repair a track, given another copy of the same track.
+// Currently this method ignores offsets.
 int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const UniqueSectors &ignored_sectors/*=UniqueSectors{}*/)
 {
     int changed_amount = 0;
@@ -662,7 +663,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
     for (auto& src_sector : src_track)
     {
         // Skip source sector if specified as ignored sector.
-        if (ignored_sectors.Contains(src_sector, track.tracklen))
+        if (ignored_sectors.Contains(src_sector, src_track.tracklen, true)) // (no offset check).
             continue;
 
         // Skip repeated source sectors, as the data source is ambiguous.
@@ -675,7 +676,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
         if (!track.empty())
             src_sector_copy.normalise_datarate(track[0].datarate);
 
-        // Find a target sector with the same CHRN, datarate, and encoding.
+        // Find a target sector with the same CHRN, datarate, and encoding (no offset check).
         auto it = track.find(src_sector_copy.header, src_sector_copy.datarate, src_sector_copy.encoding);
         if (it != track.end())
         {

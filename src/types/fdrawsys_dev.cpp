@@ -26,6 +26,7 @@ static auto& opt_fdraw_rescue_mode = getOpt<bool>("fdraw_rescue_mode");
 static auto& opt_gaps = getOpt<int>("gaps");
 static auto& opt_newdrive = getOpt<int>("newdrive");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
+static auto& opt_repair = getOpt<int>("repair");
 static auto& opt_rescans = getOpt<RetryPolicy>("rescans");
 static auto& opt_retries = getOpt<RetryPolicy>("retries");
 static auto& opt_sectors = getOpt<long>("sectors");
@@ -780,7 +781,7 @@ void FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTr
     auto& track = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack;
     const auto sectorFilterPredicate = [&deviceReadingPolicy, &track, normal_sector_id_begin, normal_sector_id_end](const Sector& sector)
     {
-        return !deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen)
+        return !deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen, opt_repair > 0)
                 && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end));
     };
     const auto iSup = track.size();
