@@ -39,6 +39,7 @@ Sector Sector::CopyWithoutData(bool keepReadAttempts/* = true*/) const
     thisWritable.m_data = std::move(dataTmp);
     thisWritable.m_data_read_stats = std::move(dataReadStatsTmp);
 
+    sector.set_baddatacrc(false); // No data is copied thus the datacrc must be the default (good) also.
     if (!keepReadAttempts)
         sector.m_read_attempts = 0;
 
