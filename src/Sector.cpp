@@ -250,8 +250,8 @@ Sector::Merge Sector::add_original(Data&& new_data, bool bad_crc/*=false*/, uint
         crc.add(new_dam);
         auto bad_data_crc = crc.add(new_data.data(), size() + 2) != 0;
         if (bad_crc != bad_data_crc)
-             util::cout << std::boolalpha << "Debug assert failed: New sector data has " << bad_crc
-                << " CRC and shortening it to expected sector size it has " << bad_data_crc << " CRC\n";
+             util::cout << "Debug assert failed: New sector data has " << (bad_crc ? "bad" : "good")
+                << " CRC and shortening it to expected sector size it has " << (bad_data_crc ? "bad" : "good") << " CRC\n";
     }
 #endif
 
