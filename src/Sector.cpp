@@ -206,8 +206,8 @@ bool Sector::has_stable_data(bool consider_checksummable_8K/* = false*/) const
     // Backward compatibility: if no paranoia then good data is also stable data.
     if (!opt_paranoia || !result)
         return result;
-    const auto read_count = data_best_copy_read_stats().ReadCount();
-    return read_count >= opt_stability_level;
+    const auto read_stats = data_best_copy_read_stats();
+    return read_stats.IsStable();
 }
 
 int Sector::GetGoodDataCopyStabilityScore(int instance) const
