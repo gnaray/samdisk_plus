@@ -769,7 +769,7 @@ bool ParseCommandLine(int argc_, char* argv_[])
             else
                 Options::opt.detect_devfs = DETECT_FS_AUTO;
             if (!fileSystemWrappers.IsValidFSName(Options::opt.detect_devfs))
-                throw util::exception("invalid detect-devfs value, it must be auto or the name of one of the supported filesystems");
+                throw util::exception("invalid detect-devfs '", optarg, "', it must be auto or the name of one of the supported filesystems");
             break;
 
         case OPT_PARANOIA:
