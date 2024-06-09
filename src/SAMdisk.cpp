@@ -728,7 +728,7 @@ bool ParseCommandLine(int argc_, char* argv_[])
             else
                 Options::opt.debug = 1;
             if (Options::opt.debug < 0)
-                throw util::exception("invalid debug level, expected >= 0");
+                throw util::exception("invalid debug level '", optarg, "', expected >= 0");
             break;
 
         case OPT_VERSION:
