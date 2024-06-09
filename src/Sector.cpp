@@ -916,6 +916,16 @@ bool UniqueSectors::AnyIdsNotContainedInThis(const Interval<int>& id_interval) c
     return false;
 }
 
+UniqueSectors::const_iterator UniqueSectors::FindToleratedSameSector(const Sector& sector,
+    const int byte_tolerance_of_time, const int trackLen) const
+{
+    const auto itEnd = cend();
+    for (auto it = cbegin(); it != itEnd; it++)
+        if (sector.is_sector_tolerated_same(*it, byte_tolerance_of_time, trackLen))
+            return it;
+    return itEnd;
+}
+
 std::string UniqueSectors::SectorHeaderSectorsToString() const
 {
     std::ostringstream ss;
