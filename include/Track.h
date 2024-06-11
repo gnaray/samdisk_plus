@@ -95,6 +95,7 @@ public:
 
     static int findMostPopularToleratedDiff(VectorX<int>& diffs, const Encoding& encoding);
     std::map<int, int> FindMatchingSectors(const Track& otherTrack, const RepeatedSectors& repeatedSectorIds) const;
+    bool DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds);
     bool DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeatedSectorIds);
 
     bool findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const;
@@ -102,7 +103,6 @@ public:
     int determineBestTrackLen(const int timedTrackLen) const;
     void setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen);
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;
-    bool DiscoverTrackSectorScheme();
 
     Track& format(const CylHead& cylhead, const Format& format);
     Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);
