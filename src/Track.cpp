@@ -264,7 +264,7 @@ bool Track::has_any_good_data() const
 
 const UniqueSectors Track::good_idcrc_sectors() const
 {
-    UniqueSectors good_idcrc_sectors;
+    UniqueSectors good_idcrc_sectors(tracklen);
     std::copy_if(begin(), end(), std::inserter(good_idcrc_sectors, good_idcrc_sectors.end()), [&](const Sector& sector) {
         return !sector.has_badidcrc();
     });
@@ -287,7 +287,7 @@ const Sectors Track::good_sectors() const
 
 const UniqueSectors Track::stable_sectors() const
 {
-    UniqueSectors stable_sectors;
+    UniqueSectors stable_sectors(tracklen);
     std::copy_if(begin(), end(), std::inserter(stable_sectors, stable_sectors.end()), [&](const Sector& sector) {
         if (sector.has_badidcrc())
             return false;
