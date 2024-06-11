@@ -173,6 +173,7 @@ public:
     int tracklen = 0;   // track length in MFM bits
     int tracktime = 0;  // track time in us
     IdAndOffsetPairs idAndOffsetPairs{};
+    IdOffsetDistanceInfo idOffsetDistanceInfo{};
 
 private:
     Sectors m_sectors{};
