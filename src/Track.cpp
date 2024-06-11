@@ -4,6 +4,7 @@
 //#include "DiskUtil.h"
 #include "IBMPCBase.h"
 #include "Util.h"
+#include "RingedInt.h"
 
 #include <algorithm>
 #include <cmath>
@@ -570,6 +571,133 @@ std::map<int, int> Track::FindMatchingSectors(const Track& otherTrack, const Rep
             result.emplace(i, it - otherTrack.begin());
     }
     return result;
+}
+
+/*
+ * Return empty result if different sized sectors are found or there are less
+ * than 2 not orphan sectors.
+ * The track must be single and not orphan data, it can have orphans.
+ */
+bool Track::DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeatedSectorIds)
+{
+    if (!opt_normal_disk)
+        return false;
+    if (!idOffsetDistanceInfo.IsEmpty())
+        return true;
+    if (size() < 2)
+        return false;
+    assert(tracklen > 0);
+
+    const auto& encoding = getEncoding();
+    auto predictedOverheadedSectorWithGap3WithDataBitsMin = 0;
+    auto predictedOverheadedSectorWithGap3WithDataBitsMax = 0;
+
+    VectorX<std::pair<int, double>> offsetDistances; // Sector index and offset distance to next per sector.
+    // Determine the uniform offset distance by averaging neighbour sector distances and dropping the worst distance.
+    auto firstNotOrphanSectorIndex = -1;
+    auto firstNotOrphanSectorSize = 0;
+    const auto repeatedSectorIdsEnd = repeatedSectorIds.end();
+    const auto iSup = size();
+    RingedInt iNext(0, iSup);
+    for (auto i = 0; i < iSup; )
+    {
+        const auto& currentSector = operator[](i);
+        if (currentSector.IsOrphan() || repeatedSectorIds.find(currentSector.header.sector) != repeatedSectorIdsEnd)
+        {
+            i++;
+            continue;
+        }
+        assert(!currentSector.HasUnknownSize());
+        if (firstNotOrphanSectorIndex < 0)
+        {
+            firstNotOrphanSectorIndex = i;
+            firstNotOrphanSectorSize = currentSector.size();
+            predictedOverheadedSectorWithGap3WithDataBitsMin = DataBytePositionAsBitOffset(
+                GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding, firstNotOrphanSectorSize, true), encoding);
+            predictedOverheadedSectorWithGap3WithDataBitsMax = DataBytePositionAsBitOffset(
+                GetFmOrMfmSectorOverheadWithGap3(getDataRate(), encoding, firstNotOrphanSectorSize), encoding);
+        }
+        else if (currentSector.size() != firstNotOrphanSectorSize) // Only same sized sectors are supported.
+        {
+            MessageCPP(msgWarningAlways, "Different sized sectors (", operator[](firstNotOrphanSectorIndex),
+                ") and (", currentSector, ") are invalid in normal disk mode, sizes (",
+                firstNotOrphanSectorSize, ", ", currentSector.size(),
+                "), skipping determining id offset distance");
+            return false;
+        }
+
+        iNext = i;
+        while (operator[]((++iNext).Value()).IsOrphan()) ;
+        if (iNext == i)
+            break; // There is only 1 not orphan, can not calculate offset difference.
+        const auto& nextSector = operator[](iNext.Value());
+        if (repeatedSectorIds.find(nextSector.header.sector) != repeatedSectorIdsEnd)
+        {
+            i++;
+            continue;
+        }
+        const double wrappedOffsetDiff = currentSector.OffsetDistanceFromThisTo(nextSector, tracklen);
+        // The range between current and next sectors is examined.
+        const int betweenSectors = round_AS<int>(ChooseCloserToInteger(
+            wrappedOffsetDiff / predictedOverheadedSectorWithGap3WithDataBitsMin,
+            wrappedOffsetDiff / predictedOverheadedSectorWithGap3WithDataBitsMax));
+        if (betweenSectors == 0) // The two sectors are too close to each other, it is an error in normal disk mode.
+        {
+            MessageCPP(msgWarningAlways, "Too close sectors (", currentSector,
+                ") (", nextSector, ") are invalid in normal disk mode, offsets (",
+                currentSector.offset, ", ", nextSector.offset,
+                "), omitting former sector from determining id offset distance");
+            idOffsetDistanceInfo.ignoredIds.emplace(i);
+        }
+        else
+            offsetDistances.emplace_back(i, wrappedOffsetDiff / betweenSectors);
+        if (iNext <= i)
+            break; // Wrapped, loop end.
+        i = iNext.Value();
+    }
+    if (offsetDistances.empty())
+        return false;
+    if (offsetDistances.size() == 1)
+    {
+        idOffsetDistanceInfo.offsetDistanceAverage = offsetDistances[0].second;
+        idOffsetDistanceInfo.offsetDistanceMin = idOffsetDistanceInfo.offsetDistanceAverage;
+        idOffsetDistanceInfo.offsetDistanceMax = idOffsetDistanceInfo.offsetDistanceAverage;
+        return true;
+    }
+    auto averageOffsetDistance = Average<std::pair<int, double>, double>(
+        offsetDistances, [](const std::pair<int, double>& element) { return element.second; });
+    do
+    {
+        std::sort(offsetDistances.begin(), offsetDistances.end(),
+            [averageOffsetDistance](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+            return std::abs(a.second - averageOffsetDistance) < std::abs(b.second - averageOffsetDistance);
+        });
+        const auto offsetDistanceMinMaxIt = std::minmax_element(
+            offsetDistances.begin(), offsetDistances.end(),
+            [averageOffsetDistance](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+            return a.second < b.second;
+        });
+        const auto offsetDistanceMin = offsetDistanceMinMaxIt.first->second;
+        const auto offsetDistanceMax = offsetDistanceMinMaxIt.second->second;
+        // If the (max - average - (average - min)) / (max - min) is greater than 0.01 then count again without max element.
+        const auto allowedOffsetDistanceMax = tolerated_offset_distance(encoding, opt_byte_tolerance_of_time);
+        const auto variance = std::abs(offsetDistanceMin + offsetDistanceMax - 2 * averageOffsetDistance) / allowedOffsetDistanceMax;
+        if (variance <= 0.1) // Experimental value.
+            break;
+        idOffsetDistanceInfo.notAverageFarFromNextIds.emplace(offsetDistances.back().first);
+        const auto offsetDistanceSize = offsetDistances.size();
+        averageOffsetDistance = (averageOffsetDistance * offsetDistanceSize - offsetDistances.back().second) / (offsetDistanceSize - 1);
+        offsetDistances.erase(offsetDistances.end() - 1);
+    } while (true);
+    const auto offsetDistanceMinMaxIt = std::minmax_element(
+        offsetDistances.begin(), offsetDistances.end(),
+        [averageOffsetDistance](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+        return a.second < b.second;
+    });
+    idOffsetDistanceInfo.offsetDistanceMin = offsetDistanceMinMaxIt.first->second;
+    idOffsetDistanceInfo.offsetDistanceMax = offsetDistanceMinMaxIt.second->second;
+    idOffsetDistanceInfo.offsetDistanceAverage = averageOffsetDistance;
+    return true;
 }
 
 bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const

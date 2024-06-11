@@ -95,6 +95,7 @@ public:
 
     static int findMostPopularToleratedDiff(VectorX<int>& diffs, const Encoding& encoding);
     std::map<int, int> FindMatchingSectors(const Track& otherTrack, const RepeatedSectors& repeatedSectorIds) const;
+    bool DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeatedSectorIds);
 
     bool findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const;
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
