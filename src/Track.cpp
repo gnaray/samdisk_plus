@@ -874,18 +874,6 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
     return trackLenBest;
 }
 
-void Track::setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen)
-{
-    assert(tracklen > 0);
-    if (tracklen == trackLen)
-        return;
-    const double rate = static_cast<double>(trackLen) / tracklen;
-    for (auto& sector : m_sectors)
-        sector.offset = round_AS<int>(sector.offset * rate);
-    tracklen = trackLen;
-    if (!empty())
-        tracktime = getTimeOfOffset(tracklen);
-}
 
 int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 {

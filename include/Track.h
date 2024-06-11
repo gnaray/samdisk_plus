@@ -100,7 +100,6 @@ public:
     void CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) const;
 
     int determineBestTrackLen(const int timedTrackLen) const;
-    void setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen);
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;
 
     Track& format(const CylHead& cylhead, const Format& format);
