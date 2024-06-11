@@ -800,6 +800,39 @@ bool Track::DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeated
     return true;
 }
 
+// Track can have orphans.
+void Track::CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) const
+{
+    if (size() < 2)
+        return;
+    assert(tracklen > 0);
+
+    const auto iSup = size();
+    const auto iMax = iSup - 1;
+    for (auto i = 0; i < iMax; i++)
+    {
+        const auto& sector = operator[](i);
+        if (sector.IsOrphan())
+            continue;
+        if (repeatedSectorIds.find(sector.header.sector) != repeatedSectorIds.end())
+            continue;
+        for (auto j = i + 1; j < iSup; j++)
+        {
+            auto& otherSector = operator[](j);
+            if (otherSector.IsOrphan())
+                continue;
+            if (sector.CompareHeader(otherSector))
+            {
+                repeatedSectorIds.emplace(std::make_pair(sector.header.sector, VectorX<int>{sector.offset, otherSector.offset}));
+                MessageCPP(msgWarningAlways, "Repeated sectors (", sector,
+                    ") at offsets (", sector.offset , ", ", otherSector.offset,
+                    ") are problematic");
+                break; // TODO More than 1 repeation is not supported currently.
+            }
+        }
+    }
+}
+
 bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const
 {
     if (referenceTrack.empty() || empty())

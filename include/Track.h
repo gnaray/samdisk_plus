@@ -97,6 +97,7 @@ public:
     std::map<int, int> FindMatchingSectors(const Track& otherTrack, const RepeatedSectors& repeatedSectorIds) const;
     bool DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds);
     bool DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeatedSectorIds);
+    void CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) const;
 
     bool findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const;
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
