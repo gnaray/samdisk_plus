@@ -1003,7 +1003,7 @@ Sectors::const_iterator Track::findSectorForDataFmOrMfm(const int dataOffset, co
     // Find a sector close enough to the data offset to be the same one.
     for (auto it = begin() ; it != itEnd; it++)
     {
-        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(it->offset, dataOffset, dataRate, encoding);
+        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(it->offset, dataOffset, dataRate, encoding, tracklen);
         if (cohereResult == CohereResult::DataTooEarly)
             break;
         else if (cohereResult == CohereResult::DataTooLate)
