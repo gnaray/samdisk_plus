@@ -547,6 +547,31 @@ void Track::setTrackTime(const int trackTime)
     return it->second;
 }
 
+// This track and otherTrack can be single or multi and must not be orphan data, they can have orphans.
+std::map<int, int> Track::FindMatchingSectors(const Track& otherTrack, const RepeatedSectors& repeatedSectorIds) const
+{
+    std::map<int, int> result{};
+    if (otherTrack.empty() || empty())
+        return result;
+
+    // Find the first pair of matching sectors.
+    const auto trackEnd = otherTrack.end();
+    const auto repeatedSectorIdsEnd = repeatedSectorIds.end();
+    const auto iSup = size();
+    for (auto i = 0; i < iSup; i++)
+    {
+        const auto& sector = operator[](i);
+        if (sector.IsOrphan())
+            continue;
+        if (repeatedSectorIds.find(sector.header.sector) != repeatedSectorIdsEnd)
+            continue;
+        const auto it = otherTrack.find(sector.header);
+        if (it != trackEnd)
+            result.emplace(i, it - otherTrack.begin());
+    }
+    return result;
+}
+
 bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const
 {
     if (referenceTrack.empty() || empty())
