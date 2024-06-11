@@ -99,7 +99,6 @@ public:
     bool DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeatedSectorIds);
     void CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) const;
 
-    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
     int determineBestTrackLen(const int timedTrackLen) const;
     void setTrackLenAndNormaliseTrackTimeAndSectorOffsets(const int trackLen);
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;

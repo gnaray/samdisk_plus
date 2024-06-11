@@ -832,34 +832,6 @@ void Track::CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) con
     }
 }
 
-void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly)
-{
-    assert(trackLenSingle > 0 && tracklen > 0 && syncOffset < tracklen);
-
-    auto sectorsEarlier = std::move(m_sectors);
-    m_sectors.clear();
-    const auto trackLenMulti = tracklen;
-    tracklen = trackLenSingle;
-    tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / trackLenMulti);
-    for (auto& sectorEarlier : sectorsEarlier)
-    {
-        const auto offsetEarlier = sectorEarlier.offset;
-        sectorEarlier.offset = modulo(offsetEarlier - syncOffset, static_cast<unsigned>(trackLenSingle));
-        if (sectorEarlier.offset == 0) // Offset must not be 0.
-            sectorEarlier.offset++;
-
-        int affectedSectorIndex;
-        const auto addResult = add(std::move(sectorEarlier), &affectedSectorIndex);
-        if (addResult == Track::AddResult::Append || addResult == Track::AddResult::Insert)
-        {
-            if (!syncOnly)
-                operator[](affectedSectorIndex).revolution = offsetEarlier / trackLenSingle;
-        }
-    }
-    std::sort(begin(), end(),
-              [](const Sector& s1, const Sector& s2) { return s1.offset < s2.offset; });
-}
-
 // Determine best track length. This method is for multi revolution track.
 int Track::determineBestTrackLen(const int timedTrackLen) const
 {
