@@ -366,6 +366,25 @@ void Track::add(Sectors&& sectors, const std::function<bool (const Sector &)>& s
     }
 }
 
+Track::AddResult Track::merge(Sector&& sector, const Sectors::iterator& it)
+{
+    if (getDataRate() != sector.datarate)
+        throw util::exception("can't mix datarates on a track");
+    auto result = AddResult::Merge;
+    // Merge details with the existing sector
+    const auto ret = it->merge(std::move(sector));
+    if (ret == Sector::Merge::Unchanged || ret == Sector::Merge::Matched // Matched for backward compatibility.
+        || ret == Sector::Merge::NewDataOverLimit)
+        result = AddResult::Unchanged;
+    else
+    {
+        // Limit the number of data copies kept for each sector.
+        if (data_overlap(*it) && !is_8k_sector())
+            it->limit_copies(1);
+    }
+    return result;
+}
+
 /* If dryrun is true then one of {Append, Insert, Merge} is returned and sector
  * is unchanged.
  * If dryrun is false then one of {Append, Insert, Merge, Unchanged} is
@@ -488,6 +507,20 @@ int Track::getOffsetOfTime(const int time) const
     assert(!empty());
 
     return GetFmOrMfmTimeBitsAsRounded(getDataRate(), time); // mfmbits (rawbits)
+}
+
+void Track::setTrackLen(const int trackLen)
+{
+    tracklen = trackLen;
+    if (!empty())
+        tracktime = getTimeOfOffset(trackLen);
+}
+
+void Track::setTrackTime(const int trackTime)
+{
+    tracktime = trackTime;
+    if (!empty())
+        tracklen = getOffsetOfTime(trackTime);
 }
 
 /*static*/ int Track::findMostPopularToleratedDiff(VectorX<int> &diffs, const Encoding& encoding)
@@ -815,6 +848,13 @@ Sectors::const_iterator Track::find(const Header& header, const int offset) cons
     return std::find_if(begin(), end(), [&](const Sector& s) {
         return offset == s.offset && header == s.header;
         });
+}
+
+Sectors::const_iterator Track::findToleratedSame(const Header& header, const int offset, int tracklen) const
+{
+    return std::find_if(begin(), end(), [&](const Sector& s) {
+        return s.is_sector_tolerated_same(header, offset, opt_byte_tolerance_of_time, tracklen);
+    });
 }
 
 Sectors::const_iterator Track::findFirstFromOffset(const int offset) const

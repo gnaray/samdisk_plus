@@ -75,6 +75,7 @@ public:
     void clear();
     void add(Track&& track);
     void add(Sectors&& sectors, const std::function<bool (const Sector &)>& sectorFilterPredicate = nullptr);
+    AddResult merge(Sector&& sector, const Sectors::iterator& it);
     AddResult add(Sector&& sector, int* affectedSectorIndex = nullptr, bool dryrun = false);
     void insert(int index, Sector&& sector);
     Sector remove(int index);
@@ -84,6 +85,13 @@ public:
     Encoding getEncoding() const;
     int getTimeOfOffset(const int offset) const;
     int getOffsetOfTime(const int time) const;
+    void setTrackLen(const int trackLen);
+    void setTrackTime(const int trackTime);
+    inline int OffsetDistanceFromTo(const int indexFrom, const int indexTo) const
+    {
+        assert(tracklen > 0);
+        return m_sectors[indexFrom].OffsetDistanceFromThisTo(m_sectors[indexTo], tracklen);
+    }
 
     static int findMostPopularToleratedDiff(VectorX<int>& diffs, const Encoding& encoding);
 
@@ -121,6 +129,11 @@ public:
         auto it = static_cast<const Track&>(*this).find(header, offset);
         return m_sectors.erase(it, it);
     }
+    Sectors::iterator findToleratedSame(const Header& header, const int offset, int tracklen)
+    {
+        auto it = static_cast<const Track&>(*this).findToleratedSame(header, offset, tracklen);
+        return m_sectors.erase(it, it);
+    }
     Sectors::iterator findFirstFromOffset(const int offset)
     {
         auto it = static_cast<const Track&>(*this).findFirstFromOffset(offset);
@@ -150,6 +163,7 @@ public:
     Sectors::const_iterator find(const Header& header) const;
     Sectors::const_iterator findNext(const Header& header, const Sectors::const_iterator& itPrev) const;
     Sectors::const_iterator find(const Header& header, const int offset) const;
+    Sectors::const_iterator findToleratedSame(const Header& header, const int offset, int tracklen) const;
     Sectors::const_iterator findFirstFromOffset(const int offset) const;
     Sectors::const_iterator findIgnoringSize(const Header& header) const;
     Sectors::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
