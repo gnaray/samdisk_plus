@@ -450,7 +450,7 @@ void Track::insert(int index, Sector&& sector)
 {
     assert(index <= size());
 
-    if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
+    if (!m_sectors.empty() && getDataRate() != sector.datarate)
         throw util::exception("can't mix datarates on a track");
 
     auto it = m_sectors.begin() + index;
