@@ -349,13 +349,14 @@ void Track::clear()
 
 void Track::add(Track&& track)
 {
-    // Ignore if no sectors to add
-    if (!track.sectors().size())
-        return;
-
+    // Setting tracklen and tracktime even if track is empty. It does not hurt and more reasonable.
     // Use longest track length and time
     tracklen = std::max(tracklen, track.tracklen);
     tracktime = std::max(tracktime, track.tracktime);
+
+    // Ignore if no sectors to add
+    if (track.empty())
+        return;
 
     add(std::move(track.sectors()));
 }
