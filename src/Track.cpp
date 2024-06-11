@@ -448,7 +448,7 @@ Track::AddResult Track::add(Sector&& sector, int* affectedSectorIndex/* = nullpt
 
 void Track::insert(int index, Sector&& sector)
 {
-    assert(index <= m_sectors.size());
+    assert(index <= size());
 
     if (!m_sectors.empty() && m_sectors[0].datarate != sector.datarate)
         throw util::exception("can't mix datarates on a track");
@@ -459,7 +459,7 @@ void Track::insert(int index, Sector&& sector)
 
 Sector Track::remove(int index)
 {
-    assert(index < m_sectors.size());
+    assert(index < size());
 
     auto it = m_sectors.begin() + index;
     auto sector = std::move(*it);
