@@ -227,9 +227,7 @@ bool Track::is_repeated(const Sector& sector) const
     for (const auto& s : m_sectors)
     {
         // Check for data rate, encoding, and CHRN match
-        if (s.datarate == sector.datarate &&
-            s.encoding == sector.encoding &&
-            s.header == sector.header)
+        if (s.CompareHeaderDatarateEncoding(sector))
         {
             // Stop if we see more than one match.
             if (++count > 1)
