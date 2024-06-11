@@ -62,6 +62,7 @@ public:
     Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);
 
     Sectors::reverse_iterator rbegin() { return m_sectors.rbegin(); }
+    Sectors::reverse_iterator rend() { return m_sectors.rend(); }
     Sectors::iterator begin() { return m_sectors.begin(); }
     Sectors::iterator end() { return m_sectors.end(); }
     Sectors::iterator find(const Sector& sector)
@@ -106,6 +107,7 @@ public:
     }
 
     Sectors::const_reverse_iterator rbegin() const { return m_sectors.rbegin(); }
+    Sectors::const_reverse_iterator rend() const { return m_sectors.rend(); }
     Sectors::const_iterator begin() const { return m_sectors.begin(); }
     Sectors::const_iterator end() const { return m_sectors.end(); }
     Sectors::const_iterator find(const Sector& sector) const;
