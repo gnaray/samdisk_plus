@@ -14,6 +14,34 @@ static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_debug = getOpt<int>("debug");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
+
+
+std::shared_ptr<const VectorX<int>> RepeatedSectors::FindOffsetsById(const int sectorId) const
+{
+    const auto it = find(sectorId);
+    if (it == end())
+        return nullptr;
+    return std::make_shared<const VectorX<int>>(it->second);
+}
+
+std::shared_ptr<int> RepeatedSectors::FindToleratedOffsetsById(const int sectorId, const int offset,
+    const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen) const
+{
+    const auto it = FindOffsetsById(sectorId);
+    if (it == nullptr)
+        return nullptr;
+    const auto& offsets = *it;
+    const auto iSup = offsets.size();
+    for (auto i = 0; i < iSup; i++)
+    {
+        if (are_offsets_tolerated_same(offset, offsets[i], encoding, byte_tolerance_of_time, trackLen))
+            return std::make_shared<int>(offsets[i]);
+    }
+    return nullptr;
+}
+
+
+
 Track::Track(int num_sectors/*=0*/)
 {
     m_sectors.reserve(num_sectors);

@@ -3,6 +3,42 @@
 #include "Sector.h"
 #include "Format.h"
 
+#include <map>
+
+struct SectorIndexWithSectorIdAndOffset
+{
+    int sectorIndex = -1;
+    int sectorId = -1;
+    int offset = -1;
+};
+
+class RepeatedSectors : public std::map<int, VectorX<int>>
+{
+public:
+    std::shared_ptr<const VectorX<int>> FindOffsetsById(const int sectorId) const;
+    std::shared_ptr<int> FindToleratedOffsetsById(const int sectorId, const int offset,
+        const Encoding& encoding, const int byte_tolerance_of_time, const int trackLen) const;
+};
+
+struct IdOffsetDistanceInfo
+{
+    double offsetDistanceMin = 0;
+    double offsetDistanceAverage = 0;
+    double offsetDistanceMax = 0;
+    std::set<int> ignoredIds{};
+    std::set<int> notAverageFarFromNextIds{};
+
+    inline bool IsEmpty() const
+    {
+        return offsetDistanceAverage == 0;
+    }
+
+    inline void Reset()
+    {
+        *this = std::move(IdOffsetDistanceInfo());
+    }
+};
+
 class Track
 {
 public:
