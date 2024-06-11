@@ -441,23 +441,9 @@ Track::AddResult Track::add(Sector&& sector, int* affectedSectorIndex/* = nullpt
         return AddResult::Insert;
     }
 
-    auto result = AddResult::Merge;
     if (affectedSectorIndex != nullptr)
         *affectedSectorIndex = static_cast<int>(it - begin());
-    if (!dryrun)
-    {
-        // Merge details with the existing sector
-        auto ret = it->merge(std::move(sector));
-        if (ret == Sector::Merge::Unchanged || ret == Sector::Merge::Matched) // Matched for backward compatibility.
-            result = AddResult::Unchanged;
-        else
-        {
-            // Limit the number of data copies kept for each sector.
-            if (data_overlap(*it) && !is_8k_sector())
-                it->limit_copies(1);
-        }
-    }
-    return result;
+    return !dryrun ? merge(std::move(sector), it) : AddResult::Merge;
 }
 
 void Track::insert(int index, Sector&& sector)
