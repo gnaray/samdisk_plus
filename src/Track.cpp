@@ -140,17 +140,29 @@ int Track::index_of(const Sector& sector) const
 /* The data extent bits of a sector are the bits between offset of next sector
  * (if exists otherwise tracklen + offset of first sector) and offset of this
  * sector.
+ * The sector must not be orphan and must exist in this track.
  */
 int Track::data_extent_bits(const Sector& sector) const
 {
+    assert(!sector.IsOrphan());
     auto it = find(sector);
     assert(it != end());
 
     auto revolution_time_ms = (sector.datarate == DataRate::_300K) ? RPM_TIME_360 : RPM_TIME_300; // time / rotation.
     auto track_len = tracklen ? tracklen : GetTrackCapacity(revolution_time_ms, sector.datarate, sector.encoding);
 
-    // Approximate bit distance to next ID header.
-    auto gap_bits = ((std::next(it) != end()) ? std::next(it)->offset : (track_len + begin()->offset)) - sector.offset;
+    // Approximate bit distance to next (not orphan) ID header.
+    auto gap_bits = 0;
+    do
+    {
+        if (++it == end())
+        {
+            it = begin();
+            gap_bits += track_len;
+        }
+    } while (it->IsOrphan());
+
+    gap_bits += it->offset - sector.offset;
     return gap_bits;
 }
 
