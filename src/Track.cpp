@@ -832,30 +832,6 @@ void Track::CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) con
     }
 }
 
-bool Track::findSyncOffsetComparedTo(const Track& referenceTrack, int& syncOffset) const
-{
-    if (referenceTrack.empty() || empty())
-        return false;
-    assert(referenceTrack.getEncoding() == getEncoding());
-
-    // Find the best sync (offset diff).
-    VectorX<int> offsetDiffs;
-    const auto trackEnd = end();
-    for (auto& s : referenceTrack.sectors())
-    {
-        auto it = find(s.header);
-        while (it != trackEnd)
-        {
-            offsetDiffs.push_back(it->offset - s.offset);
-            it = findNext(s.header, it);
-        }
-    }
-    if (offsetDiffs.empty())
-        return false;
-    syncOffset = findMostPopularToleratedDiff(offsetDiffs, getEncoding());
-    return true;
-}
-
 void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly)
 {
     assert(trackLenSingle > 0 && tracklen > 0 && syncOffset < tracklen);
