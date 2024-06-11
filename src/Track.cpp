@@ -917,7 +917,7 @@ Track& Track::format(const CylHead& cylhead, const Format& fmt)
 }
 
 // The track must not be orphan data track.
-Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterator itEnd)
+Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterator itEnd, const bool signIncompleteData/* = false*/)
 {
     assert(std::distance(it, itEnd) >= 0);
 
@@ -930,9 +930,18 @@ Data::const_iterator Track::populate(Data::const_iterator it, Data::const_iterat
     {
         assert(sector->copies() == 1);
         assert(!sector->HasUnknownSize());
-        auto bytes = std::min(sector->size(), static_cast<int>(std::distance(it, itEnd)));
-        std::copy_n(it, bytes, sector->data_copy(0).begin());
-        it += bytes;
+        const auto remainingBytes = static_cast<int>(std::distance(it, itEnd));
+        if (remainingBytes > 0)
+        {
+            const auto sectorSize = sector->size();
+            const auto bytes = std::min(sectorSize, remainingBytes);
+            std::copy_n(it, bytes, sector->data_copy(0).begin());
+            it += bytes;
+            if (signIncompleteData && remainingBytes < sectorSize)
+                sector->set_baddatacrc();
+        }
+        else if (signIncompleteData)
+            sector->remove_data();
     }
 
     return it;

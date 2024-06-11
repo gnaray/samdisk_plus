@@ -104,7 +104,7 @@ public:
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;
 
     Track& format(const CylHead& cylhead, const Format& format);
-    Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd);
+    Data::const_iterator populate(Data::const_iterator it, Data::const_iterator itEnd, const bool signIncompleteData = false);
 
     Sectors::reverse_iterator rbegin() { return m_sectors.rbegin(); }
     Sectors::reverse_iterator rend() { return m_sectors.rend(); }
