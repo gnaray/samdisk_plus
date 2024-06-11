@@ -532,14 +532,13 @@ void Track::setTrackTime(const int trackTime)
     typedef std::pair<int, int> ParticipantsAndAverage;
     VectorX<ParticipantsAndAverage> participantsAndAveragedOffsetDiffs;
     const auto diffsEnd = diffs.end();
-    for (auto it = diffs.begin(); it != diffsEnd; it++)
+    for (auto it = diffs.begin(); it != diffsEnd; )
     {
         const auto it0 = it;
-        auto s = *(it++);
+        auto diffSum = *(it++);
         while (it != diffsEnd && *it < *it0 + DataBytePositionAsBitOffset(Track::COMPARE_TOLERANCE_BYTES, encoding))
-            s += *(it++);
-        participantsAndAveragedOffsetDiffs.push_back(std::make_pair(it - it0, s / (it - it0)));
-        it--;
+            diffSum += *(it++);
+        participantsAndAveragedOffsetDiffs.push_back(std::make_pair(it - it0, diffSum / (it - it0)));
     }
     const auto it = std::max_element(participantsAndAveragedOffsetDiffs.begin(), participantsAndAveragedOffsetDiffs.end(),
                                      [] (const ParticipantsAndAverage &a, const ParticipantsAndAverage &b) {
