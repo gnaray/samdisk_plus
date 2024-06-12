@@ -664,6 +664,8 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
 int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const UniqueSectors &ignored_sectors/*=UniqueSectors{}*/)
 {
     int changed_amount = 0;
+    track.tracklen = std::max(track.tracklen, src_track.tracklen);
+    track.tracktime = std::max(track.tracktime, src_track.tracktime);
 
     // Loop over all source sectors available.
     for (auto& src_sector : src_track)
