@@ -13,30 +13,30 @@ bool OrphanDataCapableTrack::empty() const
 
 DataRate OrphanDataCapableTrack::getDataRate() const
 {
-    assert(!track.empty());
+    assert(!empty());
 
-    return track.getDataRate();
+    return track.empty() ? orphanDataTrack.getDataRate() : track.getDataRate();
 }
 
 Encoding OrphanDataCapableTrack::getEncoding() const
 {
-    assert(!track.empty());
+    assert(!empty());
 
-    return track.getEncoding();
+    return track.empty() ? orphanDataTrack.getEncoding() : track.getEncoding();
 }
 
 int OrphanDataCapableTrack::getTimeOfOffset(const int offset) const
 {
-    assert(!track.empty());
+    assert(!empty());
 
-    return track.getTimeOfOffset(offset); // microsec
+    return track.empty() ? orphanDataTrack.getTimeOfOffset(offset) : track.getTimeOfOffset(offset); // microsec
 }
 
 int OrphanDataCapableTrack::getOffsetOfTime(const int time) const
 {
     assert(!track.empty());
 
-    return track.getOffsetOfTime(time); // mfmbits
+    return track.empty() ? orphanDataTrack.getOffsetOfTime(time) : track.getOffsetOfTime(time); // mfmbits (rawbits)
 }
 
 int OrphanDataCapableTrack::getTrackLen() const
