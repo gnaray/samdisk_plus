@@ -1506,7 +1506,7 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
     }
     if (offsetDiffs.empty())
         return 0;
-    const auto offsetDiffBest = Track::findMostPopularToleratedDiff(offsetDiffs, getEncoding()); // This can be multiple tracklen. It must be reduced.
+    const auto offsetDiffBest = Track::findMostPopularToleratedDiff(offsetDiffs, getEncoding()); // This value can be multiple tracklen.
     const auto multi = round_AS<int>(static_cast<double>(offsetDiffBest) / timedTrackLen);
     if (multi == 0)
     {
@@ -1514,7 +1514,7 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
             util::cout << "determineBestTrackLen found offsetDiffBest " << offsetDiffBest << " to be too low compared to timedTrackLen " << timedTrackLen << "\n";
         return 0;
     }
-    const auto trackLenBest = round_AS<int>(static_cast<double>(offsetDiffBest) / multi);
+    const auto trackLenBest = round_AS<int>(static_cast<double>(offsetDiffBest) / multi); // The trackLen is reduced to single now.
     if (opt_debug)
     {
         if (std::abs(trackLenBest - timedTrackLen) > DataBytePositionAsBitOffset(Track::COMPARE_TOLERANCE_BYTES, getEncoding()))
@@ -1524,7 +1524,6 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
         util::cout << "determineBestTrackTime found trackLenBest " << trackLenBest << "\n";
     return trackLenBest;
 }
-
 
 int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 {

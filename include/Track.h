@@ -45,7 +45,6 @@ public:
     enum class AddResult { Unchanged, Append, Insert, Merge };
     enum class SyncMode { None, RevolutionLimited, Unlimited };
 
-public:
     explicit Track(int sectors = 0);    // sectors to reserve
     Track CopyWithoutSectorData() const;
 
@@ -95,6 +94,7 @@ public:
     }
 
     static int findMostPopularToleratedDiff(VectorX<int>& diffs, const Encoding& encoding);
+
     std::map<int, int> FindMatchingSectors(const Track& otherTrack, const RepeatedSectors& repeatedSectorIds) const;
     bool DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds);
     void ShowOffsets() const;
