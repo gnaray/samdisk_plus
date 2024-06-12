@@ -764,7 +764,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
             else
                 details += "no data";
             details += ")";
-            Message(msgFix, "added missing %s %s", strCHR(cylhead.cyl, cylhead.head, src_sector_copy.header.sector).c_str(), details.c_str());
+            MessageCPP(msgFixAlways, "added missing ", src_sector_copy, " ", details);
             track.insert(insert_idx, std::move(src_sector_copy));
             changed_amount++;
         }
