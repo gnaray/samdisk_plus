@@ -250,7 +250,7 @@ void OrphanDataCapableTrack::syncThisToOtherAsMulti(const int syncOffset, Orphan
     if (syncOffset == 0 || track.empty())
         return;
     const auto offsetMin = orphanDataTrack.empty() ? track.begin()->offset : std::min(track.begin()->offset, orphanDataTrack.begin()->offset);
-    if (syncOffset < 0 || offsetMin - syncOffset > 0)
+    if (syncOffset < 0 || offsetMin - syncOffset >= Sector::OFFSET_ALMOST_0) // Offset must not be almost 0.
     {
         for (auto& s : track.sectors())
             s.offset -= syncOffset;
