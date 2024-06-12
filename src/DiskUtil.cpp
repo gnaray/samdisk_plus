@@ -937,10 +937,15 @@ Sector GetTypicalSector(const CylHead& cylhead, const Track& track, const Sector
 
 bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
 {
+    auto inexistent = 0;
     auto missing = 0;
+    auto bad = 0;
+    auto unstable = 0;
+    auto multigood = 0;
 
     fmt.range().each([&](const CylHead& cylhead) {
         const auto& track = disk.read_track(cylhead);
+        const auto trackEnd = track.end();
         Header header(cylhead, 0, fmt.size);
 
         for (header.sector = fmt.base; header.sector < fmt.base + fmt.sectors; ++header.sector)
@@ -948,20 +953,41 @@ bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
             Data buf(fmt.sector_size(), fmt.fill);
 
             auto it = track.find(header);
-            if (it != track.end() && (*it).has_data())
+            const auto headerInexistent = it == trackEnd;
+            if (!headerInexistent && it->has_data())
             {
-                const auto& data = (*it).data_best_copy();
+                const auto& data = it->data_best_copy();
                 std::copy(data.begin(), data.begin() + std::min(data.size(), buf.size()), buf.begin());
-                if (!(*it).has_good_data())
+                if (!it->has_good_data())
                 {
-                    std::copy(BAD_SECTOR_SIGN.begin(), BAD_SECTOR_SIGN.end(), buf.begin()); // Signing sector with BADS.
-                    Message(msgWarning, "bad sector at %s sector %u", strCH(cylhead.cyl, cylhead.head).c_str(), header.sector);
+                    bad++;
+                    // Signing the end of sector because the start of sector is usually good.
+                    std::copy(BAD_SECTOR_SIGN.begin(), BAD_SECTOR_SIGN.end(), buf.end() - BAD_SECTOR_SIGN.size()); // Signing sector with BADS.
+                    MessageCPP(msgWarningAlways, "bad sector (", header, ")");
+                }
+                else
+                {
+                    if (!it->has_stable_data())
+                    {
+                        unstable++;
+                        MessageCPP(msgWarningAlways, "unstable sector (", header, ")");
+                    }
+                    if (it->copies() > 1)
+                    {
+                        multigood++;
+                        MessageCPP(msgWarningAlways, "multigood ",
+                            it->has_stable_data() ? "stable " : "unstable ", "sector (", header, ")");
+                    }
                 }
             }
             else
             {
                 std::copy(MISSING_SECTOR_SIGN.begin(), MISSING_SECTOR_SIGN.end(), buf.begin()); // Signing sector with MISS.
-                missing++;
+                if (headerInexistent)
+                    inexistent++;
+                else
+                    missing++;
+                MessageCPP(msgWarningAlways, headerInexistent ? "inexistent" : "missing", " sector (", header, ")");
             }
 
             if (!fwrite(buf.data(), lossless_static_cast<size_t>(buf.size()), 1, f_))
@@ -969,8 +995,46 @@ bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
         }
         }, fmt.cyls_first);
 
-    if (missing && !opt_minimal)
-        Message(msgWarning, "source missing %u sectors from %u/%u/%u/%u regular format", missing, fmt.cyls, fmt.heads, fmt.sectors, fmt.sector_size());
+    if (!opt_minimal && inexistent + missing + bad + unstable > 0)
+    {
+        std::string msg("detected ");
+        auto writeStarted = false;
+        if (inexistent > 0)
+        {
+            msg += make_string(inexistent, " inexistent");
+            writeStarted = true;
+        }
+        if (missing > 0)
+        {
+            if (writeStarted)
+                msg += ", ";
+            msg += make_string(missing, " missing");
+            writeStarted = true;
+        }
+        if (bad > 0)
+        {
+            if (writeStarted)
+                msg += ", ";
+            msg += make_string(bad, " bad");
+            writeStarted = true;
+        }
+        if (unstable > 0)
+        {
+            if (writeStarted)
+                msg += ", ";
+            msg += make_string(unstable, " unstable");
+            writeStarted = true;
+        }
+        if (multigood > 0)
+        {
+            if (writeStarted)
+                msg += ", ";
+            msg += make_string(multigood, " multigood");
+            writeStarted = true;
+        }
+        MessageCPP(msgWarningAlways, msg, " sectors of source by ",
+            fmt.cyls, "/", fmt.heads, "/", fmt.sectors, "/", fmt.sector_size(), " regular format");
+    }
 
     return true;
 }
