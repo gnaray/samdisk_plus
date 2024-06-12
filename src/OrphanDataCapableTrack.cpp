@@ -122,55 +122,53 @@ int OrphanDataCapableTrack::Score() const
 }
 
 // Merge the orphans track into parents track. An orphan can be merged if a coherent parent is found.
-/*static*/ void OrphanDataCapableTrack::MergeOrphansIntoParents(Track& orphansTrack, Track& parentsTrack, bool removeOrphanAfterMerge, const std::function<bool (const Sector &)>& considerParentSectorPredicate/* = nullptr*/)
+/*static*/ void OrphanDataCapableTrack::MergeOrphansIntoParents(Track& orphansTrack,
+    Track& parentsTrack, bool removeOrphanAfterMerge,
+    const std::function<bool (const Sector &)>& considerParentSectorPredicate/* = nullptr*/)
 {
+    assert(orphansTrack.tracklen == parentsTrack.tracklen);
     if (orphansTrack.empty() || parentsTrack.empty())
         return;
 
     // An orphan data and a parent sector are matched if they cohere and there is no closer to one of them that also coheres.
-    auto itParent = parentsTrack.begin();
-    auto itOrphan = orphansTrack.begin();
-    const auto dataRate = orphansTrack.getDataRate();
-    const auto encoding = orphansTrack.getEncoding();
+    const auto trackLen = parentsTrack.tracklen;
+    const auto itParentBegin = parentsTrack.begin();
     const auto itParentEnd = parentsTrack.end(); // The parents end is constant since merging sector data to parent does not change the parents.
-    while (itParent != itParentEnd && itOrphan != orphansTrack.end()) // The orphans end is variable since possibly erasing sector from orphans.
+    auto itOrphan = orphansTrack.begin();
+    while (itOrphan != orphansTrack.end()) // The orphans end is variable since possibly erasing sector from orphans.
     {
         auto& orphanDataSector = *itOrphan;
-        auto& parentSector = *itParent;
-        if (considerParentSectorPredicate && !considerParentSectorPredicate(parentSector))
+        const auto parentOffsetInterval = orphanDataSector.GetOffsetIntervalSuitableForParent(trackLen);
+        auto itParent = itParentBegin;
+        for (; itParent != itParentEnd; itParent++)
         {
-            itParent++;
-            continue;
-        }
-
-        const auto cohereResult = DoSectorIdAndDataOffsetsCohere(parentSector.offset, orphanDataSector.offset, dataRate, encoding);
-        if (cohereResult == CohereResult::DataCoheres)
-        {
-            const auto itParentNext = itParent + 1;
-            if (itParentNext != itParentEnd &&
-                    DoSectorIdAndDataOffsetsCohere(itParentNext->offset, orphanDataSector.offset, dataRate, encoding) == CohereResult::DataCoheres)
-            {
-                itParent = itParentNext;
+            auto& parentSector = *itParent;
+            if (considerParentSectorPredicate && !considerParentSectorPredicate(parentSector))
                 continue;
-            }
-            if (opt_debug)
-                util::cout << "MergeOrphansIntoParents: adding orphan data sector (offset=" << orphanDataSector.offset
-                           << ", id.sector=" << orphanDataSector.header.sector << ") to parent (offset=" << parentSector.offset
-                           << ", id.sector=" << parentSector.header.sector << ")\n";
-            if (removeOrphanAfterMerge)
+            if (parentOffsetInterval.IsRingedWithin(parentSector.offset))
             {
-                parentSector.MergeOrphanDataSector(std::move(orphanDataSector));
-                itOrphan = orphansTrack.sectors().erase(itOrphan);
-                continue;
+                const auto itParentNext = itParent + 1;
+                if (itParentNext != itParentEnd && parentOffsetInterval.IsRingedWithin(itParentNext->offset))
+                    continue;
+                if (opt_debug)
+                    util::cout << "MergeOrphansIntoParents: adding orphan data sector (offset=" << orphanDataSector.offset
+                    << ", id.sector=" << orphanDataSector.header.sector << ") to parent (offset=" << parentSector.offset
+                    << ", id.sector=" << parentSector.header.sector << ")\n";
+                if (removeOrphanAfterMerge)
+                {
+                    parentSector.MergeOrphanDataSector(std::move(orphanDataSector));
+                    itOrphan = orphansTrack.sectors().erase(itOrphan);
+                }
+                else
+                {
+                    parentSector.MergeOrphanDataSector(orphanDataSector);
+                    itOrphan++;
+                }
+                break;
             }
-            else
-                parentSector.MergeOrphanDataSector(orphanDataSector);
-            itOrphan++;
         }
-        else if (cohereResult == CohereResult::DataTooEarly)
+        if (itParent == itParentEnd)
             itOrphan++;
-        else
-            itParent++;
     }
 }
 
