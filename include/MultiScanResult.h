@@ -29,6 +29,10 @@ public:
     {
         return static_cast<int>(this->operator const FD_TIMED_MULTI_SCAN_RESULT*()->tracktime);
     }
+    inline void SetTrackTime(const int trackTime)
+    {
+        this->operator FD_TIMED_MULTI_SCAN_RESULT*()->tracktime = trackTime;
+    }
     inline int byteToleranceOfTime() const
     {
         return this->operator const FD_TIMED_MULTI_SCAN_RESULT*()->byte_tolerance_of_time;
