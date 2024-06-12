@@ -2,6 +2,8 @@
 #include "Options.h"
 #include "RingedInt.h"
 
+#include <iomanip>
+
 static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_debug = getOpt<int>("debug");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
@@ -302,6 +304,123 @@ void OrphanDataCapableTrack::disjoin()
     }
     orphanDataTrack.tracklen = track.tracklen;
     orphanDataTrack.tracktime = track.tracktime;
+}
+
+void ShowTrackLayout(const Track& multiTrack, const Track& demultidTrack)
+{
+    if (demultidTrack.empty())
+        return;
+    //    const auto& encoding = demultidTrack.getEncoding();
+    const auto demultidTrackLen = demultidTrack.tracklen;
+    const auto revs = multiTrack.tracklen / demultidTrackLen + 1;
+    VectorX<RingedInt> revIndices;
+    auto offsetMin = 0;
+    auto indexMin = 0;
+    util::cout << "            demultid   ";
+    std::string line = " id offset d2next rv   ";;
+    const auto multiISup = multiTrack.size();
+    const auto& sector0 = demultidTrack[0];
+    for (auto r = 0; r < revs; r++)
+    {
+        util::cout << "       rev " << std::setw(2) << r << "  ";
+        line += "offset d2next  ";
+        const int offsetMax = std::min(offsetMin + demultidTrackLen, multiTrack.tracklen);
+        auto indexSup = indexMin;
+        while (indexSup < multiISup && multiTrack[indexSup].offset < offsetMax)
+            indexSup++;
+        auto indexStart = indexMin;
+        while (indexStart < indexSup)
+        {
+            const auto multiOffsetDemultid = modulo(multiTrack[indexStart].offset, static_cast<unsigned>(demultidTrackLen));
+            if (are_offsets_tolerated_same(multiOffsetDemultid, sector0.offset, sector0.encoding, opt_byte_tolerance_of_time, demultidTrackLen)
+                || multiOffsetDemultid > sector0.offset)
+                break;
+            indexStart++;
+        };
+        // If indexStart is not found then it will become indexMin in RingedInt.
+        revIndices.push_back(RingedInt(indexStart, indexSup, indexMin));
+        offsetMin = offsetMax;
+        indexMin = indexSup;
+    }
+    util::cout << "\n";
+    util::cout << line << "\n";
+    std::string datLine;
+    const auto demultidISup = demultidTrack.size();
+    for (auto i = 0; i < demultidISup; i++)
+    {
+        const auto& sector = demultidTrack[i];
+        if (sector.offset >= demultidTrackLen)
+            int error = 1;
+        RingedInt iNext(i, demultidISup);
+        while (demultidTrack[(++iNext).Value()].IsOrphan() ^ sector.IsOrphan()) ;
+        const auto d2next = demultidTrack[iNext.Value()].offset
+            + (iNext <= i ? demultidTrackLen : 0) - sector.offset;
+        util::cout << std::setw(3) << sector.header.sector << " "
+            << std::setw(6) << sector.offset << " "
+            << std::setw(6) << d2next << " "
+            << std::setw(2) << sector.revolution << "   ";
+        const auto sectorIsIdAndHasData = !sector.IsOrphan() && sector.has_data();
+        if (sectorIsIdAndHasData)
+        {
+            std::ostringstream ss;
+            ss << std::setw(3) << "dat" << " "
+                << std::setw(6) << sector.offset + sector.gap3 << " " // TODO gap3
+                << std::setw(6) << sector.gap3 << " "
+                << std::setw(2) << sector.revolution << "   ";
+            datLine = ss.str();
+        }
+        for (auto r = 0; r < revs; r++)
+        {
+            auto multiOffsetFound = false;
+            const auto revIndex = revIndices[r];
+            if (!revIndex.IsEmpty())
+            {
+                auto revIndex = revIndices[r].Value();
+                const auto& multiSector = multiTrack[revIndex];
+                const auto multiOffset = multiSector.offset;
+                const auto multiOffsetDemultid = modulo(multiOffset, static_cast<unsigned>(demultidTrackLen));
+                RingedInt iMultiNext(revIndex, multiISup);
+                while (multiTrack[(++iMultiNext).Value()].IsOrphan() ^ multiSector.IsOrphan());
+                const auto d2next = (iMultiNext <= revIndex ?
+                    multiTrack.tracklen : multiTrack[iMultiNext.Value()].offset
+                    ) - multiOffset;
+                line = "";
+                if (are_offsets_tolerated_same(multiOffsetDemultid, sector.offset, sector.encoding, opt_byte_tolerance_of_time, demultidTrackLen)
+                    && (sector.header == multiSector.header))
+                {
+                    std::ostringstream ss;
+                    ss << std::setw(6) << multiOffset << " " << std::setw(6) << d2next;
+                    line = ss.str();
+                    if (sectorIsIdAndHasData)
+                    {
+                        std::ostringstream ssd;
+                        ssd << std::setw(6) << multiOffset + multiSector.gap3 << " ";
+                        if (multiSector.gap3 > 0)
+                            ssd << std::setw(6) << multiSector.gap3;
+                        else
+                            ssd << "      ";
+                        datLine += ssd.str();
+                    }
+                    revIndices[r]++;
+                    multiOffsetFound = true;
+                }
+            }
+            if (!multiOffsetFound)
+            {
+                std::ostringstream ss;
+                ss << "      " << " " << "      ";
+                line = ss.str();
+                if (sectorIsIdAndHasData)
+                    datLine += ss.str();
+            }
+            util::cout << line << "  ";
+            if (sectorIsIdAndHasData)
+                datLine += "  ";
+        }
+        util::cout << "\n";
+        if (sectorIsIdAndHasData)
+            util::cout << datLine << "\n";
+    }
 }
 void OrphanDataCapableTrack::TuneOffsetsToEachOtherByMin(OrphanDataCapableTrack& otherOrphanDataCapableTrack)
 {
