@@ -112,9 +112,10 @@ const TrackData& Disk::read(const CylHead& cylhead, bool uncached/* = false*/,
     return readNC(cylhead, uncached, with_head_seek_to, deviceReadingPolicy);
 }
 
-const Track& Disk::read_track(const CylHead& cylhead, bool uncached /* = false*/)
+const Track& Disk::read_track(const CylHead& cylhead, bool uncached/* = false*/,
+    const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/)
 {
-    return readNC(cylhead, uncached).track();
+    return readNC(cylhead, uncached, -1, deviceReadingPolicy).track();
 }
 
 const BitBuffer& Disk::read_bitstream(const CylHead& cylhead, bool uncached /* = false*/)

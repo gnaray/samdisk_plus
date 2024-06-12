@@ -39,7 +39,8 @@ public:
     const TrackData& read(const CylHead& cylhead, bool uncached = false,
                           int with_head_seek_to = -1,
                           const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{});
-    const Track& read_track(const CylHead& cylhead, bool uncached = false);
+    const Track& read_track(const CylHead& cylhead, bool uncached = false,
+        const DeviceReadingPolicy& deviceReadingPolicy = DeviceReadingPolicy{});
     const BitBuffer& read_bitstream(const CylHead& cylhead, bool uncached = false);
     const FluxData& read_flux(const CylHead& cylhead, bool uncached = false);
 
