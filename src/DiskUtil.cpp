@@ -254,7 +254,13 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
                 {
                     if (instance > 0)
                         util::cout << ' ';
-                    util::cout << sector.data_copy_read_stats(instance).ReadCount();
+                    const auto read_stats = sector.data_copy_read_stats(instance);
+                    const auto read_stats_is_unstable = !read_stats.IsStable();
+                    if (read_stats_is_unstable)
+                        util::cout << colour::YELLOW;
+                    util::cout << read_stats.ReadCount();
+                    if (read_stats_is_unstable)
+                        util::cout << colour::none;
                 }
                 util::cout << "}\n";
             }
