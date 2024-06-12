@@ -1,6 +1,8 @@
 #include "OrphanDataCapableTrack.h"
 #include "Options.h"
+#include "RingedInt.h"
 
+static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_debug = getOpt<int>("debug");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
@@ -279,9 +281,134 @@ void OrphanDataCapableTrack::syncAndDemultiThisTrackToOffset(const int syncOffse
     orphanDataTrack.syncAndDemultiThisTrackToOffset(syncOffset, trackLenSingle, syncOnly);
 }
 
+void OrphanDataCapableTrack::join()
+{
+    assert(track.tracklen == orphanDataTrack.tracklen);
+
+    if (!orphanDataTrack.sectors().empty())
+    {
+        track.sectors().push_back(std::move(orphanDataTrack.sectors()));
+        orphanDataTrack.sectors().clear();
+        std::sort(track.begin(), track.end(), Sector::CompareByOffset);
+    }
+}
+
+// The orphan data track must be empty.
+void OrphanDataCapableTrack::disjoin()
+{
+    auto& trackSectors = track.sectors();
+    auto& orphanSectors = orphanDataTrack.sectors();
+    assert(orphanSectors.empty());
+    for (auto it = trackSectors.begin(); it != trackSectors.end(); )
+    {
+        if (it->IsOrphan())
+        {
+            orphanSectors.push_back(std::move(*it));
+            it = trackSectors.erase(it);
+        }
+        else
+            it++;
+    }
+    orphanDataTrack.tracklen = track.tracklen;
+    orphanDataTrack.tracktime = track.tracktime;
+}
+void OrphanDataCapableTrack::TuneOffsetsToEachOtherByMin(OrphanDataCapableTrack& otherOrphanDataCapableTrack)
+{
+    join();
+    otherOrphanDataCapableTrack.join();
+    track.TuneOffsetsToEachOtherByMin(otherOrphanDataCapableTrack.track);
+    otherOrphanDataCapableTrack.disjoin();
+    disjoin();
+}
+
+// This track must be single rev. See Track::syncAndDemultiThisTrackToOffset 2)a)
+void OrphanDataCapableTrack::syncUnlimitedToOffset(const int syncOffset)
+{
+    join();
+    track.syncUnlimitedToOffset(syncOffset);
+    disjoin();
+}
+
+// This track must be single rev. See Track::syncAndDemultiThisTrackToOffset 3)a)
+void OrphanDataCapableTrack::syncLimitedToOffset(const int syncOffset)
+{
+    join();
+    track.syncLimitedToOffset(syncOffset);
+    disjoin();
+}
+
+// This track must be multi rev. See Track::syncAndDemultiThisTrackToOffset 2)b), 3)b)
+void OrphanDataCapableTrack::demultiAndSyncUnlimitedToOffset(const int syncOffset, const int trackLenSingle)
+{
+    join();
+    track.demultiAndSyncUnlimitedToOffset(syncOffset, trackLenSingle);
+    disjoin();
+}
+
 int OrphanDataCapableTrack::determineBestTrackLen(const int timedTrackLen) const
 {
     assert(timedTrackLen > 0);
 
     return track.determineBestTrackLen(timedTrackLen);
+}
+
+void OrphanDataCapableTrack::FixOffsetsByTimedToAvoidRepeatedSectorWhenMerging(Track& timedTrack, const RepeatedSectors& repeatedSectorIds)
+{
+    if (!opt_normal_disk) // Not normal disk can have repeated sectors.
+        return;
+    assert(track.tracklen == timedTrack.tracklen);
+
+    const auto iSup = track.size();
+    const auto iTimedSup = timedTrack.size();
+    if (iSup == 0 || iTimedSup == 0) // One of the two tracks is empty.
+        return;
+    RingedInt iTimedNext(0, iTimedSup);
+    for (auto i = 0; i < iSup; i++)
+    {
+        const auto& sector = track[i];
+        const auto itTimed = timedTrack.find(sector.header);
+        if (itTimed == timedTrack.end())
+            continue;
+        if (!itTimed->is_sector_tolerated_same(sector, opt_byte_tolerance_of_time, timedTrack.tracklen)
+            || iTimedSup < 2)
+        {
+            if (!timedTrack.DetermineOffsetDistanceMinMaxAverage(repeatedSectorIds))
+                MessageCPP(msgWarningAlways, "Can not fix offsets (", itTimed->offset,
+                    ", ", sector.offset, ") of sector (", sector,
+                    ") to avoid repeating because can not determine id offset distance");
+            else
+            {
+                const auto iTimedStart = itTimed - timedTrack.begin();
+                iTimedNext = iTimedStart;
+                while (timedTrack[(++iTimedNext).Value()].IsOrphan()); // Safety orphan check, in theory timed track can not have orphan.
+                if (iTimedNext == iTimedStart) // Safety index check, in theory this condition is always false (due to DetermineOffsetDistanceMinMaxAverage).
+                    continue; // There is only 1 not orphan.
+                const auto& timedNextSector = timedTrack[iTimedNext.Value()];
+                const auto timedWrappedOffsetDiff = itTimed->OffsetDistanceFromThisTo(timedNextSector, timedTrack.tracklen);
+                const auto dataWrappedOffsetDiff = sector.OffsetDistanceFromThisTo(timedNextSector, timedTrack.tracklen);
+                // The range between timed sector and next timed sector is examined.
+                const int betweenSectors = round_AS<int>(timedWrappedOffsetDiff / timedTrack.idOffsetDistanceInfo.offsetDistanceAverage);
+                const auto predictedOffsetDistance = round_AS<int>(betweenSectors * timedTrack.idOffsetDistanceInfo.offsetDistanceAverage);
+                // The offset closer to predicted wins so the other offset is adjusted to winner offset.
+                if (std::abs(timedWrappedOffsetDiff - predictedOffsetDistance) < std::abs(dataWrappedOffsetDiff - predictedOffsetDistance))
+                {
+                    util::cout << "FixOffsetsByTimedToAvoidRepeatedSectorWhenMerging: Modified this sector ("
+                        << sector << ") offset (" << sector.offset << ") to " << itTimed->offset << "\n";
+                    i = std::min(i - 1, track.SetSectorOffsetAt(i, itTimed->offset));
+                }
+                else
+                {
+                    util::cout << "FixOffsetsByTimedToAvoidRepeatedSectorWhenMerging: Modified timed sector ("
+                        << *itTimed << ") offset (" << itTimed->offset << ") to " << sector.offset << "\n";
+                    timedTrack.SetSectorOffsetAt(iTimedStart, sector.offset);
+                }
+            }
+        }
+    }
+}
+
+void OrphanDataCapableTrack::ShowOffsets() const
+{
+    track.ShowOffsets();
+    orphanDataTrack.ShowOffsets();
 }

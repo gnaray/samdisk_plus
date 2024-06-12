@@ -33,8 +33,21 @@ public:
     void MergePhysicalTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedPhysicalTrack);
     void MergeUnsyncedBrokenEndingTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
     void syncThisToOtherAsMulti(const int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
+
+protected:
+    void join();
+    void disjoin();
+
+public:
+    void TuneOffsetsToEachOtherByMin(OrphanDataCapableTrack& otherOrphanDataCapableTrack);
+    void syncUnlimitedToOffset(const int syncOffset);
+    void syncLimitedToOffset(const int syncOffset);
+    void demultiAndSyncUnlimitedToOffset(const int syncOffset, const int trackLenSingle);
+
     void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
     int determineBestTrackLen(const int timedTrackTime) const;
+    void FixOffsetsByTimedToAvoidRepeatedSectorWhenMerging(Track& timedTrack, const RepeatedSectors& repeatedSectorIds);
+    void ShowOffsets() const;
 
     Track track{};
     Track orphanDataTrack{};
