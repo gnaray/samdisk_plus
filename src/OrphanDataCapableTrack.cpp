@@ -43,6 +43,8 @@ int OrphanDataCapableTrack::getOffsetOfTime(const int time) const
 
 int OrphanDataCapableTrack::getTrackLen() const
 {
+    assert(track.tracklen == orphanDataTrack.tracklen);
+
     return track.tracklen;
 }
 
