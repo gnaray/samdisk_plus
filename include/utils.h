@@ -313,6 +313,35 @@ public:
         : exception(make_string(std::forward<Args>(args)...)) {}
 };
 
+class invalidoffset_exception : public exception
+{
+public:
+    template <typename ... Args>
+    explicit invalidoffset_exception(Args&& ... args)
+        : exception(make_string(std::forward<Args>(args)...)) {}
+};
+
+class overlappedrepeatedsector_exception : public exception
+{
+public:
+    template <typename ... Args>
+    explicit overlappedrepeatedsector_exception(Args&& ... args)
+        : exception(make_string(std::forward<Args>(args)...)) {}
+};
+
+class repeatedsector_exception : public exception
+{
+public:
+    template <typename ... Args>
+    explicit repeatedsector_exception(const int repeatedSectorId_, Args&& ... args)
+        : exception(make_string(std::forward<Args>(args)...))
+    {
+        repeatedSectorId = repeatedSectorId_;
+    }
+
+    int repeatedSectorId;
+};
+
 std::string fmt(const char* fmt, ...);
 VectorX<std::string> split(const std::string& str, char delim = ' ', bool skip_empty = false);
 std::string trim(const std::string& str);
