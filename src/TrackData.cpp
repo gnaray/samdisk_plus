@@ -2,7 +2,9 @@
 #include "TrackData.h"
 #include "BitstreamDecoder.h"
 #include "BitstreamEncoder.h"
+#include "Util.h"
 
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_prefer = getOpt<PreferredData>("prefer");
 
 TrackData::TrackData(const CylHead& cylhead_)
@@ -184,4 +186,42 @@ void TrackData::fix_track_readstats()
 {
     for (auto& sector : trackNC().sectors())
         sector.fix_readstats();
+}
+
+void TrackData::ForceCylHeads(const int trackSup)
+{
+    if (!opt_normal_disk)
+        return;
+    auto& track = trackNC();
+    for (auto& sector : track)
+    {
+        if (sector.header.operator CylHead() == cylhead)
+            continue;
+        if (!sector.header.IsNormal(trackSup))
+            throw util::diskforeigncylhead_exception(cylhead, " does not match not normal cyl head of sector (", sector, ")");
+        // Slight cyl mismatch in normal mode is a floppy drive and floppy disk incompatibility error.
+        // It is sure sign of misreading from neighbor track. However if the
+        // mismatching is bigger then it is probably a disk copy protection.
+        if (sector.header.cyl != cylhead.cyl)
+        {
+            const auto msg = make_string("Suspicious: ", cylhead, "'s cyl does not match sector's cyl (", sector, ")");
+            if (sector.HasNormalHeaderAndMisreadFromNeighborCyl(cylhead, trackSup))
+                MessageCPP(msgWarningAlways, msg, ", probably the floppy disk is deformed");
+            else
+                MessageCPP(msgWarningAlways, msg, ", probably intended not normal sector header");
+            if (sector.header.head != cylhead.head)
+                MessageCPP(msgWarningAlways, "Suspicious: ", cylhead, "'s head does not match sector's head (", sector,
+                    "), probably intended not normal sector header");
+        }
+        else if (sector.header.head != cylhead.head)
+        {
+            // In case the head is valid (0 or 1) the head mismatch is either
+            // hardware error (the drive reads only from one head, and the user
+            // will notice that data is same on head 0 and head 1),
+            // or sign of wrong formatting. In both cases the head value is
+            // adjusted to give it a chance.
+            MessageCPP(msgWarningAlways, "Overriding wrong head of sector (", sector, ") with head ", cylhead.head);
+            sector.header.head = cylhead.head;
+        }
+    }
 }

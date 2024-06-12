@@ -40,6 +40,7 @@ public:
     CylHead cylhead{};
 
     void fix_track_readstats();
+    void ForceCylHeads(const int trackSup);
 
 private:
     TrackDataType m_type{ TrackDataType::None };
