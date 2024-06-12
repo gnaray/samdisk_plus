@@ -351,7 +351,7 @@ const Sector* Disk::find_ignoring_size(const Header& header)
         return trackFixesNumber;
 
     const bool repairMode = transferMode == Repair;
-    const bool skip_stable_sectors = opt_skip_stable_sectors && !src_disk.is_constant_disk() ? true : false;
+    const bool skip_stable_sectors = opt_skip_stable_sectors;
     DeviceReadingPolicy deviceReadingPolicyLocal{deviceReadingPolicy.WantedSectorHeaderSectors(), deviceReadingPolicy.LookForPossibleSectors()};
 
     TrackData dst_data;
