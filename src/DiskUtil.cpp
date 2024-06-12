@@ -247,7 +247,8 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
         {
             if (sector.read_attempts() > 0) // Print readstats only if there are read attempts (and read counts too).
             {
-                util::cout << "        readstats (" << RecordStr(sector.header.sector) << "): tries=" << sector.read_attempts() << ", reads={";
+                util::cout << "        readstats (" << RecordStr(sector.header.sector)
+                    << "): tries=" << sector.read_attempts() << ", reads={";
 
                 const auto instance_sup = sector.copies();
                 for (auto instance = 0; instance < instance_sup; instance++)
@@ -760,7 +761,7 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
 
             std::string details = "(";
             if (src_sector_copy.has_data())
-                details += std::string((src_sector_copy.has_baddatacrc() ? "bad" : "good")) + " CRC";
+                details += std::string(src_sector_copy.has_baddatacrc() ? "bad" : "good") + " CRC";
             else
                 details += "no data";
             details += ")";
