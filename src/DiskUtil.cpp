@@ -692,25 +692,24 @@ int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, co
             if (track.is_repeated(*it))
                 continue;
 
+            const auto had_data = it->has_data();
             const auto had_good_data = it->has_good_data();
             // Merge the two sectors to give the best version.
             const auto merge_status = it->merge(std::move(src_sector_copy));
             if (merge_status != Sector::Merge::Unchanged
-                && merge_status != Sector::Merge::NewDataOverLimit)
+                && merge_status != Sector::Merge::NewDataOverLimit
+                && (opt_paranoia || merge_status != Sector::Merge::Matched))
             {
-                changed_amount++;
-                if (merge_status != Sector::Merge::Matched)
+                if (it->has_good_data())
                 {
-                    if (it->has_good_data())
-                    {
-                        if (had_good_data && opt_paranoia)
-                            Message(msgFix, "improved good %s", strCHR(cylhead.cyl, cylhead.head, it->header.sector).c_str());
-                        else
-                            Message(msgFix, "repaired bad %s", strCHR(cylhead.cyl, cylhead.head, it->header.sector).c_str());
-                    }
+                    changed_amount++;
+                    if (had_good_data)
+                        MessageCPP(msgFixAlways, "improved good ", *it);
                     else
-                        Message(msgFix, "improved bad %s", strCHR(cylhead.cyl, cylhead.head, it->header.sector).c_str());
+                        MessageCPP(msgFixAlways, "repaired ", had_data ? "bad" : "missing", " ", *it);
                 }
+                else
+                    MessageCPP(msgInfoAlways, "matched bad ", *it);
             }
         }
         else
