@@ -176,19 +176,19 @@ bool Disk::track_exists(const CylHead& cylhead) const
     return GetTrackData().find(cylhead) != GetTrackData().end();
 }
 
-void Disk::format(const RegularFormat& reg_fmt, const Data& data /* = Data()*/, bool cyls_first /* = false*/)
+void Disk::format(const RegularFormat& reg_fmt, const Data& data /* = Data()*/, bool cyls_first /* = false*/, const bool signIncompleteData/* = false*/)
 {
-    format(Format(reg_fmt), data, cyls_first);
+    format(Format(reg_fmt), data, cyls_first, signIncompleteData);
 }
 
-void Disk::format(const Format& new_fmt, const Data& data /* = Data()*/, bool cyls_first /* = false*/)
+void Disk::format(const Format& new_fmt, const Data& data /* = Data()*/, bool cyls_first /* = false*/, const bool signIncompleteData/* = false*/)
 {
     auto it = data.begin(), itEnd = data.end();
 
     new_fmt.range().each([&](const CylHead& cylhead) {
         Track track;
         track.format(cylhead, new_fmt);
-        it = track.populate(it, itEnd);
+        it = track.populate(it, itEnd, signIncompleteData);
         write(cylhead, std::move(track));
         }, cyls_first);
 
