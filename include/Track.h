@@ -43,6 +43,7 @@ class Track
 {
 public:
     enum class AddResult { Unchanged, Append, Insert, Merge };
+    enum class SyncMode { None, RevolutionLimited, Unlimited };
 
 public:
     explicit Track(int sectors = 0);    // sectors to reserve
@@ -96,9 +97,31 @@ public:
     static int findMostPopularToleratedDiff(VectorX<int>& diffs, const Encoding& encoding);
     std::map<int, int> FindMatchingSectors(const Track& otherTrack, const RepeatedSectors& repeatedSectorIds) const;
     bool DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds);
+    void ShowOffsets() const;
     bool DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeatedSectorIds);
     void CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) const;
+    void MergeByAvoidingRepeatedSectors(Track&& track);
+    void MergeRepeatedSectors();
+    SectorIndexWithSectorIdAndOffset FindSectorDetectingInvisibleFirstSector(const RepeatedSectors& repeatedSectorIds);
+    SectorIndexWithSectorIdAndOffset FindCloseSectorPrecedingUnreadableFirstSector();
+    void MakeVisibleFirstSector(const SectorIndexWithSectorIdAndOffset& sectorIndexAndSectorId);
+    void AdjustSuspiciousOffsets(const RepeatedSectors& repeatedSectorIds, const bool redetermineOffsetDistance = false, const bool useOffsetDistanceBalancer = false);
+    void Validate(const RepeatedSectors& repeatedSectorIds = RepeatedSectors()) const;
+    void DropSectorsFromNeighborCyls(const CylHead& cylHead, const int trackSup);
+    void EnsureNotAlmost0Offset();
 
+    void TuneOffsetsToEachOtherByMin(Track& otherTrack);
+    int SetSectorOffsetAt(const int index, const int offset);
+    bool MakeOffsetsNot0(const bool warn = true);
+    void syncUnlimitedToOffset(const int syncOffset);
+    void syncLimitedToOffset(const int syncOffset);
+    void demultiAndSyncUnlimitedToOffset(const int syncOffset, const int trackLenSingle);
+    void demultiAndSyncLimitedToOffset(const int syncOffset, const int trackLenSingle);
+protected:
+    void syncAndDemultiThisTrackToOffset(const int syncOffset, bool demulti, const SyncMode& syncMode, int trackLenSingle = 0);
+
+public:
+    void AnalyseMultiTrack(const int trackLenBest) const;
     int determineBestTrackLen(const int timedTrackLen) const;
     int findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const;
 

@@ -13,6 +13,7 @@
 
 static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_debug = getOpt<int>("debug");
+static auto& opt_unhide_first_sector_by_track_end_sector = getOpt<bool>("unhide_first_sector_by_track_end_sector");
 static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 
@@ -669,6 +670,23 @@ bool Track::DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds)
     return false;
 }
 
+void Track::ShowOffsets() const
+{
+    if (empty())
+        return;
+    assert(tracklen > 0);
+
+    const auto iSup = size();
+    for (auto i = 0; i < iSup; i++)
+    {
+        const auto& sector = operator[](i);
+        auto offsetDelta = (i == iSup - 1 ? operator[](0).offset + tracklen : operator[](i + 1).offset) - sector.offset;
+        util::cout << "ShowOffsets: track[" << i << "].{sector=" << sector << ", offset=" << sector.offset
+            << ", rev=" << sector.revolution << "}, offsetDeltaToNext=" << offsetDelta;
+        util::cout << "\n";
+    }
+}
+
 /*
  * Return empty result if different sized sectors are found or there are less
  * than 2 not orphan sectors.
@@ -823,9 +841,645 @@ void Track::CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) con
                 MessageCPP(msgWarningAlways, "Repeated sectors (", sector,
                     ") at offsets (", sector.offset , ", ", otherSector.offset,
                     ") are problematic");
-                break; // TODO More than 1 repeation is not supported currently.
+                break; // TODO More than 1 repetition is not supported currently.
             }
         }
+    }
+}
+
+void Track::MergeByAvoidingRepeatedSectors(Track&& track)
+{
+    if (!opt_normal_disk) // Not normal disk can have repeated sectors.
+        return;
+    assert(tracklen == track.tracklen);
+
+    const auto iSup = track.size();
+    if (iSup == 0 || empty()) // One of the two tracks is empty.
+        return;
+    const auto itEnd = end();
+    for (auto i = 0; i < iSup; i++)
+    {
+        auto& sector = track[i];
+        const auto it = findToleratedSame(sector.header, sector.offset, tracklen);
+        if (it == itEnd)
+        {
+            MessageCPP(msgWarningAlways, "Can not match repeated sector (", sector, ") at offset(",
+                sector.offset, "), it is dropped");
+            continue;
+        }
+        it->merge(std::move(sector));
+        MessageCPP(msgWarningAlways, "Matched repeated sector (", sector, ") at offset(",
+            sector.offset, "), it is merged to offset (", it->offset, ")");
+    }
+}
+
+void Track::MergeRepeatedSectors()
+{
+    if (!opt_normal_disk) // Merging repeated sectors is useful for normal disk only.
+        return;
+    if (size() < 2)
+        return;
+    assert(tracklen > 0);
+
+    Track trackDuplicates;
+    trackDuplicates.setTrackLen(tracklen);
+
+    auto iSup = size();
+    for (auto i = 0; i < iSup - 1; i++)
+    {
+        auto sector = &operator[](i);
+        if (sector->IsOrphan())
+            continue;
+        auto firstOccurence = i;
+        for (auto j = i + 1; j < iSup; j++) // Move duplicates from this track to track duplicates.
+        {
+            auto& otherSector = operator[](j);
+            if (otherSector.IsOrphan())
+                continue;
+            if (sector->CompareHeader(otherSector))
+            {
+                const auto wrappedOffsetDiff = sector->OffsetDistanceFromThisTo(otherSector, tracklen);
+                const auto sectorOffsetDistanceMin = sector->NextSectorOffsetDistanceMin();
+                if (wrappedOffsetDiff < sectorOffsetDistanceMin) // The two sectors overlap, favour the latter (probably not overlapping) (former is duplicate).
+                {
+                    trackDuplicates.add(std::move(*sector));
+                    m_sectors.erase(m_sectors.begin() + firstOccurence);
+                    if (i == firstOccurence)
+                        i--;
+                    firstOccurence = --j;
+                    sector = &operator[](firstOccurence);
+                }
+                else // No overlap, favour the former (latter is duplicate).
+                {
+                    trackDuplicates.add(std::move(otherSector));
+                    m_sectors.erase(m_sectors.begin() + j--);
+                }
+                iSup--;
+            }
+        }
+    }
+    if (trackDuplicates.empty())
+        return;
+    MergeByAvoidingRepeatedSectors(std::move(trackDuplicates));
+}
+
+SectorIndexWithSectorIdAndOffset Track::FindSectorDetectingInvisibleFirstSector(const RepeatedSectors& repeatedSectorIds)
+{
+    SectorIndexWithSectorIdAndOffset sectorIndexWithSectorIdAndOffset;
+    if (!opt_unhide_first_sector_by_track_end_sector)
+        return sectorIndexWithSectorIdAndOffset;
+    if (empty())
+        return sectorIndexWithSectorIdAndOffset;
+    assert(tracklen > 0);
+
+    // Let us discover the track sector scheme once if possible. If succeded then there is nothing to unhide.
+    if (!idAndOffsetPairs.empty() || DiscoverTrackSectorScheme(repeatedSectorIds))
+        return sectorIndexWithSectorIdAndOffset;
+
+    const auto& encoding = getEncoding();
+    const auto toleratedOffsetDistance = tolerated_offset_distance(encoding, opt_byte_tolerance_of_time);
+    const auto iSup = size();
+    auto i = 0;
+    for (; i < iSup; i++)
+    {
+        auto& currentSector = operator[](i);
+        if (currentSector.IsOrphan())
+            continue;
+        if (currentSector.offset >= tracklen - toleratedOffsetDistance || currentSector.offset <= toleratedOffsetDistance)
+        {   // Assuming only 1 sector is blocking discovering. That sector detects the invisible sector.
+            auto sectorDetector = remove(i);
+            const auto discovered = DiscoverTrackSectorScheme(repeatedSectorIds);
+            add(std::move(sectorDetector)); // Put back the removed sector.
+            assert(operator[](i) == sectorDetector);
+            if (discovered)
+                break;
+        }
+    }
+    if (i == iSup)
+        return sectorIndexWithSectorIdAndOffset;
+
+    const auto& invisibleSector = operator[](i);
+    const auto sectorIdAndOffsetPair = idAndOffsetPairs.FindSectorIdByOffset(
+        invisibleSector.offset + DataBytePositionAsBitOffset(GetIdOverhead(encoding), encoding));
+    if (sectorIdAndOffsetPair != idAndOffsetPairs.cend())
+    {
+        sectorIndexWithSectorIdAndOffset.sectorIndex = i;
+        sectorIndexWithSectorIdAndOffset.sectorId = sectorIdAndOffsetPair->id;
+        sectorIndexWithSectorIdAndOffset.offset = sectorIdAndOffsetPair->offsetInterval.End() - 1;
+    }
+    return sectorIndexWithSectorIdAndOffset;
+}
+
+// Can not have orphans.
+SectorIndexWithSectorIdAndOffset Track::FindCloseSectorPrecedingUnreadableFirstSector()
+{
+    SectorIndexWithSectorIdAndOffset sectorIndexWithSectorIdAndOffset;
+    if (!opt_unhide_first_sector_by_track_end_sector)
+        return sectorIndexWithSectorIdAndOffset;
+    const auto iSup = size();
+    if (iSup < 2)
+        return sectorIndexWithSectorIdAndOffset;
+    assert(tracklen > 0);
+
+    const auto& encoding = getEncoding();
+    const auto toleratedOffsetDistance = tolerated_offset_distance(encoding, opt_byte_tolerance_of_time);
+    auto& firstSector = operator[](0);
+    const auto& lastSector = operator[](iSup - 1);
+    if (lastSector.OffsetDistanceFromThisTo(firstSector, tracklen) <= toleratedOffsetDistance // TODO Should compare with a more constant value.
+        && !firstSector.has_data() && firstSector.size() == lastSector.size())
+    {
+        sectorIndexWithSectorIdAndOffset.sectorIndex = iSup - 1;
+        sectorIndexWithSectorIdAndOffset.sectorId = firstSector.header.sector;
+        sectorIndexWithSectorIdAndOffset.offset = firstSector.offset;
+    }
+    return sectorIndexWithSectorIdAndOffset;
+}
+
+void Track::MakeVisibleFirstSector(const SectorIndexWithSectorIdAndOffset& sectorIndexWithSectorIdAndOffset)
+{
+    if (empty())
+        return;
+
+    auto& firstSector = operator[](0);
+    const auto createFirstSector = firstSector.header.sector != sectorIndexWithSectorIdAndOffset.sectorId
+        || firstSector.offset != sectorIndexWithSectorIdAndOffset.offset;
+    if (createFirstSector)
+        assert(firstSector.header.sector != sectorIndexWithSectorIdAndOffset.sectorId
+            && firstSector.offset != sectorIndexWithSectorIdAndOffset.offset);
+    const auto& sectorDetector = operator[](sectorIndexWithSectorIdAndOffset.sectorIndex);
+    auto dataCarrierSector = sectorDetector;
+    dataCarrierSector.header.sector = sectorIndexWithSectorIdAndOffset.sectorId;
+    dataCarrierSector.offset = sectorIndexWithSectorIdAndOffset.offset;
+    if (createFirstSector)
+    {
+        dataCarrierSector.header.size = operator[](0).header.size;
+        MessageCPP(msgWarningAlways, "Invisible sector (", dataCarrierSector, ") at offset (", dataCarrierSector.offset,
+            ") is made visible by sector (", sectorDetector, ") at offset (", sectorDetector.offset, ")\n");
+        add(std::move(dataCarrierSector));
+    }
+    else
+    {
+        MessageCPP(msgWarningAlways, "Unreadable sector (", firstSector, ") at offset (", firstSector.offset,
+            ") is populated by sector (", sectorDetector, ") at offset (", sectorDetector.offset, ")\n");
+        firstSector.merge(std::move(dataCarrierSector));
+    }
+}
+
+/*
+ * Do nothing if different sized sectors are found or there are less
+ * than 2 not orphan sectors (since using DetermineOffsetDistanceMinMaxAverage).
+ * The track must be single and not orphan data, it can have orphans.
+ */
+void Track::AdjustSuspiciousOffsets(const RepeatedSectors& repeatedSectorIds, const bool redetermineOffsetDistance/* = false*/, const bool useOffsetDistanceBalancer/* = false*/)
+{
+    if (empty())
+        return;
+    assert(tracklen > 0);
+
+    if (redetermineOffsetDistance)
+        idOffsetDistanceInfo.Reset();
+    if (!DetermineOffsetDistanceMinMaxAverage(repeatedSectorIds))
+        return;
+    const auto ignoredIdsEnd = idOffsetDistanceInfo.ignoredIds.end();
+    const auto notAverageFarFromNextIdsEnd = idOffsetDistanceInfo.notAverageFarFromNextIds.end();
+    auto wrappedPrevOffsetDiff = -1;
+    const auto iSup = size();
+    RingedInt iNext(0, iSup);
+    RingedInt iPrev(0, iSup);
+    for (auto i = 0; i < iSup; )
+    {
+        const auto& currentSector = operator[](i);
+        if (currentSector.IsOrphan() || idOffsetDistanceInfo.ignoredIds.find(i) != ignoredIdsEnd)
+        {
+            i++;
+            continue;
+        }
+        iNext = i;
+        while (operator[]((++iNext).Value()).IsOrphan());
+        if (iNext == i) // Safety index check, in theory this condition is always false (due to DetermineOffsetDistanceMinMaxAverage).
+            break; // There is only 1 not orphan.
+        if (iNext < i) // Next is at track start (wrapping), better not modifying its offset.
+            break;
+        const auto& nextSector = operator[](iNext.Value());
+        const auto wrappedNextOffsetDiff = currentSector.OffsetDistanceFromThisTo(nextSector, tracklen);
+        // The range between current and next sectors is examined.
+        const int betweenSectors = round_AS<int>(wrappedNextOffsetDiff / idOffsetDistanceInfo.offsetDistanceAverage);
+        if (betweenSectors == 1) // Adjusting strictly 1 sector distances only.
+        {
+            const auto offsetDistanceIncrement = round_AS<int>(idOffsetDistanceInfo.offsetDistanceAverage - wrappedNextOffsetDiff);
+            if (idOffsetDistanceInfo.notAverageFarFromNextIds.find(i) != notAverageFarFromNextIdsEnd)
+            {
+                if (offsetDistanceIncrement > 0)
+                {   // Special case when timeline size is significantly less then average. Maybe never happens.
+                    if (wrappedPrevOffsetDiff < 0) // Calculate wrappedPrevOffsetDiff if not calculated earlier.
+                    {
+                        iPrev = i;
+                        while (operator[]((--iPrev).Value()).IsOrphan());
+                        if (iPrev == i) // Safety index check, in theory this condition is always false (due to DetermineOffsetDistanceMinMaxAverage).
+                            break; // There is only 1 not orphan.
+                        const auto& prevSector = operator[](iPrev.Value());
+                        wrappedPrevOffsetDiff = prevSector.OffsetDistanceFromThisTo(currentSector, tracklen);
+                    }
+                    // Check if there is enough space before the sector.
+                    if (wrappedPrevOffsetDiff >= round_AS<int>(idOffsetDistanceInfo.offsetDistanceAverage + offsetDistanceIncrement))
+                        SetSectorOffsetAt(i, currentSector.offset - offsetDistanceIncrement);
+                    else // There is not enoug space before the sector.
+                        MessageCPP(msgWarningAlways, "Can not adjust timeline size of sector (", currentSector,
+                            ") by changing its offset (", currentSector.offset,
+                            ") because there is not enough free space");
+                }
+            }
+            else if (useOffsetDistanceBalancer) // Average far from next id, unform offset distance if requested.
+                SetSectorOffsetAt(iNext.Value(), nextSector.offset + offsetDistanceIncrement);
+        }
+        if (iNext <= i)
+            break; // Wrapped, loop end.
+        wrappedPrevOffsetDiff = wrappedNextOffsetDiff;
+        i = iNext.Value();
+    }
+}
+
+/*
+ * Throws invalidoffset_exception if an offset problem is found.
+ * The track must be single and not orphan, it can have orphans.
+ */
+void Track::Validate(const RepeatedSectors& repeatedSectorIds/* = RepeatedSectors()*/) const
+{
+    if (empty())
+        return;
+    assert(tracklen > 0);
+    if (size() < 2)
+        return;
+
+    const auto& encoding = getEncoding();
+    const auto& dataRate = getDataRate();
+    const auto toleratedOffsetDistance = tolerated_offset_distance(encoding, opt_byte_tolerance_of_time);
+    const auto iSup = size();
+    auto i = 0;
+    do
+    {
+        const auto& currentSector = operator[](i);
+        const auto currentSectorOffset = currentSector.offset;
+        if (currentSectorOffset == 0)
+            throw util::invalidoffset_exception("Sector (", currentSector,
+                ") having 0 offset is software error"); // TODO I would allow offset = 0 but it means no offset for legacy code.
+        // Check if sector offsets are decreasing.
+        if (i < iSup - 1 && operator[](i + 1).offset < currentSectorOffset)
+            throw util::invalidoffset_exception("Sector (", currentSector,
+                ") offset (", currentSectorOffset, ") being greater than next sector (",
+                operator[](i + 1), ") offset (", operator[](i + 1).offset, ") is software error");
+        if (currentSector.IsOrphan())
+        {
+            i++;
+            continue;
+        }
+        RingedInt iNext(i, iSup);
+        while (operator[]((++iNext).Value()).IsOrphan()) ;
+        if (iNext == i)
+            break; // There is only 1 not orphan, can not compare.
+        const auto& nextSector = operator[](iNext.Value());
+        bool sameSectors = nextSector.CompareHeader(currentSector);
+        if (sameSectors) // Same sectors.
+        {
+            const auto wrappedOffsetDiff = currentSector.OffsetDistanceFromThisTo(nextSector, tracklen);
+            if (wrappedOffsetDiff <= toleratedOffsetDistance) // Error because these sectors should be one.
+                throw util::invalidoffset_exception("Same tolerated close sectors (", currentSector,
+                    ") are software error, offsets (",
+                    currentSectorOffset, ", ", nextSector.offset, ")");
+            else
+            {
+                const auto sectorOffsetDistanceMin = currentSector.NextSectorOffsetDistanceMin();
+                // TODO The repeatedSectorId.offsets could be considered in order to handle more than 1 repetition
+                // by checking if repeatedSectorIds.find(currentSector.id).findToleratedOffset(nextSector.offset) is valid.
+                if (wrappedOffsetDiff < sectorOffsetDistanceMin) // The two sectors overlap.
+                {
+                    const auto toleratedOffset = repeatedSectorIds.FindToleratedOffsetsById(currentSector.header.sector,
+                        nextSector.offset, encoding, opt_byte_tolerance_of_time, tracklen);
+                    if (toleratedOffset == nullptr)
+                        throw util::overlappedrepeatedsector_exception(
+                            "Unhandled repeated overlapping sectors (", currentSector,
+                            ") are sign of wrong syncing due to weak track, offsets (",
+                            currentSectorOffset, ", ", nextSector.offset, ")");
+                }
+                else if (wrappedOffsetDiff < 2 * sectorOffsetDistanceMin)
+                {
+                    const auto toleratedOffset = repeatedSectorIds.FindToleratedOffsetsById(currentSector.header.sector,
+                        nextSector.offset, encoding, opt_byte_tolerance_of_time, tracklen);
+                    if (toleratedOffset == nullptr)
+                        throw util::repeatedsector_exception(currentSector.header.sector,
+                            "Unhandled repeated neighbor sectors (", currentSector,
+                            ") are sign of wrong syncing due to weak track, offsets (",
+                            currentSectorOffset, ", ", nextSector.offset, ")");
+                }
+            }
+        }
+        if (nextSector.offset >= currentSector.offset) // The other case (<) was checked earlier on nextSector.
+        {
+            auto iOther = iNext.Value();
+            do // Check if other sector is the current sector repeated.
+            {
+                const auto& otherSector = operator[](iOther);
+                sameSectors = !otherSector.IsOrphan() && otherSector.CompareHeader(currentSector);
+                if (sameSectors)
+                {
+                    const auto toleratedOffset = repeatedSectorIds.FindToleratedOffsetsById(currentSector.header.sector,
+                        otherSector.offset, encoding, opt_byte_tolerance_of_time, tracklen);
+                    if (toleratedOffset == nullptr)
+                        throw util::repeatedsector_exception(currentSector.header.sector,
+                            "Unhandled repeated not neighbor sectors (", currentSector,
+                            ") are sign of wrong syncing due to weak track, offsets (",
+                            currentSectorOffset, ", ", otherSector.offset, ")");
+                }
+            } while (++iOther != iSup);
+        }
+        if (iNext < i)
+            break; // Wrapped, loop end.
+        i = iNext.Value();
+    } while (i < iSup);
+}
+
+void Track::DropSectorsFromNeighborCyls(const CylHead& cylHead, const int trackSup)
+{
+    if (!opt_normal_disk)
+        return;
+    auto iSup = sectors().size();
+    for (auto i = 0; i < iSup; i++)
+    {
+        const auto sector = operator[](i);
+        if (sector.HasNormalHeaderAndMisreadFromNeighborCyl(cylHead, trackSup))
+        {
+            MessageCPP(msgWarningAlways, "Dropping ", sector, " at offset ", sector.offset, " due to misreading");
+            remove(i--);
+            iSup--;
+        }
+    }
+}
+
+/*
+ * The result track is guaranteed having no sector offset almost 0.
+ * A sector offset is almost to 0 if it is in [0, 16) range because
+ * when encoding to file its value is divided by 16 thus it becomes 0.
+ * The track can be single or multi, orphan or not orphan, it can have orphans.
+ */
+void Track::EnsureNotAlmost0Offset()
+{
+    if (empty())
+        return;
+
+    auto it = begin();
+    const auto offsetShift = Sector::OFFSET_ALMOST_0 - it->offset;
+    if (offsetShift > 0)
+    {
+        const auto itSup = end();
+        do
+        {
+            if (opt_debug)
+                util::cout << "Fixing almost 0 offset (" << it->offset << ") of sector (" << *it << ")\n";
+            it->offset += offsetShift;
+        } while (++it != itSup && it->offset < Sector::OFFSET_ALMOST_0);
+    }
+}
+
+/* This and other track must be samely single or multi
+ * (although multi timed track is rare), they can have orphan data.
+ */
+void Track::TuneOffsetsToEachOtherByMin(Track& otherTrack)
+{
+    if (empty() || otherTrack.empty())
+        return;
+    assert(tracklen > 0);
+    const auto dataRate = getDataRate();
+    const auto encoding = getEncoding();
+    assert(otherTrack.getEncoding() == encoding);
+    assert(otherTrack.getDataRate() == dataRate);
+
+    // This sector and other sector are matched if their offsets are tolerated same and their headers are same.
+    const auto itThisBegin = begin();
+    auto itThis = itThisBegin;
+    const auto itOtherBegin = otherTrack.begin();
+    auto itOther = itOtherBegin;
+    const auto itThisEnd = end(); // This end is constant since modifying sector offsets does not change this end.
+    const auto itOtherEnd = otherTrack.end(); // Other end is constant since modifying sector offsets does not change other end.
+    while (itThis != itThisEnd && itOther != itOtherEnd)
+    {
+        auto& thisSector = *itThis;
+        if (are_offsets_tolerated_same(thisSector.offset, itOther->offset,
+            encoding, opt_byte_tolerance_of_time, tracklen, false))
+        {
+            const auto itOtherStart = itOther;
+            do
+            {
+                if (thisSector.header == itOther->header)
+                {
+                    if (thisSector.offset < itOther->offset)
+                        itOther = otherTrack.SetSectorOffsetAt(itOther - itOtherBegin, thisSector.offset) + itOtherBegin;
+                    else
+                        itThis = SetSectorOffsetAt(itThis - itThisBegin, itOther->offset) + itThisBegin;
+                    itOther++;
+                    goto NextItThis;
+                }
+                itOther++;
+            } while (itOther != itOtherEnd && are_offsets_tolerated_same(thisSector.offset, itOther->offset,
+                encoding, opt_byte_tolerance_of_time, tracklen, false));
+            itOther = itOtherStart;
+NextItThis:
+            itThis++;
+        }
+        else if (thisSector.offset < itOther->offset)
+            itThis++;
+        else
+            itOther++;
+    }
+    for (auto it = begin(); it != (itThisEnd - 1); it++)
+        if ((it + 1)->offset - it->offset < 160)
+            int a = 0;
+    for (auto it = otherTrack.begin(); it != (itOtherEnd - 1); it++)
+        if ((it + 1)->offset - it->offset < 160)
+            int a = 0;
+}
+
+int Track::SetSectorOffsetAt(const int index, const int offset)
+{
+    assert(index < size());
+
+    auto& sector = operator[](index);
+    const auto offsetDiff = offset - sector.offset;
+    if (offsetDiff == 0)
+        return index;
+    const auto offsetBecameLess = offsetDiff < 0;
+    sector.offset = offset;
+    if (offsetBecameLess)
+    {
+        auto iGreaterOffset = index;
+        while (--iGreaterOffset >= 0 && operator[](iGreaterOffset).offset > sector.offset);
+        if (++iGreaterOffset < index)
+            std::rotate(begin() + iGreaterOffset, begin() + index, begin() + index + 1);
+        return iGreaterOffset;
+    }
+    else
+    {
+        auto iLessOffset = index;
+        const auto iSup = size();
+        while (++iLessOffset < iSup && operator[](iLessOffset).offset < sector.offset);
+        if (--iLessOffset > index)
+            std::rotate(begin() + index, begin() + index + 1, begin() + iLessOffset + 1);
+        return iLessOffset;
+    }
+}
+
+bool Track::MakeOffsetsNot0(const bool warn/* = true*/)
+{
+    auto result = false;
+    for (auto& sector : m_sectors)
+        result |= sector.MakeOffsetNot0(warn);
+    return result;
+}
+
+// This track must be single rev. See syncAndDemultiThisTrackToOffset 2)a)
+void Track::syncUnlimitedToOffset(const int syncOffset)
+{
+    syncAndDemultiThisTrackToOffset(syncOffset, false, SyncMode::Unlimited);
+}
+
+// This track must be single rev. See syncAndDemultiThisTrackToOffset 3)a)
+void Track::syncLimitedToOffset(const int syncOffset)
+{
+    syncAndDemultiThisTrackToOffset(syncOffset, false, SyncMode::RevolutionLimited);
+}
+
+// This track must be multi rev. See syncAndDemultiThisTrackToOffset 2)b), 3)b)
+void Track::demultiAndSyncUnlimitedToOffset(const int syncOffset, const int trackLenSingle)
+{
+    syncAndDemultiThisTrackToOffset(syncOffset, true, SyncMode::Unlimited, trackLenSingle);
+}
+
+// This track must be multi rev. See syncAndDemultiThisTrackToOffset 2)b), 3)b)
+void Track::demultiAndSyncLimitedToOffset(const int syncOffset, const int trackLenSingle)
+{
+    syncAndDemultiThisTrackToOffset(syncOffset, true, SyncMode::RevolutionLimited, trackLenSingle);
+}
+
+/* The input track can be multi rev or single rev. It is single rev if its
+ * tracklen equals to the specified trackLenSingle.
+ * The following modes can be specified:
+ * 1) demulti: it requires multi rev track (it does not modify single rev track). Deprecated.
+ * 2) syncMode = Unlimited: it implies demulti because unlimited syncing easily
+ *    results in multi rev track even with negative sector offsets which are
+ *    disallowed so there are two cases.
+ * 2)a) using with implicit demulti without specified trackLenSingle then single
+ *    rev track is required.
+ * 2)b) using with excplicit demulti with specified trackLenSingle then multi rev
+ *    track is required.
+ * 3) syncMode = RevolutionLimited: it applies the sync so the sector offsets
+ *    remain in the single rev. It works on single track so there are two cases.
+ * 3)a) using without demulti then single rev track is required.
+ * 3)b) using with demulti then multi rev track is required.
+ * The result track is always single and guaranteed having no sector offset
+ * close to 0. A sector offset is close to 0 if it is in [0, 16) range because
+ * when encoding to file its value is divided by 16 thus it becomes 0.
+ */
+void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, bool demulti, const SyncMode& syncMode, int trackLenSingle/*= 0*/)
+{
+    assert(tracklen > 0);
+    assert(!(syncMode == SyncMode::None && !demulti));
+    assert(!(demulti && trackLenSingle <= 0));
+
+    if (demulti)
+    {
+        const auto trackLenMulti = tracklen;
+        tracklen = trackLenSingle;
+        tracktime = round_AS<int>(static_cast<double>(tracktime) * trackLenSingle / trackLenMulti);
+    }
+    if (empty())
+        return;
+
+    auto adjustedSyncOffset = syncOffset;
+    if (syncMode == SyncMode::RevolutionLimited && syncOffset != 0) // Limit the syncing.
+    {
+        const auto offsetFirst = m_sectors.front().offset;
+        auto revolutionOriginal = modulodiv(offsetFirst, tracklen);
+        auto newOffset = offsetFirst - syncOffset;
+        auto revolutionNew = modulodiv(newOffset, tracklen);
+        if (revolutionNew < revolutionOriginal)
+            adjustedSyncOffset = offsetFirst - Sector::OFFSET_ALMOST_0; // Go for min.
+        const auto offsetLast = m_sectors.back().offset;
+        revolutionOriginal = modulodiv(offsetLast, tracklen);
+        newOffset = offsetLast - syncOffset;
+        revolutionNew = modulodiv(newOffset, tracklen);
+        if (revolutionNew > revolutionOriginal)
+        {
+            if (adjustedSyncOffset > 0)
+                throw util::exception("The current track cannot be demultid and/or synced because its endings are tight");
+            adjustedSyncOffset = -(tracklen - 1 - offsetLast); // Go for max. (or min. within ()).
+        }
+    }
+
+    // Guarantee having no sector offset 0 (because offset 0 means there is no offset).
+    auto sectorsOriginal = std::move(m_sectors);
+    m_sectors.clear();
+    for (auto& sectorOriginal : sectorsOriginal)
+    {
+        const auto offsetOriginal = sectorOriginal.offset;
+        if (demulti)
+            sectorOriginal.revolution = offsetOriginal / tracklen;
+        sectorOriginal.offset = modulo(offsetOriginal - adjustedSyncOffset, static_cast<unsigned>(tracklen));
+        if (sectorOriginal.MakeOffsetNot0(false))
+        {
+            if (!sectorOriginal.IsOrphan())
+                MessageCPP(msgWarningAlways, "Synced offset of sector (", sectorOriginal.header,
+                    ") is changed from 0 to 1, unsynced offset was ", offsetOriginal);
+        }
+        add(std::move(sectorOriginal));
+    }
+    std::sort(begin(), end(),
+              [](const Sector& s1, const Sector& s2) { return s1.offset < s2.offset; });
+}
+
+void Track::AnalyseMultiTrack(const int trackLenBest) const
+{
+    const auto iSup = size();
+    if (iSup < 2)
+        return;
+
+    const auto& encoding = getEncoding();
+    auto i = 0;
+    auto offsetMin = 0;
+    const auto revSup = operator[](iSup - 1).offset / trackLenBest;
+    for (auto r = 0; r < revSup; r++)
+    {
+        util::cout << "rev"<< r << ":\n";
+        const auto offsetSup = offsetMin + trackLenBest;
+        while (operator[](i).offset < offsetSup)
+        {
+            auto j = i;
+            while (++j < iSup && operator[](j).offset < offsetSup) ;
+            const auto jOffsetSup = offsetSup + trackLenBest;
+            auto writeStarted = false;
+            while (j < iSup/* && operator[](j).offset < jOffsetSup*/)
+            {
+                if (are_offsets_tolerated_same(operator[](i).offset, operator[](j).offset,
+                    encoding, opt_byte_tolerance_of_time, trackLenBest)
+                    && operator[](i).header == operator[](j).header)
+                {
+                    const auto offsetDiff = operator[](j).offset - operator[](i).offset;
+                    const auto revDiff = round_AS<int>(static_cast<double>(offsetDiff) / trackLenBest);
+                    const auto offsetDiffPerRev = offsetDiff / revDiff;
+                    if (!writeStarted)
+                        util::cout << operator[](i) << ": ";
+                    else
+                        util::cout << ", ";
+                    util::cout << offsetDiffPerRev << "x" << revDiff;
+                    if (!writeStarted)
+                        writeStarted = true;
+                    //                    break;
+                }
+                j++;
+            }
+            if (writeStarted)
+                util::cout << "\n";
+            i++;
+        }
+        offsetMin = offsetSup;
     }
 }
 
