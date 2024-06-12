@@ -44,16 +44,12 @@ int OrphanDataCapableTrack::getTrackLen() const
     return track.tracklen;
 }
 
-// In the Track class the tracklen is the length of one rotation. Here it is the length of read bytes which were decoded.
+// The tracklen can be the usual length of one rotation but also the length of
+// decoded read bytes during multi rotation.
 void OrphanDataCapableTrack::setTrackLen(const int trackLen)
 {
-    track.tracklen = trackLen;
-    orphanDataTrack.tracklen = trackLen;
-    if (!track.empty())
-    {
-        track.tracktime = getTimeOfOffset(trackLen);
-        orphanDataTrack.tracktime = track.tracktime;
-    }
+    track.setTrackLen(trackLen);
+    orphanDataTrack.setTrackLen(trackLen);
 }
 
 void OrphanDataCapableTrack::addTrackLen(const int trackLen)
@@ -68,13 +64,8 @@ int OrphanDataCapableTrack::getTrackTime() const
 
 void OrphanDataCapableTrack::setTrackTime(const int trackTime)
 {
-    track.tracktime = trackTime;
-    orphanDataTrack.tracktime = trackTime;
-    if (!track.empty())
-    {
-        track.tracklen = getOffsetOfTime(trackTime);
-        orphanDataTrack.tracklen = track.tracktime;
-    }
+    track.setTrackTime(trackTime);
+    orphanDataTrack.setTrackTime(trackTime);
 }
 
 void OrphanDataCapableTrack::addTrackTime(const int trackTime)
