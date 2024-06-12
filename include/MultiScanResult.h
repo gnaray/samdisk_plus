@@ -50,7 +50,7 @@ public:
         return const_cast<FD_TIMED_MULTI_SCAN_RESULT*>(this->operator const FD_TIMED_MULTI_SCAN_RESULT*())->HeaderArray()[index];
     }
 
-    Track DecodeResult(const CylHead& cylhead, const DataRate& dataRate, const Encoding& encoding, int trackLen = 0) const;
+    Track DecodeResult(const CylHead& cylhead, const DataRate& dataRate, const Encoding& encoding) const;
 };
 
 //---------------------------------------------------------------------------

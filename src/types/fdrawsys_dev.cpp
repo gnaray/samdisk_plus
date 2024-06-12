@@ -637,7 +637,7 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cy
                         physicalTrackRescans = physicalTrackRescansInit;
                 }
             }
-            Track newTimedTrack = multiScanResult.DecodeResult(cylhead, m_lastDataRate, m_lastEncoding, m_trackInfo[cylhead].trackLenIdeal);
+            Track newTimedTrack = multiScanResult.DecodeResult(cylhead, m_lastDataRate, m_lastEncoding);
             if (m_trackInfo[cylhead].trackLenIdeal > 0)
                 newTimedTrack.setTrackLenAndNormaliseTrackTimeAndSectorOffsets(m_trackInfo[cylhead].trackLenIdeal);
 
