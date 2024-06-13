@@ -44,22 +44,27 @@ private:
     bool DetectEncodingAndDataRate(int head);
     Track BlindReadHeaders(const CylHead& cylhead, int& firstSectorSeen);
     void ReadSector(const CylHead& cylhead, Track& track, int index, int firstSectorSeen = 0);
+    void ReadSectors(const CylHead& cylhead, Track& track, const VectorX<int>& indices, int firstSectorSeen);
     void ReadFirstGap(const CylHead& cylhead, Track& track);
 
     /* Here are the methods of multi track reading based on CmdTimedMultiScan
      * implemented in driver version >= 1.0.1.12 and of physical track reading.
      */
     bool ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScanResult& multiScanResult);
+    TimedAndPhysicalDualTrack RescueTrack(const CylHead& cylhead, const DeviceReadingPolicy& deviceReadingPolicy);
     TimedAndPhysicalDualTrack BlindReadHeaders112(const CylHead& cylhead, const DeviceReadingPolicy& deviceReadingPolicy);
-    void DiscardOutOfSpaceSectorsAtTrackEnd(Track& track) const;
-    void GuessAndAddSectorIdsOfOrphans(const OrphanDataCapableTrack& timeSyncedPhysicalTrackSingle, Track& track) const;
-    void ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const DeviceReadingPolicy& deviceReadingPolicy);
+    bool GuessAndAddSectorId(const Sector& sector, Track& track) const;
+    void GuessAndAddSectorIdsOfOrphans(const OrphanDataCapableTrack& timeSyncedPhysicalTrackSingle,
+        Track& track) const;
+    void ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack,
+        const DeviceReadingPolicy& deviceReadingPolicy, const bool directlyIntoFinal);
     bool ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack);
 
     std::unique_ptr<FdrawcmdSys> m_fdrawcmd;
     Encoding m_lastEncoding{ Encoding::Unknown };
     DataRate m_lastDataRate{ DataRate::Unknown };
     TrackInfo m_trackInfo[MAX_DISK_CYLS * MAX_DISK_HEADS];
+    RepeatedSectors repeatedSectorIds{};
     bool m_warnedMFM128 = false;
 };
 

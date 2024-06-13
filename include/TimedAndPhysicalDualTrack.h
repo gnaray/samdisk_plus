@@ -8,17 +8,13 @@
 class TimedAndPhysicalDualTrack
 {
 public:
-    bool SyncAndDemultiPhysicalToTimed(const int trackLen);
+    bool SyncDemultiMergePhysicalUsingTimed(OrphanDataCapableTrack&& toBeMergedODCTrack, const RepeatedSectors& repeatedSectorIds);
 
     Track timedIdTrack{};
-    OrphanDataCapableTrack physicalTrackMulti{};
-
-    /* The last result of physicalTrackMulti created from physicalTrackMulti by
-     * SyncAndDemultiPhysicalToTimed. It is demultid (i.e. Single) and also
-     * synced if syncedTimedAndPhysicalTracks is true.
+    /* Cumulative last result of adding each newly read synced and demultid
+     * physical multi track by SyncDemultiMergePhysicalUsingTimed.
      */
     OrphanDataCapableTrack lastPhysicalTrackSingle{};
-    bool syncedTimedAndPhysicalTracks = false;
     int lastPhysicalTrackSingleScore = 0;
 
     Track timedIdDataAndPhysicalIdTrack{};

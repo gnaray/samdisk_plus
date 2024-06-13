@@ -323,10 +323,11 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 
     firstSectorSeen = scan_result->firstseen;
 
-    if (scan_result->count > 0)
+    track.tracktime = tracktime;
+    if (scan_result->count > 0) // In case of blank track the encoding and datarate are unsure.
     {
+        const auto offsetAdjuster = FdrawMeasuredOffsetAdjuster(m_lastEncoding);
         const auto mfmbit_us = GetFmOrMfmBitsTime(m_lastDataRate);
-        track.tracktime = tracktime;
         track.tracklen = round_AS<int>(track.tracktime / mfmbit_us);
 
         for (int i = 0; i < scan_result->count; ++i)
@@ -336,7 +337,8 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
             VerifyCylHeadsMatch(cylhead, header, false, opt_normal_disk);
             Sector sector(m_lastDataRate, m_lastEncoding, header);
 
-            sector.offset = round_AS<int>(scan_header.reltime / mfmbit_us);
+            sector.offset = modulo(round_AS<int>(static_cast<int>(scan_header.reltime) / mfmbit_us - offsetAdjuster), track.tracklen);
+            assert(sector.offset > 0);
             sector.set_constant_disk(false);
             track.add(std::move(sector));
         }
@@ -347,105 +349,145 @@ Track FdrawSysDevDisk::BlindReadHeaders(const CylHead& cylhead, int& firstSector
 
 void FdrawSysDevDisk::ReadSector(const CylHead& cylhead, Track& track, int index, int firstSectorSeen)
 {
-    auto& sector = track[index];
-    if (opt_debug)
-        util::cout << "ReadSector: reading " << index << ". sector having ID " << sector.header.sector << "\n";
+    ReadSectors(cylhead, track, VectorX<int>{index}, firstSectorSeen);
+}
 
-    if (sector.has_badidcrc() || sector.has_stable_data()) // Originally this was has_good_data(false, opt_normal_disk)) which did not consider 8k checksummable sector.
-        return;
-
-    auto size = Sector::SizeCodeToRealLength(sector.header.size);
-    MEMORY mem(size);
-
-    const auto readRetriesInit = opt_retries;
-    auto readRetries = readRetriesInit;
+void FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, Track& track, const VectorX<int>& indices, int firstSectorSeen)
+{
+    const auto iSup = indices.size();
+    // The retryTimes * 5 is for balancing between reading a sector and a whole track.
+    // The use case is reading a DD track of 10 sectors by CmdReadTrack which
+    // results in 28672/6250=4,588 revolutions on 1 retrying, so each sector is
+    // read almost 5 times per 1 retry by that. Here without * 5 a sector would
+    // be read only once per 1 retry.
+    // Of course the * 5 should be * 2 when reading a HD track where 2,294
+    // revolution is calculated. TODO Consider datarate for the multiplier.
+    RetryPolicy retriesSpecial(opt_retries.retryTimes * 5 + 1, opt_retries.GetSinceLastChange()); // +1 since prechecking the value in the loop.
+    VectorX<RetryPolicy> sectorRetries(iSup, retriesSpecial);
+    bool thereWasRetry;
     do // The reading loop.
     {
-        // If the sector id occurs more than once on the track, synchronise to the correct one
-        if (track.is_repeated(sector))
+        thereWasRetry = false;
+        for (auto i = 0; i < iSup; sectorRetries[i]--, i++)
         {
-            auto offset = (index + firstSectorSeen) % track.size();
-            if (!m_fdrawcmd->FdSetSectorOffset(offset))
-                throw win32_error(GetLastError(), "SetSectorOffset");
-        }
+            if (!sectorRetries[i].HasMoreRetry())
+                continue;
+            thereWasRetry = true;
+            const auto index = indices[i];
+            auto& sector = track[index];
+            if (opt_debug)
+                util::cout << "ReadSector: reading " << index << ". sector having ID " << sector.header.sector << "\n";
 
-        // Invalidate the content so misbehaving FDCs can be identififed.
-        memset(mem.pb, 0xee, static_cast<size_t>(mem.size));
-
-        const Header& header = sector.header;
-        if (!m_fdrawcmd->CmdRead(cylhead.head, header.cyl, header.head, header.sector, header.size, 1, mem))
-        {
-            // Reject errors other than CRC, sector not found and missing address marks
-            auto error{ GetLastError_MP() };
-            if (error != ERROR_CRC &&
-                error != ERROR_SECTOR_NOT_FOUND &&
-                error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
+            if (sector.has_badidcrc() || sector.has_stable_data()) // Originally this was has_good_data(false, opt_normal_disk)) which did not consider 8k checksummable sector.
             {
-                throw win32_error(error, "Read");
+                sectorRetries[i] = 0;
+                continue; //return
+            }
+
+            auto size = Sector::SizeCodeToRealLength(sector.header.size);
+            MEMORY mem(size);
+
+            // If the sector id occurs more than once on the track, synchronise to the correct one
+            if (track.is_repeated(sector))
+            {
+                auto offset = (index + firstSectorSeen) % track.size();
+                if (!m_fdrawcmd->FdSetSectorOffset(offset))
+                    throw win32_error(GetLastError(), "SetSectorOffset");
+            }
+
+            // Invalidate the content so misbehaving FDCs can be identififed.
+            memset(mem.pb, 0xee, static_cast<size_t>(mem.size));
+
+            const Header& header = sector.header;
+            if (!m_fdrawcmd->CmdRead(cylhead.head, header.cyl, header.head, header.sector, header.size, 1, mem))
+            {
+                // Reject errors other than CRC, sector not found and missing address marks
+                auto error{ GetLastError_MP() };
+                if (error != ERROR_CRC &&
+                    error != ERROR_SECTOR_NOT_FOUND &&
+                    error != ERROR_FLOPPY_ID_MARK_NOT_FOUND)
+                {
+                    throw win32_error(error, "Read");
+                }
+            }
+
+            // Get the controller result for the read to find out more
+            FD_CMD_RESULT result{};
+            if (!m_fdrawcmd->GetResult(result))
+                throw win32_error(GetLastError_MP(), "Result");
+
+            // Try again if header or data field are missing.
+            if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_NO_DATA))
+            {
+                sector.add_read_attempts(1);
+                continue;
+            }
+
+            // Header match not found for a sector we scanned earlier?
+            if (result.st1 & STREG1_END_OF_CYLINDER)
+            {
+                // Warn the user if we suspect the FDC can't handle 128-byte MFM sectors.
+                if (!m_warnedMFM128 && sector.encoding == Encoding::MFM && sector.size() == 128)
+                {
+                    Message(msgWarning, "FDC seems unable to read 128-byte sectors correctly");
+                    m_warnedMFM128 = true;
+                }
+                sector.add_read_attempts(1);
+                continue;
+            }
+
+            VerifyCylHeadsMatch(cylhead, header, false, opt_normal_disk);
+            Header resultHeader(result.cyl, result.head, result.sector, result.size);
+            VerifyCylHeadsMatch(resultHeader, header, false, opt_normal_disk);
+
+            const auto data_crc_error = (result.st2 & STREG2_DATA_ERROR_IN_DATA_FIELD) != 0;
+            const auto id_crc_error = !data_crc_error && result.st1 & STREG1_DATA_ERROR;
+            if (id_crc_error)
+                continue;
+
+            const auto anyError = data_crc_error;
+            uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? IBM_DAM_DELETED : IBM_DAM;
+            const auto expectedHeaderSector = header.sector + (anyError ? 0 : 1);
+            if (result.sector != expectedHeaderSector)
+            {
+                MessageCPP(msgWarningAlways, "Read sector (", header,
+                    ") returned result which differs from expected id (", expectedHeaderSector,
+                    "), ignoring its read data");
+                sector.add_read_attempts(1);
+                sectorRetries[i] = 0;
+                continue; //break
+            }
+
+            Data data(mem.pb, mem.pb + mem.size);
+            sector.add(std::move(data), data_crc_error, dam);
+
+            // If the read command was successful we're all done.
+            if ((result.st0 & STREG0_INTERRUPT_CODE) == 0)
+            {
+                if (sector.has_stable_data())
+                {
+                    sectorRetries[i] = 0;
+                    continue; //break
+                }
+                sectorRetries[i].wasChange = true;
+                continue;
+            }
+
+            // Accept sectors that overlap the next field, as they're unlikely to succeed.
+            if (track.data_overlap(sector))
+            {
+                sectorRetries[i] = 0;
+                continue; //break
+            }
+
+            // Accept 8K sectors with a recognised checksum method.
+            if (track.is_8k_sector() && !ChecksumMethods(mem.pb, size).empty())
+            {
+                sectorRetries[i] = 0;
+                continue; //break
             }
         }
-
-        // Get the controller result for the read to find out more
-        FD_CMD_RESULT result{};
-        if (!m_fdrawcmd->GetResult(result))
-            throw win32_error(GetLastError_MP(), "Result");
-
-        // Try again if header or data field are missing.
-        if (result.st1 & (STREG1_MISSING_ADDRESS_MARK | STREG1_NO_DATA))
-        {
-            sector.add_read_attempts(1);
-            continue;
-        }
-
-        // Header match not found for a sector we scanned earlier?
-        if (result.st1 & STREG1_END_OF_CYLINDER)
-        {
-            // Warn the user if we suspect the FDC can't handle 128-byte MFM sectors.
-            if (!m_warnedMFM128 && sector.encoding == Encoding::MFM && sector.size() == 128)
-            {
-                Message(msgWarning, "FDC seems unable to read 128-byte sectors correctly");
-                m_warnedMFM128 = true;
-            }
-            sector.add_read_attempts(1);
-            continue;
-        }
-
-        // Unsure what result.sector is exactly. Sometimes header.sector but usually header.sector+1.
-        VerifyCylHeadsMatch(cylhead, header, false, opt_normal_disk);
-        Header resultHeader(result.cyl, result.head, result.sector, result.size);
-        VerifyCylHeadsMatch(resultHeader, header, false, opt_normal_disk);
-        if (opt_normal_disk && (result.sector != header.sector && result.sector != header.sector + 1))
-        {
-            MessageCPP(msgWarning, "sector's id.sector (", header.GetRecordAsString(),
-                       ") does not match sector's id.sector (", resultHeader.GetRecordAsString(), "), ignoring this sector.");
-            sector.add_read_attempts(1);
-            continue;
-        }
-
-        bool data_crc_error =(result.st2 & STREG2_DATA_ERROR_IN_DATA_FIELD) != 0;
-        uint8_t dam = (result.st2 & STREG2_CONTROL_MARK) ? IBM_DAM_DELETED : IBM_DAM;
-
-        Data data(mem.pb, mem.pb + mem.size);
-        sector.add(std::move(data), data_crc_error, dam);
-
-        // If the read command was successful we're all done.
-        if ((result.st0 & STREG0_INTERRUPT_CODE) == 0)
-        {
-            if (sector.has_stable_data())
-                break;
-            if (readRetries.sinceLastChange)
-                readRetries = readRetriesInit;
-            continue;
-        }
-
-        // Accept sectors that overlap the next field, as they're unlikely to succeed.
-        if (track.data_overlap(sector))
-            break;
-
-        // Accept 8K sectors with a recognised checksum method.
-        if (track.is_8k_sector() && !ChecksumMethods(mem.pb, size).empty())
-            break;
-    } while (readRetries-- > 0);
+    } while (thereWasRetry);
 }
 
 void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
@@ -510,9 +552,16 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
 /* Here are the methods of multi track reading based on CmdTimedMultiScan
  * implemented in driver version >= 1.0.1.12.
  */
+
 bool FdrawSysDevDisk::ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScanResult &multiScanResult)
 {
+    const auto byte_tolerance_of_time = std::min(opt_byte_tolerance_of_time, 127);
     const bool trackInfoHasEncodingAndDataRate = m_trackInfo[cylhead].encoding != Encoding::Unknown && m_trackInfo[cylhead].dataRate != DataRate::Unknown;
+    // Prefer MFM to FM.
+    VectorX<Encoding> encodings{ Encoding::MFM, Encoding::FM };
+    // Prefer higher datarates.
+    VectorX<DataRate> dataRates{ DataRate::_250K, DataRate::_1M, DataRate::_500K, DataRate::_300K };
+
     if (trackInfoHasEncodingAndDataRate && (m_trackInfo[cylhead].encoding != m_lastEncoding || m_trackInfo[cylhead].dataRate != m_lastDataRate))
     {
         m_lastEncoding = m_trackInfo[cylhead].encoding;
@@ -523,25 +572,21 @@ bool FdrawSysDevDisk::ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScan
     if (m_lastEncoding != Encoding::Unknown && m_lastDataRate != DataRate::Unknown)
     {
         // Try the last successful encoding and data rate.
-        if (!m_fdrawcmd->CmdTimedMultiScan(cylhead.head, 0, multiScanResult, multiScanResult.size, opt_byte_tolerance_of_time))
+        if (!m_fdrawcmd->CmdTimedMultiScan(cylhead.head, 0, multiScanResult, multiScanResult.size, byte_tolerance_of_time))
             throw win32_error(GetLastError_MP(), "TimedMultiScan");
-        if (trackInfoHasEncodingAndDataRate) // Not found sector but earlier found so detection is successful.
-            return true;
+        if (trackInfoHasEncodingAndDataRate) // No matter if sector is found because earlier found so detection is successful.
+            goto Success;
         // Return true if we found a sector.
         if (multiScanResult.count() > 0) // Found sector so detection is successful.
         {
             m_trackInfo[cylhead].encoding = m_lastEncoding;
             m_trackInfo[cylhead].dataRate = m_lastDataRate;
-            return true;
+            goto Success;
         }
     }
 
-    // Prefer MFM to FM.
-    VectorX<Encoding> encodings{ Encoding::MFM, Encoding::FM };
     if (m_lastEncoding != Encoding::Unknown)
         encodings.findAndMove(m_lastEncoding, 0);
-    // Prefer higher datarates.
-    VectorX<DataRate> dataRates{ DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K };
     if (m_lastDataRate != DataRate::Unknown)
         dataRates.findAndMove(m_lastDataRate, 0);
     for (auto encoding : encodings)
@@ -565,7 +610,6 @@ bool FdrawSysDevDisk::ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScan
                     // Fail if user selected the rate.
                     if (opt_datarate == DataRate::_1M)
                         throw util::exception("FDC doesn't support 1Mbps data rate");
-
                     continue;
                 }
             }
@@ -573,7 +617,7 @@ bool FdrawSysDevDisk::ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScan
             if (!m_fdrawcmd->SetEncRate(encoding, dataRate))
                 throw win32_error(GetLastError_MP(), "SetEncRate");
 
-            if (!m_fdrawcmd->CmdTimedMultiScan(cylhead.head, 0, multiScanResult, multiScanResult.size, opt_byte_tolerance_of_time))
+            if (!m_fdrawcmd->CmdTimedMultiScan(cylhead.head, 0, multiScanResult, multiScanResult.size, byte_tolerance_of_time))
                 throw win32_error(GetLastError_MP(), "TimedMultiScan");
             if (multiScanResult.count() > 0)
             {
@@ -582,164 +626,255 @@ bool FdrawSysDevDisk::ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScan
                 m_lastDataRate = dataRate;
                 m_trackInfo[cylhead].encoding = encoding;
                 m_trackInfo[cylhead].dataRate = dataRate;
-                return true;
+                goto Success;
             }
         }
     }
 
     return false; // Nothing detected.
-}
 
-TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cylhead, const DeviceReadingPolicy& deviceReadingPolicy)
-{
-    if (m_fdrawcmd->GetVersion().value < DriverVersion1_0_1_12)
-        throw util::exception("BlindReadHeaders112 method requires driver version 1.12 at least");
-
+Success:
     if (m_trackInfo[cylhead].trackTime <= 0)
-    {   // Premeasuring tracktime once would be enough for constant speed drive but would not be for variable speed drives.
-        // In addition CmdTimed*Scan measures tracktime only if it was not measured earlier although CmdTimed*Scan might adjust it.
+    {
+        // Measuring tracktime now as some drives requires known datarate and encoding.
+        // This solution supports variable speed drives.
         FD_MULTI_TRACK_TIME_RESULT track_time;
         if (!m_fdrawcmd->FdGetMultiTrackTime(track_time, 1))
             throw win32_error(GetLastError_MP(), "GetMultiTrackTime"); // "not available for this disk type"
         m_trackInfo[cylhead].trackTime = static_cast<int>(track_time.spintime);
-        // variable speed is out of scope. however this solution supports variable speed unless m_trackInfo[all] is set as spintime.
+        if (opt_debug >= 1)
+            util::cout << "ScanAndDetectIfNecessary: measured track time " << m_trackInfo[cylhead].trackTime << "\n";
     }
+    // TimedMultiScan's tracktime must be adjusted because both
+    // a) The TimedMultiScan does not modify tracktime, instead the method simply returns it.
+    // b) Either
+    //    1) TimedMultiScan has previously measured probably wrong tracktime when datarate was unknown.
+    //    2) A previous track is scanned again but its tracktime differs due to the drive having variable speed.
+    multiScanResult.SetTrackTime(m_trackInfo[cylhead].trackTime);
+    return true;
+}
 
+TimedAndPhysicalDualTrack FdrawSysDevDisk::RescueTrack(const CylHead& cylhead, const DeviceReadingPolicy& deviceReadingPolicy)
+{
     TimedAndPhysicalDualTrack timedAndPhysicalDualTrack;
     // Find the sectors by scanning the floppy disk both timed and physical.
-    const auto physicalTrackRescansInit = std::max(opt_rescans, opt_retries);
-    auto physicalTrackRescans = physicalTrackRescansInit + 1; // +1 for the initial scanning.
-    const auto timedTrackRescansInit = opt_rescans;
-    DeviceReadingPolicy deviceReadingPolicyForScanning = deviceReadingPolicy;
-    auto timedTrackRescans = timedTrackRescansInit;
+    const auto physicalTrackRescansInit = std::max(opt_rescans, opt_retries); // TODO wrong
+    auto deviceReadingPolicyForScanning = deviceReadingPolicy;
+    auto timedTrackRescans = opt_rescans;
+    auto initialRound = true;
+    auto startTimeScanningLoop = StartStopper("Scanning loop");
     do // The scanning loop.
     {
+        if (opt_debug >= 1)
+            util::cout << "BlindReadHeaders112: scanning loop begin, timedTrackRescans=" << timedTrackRescans << "\n";
         MultiScanResult multiScanResult(MAX_SECTORS);
-        if (!ScanAndDetectIfNecessary(cylhead, multiScanResult))
+        auto startTime = StartStopper("ScanAndDetectIfNecessary");
+        if (!ScanAndDetectIfNecessary(cylhead, multiScanResult)) // Provides m_trackInfo[cylhead].trackTime.
             return timedAndPhysicalDualTrack;
+        StopStopper(startTime, "ScanAndDetectIfNecessary");
 
-        auto timedTrackTime = multiScanResult.trackTime();
         // https://en.wikipedia.org/wiki/List_of_floppy_disk_formats
         // TODO What about Amiga HD disk with 150 RPM? Otherwise the condition is correct.
-        if (timedTrackTime > RPM_TIME_200)
+        if (m_trackInfo[cylhead].trackTime > RPM_TIME_200)
             throw util::diskspeedwrong_exception("index-halving cables are no longer supported (rpm <= 200)");
-        m_trackInfo[cylhead].trackTime = timedTrackTime;
+
         if (m_lastEncoding != Encoding::MFM) // Currently only MFM encoding is supported due to ReadAndMergePhysicalTracks method.
             return timedAndPhysicalDualTrack;
 
-        if (multiScanResult.count() > 0)
+        if (multiScanResult.count() > 0) // In case of blank track the encoding and datarate are unsure.
         {
-            if (m_trackInfo[cylhead].trackLenIdeal <= 0)
-            {
-                physicalTrackRescans--;
-                if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new id when trackLenIdeal was unknown.
-                {
-                    if (physicalTrackRescans.sinceLastChange)
-                        physicalTrackRescans = physicalTrackRescansInit;
-                }
-            }
-            Track newTimedTrack = multiScanResult.DecodeResult(cylhead, m_lastDataRate, m_lastEncoding);
-            if (m_trackInfo[cylhead].trackLenIdeal > 0)
-                newTimedTrack.setTrackLenAndNormaliseTrackTimeAndSectorOffsets(m_trackInfo[cylhead].trackLenIdeal);
+            auto newTimedTrack = multiScanResult.DecodeResult(cylhead, m_lastDataRate, m_lastEncoding);
+            if (opt_debug >= 1)
+                util::cout << "BlindReadHeaders112: scanned track time " << newTimedTrack.tracktime << " and track len " << newTimedTrack.tracklen << " while scanning\n";
 
+            if (opt_debug >= 3)
+            {
+                util::cout << "BlindReadHeaders112: showing newTimedTrack:\n";
+                newTimedTrack.ShowOffsets();
+                util::cout << "BlindReadHeaders112: showing timedIdTrack:\n";
+                timedAndPhysicalDualTrack.timedIdTrack.ShowOffsets();
+            }
+            newTimedTrack.CollectRepeatedSectorIdsInto(repeatedSectorIds);
+            newTimedTrack.Validate(repeatedSectorIds);
             const auto sectorAmountPrev = timedAndPhysicalDualTrack.timedIdTrack.size();
+            timedAndPhysicalDualTrack.timedIdTrack.TuneOffsetsToEachOtherByMin(newTimedTrack); // TODO Uses min(), would average() be better?
             timedAndPhysicalDualTrack.timedIdTrack.add(std::move(newTimedTrack));
+            timedAndPhysicalDualTrack.timedIdTrack.CollectRepeatedSectorIdsInto(repeatedSectorIds);
+            timedAndPhysicalDualTrack.timedIdTrack.Validate(repeatedSectorIds);
             if (timedAndPhysicalDualTrack.timedIdTrack.size() > sectorAmountPrev)
             {
                 deviceReadingPolicyForScanning = deviceReadingPolicy;
                 deviceReadingPolicyForScanning.AddSkippableSectors(timedAndPhysicalDualTrack.timedIdTrack.good_idcrc_sectors());
-                if (timedTrackRescans.sinceLastChange)
-                    timedTrackRescans = timedTrackRescansInit;
+                timedTrackRescans.wasChange = true;
             }
         }
-    } while (timedTrackRescans-- > 0 && deviceReadingPolicyForScanning.WantMoreSectors());
-    // Out of space sectors at track end are not normal, discard them if option normal disk is specified.
-    DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.timedIdTrack);
+        initialRound = false;
+    } while (timedTrackRescans.HasMoreRetryMinusMinus() && deviceReadingPolicyForScanning.WantMoreSectors());
+    StopStopper(startTimeScanningLoop, "Scanning loop");
 
-    timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack = timedAndPhysicalDualTrack.timedIdTrack;
-
-    // If more sectors are required then try to find sectors in the physical track as well.
-    bool initialRound = true;
-    do // The reading and scanning loop.
+    if (opt_debug >= 2)
     {
-        const auto endingRound = !initialRound && physicalTrackRescans <= 0;
-        if (endingRound || !deviceReadingPolicyForScanning.WantMoreSectors()) // Ending round or do not want more sectors.
+        util::cout << "BlindReadHeaders112: scanning loop end, showing timedIdTrack\n";
+        timedAndPhysicalDualTrack.timedIdTrack.ShowOffsets();
+    }
+
+    do
+    {
+        if (timedAndPhysicalDualTrack.timedIdTrack.empty())
+            break;
+        timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack = timedAndPhysicalDualTrack.timedIdTrack;
+        // Must precede AdjustSuspiciousOffsets.
+        timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.DropSectorsFromNeighborCyls(cylhead, cyls());
+        timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.AdjustSuspiciousOffsets(repeatedSectorIds);
+
+        // If more sectors are required then try to find sectors in the physical track as well.
+        auto physicalTrackRescans = physicalTrackRescansInit + 1; // +1 since prechecking the value in the loop.
+        auto startTimeScanningReadingLoop = StartStopper("Scanning reading loop");
+        do // The reading and scanning loop.
         {
-            ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy);
-            if (timedAndPhysicalDualTrack.finalAllInTrack.has_all_stable_data(deviceReadingPolicy.SkippableSectors()))
-                break; // Scanning and reading is complete, all data is stable.
-            if (endingRound)
-                break; // Ending round so reading is finished.
-        }
-        if (!initialRound && physicalTrackRescans > 0)
-        {
-            physicalTrackRescans--;
-            if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found new id when trakLenIdeal was unknown.
+            if (opt_debug >= 2)
+                util::cout << "BlindReadHeaders112: scanning and reading loop begin, physicalTrackRescans=" << physicalTrackRescans << "\n";
+            const auto endingRound = physicalTrackRescans <= 0;
+            if (endingRound || !deviceReadingPolicyForScanning.WantMoreSectors()) // Ending round or do not want more sectors.
             {
-                if (physicalTrackRescans.sinceLastChange)
-                    physicalTrackRescans = physicalTrackRescansInit;
+                ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicy, false);
+                auto deviceReadingPolicyForReading = deviceReadingPolicy;
+                deviceReadingPolicyForReading.AddSkippableSectors(timedAndPhysicalDualTrack.finalAllInTrack.stable_sectors());
+                if (!deviceReadingPolicyForReading.WantMoreSectors())
+                    break; // Scanning and reading is complete, all data is stable.
+                if (endingRound)
+                    break; // Ending round so reading is finished.
             }
-        }
-        if (m_trackInfo[cylhead].trackLenIdeal > 0)
-        {
-            // Updates timedAndPhysicalDualTrack.{lastPhysicalTrackSingle, syncedTimedAndPhysicalTracks}.
-            if (timedAndPhysicalDualTrack.SyncAndDemultiPhysicalToTimed(m_trackInfo[cylhead].trackLenIdeal)) // Found new valuable something.
+            if (physicalTrackRescans.HasMoreRetry())
             {
-                if (physicalTrackRescans.sinceLastChange)
-                    physicalTrackRescans = physicalTrackRescansInit;
+                physicalTrackRescans--;
+                auto startTimeReadAndMergePhysicalTracks = StartStopper("ReadAndMergePhysicalTracks");
+                if (ReadAndMergePhysicalTracks(cylhead, timedAndPhysicalDualTrack)) // Found better scored track.
+                    physicalTrackRescans.wasChange = true;
+                StopStopper(startTimeReadAndMergePhysicalTracks, "ReadAndMergePhysicalTracks");
             }
-            if (timedAndPhysicalDualTrack.syncedTimedAndPhysicalTracks)
+            if (!timedAndPhysicalDualTrack.lastPhysicalTrackSingle.empty())
             {
-                // Out of space sectors at track end are not normal, discard them if option normal disk is specified.
-                DiscardOutOfSpaceSectorsAtTrackEnd(timedAndPhysicalDualTrack.lastPhysicalTrackSingle.track);
                 const auto sectorAmountPrev = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size();
-                // Merging ids of last time synced physical track single with ids of timed id data and physical track (timed track included) and with orphan guessed ids.
-                auto timedIdDataAndPhysicalIdTrackLocal = timedAndPhysicalDualTrack.lastPhysicalTrackSingle.track.CopyWithoutSectorData();
-                timedIdDataAndPhysicalIdTrackLocal.add(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.CopyWithoutSectorData());
-                GuessAndAddSectorIdsOfOrphans(timedAndPhysicalDualTrack.lastPhysicalTrackSingle, timedIdDataAndPhysicalIdTrackLocal);
-                //Merging whole (ids (done earlier) and data of) timed id data and physical id track.
-                timedIdDataAndPhysicalIdTrackLocal.add(std::move(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack));
-                // The merged result becomes the new timed id data and physical track.
-                timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack = std::move(timedIdDataAndPhysicalIdTrackLocal);
+                timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.add(timedAndPhysicalDualTrack.lastPhysicalTrackSingle.track.CopyWithoutSectorData());
+                timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.MergeRepeatedSectors();
                 if (timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.size() > sectorAmountPrev)
                 {
                     deviceReadingPolicyForScanning = deviceReadingPolicy;
                     deviceReadingPolicyForScanning.AddSkippableSectors(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.good_idcrc_sectors());
                 }
             }
+            // TODO When lastPhysicalTrackSingle has an orphan data sector, it means there is no parent
+            // sector id for that, OK. If e.g. its preceding sector is bad then the offset of our orphan
+            // data sector might be too low or too high (shortly: wrong) thus it does not find its
+            // parent sector id. The problem is that even if our orphan data sector with good offset is
+            // found later, it will be merged into the one with wrong offset thus it is lost.
+            // Would dropping our oprhan data sector help? Not really, because then we could drop one
+            // with good offset thus the guesser could not find an id for it.
+            // The solution would be using offset interval in Sector and extending it when merging the
+            // other sector in it. Not a simple change.
+        } while (true);
+        StopStopper(startTimeScanningReadingLoop, "Scanning reading loop");
+    } while (false);
+
+    if (!timedAndPhysicalDualTrack.finalAllInTrack.empty())
+    {
+        auto deviceReadingPolicyForReading = deviceReadingPolicy;
+        auto sectorIndexWithSectorIdAndOffset = timedAndPhysicalDualTrack.finalAllInTrack.FindSectorDetectingInvisibleFirstSector(repeatedSectorIds);
+        if (sectorIndexWithSectorIdAndOffset.sectorIndex < 0)
+            sectorIndexWithSectorIdAndOffset = timedAndPhysicalDualTrack.finalAllInTrack.FindCloseSectorPrecedingUnreadableFirstSector();
+        if (sectorIndexWithSectorIdAndOffset.sectorIndex >= 0)
+        {   // Find the found sector in skippable sectors.
+            const auto& sectorDetector = timedAndPhysicalDualTrack.finalAllInTrack[sectorIndexWithSectorIdAndOffset.sectorIndex];
+            if (sectorDetector.read_attempts() == 0)
+            {
+                const auto it = deviceReadingPolicyForReading.SkippableSectors().FindToleratedSameSector(
+                    timedAndPhysicalDualTrack.finalAllInTrack[sectorIndexWithSectorIdAndOffset.sectorIndex],
+                    opt_byte_tolerance_of_time, timedAndPhysicalDualTrack.finalAllInTrack.tracklen);
+                // Remove the found sector from skippable sectors if it is there so it can be read.
+                if (it != deviceReadingPolicyForReading.SkippableSectors().cend())
+                    deviceReadingPolicyForReading.RemoveSkippableSector(it);
+                // Unsetting wanted sectors so the found sector will be read (as well*).
+                // *: If wanted sectors would be more flexible then adding the found sector to it would be enough.
+                deviceReadingPolicyForReading.SetWantedSectorHeaderSectors(Interval<int>());
+                ReadSectors(cylhead, timedAndPhysicalDualTrack, deviceReadingPolicyForReading, true);
+            }
+            timedAndPhysicalDualTrack.finalAllInTrack.MakeVisibleFirstSector(sectorIndexWithSectorIdAndOffset);
         }
-        initialRound = false;
-    } while (true);
+
+        // Must precede AdjustSuspiciousOffsets and GuessAndAddSectorIdsOfOrphans.
+        timedAndPhysicalDualTrack.finalAllInTrack.DropSectorsFromNeighborCyls(cylhead, cyls());
+        timedAndPhysicalDualTrack.finalAllInTrack.AdjustSuspiciousOffsets(repeatedSectorIds, true, true);
+        GuessAndAddSectorIdsOfOrphans(timedAndPhysicalDualTrack.lastPhysicalTrackSingle, timedAndPhysicalDualTrack.finalAllInTrack);
+        timedAndPhysicalDualTrack.finalAllInTrack.EnsureNotAlmost0Offset();
+        timedAndPhysicalDualTrack.finalAllInTrack.Validate(repeatedSectorIds);
+    }
 
     return timedAndPhysicalDualTrack;
 }
 
-// Remove not normal sector headers at the track end. The track must not be orphan data track.
-void FdrawSysDevDisk::DiscardOutOfSpaceSectorsAtTrackEnd(Track& track) const
+TimedAndPhysicalDualTrack FdrawSysDevDisk::BlindReadHeaders112(const CylHead& cylhead, const DeviceReadingPolicy& deviceReadingPolicy)
 {
-    if (opt_normal_disk)
+    if (m_fdrawcmd->GetVersion().value < DriverVersion1_0_1_12)
+        throw util::exception("BlindReadHeaders112 method requires driver version 1.12 at least");
+    constexpr auto iMax = 2;
+    for (auto i = 0; i <= iMax; i++)
     {
-        while (!track.empty())
+        try
         {
-            auto it = track.rbegin();
-            const auto& sector = *it;
-            assert(sector.header.size != SIZECODE_UNKNOWN);
-            const auto lengthWithoutOuterGaps = GetFmOrMfmSectorOverheadFromOffsetToDataCrcEnd(sector.datarate, sector.encoding, sector.size());
-            if (sector.offset + DataBytePositionAsBitOffset(lengthWithoutOuterGaps, track.getEncoding()) < track.tracklen) // It fits, no more problem.
-                break;
-            if (opt_debug)
-                util::cout << "DiscardOutOfSpaceSectorsAtTrackEnd: discarding sector (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
-            track.sectors().erase(std::next(it).base());
+            return RescueTrack(cylhead, deviceReadingPolicy);
+        }
+        catch (const util::overlappedrepeatedsector_exception& e)
+        {   // Offset time syncing problem (thus neighbor repeated sectors appear), ignore loaded track and try again.
+            MessageCPP(msgWarningAlways, e.what(), i == iMax ? ", skipping reading track" : ", restarting reading track (giving a chance to handle it)");
+        }
+        catch (const util::repeatedsector_exception& e)
+        {   // Offset time syncing problem (thus neighbor repeated sectors appear), ignore loaded track and try again.
+            MessageCPP(msgWarningAlways, e.what(), i == iMax ? ", skipping reading track" : ", restarting reading track (giving a chance to handle it)");
         }
     }
+
+    return TimedAndPhysicalDualTrack();
+}
+
+// Sector must be orphan data sector.
+// Return false if discovering track sector scheme failed.
+bool FdrawSysDevDisk::GuessAndAddSectorId(const Sector& sector, Track& track) const
+{
+    // Let us discover the track sector scheme once if possible.
+    if (track.idAndOffsetPairs.empty())
+        if (!track.DiscoverTrackSectorScheme(repeatedSectorIds))
+            return false;
+    // Missing sector id, try to find it in the found track sector scheme.
+    const auto sectorId = sector.FindParentSectorIdByOffset(track.idAndOffsetPairs, track.tracklen);
+    if (sectorId >= 0)
+    {
+        // The data will be referred later by the parent sector so skip data.
+        auto parentSector = sector.CopyWithoutData(false); // Resets read_attempts.
+        parentSector.header.sector = sectorId;
+        parentSector.header.size = track[0].header.size;
+        parentSector.offset = track.findReasonableIdOffsetForDataFmOrMfm(sector.offset);
+        if (opt_debug)
+            util::cout << "GuessAndAddSectorId: added sector as parent (offset=" << parentSector.offset
+            << ", id.sector=" << parentSector.header.sector << ")\n";
+        track.add(std::move(parentSector));
+    }
+    else
+    {
+//        track.ShowOffsets();
+        MessageCPP(msgWarningAlways, "GuessAndAddSectorId: discovered track but can not find the parent of sector (",
+            sector, ") at offset (", sector.offset, ")");
+    }
+    return true;
 }
 
 void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(const OrphanDataCapableTrack& timeSyncedPhysicalTrackSingle, Track& track) const
 {
     // If there is no cylhead mismatch and there are orphan datas then guess their sector id.
-    if (timeSyncedPhysicalTrackSingle.cylheadMismatch || timeSyncedPhysicalTrackSingle.orphanDataTrack.empty())
+    if (timeSyncedPhysicalTrackSingle.orphanDataTrack.empty())
         return;
 
+    const auto sectorAmount = track.size();
     for (const auto& orphanDataSector : timeSyncedPhysicalTrackSingle.orphanDataTrack)
     {
 
@@ -753,58 +888,79 @@ void FdrawSysDevDisk::GuessAndAddSectorIdsOfOrphans(const OrphanDataCapableTrack
         {
             if (opt_debug)
                 util::cout << "GuessAndAddSectorIdsOfOrphans: Orphan has no parent (offset=" << orphanDataSector.offset << ")\n";
-            // Let us discover the track sector scheme once if possible.
-            if (track.idAndOffsetPairs.empty() && !track.DiscoverTrackSectorScheme(RepeatedSectors()))
-                return;
-            // Missing sector id, try to find it in the found track sector scheme.
-            const auto sectorId = orphanDataSector.FindParentSectorIdByOffset(track.idAndOffsetPairs, track.tracklen);
-            if (sectorId >= 0)
+            if (!GuessAndAddSectorId(orphanDataSector, track))
             {
-                // The data will be referred later by the parent sector so skip data.
-                auto parentSector = orphanDataSector.CopyWithoutData(false); // Resets read_attempts.
-                parentSector.header.sector = sectorId;
-                parentSector.header.size = track[0].header.size;
-                parentSector.offset = track.findReasonableIdOffsetForDataFmOrMfm(orphanDataSector.offset);
-                if (opt_debug)
-                    util::cout << "GuessAndAddSectorIdsOfOrphans: added sector as parent (offset=" << parentSector.offset << ", id.sector=" << parentSector.header.sector << ")\n";
-                track.add(std::move(parentSector));
+                MessageCPP(msgWarningAlways, "Could not discover track sector scheme");
+                return;
             }
         }
     }
+    if (track.size() > sectorAmount)
+        track.MergeRepeatedSectors();
 }
 
-void FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack, const DeviceReadingPolicy& deviceReadingPolicy)
+void FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack,
+    const DeviceReadingPolicy& deviceReadingPolicy, const bool directlyIntoFinal)
 {
+    auto& track = directlyIntoFinal ? timedAndPhysicalDualTrack.finalAllInTrack
+        : timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack;
+    if (track.empty())
+        return;
+
     // Limiting sector reading as specified in case of normal disk request.
     const auto normal_sector_id_begin = opt_base > 0 ? opt_base : 1;
     const auto normal_sector_id_end = opt_sectors > 0 ? (normal_sector_id_begin + static_cast<int>(opt_sectors)) : 256;
-
-    auto& track = timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack;
-    const auto sectorFilterPredicate = [&deviceReadingPolicy, &track, normal_sector_id_begin, normal_sector_id_end](const Sector& sector)
+    const auto sectorFilterPredicate = [&deviceReadingPolicy, &track,
+        normal_sector_id_begin, normal_sector_id_end](const Sector& sector)
     {
+        // TODO Question: ignore offsets or not? When repairing, the repairer ignores offsets currently,
+        // but when copying the offsets are considered. Passing opt_repairis better than nothing,
+        // but we can not tell if loading this track will be used for repairing or not.
         return !deviceReadingPolicy.SkippableSectors().Contains(sector, track.tracklen, opt_repair > 0)
-                && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end));
+            && (deviceReadingPolicy.WantedSectorHeaderSectors().IsEmpty() || deviceReadingPolicy.IsWanted(sector.header.sector))
+            && (!opt_normal_disk || (sector.header.sector >= normal_sector_id_begin && sector.header.sector < normal_sector_id_end));
     };
     const auto iSup = track.size();
+    std::map<int, int> sectorMainIndex; // The goal is reading into same sector even if sectors vector is growing.
+    for (auto i = 0; i < iSup; i++) // Store most read (main) index of each sector id.
+    {
+        const auto& sector = track[i];
+        const auto it = sectorMainIndex.find(sector.header.sector);
+        if (it == sectorMainIndex.end())
+            sectorMainIndex.emplace(sector.header.sector, i);
+        else if (sector.read_attempts() > track[it->second].read_attempts())
+            it->second = i;
+    }
+    VectorX<int> indices;
     for (int j = 0; j < 2; j++)
     {
-        for (int i = j; i < iSup; i += 2)
-        {
+        auto c = j;
+        for (int i = 0; i < iSup; i++)
+        {   // Select each 2nd main index. When a sector is repeated, its main index is determined above.
             const auto& sector = track[i];
-            if (sectorFilterPredicate(sector))
+            if (sectorMainIndex.find(sector.header.sector)->second == i)
             {
-                if (sector.read_attempts() == 0) // Read only if did not read earlier, it will read opt_retries times.
-                {
-                    if (opt_debug)
-                        util::cout << "ReadSectors: reading officially " << i << ". sector (id.sector=" << sector.header.sector << ")\n";
-                    ReadSector(cylhead, track, i, 0);
-                }
+                if (c == 0 && sector.read_attempts() == 0 && sectorFilterPredicate(sector)) // Read only if did not read earlier, it will read opt_retries times.
+                    indices.push_back(i);
+                c = 1 - c;
             }
         }
     }
-    timedAndPhysicalDualTrack.finalAllInTrack = track;
-    if (!timedAndPhysicalDualTrack.lastPhysicalTrackSingle.cylheadMismatch && timedAndPhysicalDualTrack.syncedTimedAndPhysicalTracks)
+    if (!indices.empty())
+    {
+        auto startTimeReadSector = StartStopper("ReadSectors");
+        ReadSectors(cylhead, track, indices, 0);
+        StopStopper(startTimeReadSector, "ReadSectors");
+        if (opt_debug >= 2)
+            util::cout << "ReadSectors: showing timedIdDataAndPhysicalIdTrack\n";
+    }
+    if (!directlyIntoFinal)
+        timedAndPhysicalDualTrack.finalAllInTrack = track;
+    if (!timedAndPhysicalDualTrack.lastPhysicalTrackSingle.empty())
+    {
         timedAndPhysicalDualTrack.lastPhysicalTrackSingle.MergeInto(timedAndPhysicalDualTrack.finalAllInTrack, sectorFilterPredicate);
+        timedAndPhysicalDualTrack.finalAllInTrack.MergeRepeatedSectors();
+    }
 }
 
 bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAndPhysicalDualTrack& timedAndPhysicalDualTrack)
@@ -815,29 +971,28 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
 
     if (!m_fdrawcmd->CmdReadTrack(cylhead.head, cylhead.cyl, cylhead.head, 1, 8, 1, mem)) // Read one big 32K sector.
     {
-        MessageCPP(msgWarningAlways, "Could not read ", strCH(cylhead.cyl, cylhead.head),
+        MessageCPP(msgWarningAlways, "Could not read ", cylhead,
             " at once, it is either blank or prevents from being read");
         return false;
     }
     PhysicalTrackMFM toBeMergedPhysicalTrack(mem, m_lastDataRate);
-    const auto sectorIdAmountPrev = timedAndPhysicalDualTrack.physicalTrackMulti.track.size();
-    timedAndPhysicalDualTrack.physicalTrackMulti.MergePhysicalTrack(cylhead, toBeMergedPhysicalTrack);
-    if (timedAndPhysicalDualTrack.physicalTrackMulti.cylheadMismatch)
-        throw util::diskforeigncylhead_exception(make_string(
-                                                     "cyl head mismatch found during processing physical track"));
-    const bool foundNewSectorId = timedAndPhysicalDualTrack.physicalTrackMulti.track.size() > sectorIdAmountPrev;
-    if (foundNewSectorId && m_trackInfo[cylhead].trackLenIdeal <= 0) // Found new sector id so there is a chance for determining best tracklen.
+    auto& destODCTrack = timedAndPhysicalDualTrack.lastPhysicalTrackSingle;
+    const auto sectorIdAmountPrev = destODCTrack.track.size();
+
+    auto toBeMergedODCTrack = toBeMergedPhysicalTrack.DecodeTrack(cylhead);
+    const auto prevScore = timedAndPhysicalDualTrack.lastPhysicalTrackSingleScore;
+    const auto foundBetterScore = timedAndPhysicalDualTrack.SyncDemultiMergePhysicalUsingTimed(
+        std::move(toBeMergedODCTrack), repeatedSectorIds);
+
+    if (destODCTrack.cylheadMismatch && opt_normal_disk)
+        MessageCPP(msgWarningAlways, "Suspicious: ", cylhead, " does not match at least 1 sector's cyl head on physical track");
+    if (foundBetterScore)
     {
-        const auto bestTrackLen = timedAndPhysicalDualTrack.physicalTrackMulti.determineBestTrackLen(GetFmOrMfmTimeBitsAsRounded(m_lastDataRate, m_trackInfo[cylhead].trackTime));
-        if (bestTrackLen > 0)
-        {
-            m_trackInfo[cylhead].trackLenIdeal = bestTrackLen;
-            if (timedAndPhysicalDualTrack.timedIdTrack.tracklen > 0)
-                timedAndPhysicalDualTrack.timedIdTrack.setTrackLenAndNormaliseTrackTimeAndSectorOffsets(m_trackInfo[cylhead].trackLenIdeal);
-        }
-        return true;
+        if (opt_debug >= 1)
+            util::cout << "ReadAndMergePhysicalTracks: found better score "
+                << timedAndPhysicalDualTrack.lastPhysicalTrackSingleScore << " than " << prevScore << "\n";
     }
-    return false;
+    return foundBetterScore;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
