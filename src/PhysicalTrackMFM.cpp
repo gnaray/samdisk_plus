@@ -300,6 +300,8 @@ OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
     OrphanDataCapableTrack orphanDataCapableTrack;
     PhysicalTrackContext physicalTrackContext(cylHead, dataRate);
 
+    const auto trackLen = DataBitPositionAsBitOffset(m_physicalTrackContent.BytesBitSize(), encoding); // Counted in mfmbits (rawbits).
+    orphanDataCapableTrack.setTrackLen(trackLen * 2); // Setting double the tracklen to avoid wrapping.
     constexpr const auto addressMarkSyncInPhysicalTrackLength = intsizeof(AddressMarkSyncInTrack);
     Data addressMarkSyncInPhysicalTrackBytes(addressMarkSyncInPhysicalTrackLength);
     const auto addressMarkSyncInTrack = reinterpret_cast<AddressMarkSyncInTrack*>(addressMarkSyncInPhysicalTrackBytes.data());
@@ -335,11 +337,9 @@ OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
         m_physicalTrackContent.StepBit();
     }
 
-    if (!orphanDataCapableTrack.empty())
-    {
-        orphanDataCapableTrack.setTrackLen(DataBitPositionAsBitOffset(m_physicalTrackContent.BytesBitSize(), encoding)); // Counted in mfmbits (rawbits).
-        ProcessSectorDataRefs(orphanDataCapableTrack);
-    }
+    ProcessSectorDataRefs(orphanDataCapableTrack);
+    orphanDataCapableTrack.setTrackLen(trackLen); // Setting the real tracklen which sets tracktime too if track is not empty.
+
     return orphanDataCapableTrack;
 }
 // ====================================
