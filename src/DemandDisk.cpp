@@ -49,13 +49,13 @@ TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
         auto retries = supports_retries() ? 0 : opt_retries;
         // If the disk supports rescans we won't duplicate them.
         auto rescans = supports_rescans() ? 0 : opt_rescans;
+        rescans.wasChange = track.size() > 0;
 
         // Consider rescans and error retries.
-        while (rescans > 0 || retries > 0)
+        // If no more rescans are required, stop when there's nothing to fix.
+        while (rescans.HasMoreRetry() || (retries.HasMoreRetry() &&
+            !track.has_all_stable_data(deviceReadingPolicy.SkippableSectors())))
         {
-            // If no more rescans are required, stop when there's nothing to fix.
-            if (rescans <= 0 && track.has_all_stable_data(deviceReadingPolicy.SkippableSectors()))
-                break;
             // Do not seek at second, third, etc. loading.
             auto rescan_trackdata = load(cylhead, false, -1, deviceReadingPolicy);
             auto& rescan_track = rescan_trackdata.track();
@@ -65,7 +65,10 @@ TrackData& DemandDisk::readNC(const CylHead& cylhead, bool uncached,
             if (rescan_track.size() > track.size()
                     || (rescan_track.size() == track.size() && (rescan_track.good_sectors().size() > track.good_sectors().size()
                     || (rescan_track.good_sectors().size() == track.good_sectors().size() && rescan_track.stable_sectors().size() > track.stable_sectors().size()))))
+            {
                 std::swap(trackdata, rescan_trackdata);
+                rescans.wasChange = true;
+            }
 
             // Flux reads include 5 revolutions, others just 1
             auto revs = trackdata.has_flux() ? REMAIN_READ_REVS : 1;

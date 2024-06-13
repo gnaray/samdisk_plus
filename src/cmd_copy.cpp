@@ -20,7 +20,7 @@
 static auto& opt_base = getOpt<int>("base");
 static auto& opt_detect_devfs = getOpt<std::string>("detect_devfs");
 static auto& opt_encoding = getOpt<Encoding>("encoding");
-static auto& opt_disk_retries = getOpt<int>("disk_retries");
+static auto& opt_disk_retries = getOpt<RetryPolicy>("disk_retries");
 static auto& opt_fix = getOpt<int>("fix");
 static auto& opt_merge = getOpt<int>("merge");
 static auto& opt_minimal = getOpt<int>("minimal");
@@ -33,7 +33,6 @@ static auto& opt_resize = getOpt<int>("resize");
 static auto& opt_sectors = getOpt<long>("sectors");
 static auto& opt_skip_stable_sectors = getOpt<bool>("skip_stable_sectors");
 static auto& opt_step = getOpt<int>("step");
-static auto& opt_track_retries = getOpt<int>("track_retries");
 static auto& opt_verbose = getOpt<int>("verbose");
 
 // Priority of formats for srcDiskFormat (lowest first).
@@ -172,17 +171,17 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     // Do not retry disk when
     // 1) merging because it overwrites previous data, wasting of time. Copy would be the same but it becomes repair after first round.
     // 2) disk is constant because the constant disk image always provides the same data, wasting of time.
-    const int disk_retries = !opt_merge && !src_disk->is_constant_disk() && opt_disk_retries >= 0 ? opt_disk_retries : 0;
-    for (auto disk_round = 0; disk_round <= disk_retries; disk_round++)
+    auto diskRetries = opt_merge <= 0 && !src_disk->is_constant_disk() && opt_disk_retries >= 0 ? opt_disk_retries : 0;
+    bool diskInitialRound = true;
+    do
     {
         int repair_track_changed_amount_per_disk = 0;
         const auto transferUniteMode = opt_merge ? RepairSummaryDisk::Merge : (opt_repair ? RepairSummaryDisk::Repair : RepairSummaryDisk::Copy);
         if (!src_disk->is_constant_disk()) // Clear cached tracks of interest of not constant disk.
             src_disk->clearCache(transferDiskRange); // Required for determining stability of sectors in the requested range.
         ReviewTransferPolicy(*src_disk, *dst_disk, fileSystemDeterminerDisk, transferDiskFormat, transferDiskFormatPriority, deviceReadingPolicy, transferDiskRange);
-        bool is_disk_retry = disk_round > 0; // First reading is not retry.
         if (opt_verbose)
-            Message(msgInfo, "%seading disk in %uth round", (is_disk_retry ? "Rer" : "R"), disk_round);
+            MessageCPP(msgInfoAlways, (diskInitialRound ? "R" : "Rer"), "eading disk");
 
         // Transfer the range of tracks to the target image (i.e. copy, merge or repair).
         transferDiskRange.each([&](const CylHead& cylhead)
@@ -212,14 +211,18 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
             break;
 
         if (opt_verbose && repair_track_changed_amount_per_disk > 0)
-            Message(msgInfo, "Destination disk's tracks were repaired %u times in %uth round", repair_track_changed_amount_per_disk, disk_round);
+            MessageCPP(msgInfoAlways, "Destination disk's tracks were repaired ",
+                repair_track_changed_amount_per_disk, " times");
         // Switching to repair mode from normal mode so disk retry will repair instead of overwrite.
-        // If disk retry is automatic and repairing then stop when repair could not improve the dst disk.
-        if (opt_repair && disk_retries == DISK_RETRY_AUTO && repair_track_changed_amount_per_disk == 0)
-            break;
-        if (!opt_merge && !opt_repair)
+        if (opt_merge <= 0 && opt_repair <= 0)
+        {
             opt_repair = 1;
-    }
+            diskRetries.wasChange = true;
+        }
+        if (repair_track_changed_amount_per_disk > 0)
+            diskRetries.wasChange = true;
+        diskInitialRound = false;
+    } while (diskRetries.HasMoreRetryMinusMinus());
     return result;
 }
 

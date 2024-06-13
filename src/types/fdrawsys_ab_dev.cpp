@@ -68,9 +68,16 @@ protected:
         m_fdrawcmd->SetEncRate(Encoding::MFM, DataRate::_500K);
         Track track;
 
-        auto total_scans = opt_retries < 0 ? RAW_READ_ATTEMPTS : opt_retries + 1; // TODO opt_retries can not be negative.
+        // TODO opt_retries can not be negative now. Earlier when it was negative
+        // the loop went on until target was not modified the specified times. This could be another retry policy.
+        auto scanRetries = opt_retries < 0 ? RAW_READ_ATTEMPTS : opt_retries;
+        if (!scanRetries.GetSinceLastChange())
+        {
+            scanRetries.InvertSinceLastChange();
+            MessageCPP(msgWarning, "Retries option is inverted to negative value for compatibility reason");
+        }
 
-        for (auto scan = 0; scan < total_scans; )
+        do
         {
             MEMORY mem(Sector::SizeCodeToLength(RAW_READ_SIZE_CODE));
             if (!m_fdrawcmd->FdRawReadTrack(cylhead.head, RAW_READ_SIZE_CODE, mem))
@@ -103,10 +110,10 @@ protected:
             if (opt_sectors > 0 && track.size() >= opt_sectors)
                 break;
 
-            // If no new sectors were found count an attempt.
-            if (!modified)
-                ++scan;
-        }
+            // If new sectors were found then sign the change.
+            if (modified)
+                scanRetries.wasChange = true;
+        } while (scanRetries.HasMoreRetryMinusMinus());
 
         return TrackData(cylhead, std::move(track));
     }

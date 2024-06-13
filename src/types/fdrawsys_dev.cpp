@@ -235,7 +235,8 @@ bool FdrawSysDevDisk::DetectEncodingAndDataRate(int head)
                 throw win32_error(GetLastError(), "SetEncRate");
 
             // Retry in case of spurious header CRC errors.
-            for (auto i = 0; i <= opt_retries; ++i) // TODO originally opt_retries(=5), could be replaced with opt_encratedetect_retries?
+            // TODO originally opt_retries(=5), could be replaced with opt_encratedetect_retries?
+            for (auto retries = opt_retries + 1; retries.HasMoreRetryMinusMinus(); ) // +1 since prechecking the value in the loop.
             {
                 if (m_fdrawcmd->CmdReadId(head, result))
                 {
@@ -462,7 +463,7 @@ void FdrawSysDevDisk::ReadFirstGap(const CylHead& cylhead, Track& track)
     auto size = Sector::SizeCodeToRealLength(size_code);
     MEMORY mem(size);
 
-    for (int i = 0; i <= opt_retries; ++i)
+    for (auto retries = opt_retries + 1; retries.HasMoreRetryMinusMinus(); ) // +1 since prechecking the value in the loop.
     {
         // Invalidate the content so misbehaving FDCs can be identififed.
         memset(mem.pb, 0xee, static_cast<size_t>(mem.size));

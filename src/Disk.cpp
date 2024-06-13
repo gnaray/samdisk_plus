@@ -15,7 +15,7 @@ static auto& opt_mt = getOpt<int>("mt");
 static auto& opt_repair = getOpt<int>("repair");
 static auto& opt_skip_stable_sectors = getOpt<bool>("skip_stable_sectors");
 static auto& opt_step = getOpt<int>("step");
-static auto& opt_track_retries = getOpt<int>("track_retries");
+static auto& opt_track_retries = getOpt<RetryPolicy>("track_retries");
 static auto& opt_verbose = getOpt<int>("verbose");
 
 
@@ -360,8 +360,9 @@ const Sector* Disk::find_ignoring_size(const Header& header)
     // Do not retry track when
     // 1) not repairing because it overwrites previous data, wasting of time.
     // 2) disk is constant because the constant disk image always provides the same data, wasting of time.
-    const int track_retries = repairMode && !src_disk.is_constant_disk() && opt_track_retries >= 0 ? opt_track_retries : 0;
-    for (auto track_round = 0; track_round <= track_retries; track_round++)
+    auto trackRetries = repairMode && !src_disk.is_constant_disk() && opt_track_retries >= 0 ? opt_track_retries : 0;
+    auto track_round = 0;
+    do
     {
         const bool is_track_retried = track_round > 0; // First reading is not retry.
 
@@ -419,12 +420,12 @@ const Sector* Disk::find_ignoring_size(const Header& header)
 
             dst_data = TrackData(cylhead, std::move(dst_track));
             // If track retry is automatic and repairing then stop when repair could not improve the dst disk.
-            if (track_retries == DISK_RETRY_AUTO && repair_track_changed_amount == 0)
-                break;
+            if (repair_track_changed_amount > 0)
+                trackRetries.wasChange = true;
+            if (opt_verbose && repair_track_changed_amount > 0)
+                MessageCPP(msgInfoAlways, "Destination disk's ",
+                    strCH(cylhead.cyl, cylhead.head), " was repaired ", repair_track_changed_amount, " times");
             trackFixesNumber += repair_track_changed_amount;
-            if (opt_verbose && trackFixesNumber > 0)
-                Message(msgInfoAlways, "Destination disk's track %s was repaired %u times",
-                    strCH(cylhead.cyl, cylhead.head).c_str(), trackFixesNumber);
         }
         else
         {
@@ -438,7 +439,8 @@ const Sector* Disk::find_ignoring_size(const Header& header)
                 dst_data = src_data;
             }
         }
-    }
+        track_round++;
+    } while (trackRetries.HasMoreRetryMinusMinus());
     dst_disk.write(std::move(dst_data));
     return trackFixesNumber;
 }

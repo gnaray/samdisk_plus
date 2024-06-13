@@ -49,7 +49,7 @@ struct OPTIONS
     int maxcopies = 3;
     int scale = 100, pllphase = DEFAULT_PLL_PHASE;
     int bytes_begin = 0, bytes_end = std::numeric_limits<int>::max();
-    int track_retries = -1, disk_retries = -1;
+    RetryPolicy track_retries = 0, disk_retries = 0;
     int stability_level = -1, byte_tolerance_of_time = Track::COMPARE_TOLERANCE_BYTES;
 
     Encoding encoding{ Encoding::Unknown };
@@ -91,7 +91,6 @@ int& getOpt(const char* key)
         {"cylsfirst", Options::opt.cylsfirst},
         {"datacopy", Options::opt.datacopy},
         {"debug", Options::opt.debug},
-        {"disk_retries", Options::opt.disk_retries},
         {"fill", Options::opt.fill},
         {"fix", Options::opt.fix},
         {"flip", Options::opt.flip},
@@ -145,7 +144,6 @@ int& getOpt(const char* key)
         {"step", Options::opt.step},
         {"steprate", Options::opt.steprate},
         {"time", Options::opt.time},
-        {"track_retries", Options::opt.track_retries},
         {"trim", Options::opt.trim},
         {"tty", Options::opt.tty},
         {"verbose", Options::opt.verbose},
@@ -253,8 +251,10 @@ RetryPolicy& getOpt(const char* key)
 {
     static const std::map<std::string, RetryPolicy&> s_mapStringToRetryPolicyVariables =
     {
+        {"disk_retries", Options::opt.disk_retries },
         {"rescans", Options::opt.rescans},
         {"retries", Options::opt.retries},
+        {"track_retries", Options::opt.track_retries }
     };
 
     return s_mapStringToRetryPolicyVariables.at(key);
@@ -519,9 +519,9 @@ static struct option long_options[] =
     { "paranoia",                     no_argument, nullptr, OPT_PARANOIA },        // undocumented. (Multi good data). Rescues floppy image assuming that a good CRC does not necessarily mean good data. It implies readstats thus requires using RDSK format image. It also sets stability_level as 5 if not specified.
     { "stability-level",        required_argument, nullptr, OPT_STABILITY_LEVEL }, // undocumented.  // The count of samely read data of a sector which is considered stable. < 1 means only good data is stable (backward compatibility).
     { "skip-stable-sectors",          no_argument, nullptr, OPT_SKIP_STABLE_SECTORS }, // undocumented. in repair mode skip those sectors which are already rescued in destination.
-    { "track-retries",          required_argument, nullptr, OPT_TRACK_RETRIES },   // undocumented. Amount of track retries. Each retry move the floppy drive head a bit.
+    { "track-retries",          required_argument, nullptr, OPT_TRACK_RETRIES },   // undocumented. Amount of track retries.  If negative then restart retrying when read data improved in last track-retry rounds.
+    { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },    // undocumented. Amount of disk retries. If negative then restart retrying when read data improved in last disk-retry rounds.
     { "detect-devfs",           optional_argument, nullptr, OPT_DETECT_DEVFS },    // undocumented. Detect the device filesystem and if exists use its format.
-    { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },    // undocumented. Amount of disk retries. If auto then do it while data improved.
     { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME}, // undocumented. Two things are considered at same location if their location differs <= this value. Default is 64.
     { "fdraw-rescue-mode",            no_argument, nullptr, OPT_FDRAW_RESCUE_MODE}, // undocumented. Use the rescue method in fdrawsys_dev. Default is using the all-in method.
     { "unhide-first-sector-by-track-end-sector", no_argument, nullptr, OPT_UNHIDE_FIRST_SECTOR_BY_TRACK_END_SECTOR }, // undocumented. Unhide track starting sector by track ending sector (useful when track ending sector hides track starting sector). Default is false.
@@ -736,24 +736,12 @@ bool ParseCommandLine(int argc_, char* argv_[])
             return false;
 
         case OPT_TRACK_RETRIES:
-        {
-            auto str = util::lowercase(optarg);
-            if (str == std::string("auto").substr(0, str.length()))
-                Options::opt.track_retries = DISK_RETRY_AUTO;
-            else
-                Options::opt.track_retries = util::str_value<int>(optarg);
+            Options::opt.track_retries = RetryPolicy(util::str_value<int>(optarg, true));
             break;
-        }
 
         case OPT_DISK_RETRIES:
-        {
-            auto str = util::lowercase(optarg);
-            if (str == std::string("auto").substr(0, str.length()))
-                Options::opt.disk_retries = DISK_RETRY_AUTO;
-            else
-                Options::opt.disk_retries = util::str_value<int>(optarg);
+            Options::opt.disk_retries = RetryPolicy(util::str_value<int>(optarg, true));
             break;
-        }
 
         case OPT_NORMAL_DISK:
             Options::opt.normal_disk = true;
