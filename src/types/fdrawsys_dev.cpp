@@ -50,12 +50,13 @@ FdrawSysDevDisk::FdrawSysDevDisk(const std::string& path, std::unique_ptr<Fdrawc
 
             if (!m_fdrawcmd->SetMotorTimeout(0))
                 throw win32_error(GetLastError(), "SetMotorTimeout");
-            if (!m_fdrawcmd->Recalibrate())
-                throw win32_error(GetLastError(), "Recalibrate");
 
             if (!opt_newdrive)
                 if (!m_fdrawcmd->SetDiskCheck(false))
                     throw win32_error(GetLastError(), "SetDiskCheck");
+
+            if (!m_fdrawcmd->Recalibrate())
+                throw win32_error(GetLastError(), "Recalibrate");
         }
         catch (...)
         {
