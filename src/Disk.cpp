@@ -252,6 +252,18 @@ const Sector* Disk::find(const Header& header)
 const Sector* Disk::find_ignoring_size(const Header& header)
 {
     auto& track = read_track(header);
+    // TODO Although using next line instead of previous line would optimise
+    // reading, later it would be returned again as cached track instead of
+    // reading all sectors.
+    // E.g. a filesystem detector would request only boot sector here and due to
+    // a weak track only that is found (no retry since the requested is found)
+    // but later when reading track for all sectors it would return the cached
+    // track containing only the boot sector even if there would be chance for
+    // other sectors.
+    // This situation could be improved by storing the requested sectors in
+    // Track class and when next request is part of stored request then the
+    // cached track can be returned otherwise uncached reading is necessary.
+    // auto& track = read_track(header, false, DeviceReadingPolicy(Interval<int>(header.sector, 0, BaseInterval::ConstructMode::StartAndLength), false));
     auto it = track.findIgnoringSize(header);
     if (it != track.end())
         return &*it;
@@ -366,7 +378,7 @@ const Sector* Disk::find_ignoring_size(const Header& header)
     {
         const bool is_track_retried = track_round > 0; // First reading is not retry.
 
-        Message(msgStatus, "%seading %s", (is_track_retried ? "Rer" : "R"), strCH(cylhead.cyl, cylhead.head).c_str());
+        MessageCPP(msgStatus, (!is_track_retried ? "R" : "Rer"), "eading disk", cylhead);
         Track dst_track;
         if (repairMode) // Read dst track early so we can check if it has bad sectors.
         {
@@ -390,11 +402,10 @@ const Sector* Disk::find_ignoring_size(const Header& header)
             }
         }
 
-        TrackData src_data;
         // https://docs.rs-online.com/41b6/0900766b8001b0a3.pdf, 7.2 Read error
         // Seeking head forward then backward then forward etc. when track is retried.
         const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk.cyls() - 1)) : -1;
-        src_data = src_disk.read(cylhead * opt_step, uncached || is_track_retried, with_head_seek_to, deviceReadingPolicyLocal);
+        auto src_data = src_disk.read(cylhead * opt_step, uncached || is_track_retried, with_head_seek_to, deviceReadingPolicyLocal);
 
         // Special case, force overriding cylhead of sector headers with cylhead.
         src_data.ForceCylHeads(src_disk.cyls());
