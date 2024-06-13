@@ -38,15 +38,41 @@ public:
             m_lookForPossibleSectors = true;
     }
 
+    bool IsWanted(int sector) const
+    {
+        return !m_wantedSectorHeaderSectors.IsEmpty()
+            && m_wantedSectorHeaderSectors.Where(sector) == BaseInterval::Location::Within;
+    }
+
     const UniqueSectors& SkippableSectors() const
     {
         return m_skippableSectors;
+    }
+
+    void SetSkippableSector(const Sector& skippableSector, const int trackLen)
+    {
+        m_skippableSectors.clear();
+        m_skippableSectors.trackLen = trackLen;
+        m_skippableSectors.insert(skippableSector);
+        m_unskippableWantedSectorHeaderSectorsValid = false;
     }
 
     void SetSkippableSectors(const UniqueSectors& skippableSectors)
     {
         m_skippableSectors = skippableSectors;
         m_unskippableWantedSectorHeaderSectorsValid = false;
+    }
+
+    void AddSkippableSector(const Sector& skippableSector, const int trackLen)
+    {
+        UniqueSectors skippableSectors(trackLen);
+        skippableSectors.insert(skippableSector);
+        AddSkippableSectors(skippableSectors);
+    }
+
+    void RemoveSkippableSector(const UniqueSectors::const_iterator& itSkippableSector)
+    {
+        m_skippableSectors.erase(itSkippableSector);
     }
 
     void AddSkippableSectors(const UniqueSectors& skippableSectors)
