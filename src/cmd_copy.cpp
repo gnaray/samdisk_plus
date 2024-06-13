@@ -75,7 +75,7 @@ void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDet
         if (fmtSectorsOverriden)
             normalTrackSize = lossless_static_cast<int>(opt_sectors);
         // Format priority = NormalDstImage is allowed because dst disk can change in each disk round.
-        else if (opt_repair && dst_disk.is_constant_disk() && transferDiskFormatPriority <= FormatPriority::NormalDstImage)
+        else if (opt_repair > 0 && dst_disk.is_constant_disk() && transferDiskFormatPriority <= FormatPriority::NormalDstImage)
         {
             int dst_track_amount = 0;
             int sum_dst_track_size = 0;
@@ -160,7 +160,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
 
     RepairSummaryDisk fileSystemDeterminerDisk{*src_disk, context};
     // For merge or repair, read any existing target image, error if that fails.
-    if (opt_merge || opt_repair)
+    if (opt_merge > 0 || opt_repair > 0)
     {
         ReadImage(dst_path, dst_disk, false, "", false); // The dst disk should be already normalised.
         if (!dst_disk->is_constant_disk())
@@ -185,7 +185,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     do
     {
         int repair_track_changed_amount_per_disk = 0;
-        const auto transferUniteMode = opt_merge ? RepairSummaryDisk::Merge : (opt_repair ? RepairSummaryDisk::Repair : RepairSummaryDisk::Copy);
+        const auto transferUniteMode = opt_merge > 0 ? RepairSummaryDisk::Merge : (opt_repair > 0? RepairSummaryDisk::Repair : RepairSummaryDisk::Copy);
         if (!src_disk->is_constant_disk()) // Clear cached tracks of interest of not constant disk.
             src_disk->clearCache(transferDiskRange); // Required for determining stability of sectors in the requested range.
         ReviewTransferPolicy(*src_disk, *dst_disk, fileSystemDeterminerDisk, transferDiskFormat, transferDiskFormatPriority, deviceReadingPolicy, transferDiskRange);
@@ -209,7 +209,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         // Write the new/merged target image
         // When merge or repair mode is requested, a new tmp file is written and then renamed as final file
         // which works well only if dst is a file (constant disk) but not device.
-        if (dst_disk->is_constant_disk() && (opt_merge || opt_repair))
+        if (dst_disk->is_constant_disk() && (opt_merge > 0 || opt_repair > 0))
         {
             result = WriteImage(tmp_dst_path, dst_disk) && std::remove(dst_path.c_str()) == 0
                     && std::rename(tmp_dst_path.c_str(), dst_path.c_str()) == 0;
