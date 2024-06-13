@@ -481,7 +481,7 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
             }
             name += make_string("Raw track (", strCH(cyl, head), ")");
 
-            WriteBinaryFile(make_string("f:\\", name, ".pt"), Data(mem.pb, mem.pb + output_size));
+            WriteBinaryFile(make_string("f:\\", name, ".pt"), Data(mem.pb, mem.pb + mem.size));
         }
     }
     return result;
