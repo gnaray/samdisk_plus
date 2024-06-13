@@ -175,8 +175,9 @@ bool WriteImage(const std::string& path, std::shared_ptr<Disk>& disk, const std:
 
     if (!determineDeviceFileSystem.empty() || disk->is_constant_disk())
     {
-        const bool isFileSystemApproved = fileSystemWrappers.FindAndSetApprover(*disk, false, determineDeviceFileSystem.empty() ? DETECT_FS_AUTO : determineDeviceFileSystem);
         const bool isFileSystemApproved = disk->GetFileSystem()
+            || fileSystemWrappers.FindAndSetApprover(*disk, false,
+                determineDeviceFileSystem.empty() ? DETECT_FS_AUTO : determineDeviceFileSystem);
         if (fileSystemPrev && (!isFileSystemApproved || !fileSystemPrev->IsSameNamed(*disk->GetFileSystem())))
             Message(msgWarning, "%s filesystem of disk at path (%s) has been modified",
                     fileSystemPrev->GetName().c_str(), path.c_str());
