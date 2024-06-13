@@ -168,6 +168,7 @@ bool WriteImage(const std::string& path, std::shared_ptr<Disk>& disk, const std:
     }
     catch (...)
     {
+        file.reset();
         std::remove(path.c_str());
         throw;
     }
