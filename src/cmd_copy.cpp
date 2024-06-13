@@ -61,14 +61,14 @@ void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDet
     {
         transferDiskFormat = srcFileSystemDeterminerDisk.GetFileSystem()->GetFormat();
         transferDiskFormatPriority = FormatPriority::SrcDevFS;
-        util::cout << "YEEHAAWW!! We have src filesystem in cmd_copy, its format=" << transferDiskFormat << "\n";
+        MessageCPP(msgInfo, "Detected source filesystem, its format is {", transferDiskFormat, "}\n");
     }
     if (!dst_disk.GetFileSystem() && dst_disk.is_constant_disk() && transferDiskFormatPriority < FormatPriority::DstImageFS
             && fileSystemWrappers.FindAndSetApprover(dst_disk, false))
     {
         transferDiskFormat = dst_disk.GetFileSystem()->GetFormat();
         transferDiskFormatPriority = FormatPriority::DstImageFS;
-        util::cout << "WOW!! We have dst filesystem in cmd_copy, its format=" << transferDiskFormat << "\n";
+        MessageCPP(msgInfo, "Detected destination filesystem, its format is {", transferDiskFormat, "}\n");
     }
     if (opt_normal_disk)
     {
