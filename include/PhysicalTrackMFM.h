@@ -137,7 +137,9 @@ public:
         return addressMark == AddressMark::INDEX;
     }
 
-    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& physicalTrackContent, const PhysicalTrackContext& physicalTrackContext, const Encoding& encoding);
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
+        BitPositionableByteVector& physicalTrackContent, PhysicalTrackContext& physicalTrackContext,
+        const Encoding& encoding);
 
 private:
 };
@@ -163,7 +165,9 @@ public:
         return addressMark == AddressMark::ID && intsizeof(SectorIdInPhysicalTrack) <= availableBytes;
     }
 
-    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& physicalTrackContent, const PhysicalTrackContext& physicalTrackContext, const Encoding& encoding);
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
+        BitPositionableByteVector& physicalTrackContent, PhysicalTrackContext& physicalTrackContext,
+        const Encoding& encoding);
 
     CRC16 CalculateCrc() const
     {
@@ -199,7 +203,9 @@ public:
                 (intsizeof(SectorDataRefInPhysicalTrack) + intsizeof(CrcInTrack) <= availableBytes);
     }
 
-    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack, BitPositionableByteVector& physicalTrackContent, const PhysicalTrackContext& physicalTrackContext, const Encoding& encoding);
+    static void ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
+        BitPositionableByteVector& physicalTrackContent, PhysicalTrackContext& physicalTrackContext,
+        const Encoding& encoding);
 
 private:
 };

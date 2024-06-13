@@ -25,7 +25,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
 
 /*static*/ void TrackIndexInPhysicalTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
                                                   BitPositionableByteVector& physicalTrackContent,
-                                                  const PhysicalTrackContext& /*physicalTrackContext*/,
+                                                  PhysicalTrackContext& /*physicalTrackContext*/,
                                                   const Encoding& encoding)
 {
     const auto byteBitPositionIAM = physicalTrackContent.GetByteBitPosition();
@@ -44,9 +44,8 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
 // ====================================
 
 /*static*/ void SectorIdInPhysicalTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
-                                                BitPositionableByteVector& physicalTrackContent,
-                                                const PhysicalTrackContext& physicalTrackContext,
-                                                const Encoding& encoding)
+    BitPositionableByteVector& physicalTrackContent, PhysicalTrackContext& physicalTrackContext,
+    const Encoding& encoding)
 {
     const auto byteBitPositionIDAM = physicalTrackContent.GetByteBitPosition();
     const auto requiredByteLength = intsizeof(SectorIdInPhysicalTrack);
@@ -78,7 +77,7 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
 
 /*static*/ void SectorDataRefInPhysicalTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
                                                      BitPositionableByteVector& physicalTrackContent,
-                                                     const PhysicalTrackContext& physicalTrackContext,
+                                                     PhysicalTrackContext& physicalTrackContext,
                                                      const Encoding& encoding)
 {
     const auto byteBitPositionDAM = physicalTrackContent.GetByteBitPosition();
@@ -299,7 +298,7 @@ OrphanDataCapableTrack PhysicalTrackMFM::DecodeTrack(const CylHead& cylHead)
 {
     const auto encoding = Encoding::MFM; // Now only MFM encoding is supported. Decoding a FM track has high false-positive risk.
     OrphanDataCapableTrack orphanDataCapableTrack;
-    const PhysicalTrackContext physicalTrackContext(cylHead, dataRate);
+    PhysicalTrackContext physicalTrackContext(cylHead, dataRate);
 
     constexpr const auto addressMarkSyncInPhysicalTrackLength = intsizeof(AddressMarkSyncInTrack);
     Data addressMarkSyncInPhysicalTrackBytes(addressMarkSyncInPhysicalTrackLength);
