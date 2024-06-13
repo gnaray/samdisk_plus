@@ -196,11 +196,13 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         // Transfer the range of tracks to the target image (i.e. copy, merge or repair).
         transferDiskRange.each([&](const CylHead& cylhead)
         {
+            auto start_time = StartStopper("transfer track");
             try {
                 repair_track_changed_amount_per_disk += Disk::TransferTrack(*src_disk, cylhead, *dst_disk, context, transferUniteMode, false, deviceReadingPolicy);
-            } catch (util::diskforeigncylhead_exception & e) {
+            } catch (util::diskforeigncylhead_exception& e) {
                 util::cout << colour::RED << "Error: " << e.what() << colour::none << ", ignoring this whole track to avoid data corruption\n";
             }
+            StopStopper(start_time, "transfer track");
         }, !opt_normal_disk);
 
         // Copy any metadata not already present in the target (emplace doesn't replace)
