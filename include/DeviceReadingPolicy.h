@@ -51,7 +51,37 @@ public:
 
     void AddSkippableSectors(const UniqueSectors& skippableSectors)
     {
-        m_skippableSectors.insert(skippableSectors.begin(), skippableSectors.end());
+        if (skippableSectors.empty())
+            return;
+
+        if (m_skippableSectors.trackLen > 0)
+            assert(skippableSectors.trackLen > 0);
+        else if (!m_skippableSectors.empty())
+            assert(skippableSectors.trackLen == 0);
+
+        if (m_skippableSectors.trackLen > 0 && m_skippableSectors.trackLen != skippableSectors.trackLen)
+        {
+            const auto normaliser = static_cast<double>(m_skippableSectors.trackLen) / skippableSectors.trackLen;
+            for (auto& skippableSector : skippableSectors)
+            {
+                if (!m_skippableSectors.Contains(skippableSector, skippableSectors.trackLen))
+                {
+                    auto normalisedSector = skippableSector;
+                    normalisedSector.offset = round_AS<int>(normalisedSector.offset * normaliser);
+                    m_skippableSectors.insert(normalisedSector);
+                }
+            }
+        }
+        else
+        {
+            if (m_skippableSectors.empty())
+                m_skippableSectors = skippableSectors;
+            else for (auto& skippableSector : skippableSectors)
+            {
+                if (!m_skippableSectors.Contains(skippableSector, skippableSectors.trackLen))
+                    m_skippableSectors.insert(skippableSector);
+            }
+        }
         m_unskippableWantedSectorHeaderSectorsValid = false;
     }
 
