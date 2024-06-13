@@ -22,6 +22,8 @@ public:
     DeviceReadingPolicy(const Interval<int>& wantedSectorHeaderSectors, const UniqueSectors& skippableSectors, bool lookForPossibleSectors = true)
         : DeviceReadingPolicy(wantedSectorHeaderSectors, lookForPossibleSectors)
     {
+        assert(skippableSectors.empty() || skippableSectors.trackLen > 0);
+
         m_skippableSectors = skippableSectors;
     }
 
@@ -162,7 +164,7 @@ public:
                 ss << ", ";
             else
                 writingStarted = true;
-            ss << "Skippable sectors = {" << s << "}";
+            ss << "Skippable sectors = {" << s << "} (tracklen = " << m_skippableSectors.trackLen << ")";
         }
         if (writingStarted)
             ss << ", ";
