@@ -117,6 +117,15 @@ void ReviewTransferPolicy(Disk& src_disk, Disk& dst_disk, Disk& srcFileSystemDet
                 transferDiskRange.cyl_end = transferDiskFormat.cyls;
             if (!diskRangeHeadsOverriden)
                 transferDiskRange.head_end = transferDiskFormat.heads;
+            // Limit the transfer disk range to cyl and head of src disk.
+            if (transferDiskRange.cyl_end > src_disk.cyls())
+            {
+                MessageCPP(msgWarningAlways, "Transfer range (", transferDiskRange,
+                    ") is bigger than source disk format (", strCH(src_disk.cyls(), src_disk.heads()),
+                    "), limiting transfer range");
+                transferDiskRange.cyl_end = src_disk.cyls();
+                transferDiskRange.head_end = src_disk.heads();
+            }
             // Limit to the src disk tracks and heads (it is better than src format in case of device).
             ValidateRange(transferDiskRange, src_disk.cyls(), src_disk.heads(), opt_step);
         }
