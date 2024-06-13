@@ -408,7 +408,12 @@ const Sector* Disk::find_ignoring_size(const Header& header)
         }
 
         bool changed = NormaliseTrack(cylhead, src_track);
-
+        if (src_track.tracklen == 0 && deviceReadingPolicyLocal.SkippableSectors().trackLen > 0)
+        {   // Source track has no tracklen but skippable sectors do, then fprget it.
+            auto skippableSectors = deviceReadingPolicyLocal.SkippableSectors();
+            skippableSectors.trackLen = 0;
+            deviceReadingPolicyLocal.SetSkippableSectors(skippableSectors);
+        }
         if (opt_verbose)
             ScanTrack(cylhead, src_track, context, deviceReadingPolicyLocal.SkippableSectors());
 
