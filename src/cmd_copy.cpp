@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <fstream>
 
 static auto& opt_base = getOpt<int>("base");
 static auto& opt_detect_devfs = getOpt<std::string>("detect_devfs");
@@ -211,8 +212,12 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
         // which works well only if dst is a file (constant disk) but not device.
         if (dst_disk->is_constant_disk() && (opt_merge > 0 || opt_repair > 0))
         {
-            result = WriteImage(tmp_dst_path, dst_disk) && std::remove(dst_path.c_str()) == 0
-                    && std::rename(tmp_dst_path.c_str(), dst_path.c_str()) == 0;
+            result = WriteImage(tmp_dst_path, dst_disk);
+            // Can not use (!ifstream.good() || std::remove()) for some reason.
+            if (result && std::ifstream(dst_path).good())
+                result = std::remove(dst_path.c_str()) == 0;
+            if (result)
+                result = std::rename(tmp_dst_path.c_str(), dst_path.c_str()) == 0;
         }
         else
             result = WriteImage(dst_path, dst_disk);
