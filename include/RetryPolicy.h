@@ -7,8 +7,58 @@ class RetryPolicy
 {
 public:
     RetryPolicy() = default;
-    RetryPolicy(const int retryTimesOption);
-    RetryPolicy(const int retryTimes, const bool sinceLastChange);
+    RetryPolicy(const int retryTimesOption)
+        : RetryPolicy(retryTimesOption >= 0 ? retryTimesOption : -retryTimesOption,
+            retryTimesOption >= 0 ? false : true)
+    {
+    }
+
+    constexpr RetryPolicy(const int retryTimes, const bool sinceLastChange)
+        : retryTimesInitial(retryTimes), sinceLastChange(sinceLastChange),
+        retryTimes(sinceLastChange ? retryTimes - 1 : retryTimes)
+    {
+    }
+
+    constexpr bool GetSinceLastChange() const
+    {
+        return sinceLastChange;
+    }
+
+    void InvertSinceLastChange()
+    {
+        if (sinceLastChange)
+        {
+            sinceLastChange = false;
+            retryTimes = --retryTimesInitial;
+        }
+        else
+        {
+            sinceLastChange = true;
+            retryTimes = retryTimesInitial++;
+        }
+    }
+
+    constexpr bool operator ==(const RetryPolicy& rhs) const
+    {
+        return retryTimes == rhs.retryTimes && sinceLastChange == rhs.sinceLastChange;
+    }
+
+    // Ordered by retryTimes, sinceLastChange incremented.
+    constexpr bool operator <(const RetryPolicy& rhs) const
+    {
+        return retryTimes < rhs.retryTimes || (retryTimes == rhs.retryTimes && (sinceLastChange < rhs.sinceLastChange));
+    }
+
+    constexpr bool operator ==(const int retryTimes) const
+    {
+        return this->retryTimes == retryTimes;
+    }
+
+    // Ordered by retryTimes incremented.
+    constexpr bool operator <(const int retryTimes) const
+    {
+        return this->retryTimes < retryTimes;
+    }
 
     // prefix increment
     inline RetryPolicy& operator++()
@@ -68,6 +118,29 @@ public:
         return lhs; // return the result by value (uses move constructor)
     }
 
+    bool HasMoreRetry()
+    {
+        if (sinceLastChange && wasChange)
+        {
+            wasChange = false;
+            retryTimes = retryTimesInitial;
+        }
+        return retryTimes > 0;
+    }
+
+    bool HasMoreRetryMinusMinus()
+    {
+        const auto result = HasMoreRetry();
+        operator --();
+        return result;
+    }
+
+    bool HasMoreMinusMinusRetry()
+    {
+        operator --();
+        return HasMoreRetry();
+    }
+
     std::string ToString(bool onlyRelevantData = true) const;
     friend std::string to_string(const RetryPolicy& retryPolicy, bool onlyRelevantData = true)
     {
@@ -76,22 +149,15 @@ public:
         return ss.str();
     }
 
-    int retryTimes = 0;
+protected:
+    int retryTimesInitial = 0;
     bool sinceLastChange = false;
+public:
+    int retryTimes = 0;
+    bool wasChange = false;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const RetryPolicy& r) { return os << r.ToString(); }
-
-constexpr bool operator ==(const RetryPolicy& lhs, const RetryPolicy& rhs)
-{
-    return lhs.retryTimes == rhs.retryTimes && lhs.sinceLastChange == rhs.sinceLastChange;
-}
-
-// Ordered by retryTimes, sinceLastChange incremented.
-constexpr bool operator <(const RetryPolicy& lhs, const RetryPolicy& rhs)
-{
-    return lhs.retryTimes < rhs.retryTimes || (lhs.retryTimes == rhs.retryTimes && (lhs.sinceLastChange < rhs.sinceLastChange));
-}
 
 constexpr bool operator !=(const RetryPolicy& lhs, const RetryPolicy& rhs)
 {
@@ -110,16 +176,7 @@ constexpr bool operator <=(const RetryPolicy& lhs, const RetryPolicy& rhs)
     return !(lhs > rhs);
 }
 
-constexpr bool operator ==(const RetryPolicy& lhs, const int retryTimes)
-{
-    return lhs.retryTimes == retryTimes;
-}
 
-// Ordered by retryTimes incremented.
-constexpr bool operator <(const RetryPolicy& lhs, const int retryTimes)
-{
-    return lhs.retryTimes < retryTimes;
-}
 
 constexpr bool operator !=(const RetryPolicy& lhs, const int retryTimes)
 {

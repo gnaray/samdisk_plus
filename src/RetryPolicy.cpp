@@ -2,25 +2,6 @@
 
 #include <iomanip>
 
-RetryPolicy::RetryPolicy(const int retryTimesOption)
-{
-    if (retryTimesOption >= 0)
-    {
-        retryTimes = retryTimesOption;
-        sinceLastChange = false;
-    }
-    else
-    {
-        retryTimes = -retryTimesOption;
-        sinceLastChange = true;
-    }
-}
-
-RetryPolicy::RetryPolicy(const int retryTimes, const bool sinceLastChange)
-    : retryTimes(retryTimes), sinceLastChange(sinceLastChange)
-{
-}
-
 std::string RetryPolicy::ToString(bool /*onlyRelevantData*//* = true*/) const
 {
     std::ostringstream ss;
