@@ -156,12 +156,12 @@ bool& getOpt(const char* key)
 {
     static const std::map<std::string, bool&> s_mapStringToBoolVariables =
     {
+        {"fdraw_rescue_mode", Options::opt.fdraw_rescue_mode },
         {"unhide_first_sector_by_track_end_sector", Options::opt.unhide_first_sector_by_track_end_sector },
         {"normal_disk", Options::opt.normal_disk},
         {"paranoia", Options::opt.paranoia},
         {"readstats", Options::opt.readstats},
         {"skip_stable_sectors", Options::opt.skip_stable_sectors},
-        {"fdraw_rescue_mode", Options::opt.fdraw_rescue_mode},
     };
     return s_mapStringToBoolVariables.at(key);
 }
