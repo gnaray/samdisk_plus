@@ -511,12 +511,15 @@ bool VfdrawcmdSys::CmdTimedMultiScan(int head, int track_retries,
         trackTempSingle.tracklen = orphanDataCapableTrack.getOffsetOfTime(trackTempSingle.tracktime);
 
         // Demulti the temporary track so we can check how many sectors it has.
+        const auto offsetAdjuster = FdrawMeasuredOffsetAdjuster(orphanDataCapableTrack.getEncoding());
         const auto iSup = lossless_static_cast<int>(timed_multi_scan->count);
         for (int i = 0; i < iSup; i++)
         {
-            auto sector = Sector(orphanDataCapableTrack.track[i]);
-            sector.offset %= trackTempSingle.tracklen; // Demultid offset.
-            trackTempSingle.add(std::move(sector));
+            auto& sector = orphanDataCapableTrack.track[i];
+            sector.offset += offsetAdjuster;
+            auto sectorTmp = Sector(sector);
+            sectorTmp.offset = sector.offset % trackTempSingle.tracklen; // Demultid offset.
+            trackTempSingle.add(std::move(sectorTmp));
         }
 
         const auto short_mfm_gap = Is11SectorTrack(trackTempSingle);
