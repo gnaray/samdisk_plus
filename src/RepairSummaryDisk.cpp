@@ -17,11 +17,28 @@ bool RepairSummaryDisk::is_constant_disk() const /*override*/
 }
 
 TrackData& RepairSummaryDisk::readNC(const CylHead& cylhead, bool uncached/* = false*/,
-                                          int /*with_head_seek_to*//* = -1*/, const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) /*override*/
+    int /*with_head_seek_to*//* = -1*/,
+    const DeviceReadingPolicy& deviceReadingPolicy/* = DeviceReadingPolicy{}*/) /*override*/
 {
-    const auto transferMode = m_WriteToDisk.track_exists(cylhead) ? Disk::Repair : Disk::Copy;
+    const auto trackExists = m_WriteToDisk.track_exists(cylhead);
+    if (!uncached)
+    {
+        if (trackExists)
+        {
+            auto& trackData = m_WriteToDisk.readNC(cylhead);
+            auto deviceReadingPolicyLocal = deviceReadingPolicy;
+            deviceReadingPolicyLocal.AddSkippableSectors(trackData.track().stable_sectors());
+            if (!deviceReadingPolicyLocal.WantMoreSectors())
+                return trackData;
+            uncached = true;
+        }
+    }
+    const auto transferMode = trackExists ? Disk::Repair : Disk::Copy;
     TransferTrack(m_ReadFromDisk, cylhead, m_WriteToDisk, m_Context, transferMode, uncached, deviceReadingPolicy);
-    return m_WriteToDisk.readNC(cylhead);
+    auto& trackData = m_WriteToDisk.readNC(cylhead);
+    if (transferMode == Disk::Repair) // Src track is probably less than dst track so update src track.
+        m_ReadFromDisk.Disk::writeNC(TrackData(trackData), true);
+    return trackData;
 }
 
 TrackData& RepairSummaryDisk::writeNC(TrackData&& trackdata, const bool keepStoredFormat/* = false*/) /*override*/
