@@ -55,17 +55,17 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
     const auto sectorIdInPhysicalTrack = *reinterpret_cast<SectorIdInPhysicalTrack*>(sectorIdInPhysicalTrackBytes.data());
     const auto addressMark = sectorIdInPhysicalTrack.m_addressMark;
     const auto badCrc = sectorIdInPhysicalTrack.CalculateCrc() != 0;
+    const auto header = sectorIdInPhysicalTrack.AsHeader();
+    const auto sectorOffset = DataBitPositionAsBitOffset(byteBitPositionIDAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
     if (badCrc) // Not allowing bad crc ids.
         return;
 
-    const Header header = sectorIdInPhysicalTrack.AsHeader();
     if (!VerifyCylHeadsMatch(physicalTrackContext.cylHead, header, badCrc, opt_normal_disk, true))
         orphanDataCapableTrack.cylheadMismatch = true;
     else
     {
         Sector sector(physicalTrackContext.dataRate, encoding, header);
-
-        sector.offset = DataBitPositionAsBitOffset(byteBitPositionIDAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
+        sector.offset = sectorOffset;
         sector.set_badidcrc(badCrc);
         sector.set_constant_disk(false);
         if (opt_debug)
