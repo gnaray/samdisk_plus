@@ -395,6 +395,10 @@ const Sector* Disk::find_ignoring_size(const Header& header)
         // Seeking head forward then backward then forward etc. when track is retried.
         const auto with_head_seek_to = is_track_retried ? std::max(0, std::min(cylhead.cyl + (track_round % 2 == 1 ? 1 : -1), src_disk.cyls() - 1)) : -1;
         src_data = src_disk.read(cylhead * opt_step, uncached || is_track_retried, with_head_seek_to, deviceReadingPolicyLocal);
+
+        // Special case, force overriding cylhead of sector headers with cylhead.
+        src_data.ForceCylHeads(src_disk.cyls());
+
         auto src_track = src_data.track();
 
         if (src_data.has_bitstream())
