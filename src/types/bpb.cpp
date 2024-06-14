@@ -3,6 +3,7 @@
 #include "filesystems/Fat12FileSystem.h"
 #include "Disk.h"
 #include "MemFile.h"
+#include "types/bpb.h"
 
 #include <algorithm>
 #include <string>
@@ -33,4 +34,35 @@ bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
     disk->GetFileSystem() = fat12FileSystem;
     disk->GetTypeDomesticFileSystemNames().emplace(Fat12FileSystem::Name());
     return true;
+}
+
+const std::string STRECOVER_MISS_OR_BAD("======== SORRY, THIS SECTOR CANNOT BE READ FROM FLOPPY DISK BY ST RECOVER. ========");
+const int STRECOVER_MISS_OR_BAD_SIZE = STRECOVER_MISS_OR_BAD.size();
+
+void ConvertStRecoverMissOrBadSectors(std::shared_ptr<Disk>& disk)
+{
+    disk->fmt().range().each([&](const CylHead& cylhead) {
+        const auto& track = disk->read_track(cylhead);
+        VectorX<int> badSectorIndices;
+        const auto iSup = track.size();
+        for (auto i = 0; i < iSup; i++)
+        {
+            const auto& sector = track[i];
+            if (sector.copies() > 0 && sector.data_size() >= STRECOVER_MISS_OR_BAD_SIZE)
+            {
+                const auto charData = reinterpret_cast<const char*>(sector.data_copy().data());
+                const std::string strData(charData, STRECOVER_MISS_OR_BAD_SIZE);
+                if (strData.compare(STRECOVER_MISS_OR_BAD) == 0)
+                    badSectorIndices.push_back(i);
+            }
+        }
+        if (!badSectorIndices.empty())
+        {
+            auto trackWritable = track;
+            const auto iSup = badSectorIndices.size();
+            for (auto i = 0; i < iSup; i++)
+                trackWritable[badSectorIndices[i]].remove_data();
+            disk->write(cylhead, std::move(trackWritable));
+        }
+    }, false);
 }

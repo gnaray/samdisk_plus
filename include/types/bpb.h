@@ -8,3 +8,4 @@
 #include <memory>
 
 bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk);
+void ConvertStRecoverMissOrBadSectors(std::shared_ptr<Disk>& disk);
