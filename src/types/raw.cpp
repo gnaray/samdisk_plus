@@ -1,6 +1,7 @@
 // Raw image files matched by file size alone
 
 //#include "PlatformConfig.h"
+#include "types/raw.h"
 #include "DiskUtil.h"
 #include "Options.h"
 #include "Disk.h"
@@ -85,48 +86,61 @@ bool ReadRAW(MemFile& file, std::shared_ptr<Disk>& disk)
  * and ids of all other tracks are part of those ids before overriding.
  * The current solution does the same but after overriding.
  */
-Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
+Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk, const Format& format/* = Format(RegularFormat::None)*/)
 {
     auto range = opt_range;
     // Ensure that disk contains range but modified range is junk because it is determined below.
     ValidateRange(range, disk->cyls(), disk->heads());
 
-    Format fmt;
-    fmt.cyls = 0;
-    fmt.heads = 0;
-    fmt.base = 0xff;
+    const auto isFormatPreset = !format.IsNone();
+    auto fmt = !isFormatPreset ? Format(RegularFormat::Unspecified) : format;
+    if (!isFormatPreset || format.cyls < 1)
+        fmt.cyls = 0;
+    if (!isFormatPreset || format.heads < 1)
+        fmt.heads = 0;
+    if (!isFormatPreset || format.base < 0)
+        fmt.base = 0xff;
 
     // Determine cyls, heads, datarate, encoding, size, sector range (base, sectors).
+    auto typicalSectorSet = false;
     disk->each([&](const CylHead& cylhead, const Track& track) {
         // Skip empty tracks
         if (track.empty())
             return;
 
-        // Track the used disk extent
-        fmt.cyls = std::max(fmt.cyls, cylhead.cyl + 1);
-        fmt.heads = std::max(fmt.heads, cylhead.head + 1);
+            // Track the used disk extent
+        if (!isFormatPreset || format.cyls < 1)
+            fmt.cyls = std::max(fmt.cyls, cylhead.cyl + 1);
+        if (!isFormatPreset || format.heads < 1)
+            fmt.heads = std::max(fmt.heads, cylhead.head + 1);
 
-        // Keep track of the largest sector count
-        if (track.size() > fmt.sectors)
-            fmt.sectors = static_cast<uint8_t>(track.size());
+            // Keep track of the largest sector count
+            if (!isFormatPreset || format.sectors < 1)
+                if (track.size() > fmt.sectors)
+                    fmt.sectors = static_cast<uint8_t>(track.size());
 
-        // First track?
-        if (fmt.datarate == DataRate::Unknown)
+        // First not empty track?
+        if (!typicalSectorSet)
         {
+            typicalSectorSet = true;
             // Find a typical sector to use as a template
             ScanContext context;
-            Sector typical = GetTypicalSector(cylhead, track, context.sector);
+            auto typical = GetTypicalSector(cylhead, track, context.sector);
 
-            fmt.datarate = typical.datarate;
-            fmt.encoding = typical.encoding;
-            fmt.size = typical.header.size;
+            if (!isFormatPreset || format.datarate == DataRate::Unknown)
+                fmt.datarate = typical.datarate;
+            if (!isFormatPreset || format.encoding == Encoding::Unknown)
+                fmt.encoding = typical.encoding;
+            if (!isFormatPreset || format.size < 0)
+                fmt.size = typical.header.size;
         }
 
         for (auto& s : track.sectors())
         {
             // Track the lowest sector number
-            if (s.header.sector < fmt.base)
-                fmt.base = s.header.sector;
+            if (!isFormatPreset || format.base < 0)
+                if (s.header.sector < fmt.base)
+                    fmt.base = s.header.sector;
         }
     });
 
@@ -136,12 +150,12 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
     const auto fmtBaseDetected = fmt.base;
     // Allow user overrides for flexibility
     fmt.Override(true);
-    const bool fmtBaseOverriden = opt_base != -1;
-    const bool fmtSectorsOverriden = opt_sectors != -1; // Override(true) accepts it.
+    const auto fmtBaseOverriden = opt_base != -1;
+    const auto fmtSectorsOverriden = opt_sectors != -1; // Override(true) accepts it.
     if (fmtBaseOverriden && !fmtSectorsOverriden) // Then sector_above remains the same.
         fmt.sectors -= (fmt.base - fmtBaseDetected);
 
-    int max_id = -1;
+    auto max_id = -1;
     const auto sector_above = fmt.base + fmt.sectors;
     if (fmt.sectors > 0)
     {
@@ -155,28 +169,32 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk)
                 if ((fmtBaseOverriden && s.header.sector < fmt.base) // Ignore sectors below overriden sector range.
                         || (fmtSectorsOverriden && s.header.sector >= sector_above)) // Ignore sectors above sequential overriden sector range.
                     continue;
-
+                if ((isFormatPreset && format.base >= 0 && s.header.sector < fmt.base)// Ignore sectors below specified input format.
+                        || (isFormatPreset && format.sectors >= 1 && s.header.sector >= sector_above)) // Ignore sectors above sequential input format.
+                    continue;
                 // Track the highest sector number
                 if (s.header.sector > max_id)
+                {
                     max_id = s.header.sector;
+                    if (max_id >= sector_above)
+                        throw util::exception("non-sequential sector numbers (e.g. ",
+                            s, " > top ", sector_above - 1, ") are unsuitable for raw output (overriding sector parameter might help)");
+                }
 
                 if (s.datarate != fmt.datarate)
                     throw util::exception("mixed data rates are unsuitable for raw output");
                 else if (s.encoding != fmt.encoding)
                     throw util::exception("mixed data encodings are unsuitable for raw output");
                 else if (s.header.size != fmt.size)
-                    throw util::exception("mixed sector sizes are unsuitable for raw output at "
-                        , cylhead, " sector id ", s.header.sector, ", header.size.id=", s.header.size,
-                        " (size=", s.size(), ") <> track.format.id=", fmt.size,
-                        " (size=", fmt.sector_size(), ")");
+                    throw util::exception("mixed sector sizes are unsuitable for raw output, size of sector ("
+                        , s, ") differs from track.format.size=", fmt.size,
+                        " (bytesize=", fmt.sector_size(), ")");
             }
         });
     }
 
     if (max_id < fmt.base)
         throw util::exception("not found selected sectors");
-    if (max_id >= sector_above)
-        throw util::exception("non-sequential sector numbers are unsuitable for raw output");
     return fmt;
 }
 
