@@ -16,13 +16,6 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 // ====================================
 
-CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
-        const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const
-{
-    return ::DoSectorIdAndDataOffsetsCohere(sectorIdOffset, dataOffset, dataRate, encoding);
-}
-// ====================================
-
 /*static*/ void TrackIndexInPhysicalTrack::ProcessInto(OrphanDataCapableTrack& orphanDataCapableTrack,
                                                   BitPositionableByteVector& physicalTrackContent,
                                                   PhysicalTrackContext& /*physicalTrackContext*/,
@@ -144,38 +137,6 @@ CohereResult PhysicalTrackContext::DoSectorIdAndDataOffsetsCohere(
         orphanSector.add(std::move(sectorData.physicalData), data_crc_error, dam);
     }
 }
-// ====================================
-
-///*static*/ void SectorDataFromPhysicalTrack::ResizeOrphanDataSectorUpToSize(Sector& orphanDataSector, const int sectorSize)
-//{
-//    assert(sectorSize > 0);
-
-////    Sector sizedSector = orphanDataSector.CopyWithoutData(); // Copies read_attempts as well.
-//    const auto iSup = orphanDataSector.copies();
-//    if (iSup == 0)
-//        return;// sizedSector;
-//    const auto physicalSectorSize = SectorDataFromPhysicalTrack::PhysicalSizeOf(sectorSize);
-//    auto physicalDataSize = orphanDataSector.data_size(); // Should be the same for each data.
-//    if (physicalDataSize > physicalSectorSize) // Not using more data than requested.
-//        physicalDataSize = physicalSectorSize;
-//    for (auto i = 0; i < iSup; i++)
-//    {
-//        /*const*/ auto& physicalData = orphanDataSector.data_copy(i);
-//        /* TODO If the physical data size is less than physical sector size then the data ends at next AM or track end.
-//         * It means the data contains gap3 and sync thus its crc will be bad.
-//         * I am not sure which bytes the FDC reads latest but theoretically we could find the end of good data
-//         * by calculating crc for each data length and if it becomes 0 then probably we found the correct length,
-//         * and the last two bytes are the crc.
-//         */
-//        const auto badCrc = CalculateCrcIsBad(orphanDataSector.encoding, physicalData, physicalDataSize);
-//        // Passing read attempts = 0 does not change the read_attempts so it remains correct.
-//        physicalData = GetData(physicalData, physicalDataSize);
-
-//        orphanDataSector.add_original(GetData(physicalData, physicalDataSize), badCrc, orphanDataSector.dam);//, 0, orphanDataSector.data_copy_read_stats(i));
-//    }
-//    return sizedSector;
-//}
-// ====================================
 
 void PhysicalTrackMFM::Rewind()
 {

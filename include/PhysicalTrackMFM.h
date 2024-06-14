@@ -111,8 +111,6 @@ public:
     {
     }
 
-    CohereResult DoSectorIdAndDataOffsetsCohere(const int sectorIdOffset, const int dataOffset, const Encoding& encoding) const;
-
     const CylHead cylHead;
     const DataRate dataRate = DataRate::Unknown;
 };
@@ -230,9 +228,6 @@ public:
 
     static void ProcessInto(Sector& sector, BitPositionableByteVector& physicalTrackContent, const Encoding& encoding,
                             const int nextIdamOffset = 0, const int nextDamOffset = 0);
-
-    // Method for the case when sector size became known and the orphan data sector can be resized.
-//    static void ResizeOrphanDataSectorUpToSize(Sector& orphanDataSector, const int sectorSize);
 
     static constexpr int PhysicalSizeOf(const int dataSize)
     {

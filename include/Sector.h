@@ -265,7 +265,6 @@ public:
     {
     }
 
-    const UniqueSectors StableSectors() const;
     bool Contains(const Sector& other_sector, const int other_tracklen, const bool ignoreOffsets = false) const;
     bool AnyIdsNotContainedInThis(const Interval<int>& id_interval) const;
     UniqueSectors::const_iterator FindToleratedSameSector(const Sector& sector,

@@ -176,47 +176,6 @@ void OrphanDataCapableTrack::MergeOrphansIntoParents(bool removeOrphanAfterMerge
     MergeOrphansIntoParents(orphanDataTrack, track, removeOrphanAfterMerge);
 }
 
-// Add the orphan data capable track to this after fixing (removing last orphan data sector to track end) and syncing.
-void OrphanDataCapableTrack::AddWithSyncAndBrokenEndingFix(OrphanDataCapableTrack&& orphanDataCapableTrack)
-{
-    const auto lastSectorIndex = orphanDataCapableTrack.orphanDataTrack.size() - 1;
-    if (lastSectorIndex >=0) // Not empty.
-    {
-        const auto& sector = orphanDataCapableTrack.orphanDataTrack[lastSectorIndex];
-        // Does the last orphan data sector end at track end? If yes then we ignore it since it can be broken.
-        if (BitOffsetAsDataBytePosition(orphanDataCapableTrack.orphanDataTrack.tracklen - sector.offset, orphanDataCapableTrack.getEncoding()) == sector.data_size())
-        {
-            if (opt_debug)
-                util::cout << "AddWithSyncAndBrokenEndingFix: ignoring possibly broken orphan data sector at track end (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
-            orphanDataCapableTrack.orphanDataTrack.remove(lastSectorIndex);
-        }
-    }
-
-    if (empty())
-    {
-        *this = orphanDataCapableTrack;
-        return;
-    }
-    if (orphanDataCapableTrack.empty())
-        return;
-
-    // Sync the two tracks then add the to be merged track with synced sector offsets to the merged track (this).
-    int syncOffsetBest;
-    if (!orphanDataCapableTrack.track.findSyncOffsetComparedTo(track, syncOffsetBest)) // Can not sync.
-    {
-        if (opt_debug)
-            util::cout << "AddWithSyncAndBrokenEndingFix: can not sync the tracks, choosing the better one\n";
-        if (orphanDataCapableTrack.track.size() > track.size() ||
-                (orphanDataCapableTrack.track.size() == track.size() && orphanDataCapableTrack.orphanDataTrack.size() > orphanDataTrack.size())) // The to be merged track is better.
-            *this = orphanDataCapableTrack;
-        return;
-    }
-    // Apply the sync preferably on to be merged track (if the offsets can remain positive), otherwise on this.
-    orphanDataCapableTrack.syncThisToOtherAsMulti(syncOffsetBest, *this);
-    // Merge the to be merged track (including the tracklen and tracktime and cylheadMismatch).
-    add(std::move(orphanDataCapableTrack));
-}
-
 // Merge the orphan data capable track into the target track.
 void OrphanDataCapableTrack::MergeInto(Track& targetTrack, const std::function<bool (const Sector &)>& considerTargetSectorPredicate/* = nullptr*/)
 {
@@ -224,22 +183,6 @@ void OrphanDataCapableTrack::MergeInto(Track& targetTrack, const std::function<b
 
     targetTrack.add(Sectors(track.sectors()), considerTargetSectorPredicate);
     MergeOrphansIntoParents(orphanDataTrack, targetTrack, false, considerTargetSectorPredicate);
-}
-
-// Merge the physical track into this after it is decoded into an orphan data capable track.
-void OrphanDataCapableTrack::MergePhysicalTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedPhysicalTrack)
-{
-    auto orphanDataCapableTrack = toBeMergedPhysicalTrack.DecodeTrack(cylhead);
-    MergeUnsyncedBrokenEndingTrack(std::move(orphanDataCapableTrack));
-}
-
-// Merge the orphan data capable track into this after fixing (removing last orphan data sector to track end) and syncing, and merge the orphan data sectors into possible parents.
-void OrphanDataCapableTrack::MergeUnsyncedBrokenEndingTrack(OrphanDataCapableTrack&& toBeMergedODCTrack)
-{
-    AddWithSyncAndBrokenEndingFix(std::move(toBeMergedODCTrack));
-
-    // If there are orphan data sectors then merge the them into possible parents.
-    MergeOrphansIntoParents(true);
 }
 
 // Apply the sync preferably on this track. However the offsets must be positive, thus opposite sync the targetTrack if have to.
@@ -264,12 +207,6 @@ void OrphanDataCapableTrack::syncThisToOtherAsMulti(const int syncOffset, Orphan
             s.offset += syncOffset;
         targetODCTrack.addTrackLen(syncOffset);
     }
-}
-
-void OrphanDataCapableTrack::syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly)
-{
-    track.syncAndDemultiThisTrackToOffset(syncOffset, trackLenSingle, syncOnly);
-    orphanDataTrack.syncAndDemultiThisTrackToOffset(syncOffset, trackLenSingle, syncOnly);
 }
 
 void OrphanDataCapableTrack::join()

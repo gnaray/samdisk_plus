@@ -28,10 +28,7 @@ public:
     static void MergeOrphansIntoParents(Track& orphansTrack, Track& parentsTrack, bool removeOrphanAfterMerge, const std::function<bool (const Sector &)>& considerParentSectorPredicate = nullptr);
 
     void MergeOrphansIntoParents(bool removeOrphanAfterMerge);
-    void AddWithSyncAndBrokenEndingFix(OrphanDataCapableTrack&& orphanDataCapableTrack);
     void MergeInto(Track& targetTrack, const std::function<bool (const Sector &)>& considerTargetSectorPredicate = nullptr);
-    void MergePhysicalTrack(const CylHead& cylhead, const PhysicalTrackMFM& toBeMergedPhysicalTrack);
-    void MergeUnsyncedBrokenEndingTrack(OrphanDataCapableTrack&& toBeMergedODCTrack);
     void syncThisToOtherAsMulti(const int offsetDiffBest, OrphanDataCapableTrack& targetODCTrack);
 
 protected:
@@ -44,7 +41,6 @@ public:
     void syncLimitedToOffset(const int syncOffset);
     void demultiAndSyncUnlimitedToOffset(const int syncOffset, const int trackLenSingle);
 
-    void syncAndDemultiThisTrackToOffset(const int syncOffset, const int trackLenSingle, bool syncOnly);
     int determineBestTrackLen(const int timedTrackTime) const;
     void FixOffsetsByTimedToAvoidRepeatedSectorWhenMerging(Track& timedTrack, const RepeatedSectors& repeatedSectorIds);
     void ShowOffsets() const;

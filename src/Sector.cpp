@@ -873,20 +873,6 @@ std::string Sectors::ToString(bool onlyRelevantData/* = true*/) const
 
 //////////////////////////////////////////////////////////////////////////////
 
-const UniqueSectors UniqueSectors::StableSectors() const
-{
-    UniqueSectors stableSectors;
-    std::copy_if(begin(), end(), std::inserter(stableSectors, stableSectors.end()),
-                 [&](const Sector& sector) {
-        if (sector.has_badidcrc())
-            return false;
-        // Checksummable 8k sector is considered in has_stable_data method.
-        return sector.has_stable_data();
-    });
-
-    return stableSectors;
-}
-
 bool UniqueSectors::Contains(const Sector& other_sector, const int other_tracklen, const bool ignoreOffsets/* = false*/) const
 {
     return std::any_of(cbegin(), cend(), [&](const Sector& sectorI) {
