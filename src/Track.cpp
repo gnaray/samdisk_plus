@@ -1522,6 +1522,10 @@ int Track::determineBestTrackLen(const int timedTrackLen) const
     }
     if (opt_debug)
         util::cout << "determineBestTrackTime found trackLenBest " << trackLenBest << "\n";
+
+    if (opt_debug >= 2)
+        AnalyseMultiTrack(trackLenBest);
+
     return trackLenBest;
 }
 

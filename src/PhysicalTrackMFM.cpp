@@ -22,16 +22,16 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
                                                   const Encoding& encoding)
 {
     const auto byteBitPositionIAM = physicalTrackContent.GetByteBitPosition();
-    if (opt_debug)
+    if (opt_debug >= 2)
         util::cout << "physical_track_mfm_fm " << encoding << " IAM at offset " << byteBitPositionIAM.TotalBitPosition() * 2;
     if (orphanDataCapableTrack.trackIndexOffset > 0)
     {
-        if (opt_debug)
+        if (opt_debug >= 2)
             util::cout << " ignored because found another earlier";
     }
     else
         orphanDataCapableTrack.trackIndexOffset = DataBitPositionAsBitOffset(byteBitPositionIAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
-    if (opt_debug)
+    if (opt_debug >= 2)
         util::cout << "\n";
 }
 // ====================================
@@ -51,7 +51,11 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
     const auto header = sectorIdInPhysicalTrack.AsHeader();
     const auto sectorOffset = DataBitPositionAsBitOffset(byteBitPositionIDAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
     if (badCrc) // Not allowing bad crc ids.
+    {
+        if (opt_debug >= 2)
+            util::cout << "physical_track_mfm_fm " << encoding << " IDAM (am=" << addressMark << ", id=" << header.sector << ") at offset " << sectorOffset << " is ignored due to bad CRC\n";
         return;
+    }
 
     if (!VerifyCylHeadsMatch(physicalTrackContext.cylHead, header, badCrc, opt_normal_disk, true))
         orphanDataCapableTrack.cylheadMismatch = true;
@@ -61,7 +65,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
         sector.offset = sectorOffset;
         sector.set_badidcrc(badCrc);
         sector.set_constant_disk(false);
-        if (opt_debug)
+        if (opt_debug >= 2)
             util::cout << "physical_track_mfm_fm " << encoding << " IDAM (am=" << addressMark << ", id=" << header.sector << ") at offset " << sector.offset << "\n";
         orphanDataCapableTrack.track.add(std::move(sector));
     }
@@ -84,7 +88,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
     Sector sector(physicalTrackContext.dataRate, encoding, header);
     sector.offset = DataBitPositionAsBitOffset(byteBitPositionDAM.TotalBitPosition(), encoding); // Counted in mfmbits (rawbits).
     sector.set_constant_disk(false);
-    if (opt_debug)
+    if (opt_debug >= 2)
         util::cout << "physical_track_mfm_fm " << encoding << " DAM (am=" << addressMark << ") at offset " << sector.offset << "\n";
     orphanDataCapableTrack.orphanDataTrack.add(std::move(sector));
 }
@@ -132,7 +136,7 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
         SectorDataFromPhysicalTrack sectorData(encoding, byteBitPositionDAM, std::move(sectorDataInPhysicalTrackBytes), false);
         const bool data_crc_error = sectorData.badCrc; // Always true in this case (because size is unknown).
         const auto dam = sectorData.addressMark;
-        if (opt_debug)
+        if (opt_debug >= 2)
             util::cout << "physical_track_mfm_fm " << encoding << " DAM (am=" << dam << ") at offset " << orphanSector.offset << " without IDAM\n";
         orphanSector.add(std::move(sectorData.physicalData), data_crc_error, dam);
     }
