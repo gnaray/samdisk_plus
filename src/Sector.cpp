@@ -501,7 +501,7 @@ Sector::Merge Sector::merge(Sector&& sector)
 // This can be orphan data or not orphan data sector.
 bool Sector::AcceptOrphanDataSectorSizeForMerging(const int orphanDataPhysicalSize) const
 {
-    const auto thisDataPhysicalSize = header.sector == OrphanDataCapableTrack::ORPHAN_SECTOR_ID ? data_size() : SectorDataFromPhysicalTrack::PhysicalSizeOf(data_size());
+    const auto thisDataPhysicalSize = IsOrphan() ? data_size() : SectorDataFromPhysicalTrack::PhysicalSizeOf(data_size());
     return thisDataPhysicalSize <= orphanDataPhysicalSize;
 }
 
