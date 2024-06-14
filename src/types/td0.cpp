@@ -321,8 +321,7 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
             {
                 if (track.is_repeated(*it))
                 {
-                    ++it;
-                    it = decltype(it)(track.sectors().erase(it.base()));
+                    it = std::make_reverse_iterator(track.sectors().erase(std::next(it).base()));
                     dups_removed++;
                 }
                 else
