@@ -315,8 +315,8 @@ bool ReadTD0(MemFile& file, std::shared_ptr<Disk>& disk)
         {
             auto dups_removed = 0;
 
-            auto it = track.sectors().rbegin();
-            auto rend = track.sectors().rend();
+            auto it = track.rbegin();
+            auto rend = track.rend();
             while (it != rend)
             {
                 if (track.is_repeated(*it))
