@@ -29,7 +29,8 @@ bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
         return false;
 
     file.rewind();
-    disk->format(fat12FileSystem->format, file.data());
+    disk->format(fat12FileSystem->format, file.data(), false, true);
+    ConvertStRecoverMissOrBadSectors(disk);
     disk->strType() = fat12FileSystem->IsBootSectorSigned(bootSectorData) ? DISK_TYPE_BPB_DOS : DISK_TYPE_BPB;
     disk->GetFileSystem() = fat12FileSystem;
     disk->GetTypeDomesticFileSystemNames().emplace(Fat12FileSystem::Name());
