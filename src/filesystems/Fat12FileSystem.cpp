@@ -681,7 +681,7 @@ bool Fat12FileSystem::Dir() /*override*/
     const auto max_dir_sectors = root_dir_ents * msdos_dir_entry_size / format.sector_size();
     std::string volume_label;
     bool is_volume_label_valid = false;
-    util::cout << "T  File Name        Clst     Size         Date     Time\n";
+    util::cout << "T  File Name        Clst     Size         Date     Time   Offset\n";
     for (auto dir_sector_i = dir_sector_0; dir_sector_i < dir_sector_0 + max_dir_sectors; dir_sector_i++)
     {
         auto dir_sector = GetLogicalSector(dir_sector_i);
@@ -705,29 +705,45 @@ bool Fat12FileSystem::Dir() /*override*/
                     volume_label = NameWithExt3(dir_entry, false, &is_volume_label_valid);
                     continue;
                 }
-                auto dir_entry_deleted = dir_entry.name[0] == DIR_ENTRY_DELETED_FLAG;
-                const bool attr_readonly = (dir_entry.attr & DIR_ENTRY_ATTR_READ_ONLY) != 0;
-                const bool attr_hidden = (dir_entry.attr & DIR_ENTRY_ATTR_HIDDEN) != 0;
-                const bool attr_system = (dir_entry.attr & DIR_ENTRY_ATTR_SYSTEM) != 0;
-                const auto dateTime = DateTimeString(util::le_value(dir_entry.date), util::le_value(dir_entry.time), DATE_MAX);
+                const auto dir_entry_deleted = dir_entry.name[0] == DIR_ENTRY_DELETED_FLAG;
+                auto is_name_valid = false;
+                const auto name = NameWithExt3(dir_entry, true, &is_name_valid);
+                if (dir_entry_deleted)
+                {
+                    if (!is_name_valid || name[1] == 0) // Checking 1st character is redundant but safe.
+                        continue;
+                    // The entry is a deleted invalid entry.
+                    const std::string dirEntry{ dir_entry.name, dir_entry.name + sizeof(dir_entry) };
+                    const auto pos = dirEntry.find_first_not_of(dirEntry[1], 2);
+                    if (pos == std::string::npos || pos >= sizeof(dir_entry))
+                        continue; // The entry contains a repeated character as in a sector filled with E5 or similar character.
+                }
+                const auto attr_readonly = (dir_entry.attr & DIR_ENTRY_ATTR_READ_ONLY) != 0;
+                const auto attr_hidden = (dir_entry.attr & DIR_ENTRY_ATTR_HIDDEN) != 0;
+                const auto attr_system = (dir_entry.attr & DIR_ENTRY_ATTR_SYSTEM) != 0;
+                const auto dateTime = DateTime(util::le_value(dir_entry.date), util::le_value(dir_entry.time));
                 const auto file_size = util::le_value(dir_entry.size);
                 const auto fileSizeString = file_size > static_cast<uint32_t>(format.disk_size()) ? "INVALID" : util::fmt("%7u", file_size);
-                auto line_colour = colour::none;
+                auto row_colour = colour::none;
                 // Show deleted entry in red, with first character of filename replaced by "?"
                 if (dir_entry_deleted)
-                    line_colour = colour::red;
+                    row_colour = colour::red;
                 else if (attr_hidden)
-                    line_colour = colour::cyan;
+                    row_colour = colour::cyan;
                 const auto typeLetter = dir_entry.attr & DIR_ENTRY_ATTR_DIRECTORY ? 'D' : 'F';
-                if (line_colour != colour::none)
-                    util::cout << line_colour;
+                if (row_colour != colour::none)
+                    util::cout << row_colour;
                 util::cout << util::fmt("%c  ", typeLetter);
-                bool is_name_valid = false;
-                const auto name = NameWithExt3(dir_entry, true, &is_name_valid);
-                coutTextWithValidationError(name, is_name_valid, line_colour);
-                util::cout << util::fmt("  %5hu  %s  %20s",
-                        util::le_value(dir_entry.start), fileSizeString.c_str(),
-                        dateTime.c_str());
+                coutTextWithValidationError(name, is_name_valid, row_colour);
+                const auto dirEntryStart = util::le_value(dir_entry.start);
+                util::cout << util::fmt("  %5hu  %s  ", dirEntryStart, fileSizeString.c_str());
+                const auto dateTimeInFuture = difftime(DATE_MAX, dateTime) < 0;
+                if (dateTimeInFuture)
+                    util::cout << colour::yellow;
+                util::cout << util::fmt("%20s", DateTimeString(dateTime).c_str());
+                if (dateTimeInFuture)
+                    util::cout << row_colour;
+                util::cout << util::fmt("  %7u", ClusterIndexToLogicalSectorIndex(dirEntryStart) * format.sector_size());
                 std::stringstream ss;
                 bool writingStarted = false;
                 if (attr_readonly) { if (writingStarted) ss << ", "; else writingStarted = true; ss << "Read-Only"; }
@@ -736,7 +752,7 @@ bool Fat12FileSystem::Dir() /*override*/
                 if (writingStarted)
                     util::cout << " (" << ss.str() << ")";
 
-                if (line_colour != colour::none)
+                if (row_colour != colour::none)
                     util::cout << colour::none;
                 util::cout << "\n";
             }
@@ -749,88 +765,36 @@ noMoreDirEntries:
         coutTextWithValidationError(volume_label, is_volume_label_valid);
         util::cout << '\n';
     }
-        //if (dir_entry.attr & DIR_ENTRY_ATTR_DIRECTORY)
-/*
-        auto cluster_amount = GetFileClusterAmount(util::le_value(dir_entry.start));
-        if (cluster_amount > 1) {
-            dir_entry.size;
-        }
-*/
-        //util::cout << dir_entry;
-/*
-    auto& sector9 = disk.get_sector(Header(0, 0, 9, 1));
-    auto& data9 = sector9.data_copy();
 
-    util::cout << util::fmt(" Title: %-11.11s\n\n", &data9[245]);
-    util::cout << " File Name         Start Length Line\n";
-
-    for (uint8_t i = 1; i <= 8; ++i)
+    // Listing bad clusters
+    ReadFATSectors(util::le_value(bpb.abFATSecs), util::le_value(bpb.abBytesPerSec));
+    const auto clusterIndexSup = GetClusterSup();
+    auto writingStarted = false;
+    for (auto clusterIndex = 2; clusterIndex < clusterIndexSup; clusterIndex++)
     {
-        auto& sector = disk.get_sector(Header(0, 0, i, 1));
-        auto& data = sector.data_copy();
-
-        auto dir_entries = sector.size() / intsizeof(TRDOS_DIR);
-        auto pd = reinterpret_cast<const TRDOS_DIR*>(data.data());
-
-        for (auto entry = 0; entry < dir_entries; ++entry, ++pd)
+        const auto clusterNext = GetClusterNext(clusterIndex, clusterIndexSup);
+        if (clusterNext < 0)
+            break;
+        if (IsUsedFatIndex(clusterNext) || !IsBadFatIndex(clusterNext))
+            continue;
+        if (!writingStarted)
         {
-            bool unused = pd->abName[0] == 0x00;
-            bool hidden = pd->abName[0] == 0x01;
-
-            if (unused)
-                continue;
-
-            auto uStart = (pd->abStart[1] << 8) | pd->abStart[0];
-            auto uLength = (pd->abLen[1] << 8) | pd->abLen[0];
-
-            if (!hidden)
-            {
-                // Show regular directory entry
-                util::cout << util::fmt(" %-8.8s <%c> %3u  %05u %05u", pd->abName, pd->bExt, pd->bSectors, uStart, uLength);
-            }
-            else
-            {
-                // Show deleted entry in red, with first character of filename replaced by "?"
-                util::cout << colour::red << util::fmt(" ?%-7.7s <%c> %3u  %05u %05u", pd->abName + 1, pd->bExt, pd->bSectors, uStart, uLength) << colour::none;
-            }
-
-            // If it's a BASIC program and it is not empty, check for auto-start line number
-            // ToDo: skip this for real disks due to seek cost?
-            if (pd->bExt == 'B' && uLength > 0)
-            {
-                // Locate the final sector for the file
-                uint8_t block = pd->bStartSector + lossless_static_cast<uint8_t>((uLength + 255) / 256 - 1);
-                auto offset = (uLength & 0xff) + 2;
-
-                uint8_t cyl = pd->bStartTrack + (block >> 4);
-                uint8_t sec = 1 + (block & 0xf);
-                uint8_t head = (cyl >= TRD_NORM_TRACKS) ? 1 : 0;
-                cyl %= TRD_NORM_TRACKS;
-
-                auto& sectorE = disk.get_sector(Header(cyl, head, sec, 1));
-                auto& dataE = sectorE.data_copy();
-
-                if (offset < sectorE.size() - 1)
-                {
-                    auto line = (dataE[offset + 1] << 8) | dataE[offset];
-                    if (line)
-                    {
-                        if (hidden)
-                            util::cout << "  " << colour::red << line << colour::none << " : ";
-                        else
-                            util::cout << "  " << line;
-                    }
-                }
-            }
-
-            util::cout << '\n';
+            util::cout << "Bad clusters:\n";
+            writingStarted = true;
         }
+        const auto logicalSectorIndexStart = ClusterIndexToLogicalSectorIndex(clusterIndex);
+        const auto headerStart = LogicalSectorIndexToPhysical(logicalSectorIndexStart);
+        util::cout << clusterIndex << " (" << headerStart;
+        const auto sectors_per_cluster = bpb.bSecPerClust;
+        if (sectors_per_cluster > 1)
+        {
+            const auto logicalSectorIndexLast = logicalSectorIndexStart + sectors_per_cluster - 1;
+            const auto headerLast = LogicalSectorIndexToPhysical(logicalSectorIndexLast);
+            util::cout << " - " << headerLast;
+        }
+        util::cout << ")\n";
     }
 
-    util::cout << util::fmt("\n %u File(s)\t %u Track %c. Side\n", data9[228], (data9[227] & 1) ? 40 : 80, (data9[227] & 2) ? 'D' : 'S');
-    util::cout << util::fmt(" %u Del. File(s)\t Free Sector %u\n", data9[244], (data9[230] << 8) | data9[229]);
-
-*/
     return true;
 }
 
