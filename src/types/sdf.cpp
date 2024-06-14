@@ -45,6 +45,18 @@ bool ReadSDF(MemFile& file, std::shared_ptr<Disk>& disk)
     MEMORY mem(SDF_TRACK_SIZE);
     uint8_t cyls = static_cast<uint8_t>(file.size() / (SDF_TRACK_SIZE * SDF_SIDES));
 
+    auto detectedSdf = file.read(mem, sizeof(SDF_TRACK) + sizeof(SDF_SECTOR));
+    file.rewind();
+    if (detectedSdf)
+    {
+        const auto pt = reinterpret_cast<const SDF_TRACK*>(mem.pb);
+        const auto ps = reinterpret_cast<const SDF_SECTOR*>(pt + 1);
+        if (ps->cyl >= cyls || ps->head >= 2 || ps->size > Header::SIZECODE_MAX)
+            detectedSdf = false;
+    }
+    if (!detectedSdf)
+        return false;
+
     Range(cyls, SDF_SIDES).each([&](const CylHead& cylhead) {
         if (!file.read(mem, SDF_TRACK_SIZE))
             throw util::exception("short file reading ", cylhead);
