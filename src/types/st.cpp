@@ -24,9 +24,9 @@ constexpr int ST_DD_MAX_SECTORS = 11;
 constexpr int ST_HD_MIN_SECTORS = 18; // In ST's HD floppy world there were not special formatted disks.
 constexpr int ST_HD_MAX_SECTORS = 21; // Originally ST could not operate HD floppy drive but later it could by a HW modification.
 
-bool isUnexpectedSTFormat(const Format& format)
+bool isUnexpectedSTFormat(const Format& format, const bool allowMoreTracks)
 {
-    return format.cyls < ST_MIN_TRACKS || format.cyls > ST_MAX_TRACKS
+    return format.cyls < ST_MIN_TRACKS || (!allowMoreTracks && format.cyls > ST_MAX_TRACKS)
             || format.heads < ST_MIN_SIDES || format.heads > ST_MAX_SIDES
             || format.sectors < ST_DD_MIN_SECTORS
             || (format.sectors > ST_DD_MAX_SECTORS && format.sectors < ST_HD_MIN_SECTORS)
@@ -47,9 +47,15 @@ bool ReadST(MemFile& file, std::shared_ptr<Disk>& disk)
         return false;
 
     Format format{stFat12FileSystem->format};
-    if (!diskHasFileSystem || stFat12FileSystem->format.disk_size() != file.size()
-            || isUnexpectedSTFormat(stFat12FileSystem->format))
+    // Accept disks having different amount of cyls (either space-saver or space-spender).
+    const auto diskSizeDiffersFromFileSystemSize = stFat12FileSystem->format.disk_size() != file.size();
+    const auto diskHasFileSystemWithDifferentCyls = diskHasFileSystem && diskSizeDiffersFromFileSystemSize
+        && !isUnexpectedSTFormat(stFat12FileSystem->format, true)
+        && file.size() % stFat12FileSystem->format.cyl_size() == 0;
+    if (!diskHasFileSystem || (!diskHasFileSystemWithDifferentCyls && (diskSizeDiffersFromFileSystemSize
+            || isUnexpectedSTFormat(stFat12FileSystem->format, false))))
     {
+        // Discover the format when disk size differs from what filesystem geometry suggests or filesystem format is unexpected.
         // Scan geometry combinations known to be used by ST disks. These disks having no filesystem were DD floppies.
         format.size = SizeToCode(SECTOR_SIZE);
         for (int cyls = ST_MAX_TRACKS; cyls >= ST_MIN_TRACKS; --cyls)
