@@ -99,7 +99,8 @@ bool Fat12FileSystem::SetFormatByBootSectorData(const Data& bootSectorData)
     if (bootSectorBPB.bSecPerClust < 1 || util::le_value(bootSectorBPB.abResSectors) < 1
             || bootSectorBPB.bFATs < 1 || bootSectorBPB.bFATs > 2 || root_dir_ents == 0
             || (root_dir_ents & (bpb_bytes_per_sec / intsizeof(msdos_dir_entry) - 1)) != 0
-            || (bootSectorBPB.bMedia != 0xf0 && bootSectorBPB.bMedia < 0xf8) || util::le_value(bootSectorBPB.abFATSecs) < 1)
+            || (bootSectorBPB.bMedia < 0xf8 && bootSectorBPB.bMedia != 0xf0 && bootSectorBPB.bMedia != 0x0) // media = 0 is not standard but happens.
+            || util::le_value(bootSectorBPB.abFATSecs) < 1)
         return false;
 
     format.base = 1;
@@ -119,6 +120,8 @@ bool Fat12FileSystem::SetFormatByBootSectorData(const Data& bootSectorData)
                 GetName().c_str(), total_sectors, format.total_sectors(), format.cyls, format.heads, format.sectors);
     format.datarate = (format.track_size() < 6000) ? DataRate::_250K : ((format.track_size() < 12000) ? DataRate::_500K : DataRate::_1M);
     format.gap3 = 0; // auto, based on sector count
+    if (bootSectorBPB.bMedia == 0x0)
+        MessageCPP(msgWarning, "BPB's Media byte is invalid (0) but accepting it since BPB seems to be valid anyway");
     return true;
 }
 
