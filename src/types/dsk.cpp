@@ -23,6 +23,7 @@
 
 static auto& opt_fix = getOpt<int>("fix");
 static auto& opt_legacy = getOpt<int>("legacy");
+static auto& opt_offsets = getOpt<int>("offsets");
 static auto& opt_paranoia = getOpt<bool>("paranoia");
 static auto& opt_readstats = getOpt<bool>("readstats");
 
@@ -517,12 +518,19 @@ bool ReadDSK(MemFile& file, std::shared_ptr<Disk>& disk, int edsk_version)
 
                 uint16_t val;
                 if (file.read(&val, sizeof(val), 1))
-                    track.tracklen = DataBytePositionAsBitOffset(util::letoh(val)); // convert to bitstream bits
+                    track.tracklen = util::letoh(val) * 16; // decode to bitstream bits
 
                 for (auto& sector : track.sectors())
                 {
                     if (file.read(&val, sizeof(val), 1))
-                        sector.offset = DataBytePositionAsBitOffset(util::letoh(val));  // convert to bitstream bits
+                    {
+                        sector.offset = util::letoh(val) * 16;  // decode to bitstream bits
+                        if (sector.offset < 16)
+                        {
+                            MessageCPP(msgWarning, "Read (almost) 0 offset of ", sector.header, ", setting it as not 0");
+                            sector.offset = 16;
+                        }
+                    }
                 }
 
                 disk->write(cylhead, std::move(track));
@@ -657,7 +665,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
                 throw util::exception(cylhead, " is mixed-density, which EDSK doesn't support");
 
             bool added_sector_offsets = false;
-            offsets.push_back(util::htole(static_cast<uint16_t>(BitOffsetAsDataBytePosition(track.tracklen))));
+            offsets.push_back(util::htole(static_cast<uint16_t>(track.tracklen / 16))); // encode from bitstream bits
 
             auto pt = reinterpret_cast<EDSK_TRACK*>(mem.pb);
             auto ps = reinterpret_cast<EDSK_SECTOR*>(pt + 1);
@@ -720,13 +728,17 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
 
                     // If any offsets are zero we can't generate append an offsets block.
                     if (!sector.offset)
+                    {
                         add_offsets_block = false;
+                        if (opt_offsets == 1)
+                            MessageCPP(msgWarning, "Not writing offsets because ", sector.header, " has offset 0");
+                    }
                     // Take care to only output offsets on the first pass around the fitting loop.
                     else if (!added_sector_offsets)
                     {
                         // This dsk format converts datarate 300Kbps to 250Kbps so do it on sectors as well.
                         sector.normalise_datarate(datarate);
-                        offsets.push_back(util::htole(static_cast<uint16_t>(BitOffsetAsDataBytePosition(sector.offset))));
+                        offsets.push_back(util::htole(static_cast<uint16_t>(sector.offset / 16))); // encode from bitstream bits
                     }
 
                     // Accept only normal and deleted DAMs, removing the data field for other types.
