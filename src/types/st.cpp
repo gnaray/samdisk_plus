@@ -100,14 +100,25 @@ bool WriteST(FILE* f_, std::shared_ptr<Disk>& disk)
 {
     disk->GetTypeDomesticFileSystemNames().emplace(StFat12FileSystem::Name());
 
-    const auto format = CheckBeforeWriteRAW(disk);
-    disk->fmt() = format;
+    auto needNewBPB = false;
+    Format format;
+    if (fileSystemWrappers.FindAndSetApprover(*disk, false))
+    {
+        if (disk->GetFileSystem()->GetName() != StFat12FileSystem::Name())
+            needNewBPB = true;
+        else
+            format = CheckBeforeWriteRAW(disk, disk->GetFileSystem()->GetFormat());
+    }
+    if (format.IsNone())
+        format = CheckBeforeWriteRAW(disk);
 
-    auto bpb_modified = false;
     const auto stFat12FileSystem = std::make_shared<StFat12FileSystem>(*disk, format);
-    // If disk has no boot sector or it has any filesystem but not StFat12 or StFat12 with different format then write new BPB.
-    if (stFat12FileSystem->EnsureBootSector() || (fileSystemWrappers.FindAndSetApprover(*disk, false)
-            && !disk->GetFileSystem()->IsSameNamedWithSameCylHeadSectorsSize(*stFat12FileSystem)))
+    needNewBPB |= stFat12FileSystem->EnsureBootSector(); // Requires existing format.
+    disk->fmt() = stFat12FileSystem->format;
+
+    const auto& formatST = disk->fmt();
+    auto bpb_modified = false;
+    if (needNewBPB)
     {
         stFat12FileSystem->ReadBpbFromDisk();
         if ((bpb_modified = stFat12FileSystem->ReconstructBpb()))
@@ -118,13 +129,13 @@ bool WriteST(FILE* f_, std::shared_ptr<Disk>& disk)
     if (disk->strType() == Disk::TYPE_UNKNOWN)
         disk->strType() = DISK_TYPE_ST;
 
-    const auto result = WriteRegularDisk(f_, *disk, format);
+    const auto result = WriteRegularDisk(f_, *disk, formatST);
     if (result) {
         Message(msgInfo, "Wrote %u cyl%s, %u head%s, %2u sector%s, %4u bytes/sector = %u bytes%s",
-            format.cyls, (format.cyls == 1) ? "" : "s",
-            format.heads, (format.heads == 1) ? "" : "s",
-            format.sectors, (format.sectors == 1) ? "" : "s",
-            format.sector_size(), format.disk_size(),
+            formatST.cyls, (formatST.cyls == 1) ? "" : "s",
+            formatST.heads, (formatST.heads == 1) ? "" : "s",
+            formatST.sectors, (formatST.sectors == 1) ? "" : "s",
+            formatST.sector_size(), formatST.disk_size(),
             bpb_modified ? " and boot sector with reconstructed BPB" : "");
     }
     return result;
