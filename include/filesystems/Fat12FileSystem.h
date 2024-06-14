@@ -104,19 +104,27 @@ public:
     bool SetFormatByBootSectorData(const Data& bootSectorData);
     virtual bool SetFormatByBPB(const BIOS_PARAMETER_BLOCK& bootSectorBPB);
 
-    tm DateTime(const uint16_t date, const uint16_t time, const time_t& dateMax = {}) const;
+    time_t DateTime(const uint16_t date, const uint16_t time, const time_t& dateMax = {}) const;
+    std::string DateTimeString(const time_t& dateTime) const;
     std::string DateTimeString(const uint16_t date, const uint16_t time, const time_t& dateMax = {}) const;
     const Sector* GetBootSector();
+    Header LogicalSectorIndexToPhysical(int logicalSectorIndex) const;
     const Sector* GetLogicalSector(int sector_index, bool ignoreSize = false);
     int DetermineSectorsPerCluster() const;
     bool IsEofFatIndex(int fat_index) const;
+    bool IsBadFatIndex(int fat_index) const;
     bool IsNextFatIndex(int fat_index) const;
     bool IsUsedFatIndex(int fat_index) const;
+    int ClusterIndexToLogicalSectorIndex(const int cluster) const;
+    int GetClusterSup() const;
+    bool HasFatSectorNormalDataAt(const int fatInstance, const int offset) const;
+    int GetClusterNext(const int cluster, const int clusterSup) const;
     int GetFileClusterAmount(int start_cluster) const;
     virtual bool IsShortNameCharValid(const uint8_t character, const int pos, bool allowLowerCase = false) const;
     bool IsValidShortName(const std::string& dir_entry_name) const;
     int AnalyseDirEntries();
     int MaxFatSectorsBeforeAnalysingFat() const;
+    void ReadFATSectors(const int sectorsPerFAT, const int sectorSize, VectorX<const Sector*>* cachedLogicalSectors = nullptr);
     // Examining sector distance of FAT copies and finding the best distance which equals to fat sectors.
     int AnalyseFatSectors();
     bool ReconstructBpb();
@@ -137,7 +145,9 @@ public:
     Format format{};
     BIOS_PARAMETER_BLOCK bpb{};
     Data fat1{};
+    VectorX<bool> fat1SectorHasNormalData{};
     Data fat2{};
+    VectorX<bool> fat2SectorHasNormalData{};
     int new_fat_sectors = 0;
     int new_root_dir_entries = 0;
     int sectors_per_cluster_by_root_files = 0;

@@ -128,25 +128,31 @@ const Sector* Fat12FileSystem::GetBootSector()
     return GetLogicalSector(0, true);
 }
 
-const Sector* Fat12FileSystem::GetLogicalSector(int sector_index, bool ignoreSize/*= false*/)
+Header Fat12FileSystem::LogicalSectorIndexToPhysical(int logicalSectorIndex) const
 {
     if (format.sectors <= 0 || format.heads <= 0 || format.cyls <= 0)
         throw util::exception("selected disk region is empty");
-    if (sector_index < 0 || sector_index > format.disk_size() / format.sector_size())
-        throw util::exception("invalid logical sector index ", sector_index);
-    const auto sector_id = sector_index % format.sectors + 1;
-    sector_index /= format.sectors;
-    const auto head = sector_index % format.heads;
-    const auto cyl = sector_index / format.heads;
+    if (logicalSectorIndex < 0 || logicalSectorIndex > format.disk_size() / format.sector_size())
+        throw util::exception("invalid logical sector index ", logicalSectorIndex);
+    const auto sector_id = logicalSectorIndex % format.sectors + 1;
+    logicalSectorIndex /= format.sectors;
+    const auto head = logicalSectorIndex % format.heads;
+    const auto cyl = logicalSectorIndex / format.heads;
+    return Header(cyl, head, sector_id, format.size);
+}
+
+const Sector* Fat12FileSystem::GetLogicalSector(int sector_index, bool ignoreSize/*= false*/)
+{
+    const auto header = LogicalSectorIndexToPhysical(sector_index);
     // Finding sector this way because it might be missing.
-    if (ignoreSize)
-        return disk.find(Header(cyl, head, sector_id, format.size));
+    if (!ignoreSize)
+        return disk.find(header);
     else
-        return disk.find_ignoring_size(Header(cyl, head, sector_id, format.size));
+        return disk.find_ignoring_size(header);
 
 }
 
-tm Fat12FileSystem::DateTime(const uint16_t date, const uint16_t time, const time_t& dateMax/* = {}*/) const
+time_t Fat12FileSystem::DateTime(const uint16_t date, const uint16_t time, const time_t& dateMax/* = {}*/) const
 {
     tm result;
     result.tm_year = (date >> 9) + DATE_START_YEAR - 1900;
@@ -159,22 +165,26 @@ tm Fat12FileSystem::DateTime(const uint16_t date, const uint16_t time, const tim
     if (result.tm_hour < 24 && result.tm_min < 60 && result.tm_sec < 60)
     {
         auto result_t = std::mktime(&result); // Determines tm_gmtoff as well.
-        result = *std::localtime(&result_t);
         if (result_t != -1 && (dateMax == 0 || difftime(dateMax, result_t) >= 0))
-            return result;
+            return result_t;
     }
-    result = {};
-    return result;
+    return -1;
+}
+
+std::string Fat12FileSystem::DateTimeString(const time_t& dateTime) const
+{
+    std::ostringstream os;
+    if (dateTime != -1)
+        os << std::put_time(std::localtime(&dateTime), FORMAT_STRING.c_str());
+    else
+        os << "INVALID  INVALID";
+    return os.str();
 }
 
 std::string Fat12FileSystem::DateTimeString(const uint16_t date, const uint16_t time, const time_t& dateMax/* = {}*/) const
 {
     const auto dateTime = DateTime(date, time, dateMax);
-    if (dateTime.tm_year == 0) // Shorter version of IsEmpty().
-        return "INVALID  INVALID";
-    std::ostringstream os;
-    os << std::put_time(&dateTime, FORMAT_STRING.c_str());
-    return os.str();
+    return DateTimeString(dateTime);
 }
 
 int Fat12FileSystem::DetermineSectorsPerCluster() const
@@ -199,6 +209,11 @@ bool Fat12FileSystem::IsEofFatIndex(int fat_index) const
     return fat_index >= 0xff8 && fat_index <= 0xfff;
 }
 
+bool Fat12FileSystem::IsBadFatIndex(int fat_index) const
+{
+    return fat_index >= 0xff0 && fat_index <= 0xff7;
+}
+
 bool Fat12FileSystem::IsNextFatIndex(int fat_index) const
 {
     return fat_index >= 2 && fat_index <= 0xfef;
@@ -207,6 +222,87 @@ bool Fat12FileSystem::IsNextFatIndex(int fat_index) const
 bool Fat12FileSystem::IsUsedFatIndex(int fat_index) const
 {
     return IsEofFatIndex(fat_index) || IsNextFatIndex(fat_index);
+}
+
+int Fat12FileSystem::ClusterIndexToLogicalSectorIndex(const int cluster) const
+{
+    const auto fat1_sector_0 = util::le_value(bpb.abResSectors);
+    const auto fat_sectors = util::le_value(bpb.abFATSecs);
+    const auto dir_sector_0 = fat1_sector_0 + bpb.bFATs * fat_sectors;
+    const auto root_dir_ents = util::le_value(bpb.abRootDirEnts);
+    const auto msdos_dir_entry_size = intsizeof(msdos_dir_entry);
+    const auto dir_sectors = root_dir_ents * msdos_dir_entry_size / format.sector_size();
+    const auto sectors_per_cluster = bpb.bSecPerClust;
+    return (cluster - 2) * sectors_per_cluster + dir_sector_0 + dir_sectors;
+}
+
+// Calculates based on bpb.abFATSecs and bpb.abBytesPerSec.
+int Fat12FileSystem::GetClusterSup() const
+{
+    const auto fat_sectors = util::le_value(bpb.abFATSecs);
+    const int bpb_bytes_per_sec = util::le_value(bpb.abBytesPerSec);
+    const auto fat_byte_length = fat_sectors * bpb_bytes_per_sec;
+    const auto cluster_sup = fat_byte_length * 2 / 3;
+    return cluster_sup;
+}
+
+// The fatInstance can be 0 (fat1) or 1 (fat2).
+bool Fat12FileSystem::HasFatSectorNormalDataAt(const int fatInstance, const int offset) const
+{
+    assert(fatInstance >= 0 && fatInstance <= 1);
+    const auto& fatSectorHasNormalData = fatInstance == 0 ? fat1SectorHasNormalData : fat2SectorHasNormalData;
+    const auto fatSectorIndex = offset / format.sector_size();
+    return fatSectorIndex < fatSectorHasNormalData.size() && fatSectorHasNormalData[fatSectorIndex];
+}
+
+// Fat1 and Fat2 must be already read.
+// Return cluster's next cluster, or -1 if cluster is invalid.
+int Fat12FileSystem::GetClusterNext(const int cluster, const int clusterSup) const
+{
+    const auto fat1_data = fat1.data();
+    const auto fat2_data = fat2.data();
+    if (clusterSup <= 0)
+    {
+        MessageCPP(msgWarning, "Number of clusters is unknown, dependent operations are not possible");
+        return -1;
+    }
+    if (cluster >= clusterSup)
+    {
+        MessageCPP(msgWarning, "Found out of range FAT cluster index ", cluster, ", it must be < ", clusterSup);
+        return -1;
+    }
+    auto cluster_fat_bytes = (cluster & ~0x1) * 3 / 2;
+    int fat1_next_index;
+    int fat2_next_index;
+    const auto clusterLocationEven = (cluster & 1) == 0;
+    const auto clusterFatBytesFirst = clusterLocationEven ? cluster_fat_bytes : cluster_fat_bytes + 1;
+    const auto fat1NextIndexAvailable = HasFatSectorNormalDataAt(0, clusterFatBytesFirst) && HasFatSectorNormalDataAt(0, clusterFatBytesFirst + 1);
+    const auto fat2NextIndexAvailable = HasFatSectorNormalDataAt(1, clusterFatBytesFirst) && HasFatSectorNormalDataAt(1, clusterFatBytesFirst + 1);
+    if (clusterLocationEven)
+    {
+        fat1_next_index = ((fat1_data[clusterFatBytesFirst + 1] & 0xf) << 8) + fat1_data[clusterFatBytesFirst];
+        fat2_next_index = ((fat2_data[clusterFatBytesFirst + 1] & 0xf) << 8) + fat2_data[clusterFatBytesFirst];
+    }
+    else {
+        fat1_next_index = ((fat1_data[clusterFatBytesFirst] & 0xf0) >> 4) + (fat1_data[clusterFatBytesFirst + 1] << 4);
+        fat2_next_index = ((fat2_data[clusterFatBytesFirst] & 0xf0) >> 4) + (fat2_data[clusterFatBytesFirst + 1] << 4);
+    }
+    // Favouring available FAT, then next index, then first FAT.
+    auto fat_next_index = fat1_next_index;
+    if (!fat1NextIndexAvailable)
+    {
+        if (!fat2NextIndexAvailable)
+            return 0xfff; // Next index is not available, return EOF (although not precise).
+        fat_next_index = fat2_next_index;
+    }
+    else if (fat2NextIndexAvailable)
+    {
+        if (!IsNextFatIndex(fat1_next_index) && IsNextFatIndex(fat2_next_index))
+            fat_next_index = fat2_next_index;
+        if (!IsUsedFatIndex(fat1_next_index) && IsUsedFatIndex(fat2_next_index))
+            fat_next_index = fat2_next_index;
+    }
+    return fat_next_index;
 }
 
 int Fat12FileSystem::GetFileClusterAmount(int start_cluster) const
@@ -372,6 +468,40 @@ int Fat12FileSystem::MaxFatSectorsBeforeAnalysingFat() const
     const auto max_cluster_index_by_fat = max_file_data_sectors / 1 + 2;
     return static_cast<int>(std::ceil(static_cast<double>(max_cluster_index_by_fat)
         * 3 / 2 / format.sector_size())); // TODO Assuming FAT12
+}
+
+void Fat12FileSystem::ReadFATSectors(const int sectorsPerFAT, const int sectorSize, VectorX<const Sector*>* cachedLogicalSectors/* = nullptr*/)
+{
+    const auto fat_byte_length = sectorsPerFAT * sectorSize;
+    // Store the FAT sectors continuously in fat1, fat2 so those can be processed by FAT12 3 bytes.
+    fat1.resize(fat_byte_length);
+    fat1SectorHasNormalData.resize(sectorsPerFAT);
+    fat2.resize(fat_byte_length);
+    fat2SectorHasNormalData.resize(sectorsPerFAT);
+    const auto fat1_sector_0_index = util::le_value(bpb.abResSectors);
+    for (int fat_sector_i = 0; fat_sector_i < sectorsPerFAT; fat_sector_i++)
+    {
+        const auto fat1SectorLogicalI = fat_sector_i + fat1_sector_0_index;
+        const auto fat1_sector = cachedLogicalSectors !=nullptr && fat1SectorLogicalI < cachedLogicalSectors->size()
+            ? cachedLogicalSectors->operator[](fat1SectorLogicalI) : GetLogicalSector(fat1SectorLogicalI);
+        fat1SectorHasNormalData[fat_sector_i] = fat1_sector && fat1_sector->has_normaldata();
+        if (fat1SectorHasNormalData[fat_sector_i])
+        {
+            const auto common_size = std::min(fat1_sector->data_size(), sectorSize);
+            auto d_first = fat1.begin() + fat_sector_i * sectorSize;
+            std::copy_n(fat1_sector->data_best_copy().begin(), common_size, d_first);
+        }
+        const auto fat2SectorLogicalI = fat1SectorLogicalI + sectorsPerFAT;
+        const auto fat2_sector = cachedLogicalSectors != nullptr && fat2SectorLogicalI < cachedLogicalSectors->size()
+            ? cachedLogicalSectors->operator[](fat2SectorLogicalI) : GetLogicalSector(fat2SectorLogicalI);
+        fat2SectorHasNormalData[fat_sector_i] = fat2_sector && fat2_sector->has_normaldata();
+        if (fat2SectorHasNormalData[fat_sector_i])
+        {
+            const auto common_size = std::min(fat2_sector->data_size(), sectorSize);
+            auto d_first = fat2.begin() + fat_sector_i * sectorSize;
+            std::copy_n(fat2_sector->data_best_copy().begin(), common_size, d_first);
+        }
+    }
 }
 
 // Examining sector distance of FAT copies and finding the best distance which equals to fat sectors.
