@@ -203,7 +203,9 @@ int Fat12FileSystem::DetermineSectorsPerCluster() const
     // Round up to next power of 2.
     auto sectors_per_cluster_power2 = 1 << static_cast<int>(std::ceil(log(sectors_per_cluster) / log(2)));
     if (sectors_per_cluster_power2 != 1 && sectors_per_cluster_power2 != 2)
-        Message(msgWarning, "Found not normal %u sectors per cluster value", sectors_per_cluster_power2);
+        MessageCPP(msgWarning, "Found not normal ", sectors_per_cluster_power2, " sectors per cluster value");
+    if (sectors_per_cluster_power2 > 255)
+        throw util::exception("invalid sectors per cluster value ", sectors_per_cluster_power2);
     return sectors_per_cluster_power2;
 }
 
