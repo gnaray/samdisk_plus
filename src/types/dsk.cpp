@@ -23,6 +23,7 @@
 
 static auto& opt_fix = getOpt<int>("fix");
 static auto& opt_legacy = getOpt<int>("legacy");
+static auto& opt_maxcopies = getOpt<int>("maxcopies");
 static auto& opt_offsets = getOpt<int>("offsets");
 static auto& opt_paranoia = getOpt<bool>("paranoia");
 static auto& opt_readstats = getOpt<bool>("readstats");
@@ -122,16 +123,21 @@ public:
         const int numDatas = dataReadCount.size();
         if (numDatas != sector.copies())
         {
-            if (!opt_paranoia && sector.has_good_data())
-                throw util::exception("readstats info does not match track info, specifying paranoia parameter should work");
-            throw util::exception("readstats info does not match track info at ", cylhead, " sector ", sector.header.sector);
+            const auto hasMaxCopies = sector.copies() == opt_maxcopies;
+            if (hasMaxCopies)
+                MessageCPP(msgWarning, sector, " readstats contains more copies (", numDatas, ") than max-copies option (",
+                    opt_maxcopies, ") allows, ignoring excess readstats copies");
+            if (!opt_paranoia && (!hasMaxCopies || sector.has_good_data()))
+                throw util::exception("readstats info does not match track info at sector (", sector,
+                    "), specifying paranoia parameter should work");
         }
         sector.resize_data(numDatas);
         if (numDatas > 0)
         {
             // Process each data instance.
             for (auto instance = 0; instance < numDatas; ++instance)
-                sector.set_read_stats(instance, DataReadStats(util::letoh(dataReadCount[instance])));
+                if (instance < opt_maxcopies)
+                    sector.set_read_stats(instance, DataReadStats(util::letoh(dataReadCount[instance])));
         }
         sector.set_read_attempts(util::letoh(readAttempts));
     }
