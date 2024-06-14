@@ -313,38 +313,16 @@ int Fat12FileSystem::GetClusterNext(const int cluster, const int clusterSup) con
 int Fat12FileSystem::GetFileClusterAmount(int start_cluster) const
 {
     // Find length of cluster chain starting at start_cluster.
-    auto fat1_data = fat1.data();
-    auto fat2_data = fat2.data();
     const auto fat_byte_length = new_fat_sectors * format.sector_size();
     const auto cluster_sup = fat_byte_length * 2 / 3;
     int cluster_amount = 0;
     int cluster_i = start_cluster;
     do
     {
-        if (cluster_i >= cluster_sup)
-        {
-            Message(msgWarning, "Found out of range FAT cluster index %u, it must be < ", cluster_i, cluster_sup);
+        const auto fat_next_index = GetClusterNext(cluster_i, cluster_sup);
+        if (fat_next_index < 0)
             break;
-        }
-        auto cluster_i_fat_bytes = (cluster_i & ~0x1) * 3 / 2;
-        int fat1_next_index;
-        int fat2_next_index;
-        if ((cluster_i & 1) == 0)
-        {
-            fat1_next_index = ((fat1_data[cluster_i_fat_bytes + 1] & 0xf) << 8) + fat1_data[cluster_i_fat_bytes];
-            fat2_next_index = ((fat2_data[cluster_i_fat_bytes + 1] & 0xf) << 8) + fat2_data[cluster_i_fat_bytes];
-        }
-        else {
-            fat1_next_index = ((fat1_data[cluster_i_fat_bytes + 1] & 0xf0) >> 4) + (fat1_data[cluster_i_fat_bytes + 2] << 4);
-            fat2_next_index = ((fat2_data[cluster_i_fat_bytes + 1] & 0xf0) >> 4) + (fat2_data[cluster_i_fat_bytes + 2] << 4);
-        }
-        // Preferring first FAT but NEXT index even more.
-        int fat_next_index = fat1_next_index;
-        if (!IsNextFatIndex(fat1_next_index) && IsNextFatIndex(fat2_next_index))
-            fat_next_index = fat2_next_index;
-        if (!IsUsedFatIndex(fat1_next_index) && IsUsedFatIndex(fat2_next_index))
-            fat_next_index = fat2_next_index;
-        if (!IsUsedFatIndex(fat_next_index))
+        if (!IsUsedFatIndex(fat_next_index)) // The cluster chain reached an unused cluster, it should not happen.
             break;
         cluster_amount++;
         if (IsEofFatIndex(fat_next_index))
