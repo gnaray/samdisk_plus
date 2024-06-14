@@ -5,6 +5,7 @@
 #include "Disk.h"
 #include "MemFile.h"
 #include "filesystems/StFat12FileSystem.h"
+#include "types/bpb.h"
 #include "types/raw.h"
 #include "DiskUtil.h"
 
@@ -78,6 +79,7 @@ bool ReadST(MemFile& file, std::shared_ptr<Disk>& disk)
 foundFormat:
     file.rewind();
     disk->format(format, file.data());
+    ConvertStRecoverMissOrBadSectors(disk);
     disk->strType() = diskHasFileSystem ? DISK_TYPE_ST_BPB : DISK_TYPE_ST;
     if (diskHasFileSystem)
     {
