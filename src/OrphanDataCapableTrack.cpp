@@ -177,6 +177,7 @@ void OrphanDataCapableTrack::MergeOrphansIntoParents(bool removeOrphanAfterMerge
 }
 
 // Merge the orphan data capable track into the target track.
+// This and target track must be single track.
 void OrphanDataCapableTrack::MergeInto(Track& targetTrack, const std::function<bool (const Sector &)>& considerTargetSectorPredicate/* = nullptr*/)
 {
     assert(targetTrack.tracklen == track.tracklen && targetTrack.tracklen == orphanDataTrack.tracklen);
