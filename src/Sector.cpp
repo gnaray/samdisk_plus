@@ -23,7 +23,7 @@ bool DataReadStats::IsStable() const
     return m_read_count >= opt_stability_level;
 }
 
-Sector::Sector(DataRate datarate_, Encoding encoding_, const Header& header_, int gap3_)
+Sector::Sector(DataRate datarate_, Encoding encoding_, const Header& header_/* = Header()*/, int gap3_/* = 0*/)
     : header(header_), datarate(datarate_), encoding(encoding_), gap3(gap3_)
 {
 }

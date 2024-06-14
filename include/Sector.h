@@ -16,7 +16,7 @@ class DataReadStats
 {
 public:
     DataReadStats() = default;
-    DataReadStats(int read_count)
+    DataReadStats(const int read_count)
         : m_read_count(read_count)
     {
     }
@@ -206,7 +206,7 @@ public:
     }
 
 public:
-    Header header{ 0,0,0,0 };               // cyl, head, sector, size
+    Header header{0, 0, 0, 0};               // cyl, head, sector, size
     DataRate datarate = DataRate::Unknown;  // 250Kbps
     Encoding encoding = Encoding::Unknown;  // MFM
     int offset = 0;                         // bitstream offset from index, in bits
