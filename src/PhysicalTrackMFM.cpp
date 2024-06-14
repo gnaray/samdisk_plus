@@ -108,6 +108,8 @@ static auto& opt_normal_disk = getOpt<bool>("normal_disk");
         const SectorDataFromPhysicalTrack sectorData(encoding, byteBitPositionDAM, std::move(sectorDataInPhysicalTrackBytes), true);
         const bool data_crc_error = sectorData.badCrc;
         const auto dam = sectorData.addressMark;
+        // Next line is a possibility. The gap2 does not exist in Sector but its value would be the following.
+        //sector.gap2 = DataBitPositionAsBitOffset(sectorData.byteBitPositionFound.TotalBitPosition(), encoding) - sector.offset;
         sector.add(sectorData.GetData(), data_crc_error, dam);
     }
     else
