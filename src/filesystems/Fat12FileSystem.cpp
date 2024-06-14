@@ -549,27 +549,7 @@ int Fat12FileSystem::AnalyseFatSectors()
     if (best_fat_sector_dist != 3 && best_fat_sector_dist != 5)
         Message(msgWarning, "Found not normal %u sectors per FAT value", best_fat_sector_dist);
 
-    const auto fat_byte_length = best_fat_sector_dist * format.sector_size();
-    // Store the FAT sectors continuously in fat1, fat2 so those can be processed by FAT12 3 bytes.
-    fat1.resize(fat_byte_length);
-    fat2.resize(fat_byte_length);
-    for (int fat_sector_i = fat1_sector_0_index; fat_sector_i < fat1_sector_0_index + best_fat_sector_dist; fat_sector_i++)
-    {
-        auto fat1_sector = logical_sectors[fat_sector_i];
-        if (fat1_sector && fat1_sector->has_normaldata())
-        {
-            const auto common_size = std::min(fat1_sector->data_size(), format.sector_size());
-            auto d_first = fat1.begin() + (fat_sector_i - fat1_sector_0_index) * format.sector_size();
-            std::copy_n(fat1_sector->data_best_copy().begin(), common_size, d_first);
-        }
-        auto fat2_sector = logical_sectors[fat_sector_i + best_fat_sector_dist];
-        if (fat2_sector && fat2_sector->has_normaldata())
-        {
-            const auto common_size = std::min(fat2_sector->data_size(), format.sector_size());
-            auto d_first = fat2.begin() + (fat_sector_i - fat1_sector_0_index) * format.sector_size();
-            std::copy_n(fat2_sector->data_best_copy().begin(), common_size, d_first);
-        }
-    }
+    ReadFATSectors(best_fat_sector_dist, format.sector_size(), &logical_sectors);
     return best_fat_sector_dist;
 }
 
