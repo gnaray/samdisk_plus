@@ -887,7 +887,6 @@ bool UniqueSectors::AnyIdsNotContainedInThis(const Interval<int>& id_interval) c
     if (empty())
         return true;
 
-    UniqueSectors not_contained_ids;
     std::set<int> contained_ids;
     std::for_each(begin(), end(), [&](const Sector& sector)
     {
