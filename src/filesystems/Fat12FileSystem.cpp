@@ -310,6 +310,7 @@ int Fat12FileSystem::GetClusterNext(const int cluster, const int clusterSup) con
     return fat_next_index;
 }
 
+// Return number of clusters in cluster chain started by start_cluster.
 int Fat12FileSystem::GetFileClusterAmount(int start_cluster) const
 {
     // Find length of cluster chain starting at start_cluster.
@@ -400,7 +401,7 @@ int Fat12FileSystem::AnalyseDirEntries()
                     // Entry must not be deleted, must not be label, must not be directory and must not be long file name part.
                     // At this point can not read directories because sector per cluster value is unknown.
                     else if (dir_entry.name[0] != DIR_ENTRY_DELETED_FLAG && ((dir_entry.attr & 0x18) == 0)
-                        && dir_entry.name[0] >= 33) {
+                        && dir_entry.name[0] > ' ') {
                         auto cluster_amount = GetFileClusterAmount(util::le_value(dir_entry.start));
                         if (cluster_amount > 1) {
                             sum_sectors_per_cluster += static_cast<int>(std::ceil(static_cast<double>(util::le_value(dir_entry.size)) / format.sector_size() / cluster_amount));
@@ -437,7 +438,7 @@ int Fat12FileSystem::AnalyseDirEntries()
         found_dir_sectors = normal_dir_sectors_2;
     auto found_dir_entries = found_dir_sectors * format.sector_size() / msdos_dir_entry_size;
     if (found_dir_entries != normal_dir_entries_1 && found_dir_entries != normal_dir_entries_2) {
-        Message(msgWarning, "Found not normal %u directory entries value, it should be %u normally", found_dir_entries, normal_dir_entries);
+        MessageCPP(msgWarning, "Found not normal ", found_dir_entries, " directory entries value, it should be ", normal_dir_entries, " normally");
     }
     return found_dir_entries;
 }
@@ -491,7 +492,7 @@ void Fat12FileSystem::ReadFATSectors(const int sectorsPerFAT, const int sectorSi
 int Fat12FileSystem::AnalyseFatSectors()
 {
     if (bpb.bFATs != 2)
-        throw util::exception("amount of fat not being 2 is unsuitable for ST output");
+        throw util::exception("amount of FAT copies not being 2 is unsupported in FAT12");
     const auto fat1_sector_0_index = util::le_value(bpb.abResSectors);
     const auto max_fat_sectors = MaxFatSectorsBeforeAnalysingFat();
     VectorX<double> fat_sector_match(max_fat_sectors + 1);
@@ -524,7 +525,7 @@ int Fat12FileSystem::AnalyseFatSectors()
                     sum += fat1_data[i++];
                     difference += std::abs(fat1_data_i - static_cast<int>(std::round(sum / i)));
                 }
-                // equal / common_size is in [0,1], difference / common_size is in [0, 128)
+                // equal / common_size is in [0, 1], difference / common_size is in [0, 128)
                 fat_sector_match[fat_sector_dist] += static_cast<double>(equal)
                     * difference / 128 / common_size / common_size;
                 fat_sector_participants[fat_sector_dist]++;
@@ -547,7 +548,7 @@ int Fat12FileSystem::AnalyseFatSectors()
         }
     }
     if (best_fat_sector_dist != 3 && best_fat_sector_dist != 5)
-        Message(msgWarning, "Found not normal %u sectors per FAT value", best_fat_sector_dist);
+        MessageCPP(msgWarning, "Found not normal ", best_fat_sector_dist, " sectors per FAT value");
 
     ReadFATSectors(best_fat_sector_dist, format.sector_size(), &logical_sectors);
     return best_fat_sector_dist;
@@ -575,7 +576,7 @@ bool Fat12FileSystem::ReconstructBpb()
     util::store_le_value(new_fat_sectors, bpb.abFATSecs);
     new_root_dir_entries = AnalyseDirEntries();
     util::store_le_value(new_root_dir_entries, bpb.abRootDirEnts); // It is 0x70 or 0xe0 normally.
-                                                                    // It is usually 2 but sometimes 1 when user wants less loss per cluster but it requires bigger FAT.
+    // It is usually 2 but sometimes 1 when user wants less loss per cluster but it requires bigger FAT.
     bpb.bSecPerClust = lossless_static_cast<uint8_t>(DetermineSectorsPerCluster());
 
     return bpb != bpb_previous;
@@ -698,7 +699,7 @@ bool Fat12FileSystem::Dir() /*override*/
                 auto& dir_entry = *reinterpret_cast<const msdos_dir_entry*>(&dir_sector_data[i]);
                 if (dir_entry.name[0] == 0)
                     goto noMoreDirEntries;
-                if (dir_entry.attr == DIR_ENTRY_ATTR_LONG_NAME || dir_entry.name[0] < 33)
+                if (dir_entry.attr == DIR_ENTRY_ATTR_LONG_NAME || dir_entry.name[0] <= ' ')
                     continue;
                 if (dir_entry.attr & DIR_ENTRY_ATTR_VOLUME_ID)
                 {   // TODO Can be a label deleted? Probably not.
