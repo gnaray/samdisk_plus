@@ -39,14 +39,20 @@ bool FileSystemWrappers::FindAndSetApprover(Disk& disk, bool srcDisk, const std:
     const bool detectFSAll = util::caseInSensCompare(detectFSHavingName, DETECT_FS_AUTO);
     for (auto&& fileSystemWrapperInterface : *this)
     {
-        if ((detectFSAll || util::caseInSensCompare(fileSystemWrapperInterface->Name(), detectFSHavingName))
-                && (disk.GetFileSystem() = fileSystemWrapperInterface->ConstructByApprovingDisk(disk)))
+        if (detectFSAll || util::caseInSensCompare(fileSystemWrapperInterface->Name(), detectFSHavingName))
         {
-            if (!disk.GetTypeDomesticFileSystemNames().empty()
-                    && disk.GetTypeDomesticFileSystemNames().find(disk.GetFileSystem()->GetName()) == disk.GetTypeDomesticFileSystemNames().end())
-                Message(msgWarning, "%s disk type at path (%s) has foreign %s filesystem",
-                        disk.strType().c_str(), disk.GetPath().c_str(), disk.GetFileSystem()->GetName().c_str());
-            return true;
+            const auto srcDstString = srcDisk ? "source" : "destination";
+            MessageCPP(msgInfoAlways, "Detecting ", srcDstString, " filesystem: ", fileSystemWrapperInterface->Name());
+            if ((disk.GetFileSystem() = fileSystemWrapperInterface->ConstructByApprovingDisk(disk)))
+            {
+                if (!disk.GetTypeDomesticFileSystemNames().empty()
+                        && disk.GetTypeDomesticFileSystemNames().find(disk.GetFileSystem()->GetName()) == disk.GetTypeDomesticFileSystemNames().end())
+                    Message(msgWarning, "%s disk type at path (%s) has foreign %s filesystem",
+                            disk.strType().c_str(), disk.GetPath().c_str(), disk.GetFileSystem()->GetName().c_str());
+                MessageCPP(msgInfoAlways, "Detected ", srcDstString, " filesystem: ",
+                    fileSystemWrapperInterface->Name(), ", its format is {", disk.GetFileSystem()->GetFormat(), "}\n");
+                return true;
+            }
         }
     }
     return false;
