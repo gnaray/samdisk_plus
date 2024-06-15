@@ -339,7 +339,7 @@ public:
         repeatedSectorId = repeatedSectorId_;
     }
 
-    int repeatedSectorId;
+    int repeatedSectorId = -1;
 };
 
 std::string fmt(const char* fmt, ...);
