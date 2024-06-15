@@ -226,7 +226,7 @@ bool WriteMFI(FILE* f_, std::shared_ptr<Disk>& disk)
     strncpy(fh.signature, "MESSFLOPPYIMAGE", sizeof(fh.signature));
     fh.cyl_count = static_cast<uint32_t>(util::htole(tracks));
     fh.head_count = static_cast<uint32_t>(util::htole(heads));
-    fh.form_factor = util::htole(FF_UNKNOWN);
+    fh.form_factor = util::htole(static_cast<uint32_t>(FF_UNKNOWN));
     fh.variant = util::htole(MfiVariant(track0, disk->cyls(), disk->heads()));
 
     if (!fwrite(header.data(), static_cast<size_t>(header.size()), 1, f_))
