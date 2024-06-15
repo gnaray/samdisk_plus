@@ -125,7 +125,7 @@ public:
     {
     }
 
-    static constexpr bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
+    static bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
     {
         return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue), availableBytes);
     }
@@ -153,7 +153,7 @@ public:
     {
     }
 
-    static constexpr bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
+    static bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
     {
         return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue), availableBytes);
     }
@@ -188,7 +188,7 @@ public:
     {
     }
 
-    static constexpr bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
+    static bool IsSuitable(uint8_t addressMarkValue, const int availableBytes)
     {
         return AddressMark::IsValid(addressMarkValue) && IsSuitable(AddressMark(addressMarkValue), availableBytes);
     }
