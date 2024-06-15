@@ -162,7 +162,7 @@ void bit_reverse(uint8_t* pb, T len)
 template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
 T byteswap(T x)
 {
-    const iSup = sizeof(T);
+    const auto iSup = sizeof(T);
     T result = 0;
     for (auto i = 0; i < iSup; i++)
     {
