@@ -191,7 +191,7 @@ public:
     Sectors::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
     Sectors::const_iterator findSectorForDataFmOrMfm(const int dataOffset, const int sizeCode, bool findClosest = true) const;
 
-    std::string Track::ToString(bool onlyRelevantData = true) const;
+    std::string ToString(bool onlyRelevantData = true) const;
 
     friend std::string to_string(const Track& track, bool onlyRelevantData = true)
     {
