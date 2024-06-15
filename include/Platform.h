@@ -107,6 +107,8 @@ typedef struct _DISK_GEOMETRY {
 // WinIoCtl.h (WinIoCtl.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/WinIoCtl.h
 #define FILE_DEVICE_UNKNOWN             0x00000022 // [used by win32_error.cpp]
 
+#include "win32_error.h"
+
 // DeviceIoControl used by fdrawcmd.h.
 inline BOOL DeviceIoControl(HANDLE /*hDevice*/, DWORD /*dwIoControlCode*/, LPVOID /*lpInBuffer*/, DWORD /*nInBufferSize*/,
     LPVOID /*lpOutBuffer*/, DWORD /*nOutBufferSize*/, LPDWORD lpBytesReturned, LPOVERLAPPED /*lpOverlapped*/)
