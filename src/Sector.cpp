@@ -199,6 +199,11 @@ void Sector::set_read_stats(int instance, DataReadStats&& data_read_stats)
     m_data_read_stats[instance] = std::move(data_read_stats);
 }
 
+int Sector::read_stats_copies() const
+{
+    return m_data_read_stats.size();
+}
+
 // The stable sector is good sector and in paranoia mode it is read at least stability level times.
 bool Sector::has_stable_data(bool consider_checksummable_8K/* = false*/) const
 {

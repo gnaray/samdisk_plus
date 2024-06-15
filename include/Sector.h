@@ -159,6 +159,7 @@ public:
     int copies() const;
     void add_read_stats(int instance, DataReadStats&& data_read_stats);
     void set_read_stats(int instance, DataReadStats&& data_read_stats);
+    int read_stats_copies() const;
     bool has_stable_data(bool consider_checksummable_8K = false) const;
     int GetGoodDataCopyStabilityScore(int instance) const;
     bool HasNormalHeaderAndMisreadFromNeighborCyl(const CylHead& cylHead, const int trackSup) const;
