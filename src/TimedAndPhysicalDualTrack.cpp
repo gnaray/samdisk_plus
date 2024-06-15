@@ -31,8 +31,9 @@ bool TimedAndPhysicalDualTrack::SyncDemultiMergePhysicalUsingTimed(
 
     if (opt_debug >= 2)
     {
-        util::cout << "SyncDemultiMergePhysicalUsingTimed: showing toBeMergedODCTrack offsets before processing it:\n";
-        toBeMergedODCTrack.ShowOffsets();
+        util::cout << "SyncDemultiMergePhysicalUsingTimed: showing toBeMergedODCTrack offsets before processing it:\n"
+            << toBeMergedODCTrack.ToString(false) << "\n";
+
     }
 
     const auto lastSectorIndex = MIDOrphanDataTrack.size() - 1;

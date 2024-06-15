@@ -690,10 +690,10 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::RescueTrack(const CylHead& cylhead, c
 
             if (opt_debug >= 3)
             {
-                util::cout << "BlindReadHeaders112: showing newTimedTrack:\n";
-                newTimedTrack.ShowOffsets();
-                util::cout << "BlindReadHeaders112: showing timedIdTrack:\n";
-                timedAndPhysicalDualTrack.timedIdTrack.ShowOffsets();
+                util::cout << "BlindReadHeaders112: showing newTimedTrack:\n"
+                    << newTimedTrack.ToString(false) << "\n";
+                util::cout << "BlindReadHeaders112: showing timedIdTrack:\n"
+                    << timedAndPhysicalDualTrack.timedIdTrack.ToString(false) << "\n";
             }
             newTimedTrack.CollectRepeatedSectorIdsInto(repeatedSectorIds);
             newTimedTrack.Validate(repeatedSectorIds);
@@ -715,8 +715,8 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::RescueTrack(const CylHead& cylhead, c
 
     if (opt_debug >= 2)
     {
-        util::cout << "BlindReadHeaders112: scanning loop end, showing timedIdTrack\n";
-        timedAndPhysicalDualTrack.timedIdTrack.ShowOffsets();
+        util::cout << "BlindReadHeaders112: scanning loop end, showing timedIdTrack\n"
+            << timedAndPhysicalDualTrack.timedIdTrack.ToString(false) << "\n";
     }
 
     do
@@ -862,7 +862,7 @@ bool FdrawSysDevDisk::GuessAndAddSectorId(const Sector& sector, Track& track) co
     }
     else
     {
-//        track.ShowOffsets();
+//        util::cout << track.ToString(false) << "\n";
         MessageCPP(msgWarningAlways, "GuessAndAddSectorId: discovered track but can not find the parent of sector (",
             sector, ") at offset (", sector.offset, ")");
     }
@@ -953,7 +953,7 @@ void FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, TimedAndPhysicalDualTr
         ReadSectors(cylhead, track, indices, 0);
         StopStopper(startTimeReadSector, "ReadSectors");
         if (opt_debug >= 2)
-            util::cout << "ReadSectors: showing timedIdDataAndPhysicalIdTrack\n";
+            util::cout << "ReadSectors: showing timedIdDataAndPhysicalIdTrack\n" << track.ToString(false) << "\n";
     }
     if (!directlyIntoFinal)
         timedAndPhysicalDualTrack.finalAllInTrack = track;

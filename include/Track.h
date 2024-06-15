@@ -97,7 +97,6 @@ public:
 
     std::map<int, int> FindMatchingSectors(const Track& otherTrack, const RepeatedSectors& repeatedSectorIds) const;
     bool DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds);
-    void ShowOffsets() const;
     bool DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeatedSectorIds);
     void CollectRepeatedSectorIdsInto(RepeatedSectors& repeatedSectorIds) const;
     void MergeByAvoidingRepeatedSectors(Track&& track);
@@ -191,6 +190,15 @@ public:
     Sectors::const_iterator findIgnoringSize(const Header& header) const;
     Sectors::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;
     Sectors::const_iterator findSectorForDataFmOrMfm(const int dataOffset, const int sizeCode, bool findClosest = true) const;
+
+    std::string Track::ToString(bool onlyRelevantData = true) const;
+
+    friend std::string to_string(const Track& track, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << track.ToString(onlyRelevantData);
+        return ss.str();
+    }
 
     int tracklen = 0;   // track length in MFM bits
     int tracktime = 0;  // track time in us

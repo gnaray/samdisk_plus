@@ -43,7 +43,14 @@ public:
 
     int determineBestTrackLen(const int timedTrackTime) const;
     void FixOffsetsByTimedToAvoidRepeatedSectorWhenMerging(Track& timedTrack, const RepeatedSectors& repeatedSectorIds);
-    void ShowOffsets() const;
+    std::string ToString(bool onlyRelevantData = true) const;
+
+    friend std::string to_string(const OrphanDataCapableTrack& orphanDataCapableTrack, bool onlyRelevantData = true)
+    {
+        std::ostringstream ss;
+        ss << orphanDataCapableTrack.ToString(onlyRelevantData);
+        return ss.str();
+    }
 
     Track track{};
     Track orphanDataTrack{};

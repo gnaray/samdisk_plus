@@ -670,23 +670,6 @@ bool Track::DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds)
     return false;
 }
 
-void Track::ShowOffsets() const
-{
-    if (empty())
-        return;
-    assert(tracklen > 0);
-
-    const auto iSup = size();
-    for (auto i = 0; i < iSup; i++)
-    {
-        const auto& sector = operator[](i);
-        auto offsetDelta = (i == iSup - 1 ? operator[](0).offset + tracklen : operator[](i + 1).offset) - sector.offset;
-        util::cout << "ShowOffsets: track[" << i << "].{sector=" << sector << ", offset=" << sector.offset
-            << ", rev=" << sector.revolution << "}, offsetDeltaToNext=" << offsetDelta;
-        util::cout << "\n";
-    }
-}
-
 /*
  * Return empty result if different sized sectors are found or there are less
  * than 2 not orphan sectors.
@@ -1673,4 +1656,39 @@ Sectors::const_iterator Track::findSectorForDataFmOrMfm(const int dataOffset, co
         }
     }
     return itFound;
+}
+
+std::string Track::ToString(bool onlyRelevantData/* = true*/) const
+{
+    std::ostringstream ss;
+    ss << "tracklen=" << tracklen << ", tracktime=" << tracktime;
+    auto writingStarted = true;
+    if (!onlyRelevantData || !empty())
+    {
+        if (empty())
+            return ss.str();
+
+        ss << ", {\n";
+        const auto iSup = size();
+        for (auto i = 0; i < iSup; i++)
+        {
+            const auto& sector = operator[](i);
+            ss << "[" << i << "].{sector=" << sector.ToString(onlyRelevantData) << ", offset=" << sector.offset
+                << ", rev=" << sector.revolution << ", copies=" << sector.copies() << ", read_attempts=" << sector.read_attempts();
+            if (sector.read_stats_copies() > 0)
+            {
+                ss << ", read_stats_copies=" << sector.read_stats_copies();
+                ss << ", read_stats.count=" << sector.data_copy_read_stats().ReadCount();
+            }
+            ss << "}";
+            if (i < iSup - 1 || tracklen > 0)
+            {
+                const auto offsetDelta = (i == iSup - 1 ? operator[](0).offset + tracklen : operator[](i + 1).offset) - sector.offset;
+                ss << ", offsetDeltaToNext=" << offsetDelta;
+            }
+            ss << "\n";
+        }
+        ss << "}";
+    }
+    return ss.str();
 }

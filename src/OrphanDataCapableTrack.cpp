@@ -336,8 +336,10 @@ void OrphanDataCapableTrack::FixOffsetsByTimedToAvoidRepeatedSectorWhenMerging(T
     }
 }
 
-void OrphanDataCapableTrack::ShowOffsets() const
+std::string OrphanDataCapableTrack::ToString(bool onlyRelevantData/* = true*/) const
 {
-    track.ShowOffsets();
-    orphanDataTrack.ShowOffsets();
+    std::ostringstream ss;
+    ss << "track={" << track.ToString(onlyRelevantData)
+        << "}, orphanDataTrack={" << orphanDataTrack.ToString(onlyRelevantData) << "}";
+    return ss.str();
 }
