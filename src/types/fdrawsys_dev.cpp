@@ -178,6 +178,9 @@ TrackData FdrawSysDevDisk::load(const CylHead& cylhead, bool /*first_read*/,
         }
     }
 
+    if (opt_debug >= 2)
+        util::cout << "load: showing track\n" << track.ToString(false) << "\n";
+
     if (read_first_gap_requested)
         ReadFirstGap(cylhead, track);
 
@@ -764,6 +767,11 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::RescueTrack(const CylHead& cylhead, c
                     deviceReadingPolicyForScanning = deviceReadingPolicy;
                     deviceReadingPolicyForScanning.AddSkippableSectors(timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.good_idcrc_sectors());
                 }
+            }
+            if (opt_debug >= 2)
+            {
+                util::cout << "BlindReadHeaders112: scanning and reading loop end, showing timedIdDataAndPhysicalIdTrack\n"
+                    << timedAndPhysicalDualTrack.timedIdDataAndPhysicalIdTrack.ToString(false) << "\n";
             }
             // TODO When lastPhysicalTrackSingle has an orphan data sector, it means there is no parent
             // sector id for that, OK. If e.g. its preceding sector is bad then the offset of our orphan
