@@ -1,7 +1,6 @@
 // vfdphysicaltracks virtual device
 
 #include "types/vfdphysicaltracks_dev.h"
-#include "MemFile.h"
 #include "PhysicalTrackMFM.h"
 
 VfdPhysicalTracksDevDisk::VfdPhysicalTracksDevDisk(const std::string& path)
@@ -45,7 +44,7 @@ TrackData VfdPhysicalTracksDevDisk::load(const CylHead& cylhead, bool /*first_re
 
 TrackData VfdPhysicalTracksDevDisk::LoadPhysicalTrack(const CylHead& cylhead)
 {
-    const auto pattern = " Raw track (cyl %02d head %1d).floppy_raw_track";
+    const auto pattern = " Raw track (cyl %02d head %1d).pt";
     const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
     const auto physicalTrackFilePath = FindFirstFileOnly(fileNamePart, m_path);
     Data physicalTrackContent;
