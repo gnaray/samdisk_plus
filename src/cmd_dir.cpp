@@ -990,12 +990,12 @@ bool DirMgt(Disk& disk)
 
 bool Dir(Disk& disk)
 {
+    if (disk.GetFileSystem())
+        return disk.GetFileSystem()->Dir();
+
     auto sector = IsDeepThoughtDisk(disk);
     if (sector != nullptr)
         return DirAce(disk);
-
-    if (disk.GetFileSystem())
-        return disk.GetFileSystem()->Dir();
 
     if ((sector = disk.find(Header(0, 0, 1, 2))) != nullptr)
     {
