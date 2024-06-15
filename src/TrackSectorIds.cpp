@@ -59,7 +59,7 @@
         const auto foundLastValidId = std::find_if(incompleteSectorIds.rbegin(), incompleteSectorIds.rend(),
             [](int id) { return id >= 0; });
         assert(foundLastValidId != incompleteSectorIds.rend());
-        const auto maxIndex = (incompleteSectorIds.rend() - foundLastValidId); // static_cast<int>
+        const auto maxIndex = static_cast<int>(incompleteSectorIds.rend() - foundLastValidId);
         sectorsMinLocal = std::max(maxIndex, maxId);
     }
     const int sectorsSup = static_cast<int>(incompleteSectorIds.size()) + 1;
