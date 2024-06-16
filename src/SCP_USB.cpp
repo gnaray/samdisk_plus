@@ -55,7 +55,7 @@ SuperCardProUSB::SuperCardProUSB(int fd)
 {
 }
 
-SuperCardProUSB::~SuperCardProUSB()
+SuperCardProUSB::~SuperCardProUSB() /*override*/
 {
     close(m_fd);
 }

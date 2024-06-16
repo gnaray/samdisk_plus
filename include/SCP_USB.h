@@ -5,7 +5,7 @@
 class SuperCardProUSB final : public SuperCardPro
 {
 public:
-    ~SuperCardProUSB();
+    ~SuperCardProUSB() override;
     static std::unique_ptr<SuperCardPro> Open();
 
 private:
@@ -15,5 +15,5 @@ private:
     bool Write(const void* p, int len, int* bytes_written) override;
 
     int m_fd = -1;
-    int m_error = 0;
+    int m_error = 0; // TODO Why shadowing inherited uint8_t m_error?
 };
