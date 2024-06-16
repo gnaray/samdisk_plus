@@ -1,6 +1,7 @@
 #include "OrphanDataCapableTrack.h"
 #include "Options.h"
 #include "RingedInt.h"
+#include "Util.h"
 
 static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_debug = getOpt<int>("debug");
@@ -240,14 +241,6 @@ void OrphanDataCapableTrack::disjoin()
     }
     orphanDataTrack.tracklen = track.tracklen;
     orphanDataTrack.tracktime = track.tracktime;
-}
-void OrphanDataCapableTrack::TuneOffsetsToEachOtherByMin(OrphanDataCapableTrack& otherOrphanDataCapableTrack)
-{
-    join();
-    otherOrphanDataCapableTrack.join();
-    track.TuneOffsetsToEachOtherByMin(otherOrphanDataCapableTrack.track);
-    otherOrphanDataCapableTrack.disjoin();
-    disjoin();
 }
 
 // This track must be single rev. See Track::syncAndDemultiThisTrackToOffset 2)a)

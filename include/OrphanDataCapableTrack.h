@@ -2,9 +2,6 @@
 #define ORPHANDATACAPABLETRACK_H
 //---------------------------------------------------------------------------
 
-class OrphanDataCapableTrack; // Required because this and PhysicalTrackMFM includes each other.
-
-#include "PhysicalTrackMFM.h"
 #include "Track.h"
 
 class OrphanDataCapableTrack
@@ -36,7 +33,6 @@ protected:
     void disjoin();
 
 public:
-    void TuneOffsetsToEachOtherByMin(OrphanDataCapableTrack& otherOrphanDataCapableTrack);
     void syncUnlimitedToOffset(const int syncOffset);
     void syncLimitedToOffset(const int syncOffset);
     void demultiAndSyncUnlimitedToOffset(const int syncOffset, const int trackLenSingle);
