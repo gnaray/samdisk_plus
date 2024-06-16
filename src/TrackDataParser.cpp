@@ -46,26 +46,21 @@ void TrackDataParser::SetBitPos(int bitpos)
 
 uint8_t TrackDataParser::ReadByte()
 {
-    uint8_t b;
-
     // Convert bit position to byte offset+shift
-    auto offset = _bitpos >> 3, shift = _bitpos & 7;
+    const auto offset = _bitpos >> 3, shift = _bitpos & 7;
 
     // Advance by 8 bits
     _bitpos += 8;
 
-    // Before final b
-    if (offset != _track_len - 1)
-        b = (_track_data[offset] << shift) | (_track_data[offset + 1] >> (8 - shift));
-    else
+    // Before final b aka offsetAtEnd?
+    const auto offsetAtEnd = offset == _track_len - 1;
+    if (offsetAtEnd)
     {
-        b = (_track_data[offset] << shift) | (_track_data[0] >> (8 - shift));
-
         _bitpos -= _track_len * 8;
         _wrapped = true;
     }
 
-    return b;
+    return static_cast<uint8_t>((_track_data[offset] << shift) | (_track_data[offsetAtEnd ? 0 : offset + 1] >> (8 - shift)));
 }
 
 uint8_t TrackDataParser::ReadPrevByte()
