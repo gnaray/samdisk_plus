@@ -30,12 +30,12 @@ struct IdOffsetDistanceInfo
 
     inline bool IsEmpty() const
     {
-        return offsetDistanceAverage == 0;
+        return offsetDistanceAverage < 1;
     }
 
     inline void Reset()
     {
-        *this = std::move(IdOffsetDistanceInfo());
+        *this = IdOffsetDistanceInfo();
     }
 };
 
