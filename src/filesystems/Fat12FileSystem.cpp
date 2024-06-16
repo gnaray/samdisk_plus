@@ -714,7 +714,7 @@ bool Fat12FileSystem::Dir() /*override*/
                     if (!is_name_valid || name[1] == 0) // Checking 1st character is redundant but safe.
                         continue;
                     // The entry is a deleted invalid entry.
-                    const std::string dirEntry{ dir_entry.name, dir_entry.name + sizeof(dir_entry) };
+                    const std::string dirEntry{ reinterpret_cast<const char*>(&dir_entry), reinterpret_cast<const char*>(&(&dir_entry)[1]) };
                     const auto pos = dirEntry.find_first_not_of(dirEntry[1], 2);
                     if (pos == std::string::npos || pos >= sizeof(dir_entry))
                         continue; // The entry contains a repeated character as in a sector filled with E5 or similar character.
