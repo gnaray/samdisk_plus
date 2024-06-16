@@ -771,7 +771,7 @@ bool Track::DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeated
         });
         const auto offsetDistanceMinMaxIt = std::minmax_element(
             offsetDistances.begin(), offsetDistances.end(),
-            [averageOffsetDistance](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+            [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
             return a.second < b.second;
         });
         const auto offsetDistanceMin = offsetDistanceMinMaxIt.first->second;
@@ -788,7 +788,7 @@ bool Track::DetermineOffsetDistanceMinMaxAverage(const RepeatedSectors& repeated
     } while (true);
     const auto offsetDistanceMinMaxIt = std::minmax_element(
         offsetDistances.begin(), offsetDistances.end(),
-        [averageOffsetDistance](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+        [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
         return a.second < b.second;
     });
     idOffsetDistanceInfo.offsetDistanceMin = offsetDistanceMinMaxIt.first->second;
