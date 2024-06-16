@@ -29,13 +29,13 @@ std::string to_string(const Compress& compression)
 {
     switch (compression)
     {
-    default:
     case Compress::None:    return "none";
     case Compress::Zip:     return "zip";
     case Compress::Gzip:    return "gzip";
     case Compress::Bzip2:   return "bzip2";
     case Compress::Xz:      return "xz";
     }
+    throw util::exception("unsupported compression (", to_string(compression), ")");
 }
 
 

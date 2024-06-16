@@ -38,8 +38,7 @@ inline int bitcell_ns(DataRate datarate)
     case DataRate::_500K:   return 1000;
     case DataRate::_1M:     return 500;
     }
-
-    return 0;
+    throw util::exception("unsupported datarate (", datarate, ")");
 }
 
 constexpr int bits_per_second(DataRate datarate)
