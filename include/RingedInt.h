@@ -11,7 +11,7 @@ public:
     }
 
     RingedInt(int value, int sup, int min = 0)
-        : m_sup(sup), m_min(min)
+        : m_min(min), m_sup(sup)
     {
         m_value = ValueToRingedInt(value);
     }
