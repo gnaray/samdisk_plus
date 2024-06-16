@@ -114,10 +114,10 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk, const Format& format/* =
         if (!isFormatPreset || format.heads < 1)
             fmt.heads = std::max(fmt.heads, cylhead.head + 1);
 
-            // Keep track of the largest sector count
-            if (!isFormatPreset || format.sectors < 1)
-                if (track.size() > fmt.sectors)
-                    fmt.sectors = static_cast<uint8_t>(track.size());
+        // Keep track of the largest sector count
+        if (!isFormatPreset || format.sectors < 1)
+            if (track.size() > fmt.sectors)
+                fmt.sectors = static_cast<uint8_t>(track.size());
 
         // First not empty track?
         if (!typicalSectorSet)
