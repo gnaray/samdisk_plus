@@ -31,7 +31,7 @@ public:
     }
     inline void SetTrackTime(const int trackTime)
     {
-        this->operator FD_TIMED_MULTI_SCAN_RESULT*()->tracktime = trackTime;
+        this->operator FD_TIMED_MULTI_SCAN_RESULT*()->tracktime = static_cast<unsigned>(trackTime);
     }
     inline int byteToleranceOfTime() const
     {
