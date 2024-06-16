@@ -430,44 +430,73 @@ constexpr const char* Module_divisor_is_0 = "Can not calculate modulo when divis
 // https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
 inline int modulo2Power(int value, unsigned powerOf2)
 {
+    assert(powerOf2 <= std::numeric_limits<int>::max());
     if (powerOf2 == 0)
         throw make_error<std::runtime_error>(Module_divisor_is_0);
     return value & static_cast<int>(powerOf2 - 1);
 }
 
-// Special case where diff is result of a - b where a and b are in [0, modulo].
-inline int diffModulo(int diffMod, unsigned m) // diff modulo
+// Special case where diff is result of a - b where a and b are in [0, modulo).
+inline int diffModulo(int diffMod, int m) // diff modulo
 {
-    assert(diffMod >= -static_cast<int>(m) && diffMod < static_cast<int>(m));
+    assert(m >= 0);
+    assert(diffMod >= -m && diffMod < m);
     if (m == 0)
         throw make_error<std::runtime_error>(Module_divisor_is_0);
     return diffMod < 0 ? diffMod + m : diffMod;
 }
 
-// Special case where diff is result of a + b where a and b are in [0, modulo].
-inline int sumModulo(int sumMod, unsigned m) // diff modulo
+inline int diffModulo(int diffMod, unsigned m) // diff modulo
 {
-    assert(sumMod >= 0 && sumMod < 2 * static_cast<int>(m));
+    assert(m <= std::numeric_limits<int>::max());
+    return diffModulo(diffMod, static_cast<int>(m));
+}
+
+// Special case where diff is result of a + b where a and b are in [0, modulo).
+inline int sumModulo(int sumMod, int m) // diff modulo
+{
+    assert(m >= 0);
+    assert(sumMod >= 0 && sumMod < 2 * m);
     if (m == 0)
         throw make_error<std::runtime_error>(Module_divisor_is_0);
-    return sumMod >= static_cast<int>(m) ? sumMod - m : sumMod;
+    return sumMod >= m ? sumMod - m : sumMod;
+}
+
+inline int sumModulo(int diffMod, unsigned m) // diff modulo
+{
+    assert(m <= std::numeric_limits<int>::max());
+    return sumModulo(diffMod, static_cast<int>(m));
 }
 
 // https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
 // Slightly faster than modulo_euclidean(int, int).
-inline int modulo(int value, unsigned m)
+inline int modulo(int value, signed m)
 {
+    assert(m >= 0);
     if (m == 0)
         throw make_error<std::runtime_error>(Module_divisor_is_0);
-    const int mod = value % static_cast<int>(m);
+    const auto mod = value % m;
     return mod < 0 ? mod + m : mod;
+}
+
+inline int modulo(int value, unsigned m)
+{
+    assert(m <= std::numeric_limits<int>::max());
+    return modulo(value, static_cast<int>(m));
+}
+
+inline int modulodiv(int value, signed m)
+{
+    assert(m >= 0);
+    if (m == 0)
+        throw make_error<std::runtime_error>(Module_divisor_is_0);
+    return value >= 0 ? value / m : (value - m + 1) / m;
 }
 
 inline int modulodiv(int value, unsigned m)
 {
-    if (m == 0)
-        throw make_error<std::runtime_error>(Module_divisor_is_0);
-    return value >= 0 ? value / static_cast<int>(m) : (value - m + 1) / static_cast<int>(m);
+    assert(m <= std::numeric_limits<int>::max());
+    return modulodiv(value, static_cast<int>(m));
 }
 
 // Special case where diff is result of a - b where a and b are in modulo.
@@ -485,7 +514,7 @@ inline int modulo_euclidean(int value, int m) // modulo_Euclidean2
         throw make_error<std::runtime_error>(Module_divisor_is_0);
     if (m == -1)
         return 0; // This test needed to prevent UB of `INT_MIN % -1`.
-    const int mod = value % m;
+    const auto mod = value % m;
     return mod < 0 ? (m < 0 ? mod - m : mod + m) : mod;
 }
 

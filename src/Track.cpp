@@ -1405,7 +1405,7 @@ void Track::syncAndDemultiThisTrackToOffset(const int syncOffset, bool demulti, 
         const auto offsetOriginal = sectorOriginal.offset;
         if (demulti)
             sectorOriginal.revolution = offsetOriginal / tracklen;
-        sectorOriginal.offset = modulo(offsetOriginal - adjustedSyncOffset, static_cast<unsigned>(tracklen));
+        sectorOriginal.offset = modulo(offsetOriginal - adjustedSyncOffset, tracklen);
         if (sectorOriginal.MakeOffsetNot0(false))
         {
             if (!sectorOriginal.IsOrphan())
@@ -1518,7 +1518,7 @@ int Track::findReasonableIdOffsetForDataFmOrMfm(const int dataOffset) const
 
     const auto offsetDiff = DataBytePositionAsBitOffset(GetFmOrMfmIdamAndDamDistance(getDataRate(), getEncoding()), getEncoding());
     // We could check if the sector overlaps something existing but unimportant now.
-    return modulo(dataOffset - offsetDiff, static_cast<unsigned>(tracklen));
+    return modulo(dataOffset - offsetDiff, tracklen);
 }
 
 Track& Track::format(const CylHead& cylhead, const Format& fmt)

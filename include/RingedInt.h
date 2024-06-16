@@ -2,6 +2,8 @@
 #define RingedIntH
 //---------------------------------------------------------------------------
 
+#include "Cpp_helpers.h"
+
 #include <cassert>
 
 class RingedInt
@@ -54,7 +56,7 @@ public:
         assert(m_sup >= m_min);
         if (IsEmpty())
             return m_min;
-        return modulo(value - m_min, static_cast<unsigned>(m_sup - m_min)) + m_min;
+        return modulo(value - m_min, m_sup - m_min) + m_min;
     }
 
 /*  // Too many ambigous operator overloads...

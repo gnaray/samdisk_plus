@@ -809,9 +809,8 @@ Interval<int> Sector::GetOffsetIntervalSuitableForParent(const int trackLen) con
 
     int min_distance, max_distance;
     GetSectorIdAndDataOffsetDistanceMinMax(datarate, encoding, min_distance, max_distance);
-    const auto uTrackLen = static_cast<unsigned>(trackLen);
-    const auto dataOffsetMin = modulo(offset - max_distance, uTrackLen);
-    const auto dataOffsetMax = modulo(offset - min_distance, uTrackLen);
+    const auto dataOffsetMin = modulo(offset - max_distance, trackLen);
+    const auto dataOffsetMax = modulo(offset - min_distance, trackLen);
     const Interval<int> dataOffsetInterval(dataOffsetMin, dataOffsetMax, BaseInterval::ConstructMode::StartAndEnd);
     return dataOffsetInterval;
 }

@@ -100,7 +100,7 @@ CohereResult DoSectorIdAndDataOffsetsCohere(
     const auto sectorIdAndDataOffsetDistance = dataOffset - sectorIdOffset;
     if (sectorIdAndDataOffsetDistance < max_distance)
     {
-        const auto sectorIdAndDataOffsetDistanceWrapped = modulo(sectorIdAndDataOffsetDistance, static_cast<unsigned>(trackLen));
+        const auto sectorIdAndDataOffsetDistanceWrapped = modulo(sectorIdAndDataOffsetDistance, trackLen);
         if (sectorIdAndDataOffsetDistanceWrapped < min_distance // dataOffset too low, need to check all (by returning DataTooLate).
             || sectorIdAndDataOffsetDistanceWrapped > max_distance)
             return CohereResult::DataTooLate;

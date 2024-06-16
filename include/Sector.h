@@ -126,7 +126,7 @@ public:
     inline int OffsetDistanceFromThisTo(const Sector& toSector, const int trackLen) const
     {
         assert(trackLen > 0);
-        return diffModulo(toSector.offset - offset, static_cast<unsigned>(trackLen));
+        return diffModulo(toSector.offset - offset, trackLen);
     }
 
     int size() const;

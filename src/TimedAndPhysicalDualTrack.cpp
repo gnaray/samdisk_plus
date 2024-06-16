@@ -59,7 +59,6 @@ bool TimedAndPhysicalDualTrack::SyncDemultiMergePhysicalUsingTimed(
     lastPhysicalTrackSingleLocal.setTrackLen(trackLenAbout);
     if (opt_debug >= 2)
         util::cout << "SyncDemultiMergePhysicalUsingTimed: tracklenAbout = " << trackLenAbout << "\n";
-    const auto uTrackLenAbout = static_cast<unsigned>(trackLenAbout);
     std::set<int> MIDMergedSectorIndices;
     std::set<int> MIDMergedOrphanSectorIndices;
     const auto iMIDSup = MIDTrack.size();
@@ -116,7 +115,7 @@ bool TimedAndPhysicalDualTrack::SyncDemultiMergePhysicalUsingTimed(
                             break;
                         auto MIDOrphanSectorCopy = MIDOrphanSector;
                         MIDOrphanSectorCopy.revolution = MIDOrphanSectorCopy.offset / trackLenAbout;
-                        MIDOrphanSectorCopy.offset = modulo(MIDOrphanSectorCopy.offset - syncOffset, uTrackLenAbout);
+                        MIDOrphanSectorCopy.offset = modulo(MIDOrphanSectorCopy.offset - syncOffset, trackLenAbout);
                         if (MIDOrphanSectorCopy.offset == 0)
                             MIDOrphanSectorCopy.offset = 1;
                         if (opt_debug >= 2)
@@ -167,7 +166,7 @@ bool TimedAndPhysicalDualTrack::SyncDemultiMergePhysicalUsingTimed(
             }
             auto MIDSectorCopy = MIDSector;
             MIDSectorCopy.revolution = MIDSectorCopy.offset / trackLenAbout;
-            MIDSectorCopy.offset = modulo(MIDSectorCopy.offset - syncOffset, uTrackLenAbout);
+            MIDSectorCopy.offset = modulo(MIDSectorCopy.offset - syncOffset, trackLenAbout);
             if (MIDSectorCopy.offset == 0)
                 MIDSectorCopy.offset = 1;
             if (opt_debug >= 2)
