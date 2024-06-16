@@ -1095,7 +1095,6 @@ void Track::Validate(const RepeatedSectors& repeatedSectorIds/* = RepeatedSector
         return;
 
     const auto& encoding = getEncoding();
-    const auto& dataRate = getDataRate();
     const auto toleratedOffsetDistance = tolerated_offset_distance(encoding, opt_byte_tolerance_of_time);
     const auto iSup = size();
     auto i = 0;
@@ -1273,12 +1272,6 @@ NextItThis:
         else
             itOther++;
     }
-    for (auto it = begin(); it != (itThisEnd - 1); it++)
-        if ((it + 1)->offset - it->offset < 160)
-            int a = 0;
-    for (auto it = otherTrack.begin(); it != (itOtherEnd - 1); it++)
-        if ((it + 1)->offset - it->offset < 160)
-            int a = 0;
 }
 
 int Track::SetSectorOffsetAt(const int index, const int offset)
@@ -1436,9 +1429,8 @@ void Track::AnalyseMultiTrack(const int trackLenBest) const
         {
             auto j = i;
             while (++j < iSup && operator[](j).offset < offsetSup) ;
-            const auto jOffsetSup = offsetSup + trackLenBest;
             auto writeStarted = false;
-            while (j < iSup/* && operator[](j).offset < jOffsetSup*/)
+            while (j < iSup)
             {
                 if (are_offsets_tolerated_same(operator[](i).offset, operator[](j).offset,
                     encoding, opt_byte_tolerance_of_time, trackLenBest)
@@ -1454,7 +1446,6 @@ void Track::AnalyseMultiTrack(const int trackLenBest) const
                     util::cout << offsetDiffPerRev << "x" << revDiff;
                     if (!writeStarted)
                         writeStarted = true;
-                    //                    break;
                 }
                 j++;
             }
@@ -1662,7 +1653,6 @@ std::string Track::ToString(bool onlyRelevantData/* = true*/) const
 {
     std::ostringstream ss;
     ss << "tracklen=" << tracklen << ", tracktime=" << tracktime;
-    auto writingStarted = true;
     if (!onlyRelevantData || !empty())
     {
         if (empty())

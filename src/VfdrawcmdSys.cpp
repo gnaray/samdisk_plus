@@ -4,7 +4,6 @@
 #include "VfdrawcmdSys.h"
 #include "BitstreamTrackBuilder.h"
 #include "IBMPCBase.h"
-#include "MemFile.h"
 #include "Options.h"
 #include "PhysicalTrackMFM.h"
 #include "SpecialFormat.h"

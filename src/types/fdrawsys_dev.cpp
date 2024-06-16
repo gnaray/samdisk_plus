@@ -665,7 +665,6 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::RescueTrack(const CylHead& cylhead, c
     const auto physicalTrackRescansInit = std::max(opt_rescans, opt_retries); // TODO wrong
     auto deviceReadingPolicyForScanning = deviceReadingPolicy;
     auto timedTrackRescans = opt_rescans;
-    auto initialRound = true;
     auto startTimeScanningLoop = StartStopper("Scanning loop");
     do // The scanning loop.
     {
@@ -712,7 +711,6 @@ TimedAndPhysicalDualTrack FdrawSysDevDisk::RescueTrack(const CylHead& cylhead, c
                 timedTrackRescans.wasChange = true;
             }
         }
-        initialRound = false;
     } while (timedTrackRescans.HasMoreRetryMinusMinus() && deviceReadingPolicyForScanning.WantMoreSectors());
     StopStopper(startTimeScanningLoop, "Scanning loop");
 
@@ -986,7 +984,6 @@ bool FdrawSysDevDisk::ReadAndMergePhysicalTracks(const CylHead& cylhead, TimedAn
     }
     PhysicalTrackMFM toBeMergedPhysicalTrack(mem, m_lastDataRate);
     auto& destODCTrack = timedAndPhysicalDualTrack.lastPhysicalTrackSingle;
-    const auto sectorIdAmountPrev = destODCTrack.track.size();
 
     auto toBeMergedODCTrack = toBeMergedPhysicalTrack.DecodeTrack(cylhead);
     const auto prevScore = timedAndPhysicalDualTrack.lastPhysicalTrackSingleScore;
