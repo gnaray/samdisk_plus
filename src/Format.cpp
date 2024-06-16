@@ -80,7 +80,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.sectors = 10;
         fmt.skew = 1;
         fmt.gap3 = 24;
-        break;
+        goto caseHandled;
 
     case RegularFormat::ProDos: // 720K
         fmt.fdc = FdcType::PC;
@@ -91,7 +91,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 2;
         fmt.gap3 = 0x50;
         fmt.fill = 0xe5;
-        break;
+        goto caseHandled;
 
     case RegularFormat::PC320:   // 320K
         fmt.fdc = FdcType::PC;
@@ -103,7 +103,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 1;
         fmt.gap3 = 0x50;
         fmt.fill = 0xf6;
-        break;
+        goto caseHandled;
 
     case RegularFormat::PC360:   // 360K
         fmt.fdc = FdcType::PC;
@@ -115,7 +115,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 1;
         fmt.gap3 = 0x50;
         fmt.fill = 0xf6;
-        break;
+        goto caseHandled;
 
     case RegularFormat::PC640:   // 640K
         fmt.fdc = FdcType::PC;
@@ -126,7 +126,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 1;
         fmt.gap3 = 0x50;
         fmt.fill = 0xe5;
-        break;
+        goto caseHandled;
 
     case RegularFormat::PC720:   // 720K
         fmt.fdc = FdcType::PC;
@@ -137,7 +137,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 1;
         fmt.gap3 = 0x50;
         fmt.fill = 0xf6;
-        break;
+        goto caseHandled;
 
     case RegularFormat::PC1200: // 1.2M
         fmt.fdc = FdcType::PC;
@@ -148,7 +148,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 1;
         fmt.gap3 = 0x54;
         fmt.fill = 0xf6;
-        break;
+        goto caseHandled;
 
     case RegularFormat::PC1232: // 1232K
         fmt.fdc = FdcType::PC;
@@ -161,7 +161,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 1;
         fmt.gap3 = 0x54;
         fmt.fill = 0xf6;
-        break;
+        goto caseHandled;
 
     case RegularFormat::PC1440: // 1.44M
         fmt.fdc = FdcType::PC;
@@ -172,7 +172,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 1;
         fmt.gap3 = 0x65;
         fmt.fill = 0xf6;
-        break;
+        goto caseHandled;
 
     case RegularFormat::PC2880: // 2.88M
         fmt.fdc = FdcType::PC;
@@ -183,7 +183,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.skew = 1;
         fmt.gap3 = 0x53;
         fmt.fill = 0xf6;
-        break;
+        goto caseHandled;
 
     case RegularFormat::D80:
         fmt.fdc = FdcType::WD;
@@ -192,7 +192,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.sectors = 9;
         fmt.skew = 5;
         fmt.fill = 0xe5;
-        break;
+        goto caseHandled;
 
     case RegularFormat::OPD:
         fmt.fdc = FdcType::WD;
@@ -205,7 +205,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.offset = 17;
         fmt.interleave = 13;
         fmt.skew = 13;
-        break;
+        goto caseHandled;
 
     case RegularFormat::MBD820:
         fmt.fdc = FdcType::WD;
@@ -216,7 +216,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.size = 3;
         fmt.skew = 1;
         fmt.gap3 = 44;
-        break;
+        goto caseHandled;
 
     case RegularFormat::MBD1804:
         fmt.fdc = FdcType::WD;
@@ -226,7 +226,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.sectors = 11;
         fmt.size = 3;
         fmt.skew = 1;
-        break;
+        goto caseHandled;
 
     case RegularFormat::TRDOS:
         fmt.fdc = FdcType::WD;
@@ -238,7 +238,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.size = 1;
         fmt.interleave = 2;
         fmt.head1 = 0;
-        break;
+        goto caseHandled;
 
     case RegularFormat::QDOS:
         fmt.fdc = FdcType::WD;
@@ -248,7 +248,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.heads = 2;
         fmt.sectors = 9;
         fmt.size = 2;
-        break;
+        goto caseHandled;
 
     case RegularFormat::D2M:
         fmt.fdc = FdcType::WD;
@@ -261,7 +261,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.gap3 = 0x64;
         fmt.head0 = 1;
         fmt.head1 = 0;
-        break;
+        goto caseHandled;
 
     case RegularFormat::D4M:
         fmt.fdc = FdcType::WD;
@@ -274,7 +274,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.gap3 = 0x64;
         fmt.head0 = 1;
         fmt.head1 = 0;
-        break;
+        goto caseHandled;
 
     case RegularFormat::D81:
         fmt.fdc = FdcType::WD;
@@ -284,7 +284,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.gap3 = 0x26;
         fmt.head0 = 1;
         fmt.head1 = 0;
-        break;
+        goto caseHandled;
 
     case RegularFormat::_2D:
         fmt.fdc = FdcType::PC;
@@ -293,7 +293,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.cyls = 40;
         fmt.sectors = 16;
         fmt.size = 1;
-        break;
+        goto caseHandled;
 
     case RegularFormat::AmigaDOS:
         fmt.fdc = FdcType::Amiga;
@@ -303,7 +303,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.sectors = 11;
         fmt.size = 2;
         fmt.base = 0;
-        break;
+        goto caseHandled;
 
     case RegularFormat::AmigaDOSHD:
         fmt.fdc = FdcType::Amiga;
@@ -312,7 +312,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.sectors = 22;
         fmt.size = 2;
         fmt.base = 0;
-        break;
+        goto caseHandled;
 
     case RegularFormat::LIF:
         fmt.cyls = 77;
@@ -322,7 +322,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.encoding = Encoding::MFM;
         fmt.sectors = 16;
         fmt.size = 1;
-        break;
+        goto caseHandled;
 
     case RegularFormat::AtariST:
         fmt.fdc = FdcType::WD;
@@ -334,7 +334,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.size = 2;
         fmt.gap3 = 40;
         fmt.fill = 0x00;
-        break;
+        goto caseHandled;
 
     case RegularFormat::TO_640K_MFM:
         fmt.cyls = 80;
@@ -347,7 +347,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.gap3 = 50;
         fmt.fill = 0xe5;
         fmt.cyls_first = true;
-        break;
+        goto caseHandled;
 
     case RegularFormat::TO_320K_MFM:
         fmt = GetFormat(RegularFormat::TO_640K_MFM);
@@ -355,7 +355,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.heads = 1;
         fmt.size = 1;
         fmt.encoding = Encoding::MFM;
-        break;
+        goto caseHandled;
 
     case RegularFormat::TO_160K_MFM:
         fmt = GetFormat(RegularFormat::TO_320K_MFM);
@@ -363,7 +363,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.heads = 1;
         fmt.size = 1;
         fmt.encoding = Encoding::MFM;
-        break;
+        goto caseHandled;
 
     case RegularFormat::TO_160K_FM:
         fmt = GetFormat(RegularFormat::TO_320K_MFM);
@@ -371,7 +371,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.heads = 1;
         fmt.size = 0;
         fmt.encoding = Encoding::FM;
-        break;
+        goto caseHandled;
 
     case RegularFormat::TO_80K_FM:
         fmt = GetFormat(RegularFormat::TO_160K_FM);
@@ -379,7 +379,7 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.heads = 1;
         fmt.size = 0;
         fmt.encoding = Encoding::FM;
-        break;
+        goto caseHandled;
 
     case RegularFormat::DO:
         fmt.fdc = FdcType::Apple;
@@ -390,19 +390,17 @@ Format Format::GetFormat(RegularFormat reg_fmt)
         fmt.sectors = 16;
         fmt.base = 0;
         fmt.size = 1;
-        break;
+        goto caseHandled;
 
     case RegularFormat::Unspecified:
-        break;
+        goto caseHandled;
 
     case RegularFormat::None:
-        break;
-
-    default:
-        assert(false);
-        break;
+        goto caseHandled;
     }
+    throw util::exception("unsupported regular format (", reg_fmt, ")");
 
+caseHandled:
     fmt.regular_format = reg_fmt;
     return fmt;
 }
