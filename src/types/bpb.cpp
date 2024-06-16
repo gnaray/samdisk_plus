@@ -38,7 +38,7 @@ bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
 }
 
 const std::string STRECOVER_MISS_OR_BAD{"======== SORRY, THIS SECTOR CANNOT BE READ FROM FLOPPY DISK BY ST RECOVER. ========"};
-const int STRECOVER_MISS_OR_BAD_SIZE = STRECOVER_MISS_OR_BAD.size();
+const int STRECOVER_MISS_OR_BAD_SIZE = static_cast<signed>(STRECOVER_MISS_OR_BAD.size());
 
 void ConvertStRecoverMissOrBadSectors(std::shared_ptr<Disk>& disk)
 {
@@ -52,7 +52,7 @@ void ConvertStRecoverMissOrBadSectors(std::shared_ptr<Disk>& disk)
             if (sector.copies() > 0 && sector.data_size() >= STRECOVER_MISS_OR_BAD_SIZE)
             {
                 const auto charData = reinterpret_cast<const char*>(sector.data_copy().data());
-                const std::string strData(charData, STRECOVER_MISS_OR_BAD_SIZE);
+                const std::string strData(charData, static_cast<unsigned>(STRECOVER_MISS_OR_BAD_SIZE));
                 if (strData.compare(STRECOVER_MISS_OR_BAD) == 0)
                     badSectorIndices.push_back(i);
             }
