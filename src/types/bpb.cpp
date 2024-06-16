@@ -37,7 +37,7 @@ bool ReadBPB(MemFile& file, std::shared_ptr<Disk>& disk)
     return true;
 }
 
-const std::string STRECOVER_MISS_OR_BAD("======== SORRY, THIS SECTOR CANNOT BE READ FROM FLOPPY DISK BY ST RECOVER. ========");
+const std::string STRECOVER_MISS_OR_BAD{"======== SORRY, THIS SECTOR CANNOT BE READ FROM FLOPPY DISK BY ST RECOVER. ========"};
 const int STRECOVER_MISS_OR_BAD_SIZE = STRECOVER_MISS_OR_BAD.size();
 
 void ConvertStRecoverMissOrBadSectors(std::shared_ptr<Disk>& disk)
