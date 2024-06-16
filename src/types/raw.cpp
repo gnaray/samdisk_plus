@@ -159,7 +159,7 @@ Format CheckBeforeWriteRAW(std::shared_ptr<Disk>& disk, const Format& format/* =
     const auto sector_above = fmt.base + fmt.sectors;
     if (fmt.sectors > 0)
     {
-        disk->each([&](const CylHead& cylhead, const Track& track) {
+        disk->each([&](const CylHead& /*cylhead*/, const Track& track) {
             // Skip empty tracks
             if (track.empty())
                 return;

@@ -662,7 +662,7 @@ bool NormaliseBitstream(BitBuffer& bitbuf)
 
 // Attempt to repair a track, given another copy of the same track.
 // Currently this method ignores offsets.
-int RepairTrack(const CylHead& cylhead, Track& track, const Track& src_track, const UniqueSectors &ignored_sectors/*=UniqueSectors{}*/)
+int RepairTrack(const CylHead& /*cylhead*/, Track& track, const Track& src_track, const UniqueSectors &ignored_sectors/*=UniqueSectors{}*/)
 {
     int changed_amount = 0;
     track.tracklen = std::max(track.tracklen, src_track.tracklen);

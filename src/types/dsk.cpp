@@ -118,7 +118,7 @@ public:
         }
     }
 
-    void TransferToSector(const CylHead& cylhead, Sector& sector) const
+    void TransferToSector(const CylHead& /*cylhead*/, Sector& sector) const
     {
         const int numDatas = dataReadCount.size();
         if (numDatas != sector.copies())

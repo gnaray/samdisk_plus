@@ -291,7 +291,7 @@ bool VfdrawcmdSys::CmdVerify(int /*phead*/, int cyl, int head, int sector, int s
  * - eot: number of sectors
  * - mem: the memory where the read sectors are stored. Its size is auto calculated if 0.
  */
-bool VfdrawcmdSys::CmdReadTrack(int phead, int cyl, int /*head*/, int /*sector*/, int size, int eot, MEMORY& mem)
+bool VfdrawcmdSys::CmdReadTrack(int phead, int /*cyl*/, int /*head*/, int /*sector*/, int size, int eot, MEMORY& mem)
 {
     const auto sizeChecked = lossless_static_cast<uint8_t>(size);
     const auto eotChecked = lossless_static_cast<uint8_t>(eot);
