@@ -12,38 +12,38 @@ static auto& opt_debug = getOpt<int>("debug");
 
 static const char* aszPartTypes[256] =
 {
-    "Empty", "FAT12", "Xenix root", "Xenix /usr", "FAT16 <32M", "(Extended)", "FAT16 32M+", "NTFS/HPFS",//00-07
-    NULL, NULL, "OS/2 Boot", "FAT32", "FAT32 LBA", NULL, "VFAT LBA", "(Extended LBA)",                  //08-0f
-    NULL, "FAT12 Hidden", "Compaq", NULL, "FAT16 <32M Hidden", NULL, "FAT16 32M+ Hidden", "NTFS Hidden",//10-17
-    NULL, NULL, NULL, "FAT32 Hidden", "FAT32 LBA Hidden", NULL, "VFAT LBA Hidden", NULL,                //18-1f
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, "NTFS Hidden",                                            //20-27
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //28-2f
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //30-27
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //38-2f
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //40-47
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //48-4f
-    NULL, NULL, "CP/M", NULL, NULL, NULL, NULL, NULL,                                                   //50-57
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //58-5f
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //60-67
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //68-6f
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //70-77
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //78-7f
-    NULL, NULL, "Linux swap", "Linux native", NULL, NULL, NULL, NULL,                                   //80-87
-    NULL, NULL, NULL, NULL, NULL, NULL, "Linux LVM", NULL,                                              //88-8f
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //90-97
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //98-9f
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //a0-a7
-    "Mac OSX", NULL, NULL, NULL, NULL, NULL, NULL, "Mac OSX HFS+",                                      //a8-af
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //b0-b7
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //b8-bf
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //c0-c7
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //c8-cf
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //d0-d7
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //d8-df
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //e0-e7
-    NULL, NULL, NULL, "BeOS BFS", NULL, NULL, "EFI Protective", NULL,                                   //e8-ef
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,                                                     //f0-f7
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL                                                      //f8-ff
+    "Empty", "FAT12", "Xenix root", "Xenix /usr", "FAT16 <32M", "(Extended)", "FAT16 32M+", "NTFS/HPFS",          //00-07
+    nullptr, nullptr, "OS/2 Boot", "FAT32", "FAT32 LBA", nullptr, "VFAT LBA", "(Extended LBA)",                   //08-0f
+    nullptr, "FAT12 Hidden", "Compaq", nullptr, "FAT16 <32M Hidden", nullptr, "FAT16 32M+ Hidden", "NTFS Hidden", //10-17
+    nullptr, nullptr, nullptr, "FAT32 Hidden", "FAT32 LBA Hidden", nullptr, "VFAT LBA Hidden", nullptr,           //18-1f
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, "NTFS Hidden",                                 //20-27
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //28-2f
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //30-27
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //38-2f
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //40-47
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //48-4f
+    nullptr, nullptr, "CP/M", nullptr, nullptr, nullptr, nullptr, nullptr,                                        //50-57
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //58-5f
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //60-67
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //68-6f
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //70-77
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //78-7f
+    nullptr, nullptr, "Linux swap", "Linux native", nullptr, nullptr, nullptr, nullptr,                           //80-87
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, "Linux LVM", nullptr,                                   //88-8f
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //90-97
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //98-9f
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //a0-a7
+    "Mac OSX", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, "Mac OSX HFS+",                              //a8-af
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //b0-b7
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //b8-bf
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //c0-c7
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //c8-cf
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //d0-d7
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //d8-df
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //e0-e7
+    nullptr, nullptr, nullptr, "BeOS BFS", nullptr, nullptr, "EFI Protective", nullptr,                           //e8-ef
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,                                       //f0-f7
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr                                        //f8-ff
 };
 
 
@@ -242,7 +242,7 @@ void ListDrive(const std::string& path, const HDD& hdd, int verbose)
 
                 char szVolName[64] = "";
 #ifdef _WIN32
-                if (!GetVolumeInformation(sVolume.c_str(), szVolName, sizeof(szVolName), NULL, NULL, NULL, NULL, 0))
+                if (!GetVolumeInformation(sVolume.c_str(), szVolName, sizeof(szVolName), nullptr, nullptr, nullptr, nullptr, 0))
 #endif
                     szVolName[0] = '\0';
 

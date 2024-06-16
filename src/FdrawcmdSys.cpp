@@ -471,7 +471,7 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
             time(&tt);
             struct tm* t = localtime(&tt);
 
-            if (t != NULL)
+            if (t != nullptr)
             {
                 char buffer[30];
                 sprintf(buffer, "%04d-%02d-%02d %02d.%02d.%02d ",
