@@ -95,7 +95,7 @@ bool TimedAndPhysicalDualTrack::SyncDemultiMergePhysicalUsingTimed(
                         if (MIDMergedOrphanSectorIndices.find(IndexInDirection(iMIDOrphan, iMIDOrphanSup, lookForward)) != MIDMergedOrphanSectorIndices.cend())
                             continue;
                         if ((lookForward && MIDOrphanSector.offset < MIDSectorBase.offset)
-                            || !lookForward && MIDOrphanSector.offset > MIDSectorBase.offset)
+                            || (!lookForward && MIDOrphanSector.offset > MIDSectorBase.offset))
                         {
                             if (opt_debug >= 2)
                                 util::cout << "SyncDemultiMergePhysicalUsingTimed: ignoring orphan sector at offset ("
