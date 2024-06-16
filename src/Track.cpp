@@ -1255,9 +1255,9 @@ void Track::TuneOffsetsToEachOtherByMin(Track& otherTrack)
                 if (thisSector.header == itOther->header)
                 {
                     if (thisSector.offset < itOther->offset)
-                        itOther = otherTrack.SetSectorOffsetAt(itOther - itOtherBegin, thisSector.offset) + itOtherBegin;
+                        itOther = otherTrack.SetSectorOffsetAt(static_cast<int>(itOther - itOtherBegin), thisSector.offset) + itOtherBegin;
                     else
-                        itThis = SetSectorOffsetAt(itThis - itThisBegin, itOther->offset) + itThisBegin;
+                        itThis = SetSectorOffsetAt(static_cast<int>(itThis - itThisBegin), itOther->offset) + itThisBegin;
                     itOther++;
                     goto NextItThis;
                 }

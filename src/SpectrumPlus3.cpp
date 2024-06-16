@@ -125,7 +125,7 @@ bool FixPlus3BootLoader(std::shared_ptr<Disk>& disk)
     {
         // Determine decryption parameters
         int data_offset = data[code_offset + 1];
-        uint16_t len = (data[code_offset + 5] << 8) | data[code_offset + 4];    // Extract length from LD BC,nn instruction
+        uint16_t len = static_cast<uint16_t>((data[code_offset + 5] << 8) | data[code_offset + 4]);    // Extract length from LD BC,nn instruction
         uint8_t r = data[code_offset + 4];                                      // R register initialised from LSB of length
         r = (r & 0x80) | ((r + 2) & 0x7f);                                      // R advances by 2 between LD R,A and LD A,R, with 7-bit update
 

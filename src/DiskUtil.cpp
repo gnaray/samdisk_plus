@@ -963,7 +963,7 @@ bool WriteRegularDisk(FILE* f_, Disk& disk, const Format& fmt)
                 {
                     bad++;
                     // Signing the end of sector because the start of sector is usually good.
-                    std::copy(BAD_SECTOR_SIGN.begin(), BAD_SECTOR_SIGN.end(), buf.end() - BAD_SECTOR_SIGN.size()); // Signing sector with BADS.
+                    std::copy(BAD_SECTOR_SIGN.begin(), BAD_SECTOR_SIGN.end(), buf.end() - static_cast<int>(BAD_SECTOR_SIGN.size())); // Signing sector with BADS.
                     MessageCPP(msgWarningAlways, "bad sector (", header, ")");
                 }
                 else

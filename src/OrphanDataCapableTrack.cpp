@@ -300,7 +300,7 @@ void OrphanDataCapableTrack::FixOffsetsByTimedToAvoidRepeatedSectorWhenMerging(T
                     ") to avoid repeating because can not determine id offset distance");
             else
             {
-                const auto iTimedStart = itTimed - timedTrack.begin();
+                const auto iTimedStart = static_cast<int>(itTimed - timedTrack.begin());
                 iTimedNext = iTimedStart;
                 while (timedTrack[(++iTimedNext).Value()].IsOrphan()); // Safety orphan check, in theory timed track can not have orphan.
                 if (iTimedNext == iTimedStart) // Safety index check, in theory this condition is always false (due to DetermineOffsetDistanceMinMaxAverage).
