@@ -2,6 +2,8 @@
 #define RingedIntH
 //---------------------------------------------------------------------------
 
+#include <cassert>
+
 class RingedInt
 {
 public:
