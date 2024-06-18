@@ -71,7 +71,7 @@ bool ReadBuiltIn(const std::string& path, std::shared_ptr<Disk>& disk)
     CylHead cylhead(0, 0);
     uint8_t i;
 
-    auto type = std::strtol(path.c_str() + 1, NULL, 0);
+    auto type = std::strtol(path.c_str() + 1, nullptr, 0);
     switch (type)
     {
         // 500Kbps examples

@@ -157,7 +157,7 @@ bool WriteIMD(FILE* /*f_*/, std::shared_ptr<Disk>&/*disk*/)
 {
     throw std::logic_error("IMD writing not implemented");
 #if 0
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     struct tm* tm = localtime(&now);
 
     // Format a suitable ASCII header

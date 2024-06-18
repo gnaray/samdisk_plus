@@ -899,13 +899,13 @@ int main(int argc_, char* argv_[])
         FreeConsole();
 
         char szPath[MAX_PATH];
-        GetModuleFileName(GetModuleHandle(NULL), szPath, ARRAYSIZE(szPath));
+        GetModuleFileName(GetModuleHandle(nullptr), szPath, ARRAYSIZE(szPath));
 
         auto strCommand = std::string("/k \"") + szPath + "\" --help";
         GetEnvironmentVariable("COMSPEC", szPath, ARRAYSIZE(szPath));
 
         auto ret = static_cast<int>(reinterpret_cast<ULONG_PTR>(
-            ShellExecute(NULL, "open", szPath, strCommand.c_str(), NULL, SW_NORMAL)));
+            ShellExecute(nullptr, "open", szPath, strCommand.c_str(), nullptr, SW_NORMAL)));
 
         // Fall back on the old message if it failed
         if (ret < 32)

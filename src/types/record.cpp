@@ -221,7 +221,7 @@ bool UnwrapCPM(std::shared_ptr<Disk>&/*olddisk*/, std::shared_ptr<Disk>&/*newdis
     BYTE bFirstTrack = (MGT_DISK_SIZE - DOS_DISK_SIZE) / MGT_TRACK_SIZE;
 
     PCSECTOR ps = olddisk->GetSector(0, 0, 1, &fmtMGT);
-    MGT_DIR* pdir = ps ? reinterpret_cast<MGT_DIR*>(ps->apbData[0]) : NULL;
+    MGT_DIR* pdir = ps ? reinterpret_cast<MGT_DIR*>(ps->apbData[0]) : nullptr;
 
     // Check for SPECIAL file using 1440 sectors and starting at the right sector map position
     if (!pdir || pdir->bType != 8 ||

@@ -72,7 +72,7 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
 
 #ifdef HAVE_CAPSIMAGE
 #ifdef __APPLE__
-    if (CAPSGetVersionInfo == NULL)
+    if (CAPSGetVersionInfo == nullptr)
         throw util::exception("CAPSImage.framework is required for this image");
 #endif
     if (!CheckLibrary("capsimg", "CAPSGetVersionInfo"))
