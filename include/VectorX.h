@@ -18,7 +18,7 @@ public:
     typedef typename VectorX::size_type ST;
 
     using std::vector<T>::vector;
-#if defined(_WIN32) && _MSC_VER <= 1900
+#if defined(_MSC_VER) && _MSC_VER <= 1900
     VectorX() : std::vector<T>::vector() {}
 #endif
     using std::vector<T>::operator[];
@@ -37,7 +37,7 @@ public:
     {
     }
 
-#if !defined(_WIN32) || _MSC_VER > 1900
+#if !defined(_MSC_VER) || _MSC_VER > 1900
     template <typename U = IT,
               std::enable_if_t<std::is_integral<U>::value> * = nullptr>
     explicit VectorX(U count,
