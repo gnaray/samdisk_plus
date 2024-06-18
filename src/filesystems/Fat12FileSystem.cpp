@@ -1,6 +1,8 @@
 // Fat12FileSystem (including BIOS Parameter Block), for MS-DOS and compatible disks.
 
+#ifdef _WIN32
 #include "PlatformConfig.h" // For disabling localtime deprecation.
+#endif
 #include "filesystems/Fat12FileSystem.h"
 #include "Util.h"
 #include "DiskUtil.h"

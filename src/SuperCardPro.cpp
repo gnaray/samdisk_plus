@@ -1,6 +1,6 @@
 // SuperCard Pro device base class
 
-#include "PlatformConfig.h"
+#include "config.h"
 #include "SuperCardPro.h"
 #include "Options.h"
 

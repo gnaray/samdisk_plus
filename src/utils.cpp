@@ -1,5 +1,6 @@
 // Utility functions
 
+#include "config.h"
 #include "utils.h"
 #include "Util.h"
 

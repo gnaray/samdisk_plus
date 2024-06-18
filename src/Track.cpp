@@ -1,4 +1,3 @@
-#include "PlatformConfig.h"
 #include "Track.h"
 #include "Options.h"
 //#include "DiskUtil.h"

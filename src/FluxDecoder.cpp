@@ -2,7 +2,6 @@
 //
 // PLL code from Keir Frasier's Disk-Utilities/libdisk
 
-#include "PlatformConfig.h"
 #include "FluxDecoder.h"
 #include "Options.h"
 

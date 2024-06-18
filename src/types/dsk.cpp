@@ -7,7 +7,9 @@
 // John Elliot's rate+encoding extension:
 //  http://groups.google.com/group/comp.sys.sinclair/msg/80e4c2d1403ea65c
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling strncpy deprecation.
+#endif
 #include "Options.h"
 #include "DiskUtil.h"
 #include "types/dsk.h"

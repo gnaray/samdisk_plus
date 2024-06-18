@@ -1,6 +1,8 @@
 // SAM Coupe helper functions
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling localtime deprecation.
+#endif
 #include "SAMCoupe.h"
 #include "Options.h"
 

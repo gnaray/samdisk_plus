@@ -1,5 +1,10 @@
 // Main entry point and command-line handler
 
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling strncpy deprecation.
+#else
+#include "config.h"
+#endif
 #include "SAMdisk.h"
 #include "FileSystem.h"
 #include "Options.h"

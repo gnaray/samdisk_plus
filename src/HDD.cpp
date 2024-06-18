@@ -1,6 +1,8 @@
 // Base class for HDD devices and image files
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling read, write, close deprecation.
+#endif
 #include "HDD.h"
 #include "Options.h"
 #include "BlockDevice.h"

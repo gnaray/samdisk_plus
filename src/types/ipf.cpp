@@ -1,6 +1,7 @@
 // Interchangeable Preservation Format from the Software Preservation Society:
 //  http://www.softpres.org/
 
+#include "config.h" // IWYU pragma: keep
 #include "Options.h"
 //#include "BitstreamDecoder.h"
 #include "Disk.h"

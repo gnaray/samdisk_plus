@@ -1,6 +1,5 @@
 #pragma once
 
-#include "PlatformConfig.h"
 #include "Disk.h"
 #include "DiskUtil.h"
 #include "Header.h"

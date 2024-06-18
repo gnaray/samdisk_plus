@@ -1,8 +1,8 @@
 // KryoFlux device base class
 
-#include "PlatformConfig.h"
-#include "Options.h"
+#include "config.h"
 #include "KryoFlux.h"
+#include "Options.h"
 
 #include <cstring>
 #include <thread>

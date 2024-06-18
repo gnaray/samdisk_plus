@@ -7,6 +7,8 @@
 #ifndef FDRAWCMD_H
 #define FDRAWCMD_H
 
+#include "Platform.h"
+
 #ifndef CTL_CODE
 #ifdef _WIN32
 #include <winioctl.h> // Requires preincluded windows.h.

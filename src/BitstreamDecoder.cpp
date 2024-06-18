@@ -1,6 +1,5 @@
 // Decode flux reversals and bitstreams to something recognisable
 
-#include "PlatformConfig.h"
 #include "BitstreamDecoder.h"
 #include "Util.h"
 #include "Options.h"

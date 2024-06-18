@@ -1,6 +1,8 @@
 // Copy command
 
+#ifdef _WIN32
 #include "PlatformConfig.h" // For disabling fopen deprecation.
+#endif
 #include "FileSystem.h"
 #include "Interval.h"
 #include "Options.h"

@@ -1,7 +1,9 @@
 // HFE format for HxC floppy emulator:
 //  http://hxc2001.com/download/floppy_drive_emulator/SDCard_HxC_Floppy_Emulator_HFE_file_format.pdf
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling strncpy deprecation.
+#endif
 #include "Options.h"
 #include "DiskUtil.h"
 #include "Disk.h"

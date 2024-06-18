@@ -1,6 +1,5 @@
 // View command
 
-#include "PlatformConfig.h"
 #include "Options.h"
 #include "SAMdisk.h"
 #include "DiskUtil.h"

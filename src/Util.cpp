@@ -1,6 +1,10 @@
 // Legacy utility functions
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling strncat deprecation.
+#else
+#include "config.h"
+#endif
 #include "Util.h"
 #include "Options.h"
 #include "Image.h"

@@ -1,7 +1,6 @@
 ﻿// CWTool = CatWeasel binary disk image created by CWTool:
 //  http://www.discferret.com/wiki/CWTool_image_format
 
-#include "PlatformConfig.h"
 #include "Disk.h"
 #include "DiskUtil.h"
 #include "MemFile.h"

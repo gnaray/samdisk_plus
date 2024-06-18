@@ -1,6 +1,10 @@
 // USB backend for SuperCard Pro device
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling open, read, write, close deprecation.
+#else
+#include "config.h"
+#endif
 #include "SCP_USB.h"
 #include "FileIO.h" // O_BINARY
 

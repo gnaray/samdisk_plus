@@ -1,7 +1,9 @@
 // SuperCard Pro flux file format:
 //  http://www.cbmstuff.com/downloads/scp/scp_image_specs.txt
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling gmtime deprecation.
+#endif
 #include "DemandDisk.h"
 #include "Disk.h"
 #include "MemFile.h"

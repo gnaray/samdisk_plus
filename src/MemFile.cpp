@@ -1,6 +1,10 @@
 // Memory-backed files used for disk images
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling fopen deprecation.
+#else
+#include "config.h"
+#endif
 #include "MemFile.h"
 #include "Util.h"
 #include "FileIO.h" // PATH_SEPARATOR_CHR

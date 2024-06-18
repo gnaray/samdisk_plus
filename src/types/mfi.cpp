@@ -2,7 +2,7 @@
 //
 // https://github.com/mamedev/mame/blob/master/src/lib/formats/mfi_dsk.cpp
 
-#include "PlatformConfig.h"
+#include "config.h"
 #include "DemandDisk.h"
 //#include "BitstreamDecoder.h"
 #include "Disk.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #ifdef HAVE_WINUSB
 

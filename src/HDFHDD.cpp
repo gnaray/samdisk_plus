@@ -1,6 +1,8 @@
 // HDF HDD disk image files
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling open, read, write, close, unlink deprecation.
+#endif
 #include "HDFHDD.h"
 #include "Options.h"
 #include "FileIO.h" // Although included by Options.h as well.

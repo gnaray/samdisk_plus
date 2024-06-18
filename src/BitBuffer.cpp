@@ -1,6 +1,5 @@
 // Bit buffer to hold decoded flux data for scanning
 
-#include "PlatformConfig.h"
 #include "BitBuffer.h"
 #include "Options.h"
 

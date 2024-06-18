@@ -1,6 +1,8 @@
 // Create command
 
-#include "PlatformConfig.h"
+#ifdef _WIN32
+#include "PlatformConfig.h" // For disabling unlink deprecation.
+#endif
 #include "Options.h"
 #include "Disk.h"
 #include "DiskUtil.h"

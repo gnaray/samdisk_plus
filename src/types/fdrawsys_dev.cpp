@@ -6,7 +6,6 @@
 #ifdef HAVE_FDRAWCMD_H
 
 #include "types/fdrawsys_dev.h"
-#include "Platform.h"
 #include "fdrawcmd.h"
 
 #include "DiskUtil.h"

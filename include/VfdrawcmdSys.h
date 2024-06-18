@@ -1,11 +1,6 @@
 #pragma once
 
 #include "PhysicalTrackMFM.h"
-#include "config.h"
-
-#include "Platform.h"
-#include "fdrawcmd.h"
-
 #include "FdrawcmdSys.h"
 #include "Header.h"
 #include "Util.h"
