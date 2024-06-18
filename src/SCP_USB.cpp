@@ -12,10 +12,9 @@
 #include <string>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#else
-#ifdef _WIN32
-#include <io.h>
 #endif
+#ifdef HAVE_IO_H
+#include <io.h>
 #endif
 
 #ifdef _WIN32
