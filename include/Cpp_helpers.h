@@ -430,7 +430,7 @@ constexpr const char* Module_divisor_is_0 = "Can not calculate modulo when divis
 // https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
 inline int modulo2Power(int value, unsigned powerOf2)
 {
-    assert(powerOf2 <= std::numeric_limits<int>::max());
+    assert(powerOf2 <= static_cast<unsigned>(std::numeric_limits<int>::max()));
     if (powerOf2 == 0)
         throw make_error<std::runtime_error>(Module_divisor_is_0);
     return value & static_cast<int>(powerOf2 - 1);
@@ -448,7 +448,7 @@ inline int diffModulo(int diffMod, int m) // diff modulo
 
 inline int diffModulo(int diffMod, unsigned m) // diff modulo
 {
-    assert(m <= std::numeric_limits<int>::max());
+    assert(m <= static_cast<unsigned>(std::numeric_limits<int>::max()));
     return diffModulo(diffMod, static_cast<int>(m));
 }
 
@@ -464,7 +464,7 @@ inline int sumModulo(int sumMod, int m) // diff modulo
 
 inline int sumModulo(int diffMod, unsigned m) // diff modulo
 {
-    assert(m <= std::numeric_limits<int>::max());
+    assert(m <= static_cast<unsigned>(std::numeric_limits<int>::max()));
     return sumModulo(diffMod, static_cast<int>(m));
 }
 
@@ -481,7 +481,7 @@ inline int modulo(int value, signed m)
 
 inline int modulo(int value, unsigned m)
 {
-    assert(m <= std::numeric_limits<int>::max());
+    assert(m <= static_cast<unsigned>(std::numeric_limits<int>::max()));
     return modulo(value, static_cast<int>(m));
 }
 
@@ -495,7 +495,7 @@ inline int modulodiv(int value, signed m)
 
 inline int modulodiv(int value, unsigned m)
 {
-    assert(m <= std::numeric_limits<int>::max());
+    assert(m <= static_cast<unsigned>(std::numeric_limits<int>::max()));
     return modulodiv(value, static_cast<int>(m));
 }
 
