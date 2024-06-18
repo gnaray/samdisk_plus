@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <cstring>
 #include <fcntl.h>
-#ifndef _WIN32
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
 #include <sys/stat.h>
