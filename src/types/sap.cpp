@@ -287,7 +287,7 @@ bool WriteSAP(FILE* f_, std::shared_ptr<Disk>& disk)
                     crc_be = ~crc_be;
 
                 if (!fwrite(&ss, sizeof(ss), 1, f_) ||
-                    !fwrite(data.data(), data.size(), 1, f_) ||
+                    !fwrite(data.data(), data.size<size_t>(), 1, f_) ||
                     !fwrite(&crc_be, sizeof(crc_be), 1, f_))
                     throw util::exception("write error");
             }

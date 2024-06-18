@@ -284,7 +284,7 @@ bool UpdateBDOSBootSector(uint8_t* pb_, const HDD& hdd)
 
     // Save a copy of the the boot sector before the update
     MEMORY mem(hdd.sector_size);
-    memcpy(mem, pb_, mem.size);
+    memcpy(mem, pb_, static_cast<size_t>(mem.size));
 
     // Set the LBA location of the first record
     pb_[0x104] = bdc.base_sectors & 0xff;
@@ -322,7 +322,7 @@ bool UpdateBDOSBootSector(uint8_t* pb_, const HDD& hdd)
     pbD0[22] = HIBYTE(bdc.base_sectors);
 
     // If anything changed, report the update
-    if (memcmp(mem, pb_, mem.size))
+    if (memcmp(mem, pb_, static_cast<size_t>(mem.size)))
     {
         Message(msgFix, "updated BDOS boot parameters to match target media");
         return true;

@@ -27,7 +27,7 @@ std::string GetDeepThoughtData(const Data& data)
 
     auto offset = GetDeepThoughtDataOffset(data);
     if (offset != 0)
-        str = std::string(reinterpret_cast<const char*>(data.data() + offset), data.size() - offset);
+        str = std::string(reinterpret_cast<const char*>(data.data() + offset), static_cast<std::string::size_type>(data.size() - offset));
 
     return str;
 }

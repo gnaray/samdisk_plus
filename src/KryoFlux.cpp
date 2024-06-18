@@ -325,7 +325,7 @@ void KryoFlux::ReadFlux(int revs, FluxData& flux_revs, std::vector<std::string>&
                             //                                  disk.metadata()[name] = value;
 
                             if (name == "sck")
-                                ps_per_tick = PS_PER_TICK(std::atoi(value.c_str()));
+                                ps_per_tick = static_cast<uint32_t>(PS_PER_TICK(std::atoi(value.c_str())));
                         }
                     }
                 }

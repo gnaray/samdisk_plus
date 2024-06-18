@@ -271,7 +271,7 @@ void ListDrive(const std::string& path, const HDD& hdd, int verbose)
             for (int p = 0; p < 4; ++p)
             {
                 // Calculate offset to partition entry
-                size_t i = 446 + p * 16;
+                size_t i = static_cast<size_t>(446 + p * 16);
 
                 // Read the partition type, skip if it's zero (unused)
                 uint8_t bType = mbr[i + 4];

@@ -52,7 +52,7 @@ bool ReadTrinLoad(const std::string& path, std::shared_ptr<Disk>& disk)
 
     auto record = strtoul(path.c_str() + 4, nullptr, 10);
     if (record != 0)
-        trinity->select_record(record);
+        trinity->select_record(lossless_static_cast<int>(record));
 
     auto ip_addr_str = trinity->devices()[0];
     auto trinload_disk = std::make_shared<TrinLoadDisk>(std::move(trinity));

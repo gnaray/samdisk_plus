@@ -47,7 +47,7 @@ bool ReadS24(MemFile& file, std::shared_ptr<Disk>& disk)
                 Sector sector(DataRate::_500K, Encoding::MFM, Header(cyl, head, i + 1, pbSectors[i]));
 
                 Data data(sector.size());
-                memcpy(data.data(), pb, data.size());
+                memcpy(data.data(), pb, data.size<size_t>());
                 pb += data.size();
 
                 sector.add(std::move(data));

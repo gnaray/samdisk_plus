@@ -80,9 +80,9 @@ bool ReadSBT(MemFile& file, std::shared_ptr<Disk>& disk)
     pbD[14] = 1;
 
     // Sector address map
-    memset(pbD + 15, 0xff, sectors >> 3);
+    memset(pbD + 15, 0xff, static_cast<size_t>(sectors >> 3));
     if (sectors & 7)
-        pbD[15 + (sectors >> 3)] = (1U << (sectors & 7)) - 1;
+        pbD[15 + (sectors >> 3)] = static_cast<uint8_t>((1U << (sectors & 7)) - 1);
 
     // Starting page number and offset
     pbD[236] = pbF[8];

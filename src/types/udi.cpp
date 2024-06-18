@@ -31,7 +31,7 @@ struct UDI_TRACK
 
 static uint32_t crc32(const uint8_t* buf, int len)
 {
-    int32_t crc = ~0;
+    uint32_t crc = ~0U;
     for (int i = 0; i < len; i++)
     {
         crc ^= ~buf[i];
@@ -45,7 +45,7 @@ static uint32_t crc32(const uint8_t* buf, int len)
         crc = ~crc;
     }
 
-    return static_cast<uint32_t>(crc);
+    return crc;
 }
 
 bool ReadUDI(MemFile& file, std::shared_ptr<Disk>& disk)

@@ -94,7 +94,7 @@ bool ReadIMD(MemFile& file, std::shared_ptr<Disk>& disk)
             if (it.size == 0xff)
             {
                 // Read the sector size from the map, and convert to a size code
-                uint16_t wSize = (nmap[i * 2 + 1] << 8) | nmap[i * 2];
+                uint16_t wSize = static_cast<uint16_t>((nmap[i * 2 + 1] << 8) | nmap[i * 2]);
                 sector.header.size = SizeToCode(wSize);
 
                 // Fail if the size was invalid

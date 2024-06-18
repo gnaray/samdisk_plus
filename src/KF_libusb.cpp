@@ -109,7 +109,7 @@ std::string KF_libusb::Control(int req, int index, int value)
 
     auto ret = libusb_control_transfer(
         m_hdev,
-        LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_OTHER,
+        static_cast<uint8_t>(LIBUSB_ENDPOINT_IN) | LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_OTHER,
         static_cast<uint8_t>(req),
         0,
         static_cast<uint16_t>(index),
@@ -120,7 +120,7 @@ std::string KF_libusb::Control(int req, int index, int value)
     if (ret < 0)
         throw util::exception(util::format("(control) ", libusb_error_name(ret)));
 
-    return std::string(reinterpret_cast<char*>(buf), ret);
+    return std::string(reinterpret_cast<char*>(buf), static_cast<std::string::size_type>(ret));
 }
 
 int KF_libusb::Read(void* buf, int len)
@@ -233,6 +233,8 @@ void KF_libusb::StopAsyncRead()
 
 int KF_libusb::ReadAsync(void* buf, int len)
 {
+    assert(len > 0);
+
     struct timeval tv { KF_TIMEOUT_MS / 1000, (KF_TIMEOUT_MS % 1000) * 1000 };
     auto ret = libusb_handle_events_timeout(m_ctx, &tv);
     if (ret == LIBUSB_SUCCESS || ret == LIBUSB_ERROR_INTERRUPTED)
@@ -243,7 +245,7 @@ int KF_libusb::ReadAsync(void* buf, int len)
 
     std::lock_guard<std::mutex> lock(m_readmutex);
     len = std::min(len, static_cast<int>(m_readbuf.size()));
-    std::memcpy(buf, m_readbuf.data(), len);
+    std::memcpy(buf, m_readbuf.data(), static_cast<size_t>(len));
     m_readbuf.erase(m_readbuf.begin(), m_readbuf.begin() + len);
     return len;
 }

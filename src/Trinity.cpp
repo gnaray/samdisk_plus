@@ -102,23 +102,27 @@ const VectorX<std::string> Trinity::devices() const
 
 int Trinity::Send(const void* pv, int len)
 {
+    assert(len > 0);
+
     auto addr_to = reinterpret_cast<const sockaddr*>(&m_addr_to);
 
-    auto ret = sendto(m_socket, reinterpret_cast<const char*>(pv), len, 0, addr_to, sizeof(m_addr_to));
+    auto ret = sendto(m_socket, reinterpret_cast<const char*>(pv), static_cast<size_t>(len), 0, addr_to, sizeof(m_addr_to));
     return std::max(static_cast<int>(ret), 0);
 }
 
 int Trinity::Recv(void* pv, int len)
 {
+    assert(len > 0);
+
     socklen_t addr_from_len = sizeof(m_addr_from);
     auto addr_from = reinterpret_cast<sockaddr*>(&m_addr_from);
     auto pch = reinterpret_cast<char*>(pv);
 
-    auto ret = recvfrom(m_socket, pch, len, 0, addr_from, &addr_from_len);
+    auto ret = recvfrom(m_socket, pch, static_cast<size_t>(len), 0, addr_from, &addr_from_len);
     if (ret < 0)
         throw util::exception("network timeout waiting for response");
 
-    return ret;
+    return lossless_static_cast<int>(ret);
 }
 
 
