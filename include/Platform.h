@@ -177,11 +177,11 @@ inline BOOL DeviceIoControl(HANDLE /*hDevice*/, DWORD /*dwIoControlCode*/, LPVOI
 
 #define STATUS_INVALID_PARAMETER		static_cast<DWORD>(0xC000000DL)
 
-inline HANDLE CreateFile(LPCSTR lpFileName,DWORD dwDesiredAccess,
-        DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-        DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes,
-                   HANDLE hTemplateFile) { return INVALID_HANDLE_VALUE; }
-inline BOOL CloseHandle(HANDLE hObject) { return false; }
+inline HANDLE CreateFile(LPCSTR /*lpFileName*/, DWORD /*dwDesiredAccess*/,
+        DWORD /*dwShareMode*/, LPSECURITY_ATTRIBUTES /*lpSecurityAttributes*/,
+        DWORD /*dwCreationDisposition*/, DWORD /*dwFlagsAndAttributes*/,
+                   HANDLE /*hTemplateFile*/) { return INVALID_HANDLE_VALUE; }
+inline BOOL CloseHandle(HANDLE /*hObject*/) { return false; }
 
 // Service Control Manager (WinSvc.h): https://github.com/tpn/winsdk-7/blob/master/v7.1A/Include/WinSvc.h
 #define DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name
@@ -206,12 +206,12 @@ typedef struct _SERVICE_STATUS {
 #define SERVICE_PAUSE_PENDING                  0x00000006
 #define SERVICE_PAUSED                         0x00000007
 
-inline SC_HANDLE OpenSCManager(LPCSTR lpMachineName, LPCSTR lpDatabaseName, DWORD dwDesiredAccess)
+inline SC_HANDLE OpenSCManager(LPCSTR /*lpMachineName*/, LPCSTR /*lpDatabaseName*/, DWORD /*dwDesiredAccess*/)
 { return nullptr; }
-inline SC_HANDLE OpenService(SC_HANDLE hSCManager, LPCSTR lpServiceName, DWORD dwDesiredAccess)
+inline SC_HANDLE OpenService(SC_HANDLE /*hSCManager*/, LPCSTR /*lpServiceName*/, DWORD /*dwDesiredAccess*/)
 { return nullptr; }
-inline BOOL QueryServiceStatus(SC_HANDLE hService, LPSERVICE_STATUS lpServiceStatus) { return false; }
-inline BOOL CloseServiceHandle(SC_HANDLE hSCObject) { return false; }
+inline BOOL QueryServiceStatus(SC_HANDLE /*hService*/, LPSERVICE_STATUS /*lpServiceStatus*/) { return false; }
+inline BOOL CloseServiceHandle(SC_HANDLE /*hSCObject*/) { return false; }
 
 #endif // _WIN32
 

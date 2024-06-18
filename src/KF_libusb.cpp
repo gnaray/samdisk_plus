@@ -103,7 +103,7 @@ std::string KF_libusb::GetProductName()
     return std::string(reinterpret_cast<char*>(product));
 }
 
-std::string KF_libusb::Control(int req, int index, int value)
+std::string KF_libusb::Control(int req, int index, int /*value*/)
 {
     uint8_t buf[256];
 
