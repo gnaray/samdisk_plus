@@ -7,6 +7,10 @@
 #include "Disk.h"
 #include "MemFile.h"
 
+#ifdef _WIN32
+#include "Util.h"
+#endif
+
 #include <memory>
 
 static auto& opt_fix = getOpt<int>("fix");
@@ -181,7 +185,7 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
                 // Do we have timing data that we're allowed to use?
                 if (cti.timelen > 0)
                 {
-                    std::vector<uint32_t> flux_times;
+                    VectorX<uint32_t> flux_times;
                     flux_times.reserve(tracklen_bits);
 
                     // Generate a revolution of flux data
