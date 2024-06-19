@@ -11,6 +11,12 @@ if (CMAKE_TOOLCHAIN_FILE)
   include(${CMAKE_TOOLCHAIN_FILE})
 endif()
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(ARCH_TYPE x64) # 64 bits
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(ARCH_TYPE x86)# 32 bits
+endif()
+
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
 include(CheckSymbolExists)
@@ -69,6 +75,7 @@ message(STATUS "CMAKE_BUILD_TYPE is: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   target_compile_definitions(${PROJECT_NAME} PRIVATE _DEBUG=1)
 endif()
+cmake_print_variables(ARCH_TYPE)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
 
@@ -173,8 +180,8 @@ if (FTDI_LIBRARY AND FTDI_INCLUDE_DIR)
   set(HAVE_FTDI 1)
 endif()
 
-find_library(CAPSIMAGE_LIBRARY NAMES capsimage CAPSimage CAPSimg ENV LD_LIBRARY_PATH)
-find_path(CAPSIMAGE_INCLUDE_DIR caps/CapsLibAll.h)
+find_library(CAPSIMAGE_LIBRARY NAMES capsimage CAPSimage CAPSImg HINTS ${CMAKE_SOURCE_DIR}/capsimage/${ARCH_TYPE} ENV LD_LIBRARY_PATH)
+find_path(CAPSIMAGE_INCLUDE_DIR caps/CapsLibAll.h HINTS ${CMAKE_SOURCE_DIR}/capsimage)
 if (CAPSIMAGE_LIBRARY AND CAPSIMAGE_INCLUDE_DIR)
   message(STATUS "Found CAPSimage: ${CAPSIMAGE_LIBRARY}")
 
