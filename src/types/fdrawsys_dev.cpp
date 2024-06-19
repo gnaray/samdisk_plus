@@ -563,7 +563,7 @@ bool FdrawSysDevDisk::ScanAndDetectIfNecessary(const CylHead& cylhead, MultiScan
     // Prefer MFM to FM.
     VectorX<Encoding> encodings{ Encoding::MFM, Encoding::FM };
     // Prefer higher datarates.
-    VectorX<DataRate> dataRates{ DataRate::_250K, DataRate::_1M, DataRate::_500K, DataRate::_300K };
+    VectorX<DataRate> dataRates{ DataRate::_1M, DataRate::_500K, DataRate::_300K, DataRate::_250K };
 
     if (trackInfoHasEncodingAndDataRate && (m_trackInfo[cylhead].encoding != m_lastEncoding || m_trackInfo[cylhead].dataRate != m_lastDataRate))
     {
