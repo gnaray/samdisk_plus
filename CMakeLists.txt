@@ -16,6 +16,7 @@ include(CheckFunctionExists)
 include(CheckSymbolExists)
 include(CheckTypeSize)
 include(CheckCXXCompilerFlag)
+include(CMakePrintHelpers)
 
 check_type_size(ssize_t SSIZE_T)
 
