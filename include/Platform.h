@@ -9,14 +9,15 @@
 #endif
 
 #include <cstdint>
+
 #ifndef _WIN32
+// __WINDOWS_TYPES__ comes from WinTypes.h and only that xor this block can be included.
+#ifndef __WINDOWS_TYPES__
 // For fdrawcmd.h the following are required (which winioctl.h provides on Windows):
 // CTL_CODE
 // FILE_DEVICE_UNKNOWN
 // DeviceIoControl()
 // METHOD_*
-
-typedef __int64_t __int64;
 
 // Defining things so this file can be included not only on Windows platform.
 #define CTL_CODE( DeviceType, Function, Method, Access ) (                 \
@@ -33,72 +34,38 @@ typedef const char *LPCSTR;
 
 typedef unsigned short *LPWSTR;
 
-typedef void* HANDLE;
+typedef void *HANDLE;
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
 typedef unsigned int DWORD; // Originally long which is 32 bits except in Unix-like systems where 64 bits.
 typedef unsigned int ULONG; // Originally long which is 32 bits except in Unix-like systems where 64 bits.
 typedef int LONG; // Originally long which is 32 bits except in Unix-like systems where 64 bits.
-typedef __int64 LONGLONG;
 
 typedef int BOOL;
 
 // https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
 typedef DWORD *LPDWORD;
-typedef void *LPVOID;
+typedef void *PVOID, *LPVOID;
 typedef struct _OVERLAPPED
 {
-} *LPOVERLAPPED;
+    DWORD Internal;
+    DWORD InternalHigh;
+    union {
+        struct{
+            DWORD Offset;
+            DWORD OffsetHigh;
+        };
+        PVOID  Pointer;
+    };
+    HANDLE hEvent;
+} OVERLAPPED, *LPOVERLAPPED;
 
-typedef void *LPSECURITY_ATTRIBUTES;
-
-typedef union _LARGE_INTEGER {
-  struct {
-    DWORD LowPart;
-    LONG  HighPart;
-  };
-  LONGLONG QuadPart;
-} LARGE_INTEGER, *PLARGE_INTEGER;
-
-// Media_type (winioctl.h): https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ne-winioctl-media_type
-typedef enum _MEDIA_TYPE {
-  Unknown = 0,
-  F5_1Pt2_512,
-  F3_1Pt44_512,
-  F3_2Pt88_512,
-  F3_20Pt8_512,
-  F3_720_512,
-  F5_360_512,
-  F5_320_512,
-  F5_320_1024,
-  F5_180_512,
-  F5_160_512,
-  RemovableMedia,
-  FixedMedia,
-  F3_120M_512,
-  F3_640_512,
-  F5_640_512,
-  F5_720_512,
-  F3_1Pt2_512,
-  F3_1Pt23_1024,
-  F5_1Pt23_1024,
-  F3_128Mb_512,
-  F3_230Mb_512,
-  F8_256_128,
-  F3_200Mb_512,
-  F3_240M_512,
-  F3_32M_512
-} MEDIA_TYPE, *PMEDIA_TYPE;
-
-// DISK_GEOMETRY structure (ntdddisk.h): https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntdddisk/ns-ntdddisk-_disk_geometry
-typedef struct _DISK_GEOMETRY {
-  LARGE_INTEGER Cylinders;
-  MEDIA_TYPE    MediaType;
-  ULONG         TracksPerCylinder;
-  ULONG         SectorsPerTrack;
-  ULONG         BytesPerSector;
-} DISK_GEOMETRY, *PDISK_GEOMETRY;
+typedef struct _SECURITY_ATTRIBUTES {
+    DWORD nLength;
+    LPVOID lpSecurityDescriptor;
+    BOOL bInheritHandle;
+} SECURITY_ATTRIBUTES , *LPSECURITY_ATTRIBUTES;
 
 #define INVALID_HANDLE_VALUE reinterpret_cast<HANDLE>(-1)
 #define INVALID_FILE_SIZE    static_cast<DWORD>(0xFFFFFFFF)
@@ -212,6 +179,58 @@ inline SC_HANDLE OpenService(SC_HANDLE /*hSCManager*/, LPCSTR /*lpServiceName*/,
 { return nullptr; }
 inline BOOL QueryServiceStatus(SC_HANDLE /*hService*/, LPSERVICE_STATUS /*lpServiceStatus*/) { return false; }
 inline BOOL CloseServiceHandle(SC_HANDLE /*hSCObject*/) { return false; }
+
+#endif // __WINDOWS_TYPES__
+
+typedef __int64_t __int64;
+typedef __int64 LONGLONG;
+
+typedef union _LARGE_INTEGER {
+  struct {
+    DWORD LowPart;
+    LONG  HighPart;
+  };
+  LONGLONG QuadPart;
+} LARGE_INTEGER, *PLARGE_INTEGER;
+
+// Media_type (winioctl.h): https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ne-winioctl-media_type
+typedef enum _MEDIA_TYPE {
+  Unknown = 0,
+  F5_1Pt2_512,
+  F3_1Pt44_512,
+  F3_2Pt88_512,
+  F3_20Pt8_512,
+  F3_720_512,
+  F5_360_512,
+  F5_320_512,
+  F5_320_1024,
+  F5_180_512,
+  F5_160_512,
+  RemovableMedia,
+  FixedMedia,
+  F3_120M_512,
+  F3_640_512,
+  F5_640_512,
+  F5_720_512,
+  F3_1Pt2_512,
+  F3_1Pt23_1024,
+  F5_1Pt23_1024,
+  F3_128Mb_512,
+  F3_230Mb_512,
+  F8_256_128,
+  F3_200Mb_512,
+  F3_240M_512,
+  F3_32M_512
+} MEDIA_TYPE, *PMEDIA_TYPE;
+
+// DISK_GEOMETRY structure (ntdddisk.h): https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntdddisk/ns-ntdddisk-_disk_geometry
+typedef struct _DISK_GEOMETRY {
+  LARGE_INTEGER Cylinders;
+  MEDIA_TYPE    MediaType;
+  ULONG         TracksPerCylinder;
+  ULONG         SectorsPerTrack;
+  ULONG         BytesPerSector;
+} DISK_GEOMETRY, *PDISK_GEOMETRY;
 
 #endif // _WIN32
 
