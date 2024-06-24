@@ -4,6 +4,8 @@
 
 #ifdef HAVE_FTD2XX
 
+#include "Util.h"
+
 /*static*/ std::unique_ptr<SuperCardPro> SuperCardProFTD2XX::Open()
 {
     FT_HANDLE hdev;
