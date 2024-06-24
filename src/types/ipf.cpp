@@ -7,13 +7,7 @@
 #include "Disk.h"
 #include "MemFile.h"
 
-#ifdef _WIN32
-#include "Util.h"
-#endif
-
 #include <memory>
-
-static auto& opt_fix = getOpt<int>("fix");
 
 // ToDo:
 // - wrap CAPSImg library in class wrapper for thrown exceptions
@@ -29,8 +23,12 @@ struct IPF_HEADER
 
 #ifdef HAVE_CAPSIMAGE
 
+#include "Util.h"
+
 #define __cdecl
-#include "caps/CapsLibAll.h"
+#include "caps/CapsLibAll.h" // IWYU pragma: keep
+
+static auto& opt_fix = getOpt<int>("fix");
 
 #ifdef __APPLE__
 extern "C" SDWORD __cdecl CAPSGetVersionInfo(PVOID pversioninfo, UDWORD flag) __attribute__((weak_import));
