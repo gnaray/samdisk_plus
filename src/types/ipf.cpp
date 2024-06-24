@@ -152,11 +152,11 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
                 cti.type = 1;
 
                 // Set the revolution within CT Raw images
-                ret = CAPSSetRevolution(id, rev);
+                ret = CAPSSetRevolution(id, static_cast<UDWORD>(rev));
 
                 // Lock to receive track data, which includes updating any weak areas
                 if (ret == imgeOk)
-                    ret = CAPSLockTrack(reinterpret_cast<CapsTrackInfo*>(&cti), id, cyl, head, lock_flags);
+                    ret = CAPSLockTrack(reinterpret_cast<CapsTrackInfo*>(&cti), id, cyl, head, static_cast<UDWORD>(lock_flags));
 
                 if (ret != imgeOk)
                 {
@@ -167,7 +167,7 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
                     if (ret == imgeIncompatible)
                         throw util::exception("failed to lock track, please upgrade capsimg");
 
-                    Message(msgWarning, "failed to lock %s (%s)", strCH(cyl, head).c_str(), error_string(ret).c_str());
+                    Message(msgWarning, "failed to lock %s (%s)", strCH(static_cast<int>(cyl), static_cast<int>(head)).c_str(), error_string(ret).c_str());
                     break;
                 }
 
@@ -194,9 +194,9 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
                         uint8_t bit = (cti.trackbuf[i / 8] >> (7 - (i & 7))) & 1;
 
                         if ((i >> 3) < cti.timelen)
-                            total_time += ns_per_bitcell * cti.timebuf[i >> 3] / 1000;
+                            total_time += static_cast<uint32_t>(ns_per_bitcell * static_cast<int>(cti.timebuf[i >> 3] / 1000));
                         else
-                            total_time += ns_per_bitcell;
+                            total_time += static_cast<uint32_t>(ns_per_bitcell);
 
                         if (bit)
                         {
@@ -231,9 +231,9 @@ bool ReadIPF(MemFile& file, std::shared_ptr<Disk>& disk)
 
             // Add flux or bitstream data, depending on which we generated
             if (!flux_revs.empty())
-                disk->write(CylHead(cyl, head), std::move(flux_revs), image_type == citIPF);
+                disk->write(CylHead(static_cast<int>(cyl), static_cast<int>(head)), std::move(flux_revs), image_type == citIPF);
             else
-                disk->write(CylHead(cyl, head), std::move(bitbuf));
+                disk->write(CylHead(static_cast<int>(cyl), static_cast<int>(head)), std::move(bitbuf));
         }
     }
 
