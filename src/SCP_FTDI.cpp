@@ -4,6 +4,8 @@
 
 #ifdef HAVE_FTDI
 
+#include "Util.h"
+
 /*static*/ std::unique_ptr<SuperCardPro> SuperCardProFTDI::Open()
 {
     auto hdev = ftdi_new();
