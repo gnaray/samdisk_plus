@@ -7,6 +7,10 @@
 #endif
 #include "ComLib.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 ExtSub SDWORD __cdecl CAPSInit();
 ExtSub SDWORD __cdecl CAPSExit();
 ExtSub SDWORD __cdecl CAPSAddImage();
@@ -34,5 +38,9 @@ ExtSub SDWORD __cdecl CAPSSetRevolution(SDWORD id, UDWORD value);
 ExtSub SDWORD __cdecl CAPSGetImageType(PCHAR name);
 ExtSub SDWORD __cdecl CAPSGetImageTypeMemory(PUBYTE buffer, UDWORD length);
 ExtSub SDWORD __cdecl CAPSGetDebugRequest();
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif
