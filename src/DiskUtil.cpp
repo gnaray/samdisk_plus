@@ -249,7 +249,7 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
             {
                 util::cout << "        readstats (" << RecordStr(sector.header.sector)
                     << "): tries=" << sector.read_attempts() << ", reads={";
-
+                const auto sectorHasGoodData = sector.has_good_data();
                 const auto instance_sup = sector.copies();
                 for (auto instance = 0; instance < instance_sup; instance++)
                 {
@@ -257,10 +257,10 @@ void DumpTrack(const CylHead& cylhead, const Track& track, const ScanContext& co
                         util::cout << ' ';
                     const auto read_stats = sector.data_copy_read_stats(instance);
                     const auto read_stats_is_unstable = !read_stats.IsStable();
-                    if (read_stats_is_unstable)
+                    if (sectorHasGoodData && read_stats_is_unstable)
                         util::cout << colour::YELLOW;
                     util::cout << read_stats.ReadCount();
-                    if (read_stats_is_unstable)
+                    if (sectorHasGoodData && read_stats_is_unstable)
                         util::cout << colour::none;
                 }
                 util::cout << "}\n";
