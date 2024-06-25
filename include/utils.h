@@ -541,7 +541,7 @@ public:
     }
     constexpr uint8_t BuildValue() const
     {
-        return 0xff;
+        return value & 0xff;
     }
     uint32_t value;
 };
