@@ -14,6 +14,11 @@
 #include "FluxDecoder.h"
 #ifdef _WIN32
 #include "CrashDump.h"
+
+#ifndef _DEBUG
+#include <shellapi.h>
+#endif
+
 #endif
 
 constexpr int STABILITY_LEVEL_DEFAULT = 3;
