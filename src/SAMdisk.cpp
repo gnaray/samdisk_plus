@@ -528,19 +528,90 @@ static struct option long_options[] =
     { "pll-phase",  required_argument, nullptr, OPT_PLLPHASE },
     { "bit-skip",   required_argument, nullptr, OPT_BITSKIP },
 
-    { "normal-disk",                  no_argument, nullptr, OPT_NORMAL_DISK },     // undocumented. Expects disk as normal: all units (sectors, tracks, sides) have same size, sector ids form a sequence starting by 1.
-    { "readstats",                    no_argument, nullptr, OPT_READSTATS },       // undocumented. Looking for good data by the reading statistics. Requires RDSK format image.
-    { "paranoia",                     no_argument, nullptr, OPT_PARANOIA },        // undocumented. (Multi good data). Rescues floppy image assuming that a good CRC does not necessarily mean good data. It implies readstats thus requires using RDSK format image. It also sets stability_level as 5 if not specified.
-    { "stability-level",        required_argument, nullptr, OPT_STABILITY_LEVEL }, // undocumented.  // The count of samely read data of a sector which is considered stable. < 1 means only good data is stable (backward compatibility).
-    { "skip-stable-sectors",          no_argument, nullptr, OPT_SKIP_STABLE_SECTORS }, // undocumented. in repair mode skip those sectors which are already rescued in destination.
-    { "track-retries",          required_argument, nullptr, OPT_TRACK_RETRIES },   // undocumented. Amount of track retries.  If negative then restart retrying when read data improved in last track-retry rounds.
-    { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },    // undocumented. Amount of disk retries. If negative then restart retrying when read data improved in last disk-retry rounds.
-    { "detect-devfs",           optional_argument, nullptr, OPT_DETECT_DEVFS },    // undocumented. Detect the device filesystem and if exists use its format.
-    { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME}, // undocumented. Two things are considered at same location if their location differs <= this value. Default is 64.
-    { "fdraw-rescue-mode",            no_argument, nullptr, OPT_FDRAW_RESCUE_MODE}, // undocumented. Use the rescue method in fdrawsys_dev. Default is using the all-in method.
-    { "unhide-first-sector-by-track-end-sector", no_argument, nullptr, OPT_UNHIDE_FIRST_SECTOR_BY_TRACK_END_SECTOR }, // undocumented. Unhide track starting sector by track ending sector (useful when track ending sector hides track starting sector). Default is false.
+    /* undocumented. Expects disk as normal ie. all units (sectors, tracks, sides)
+     * have same size, sector ids form a sequence starting by 1, sector headers
+     * match the cylinder and head of the containing track.
+     */
+    { "normal-disk",                  no_argument, nullptr, OPT_NORMAL_DISK },
+
+    /* undocumented. Administrates the read attempts of a sector and read count of
+     * its each data (typically bad CRC sector has more bad data copies), called
+     * reading statistics. It can be saved only in RDSK format image currently.
+     */
+    { "readstats",                    no_argument, nullptr, OPT_READSTATS },
+
+
+    /* undocumented. Does not trust good CRC data because a bad data can also have good
+     * CRC rarely when reading a wear sector. It enables a sector having multiple
+     * different good data. A good data becomes final good or stable data when its
+     * read count reaches the stability level (see below). Since it relies on read
+     * count it requires readstats option. It also relies on stability level so it
+     * requires stability-level option (uses its default value if not specified).
+     */
+    { "paranoia",                     no_argument, nullptr, OPT_PARANOIA },
+
+    /* undocumented. The good CRC data of a sector becomes stable when its read
+     * count reaches N. Thus N<=1 means any good data is stable. Default value is 3.
+     */
+    { "stability-level",        required_argument, nullptr, OPT_STABILITY_LEVEL },
+
+    /* undocumented. Skips reading sectors which are stable in destination
+     * already in repair mode thus it requires --repair option. Note that the
+     * --disk-retries option can also provide --repair option, see there.
+     */
+    { "skip-stable-sectors",          no_argument, nullptr, OPT_SKIP_STABLE_SECTORS },
+
+    /* undocumented. The amount of track retries when copying. See RetryAmount.
+     */
+    { "track-retries",          required_argument, nullptr, OPT_TRACK_RETRIES },
+
+    /* undocumented. The amount of disk retries when copying. See RetryAmount.
+     * When copying a disk without --repair option the destination is ignored and
+     * overwritten. However if the --disk-retries option is also specified and is
+     * not 0 then the repair mode is automatically activated after the copying of
+     * first try (round) i.e. when retrying. This way the --skip-stable-sectors
+     * option can work together with --disk-retries option instead of --repair
+     * option.
+     */
+    { "disk-retries",           required_argument, nullptr, OPT_DISK_RETRIES },
+
+    /* undocumented. Detects the specified filesystem on the used
+     * device(s) in order to use its format (makes rescuing faster). If the
+     * filesystemname is not specified then all known filesystem will be tried to be
+     * detected. To see the supported filesystem names run "SAMdisk.exe -v".
+     */
+    { "detect-devfs",           optional_argument, nullptr, OPT_DETECT_DEVFS },
+
+    /* undocumented. Considers two things the same (sector header when
+     * headers are the same, or sector data) at same location if their location
+     * difference is less or equal this value (in bytes). Default value is 64. It is
+     * highly recommended NOT to change it.
+     */
+    { "byte-tolerance-of-time", required_argument, nullptr, OPT_BYTE_TOLERANCE_OF_TIME},
+
+    /* undocumented. Uses the rescuing method when using the fdrawsys_dev.
+     * Default is using the cloning method.
+     */
+    { "fdraw-rescue-mode",            no_argument, nullptr, OPT_FDRAW_RESCUE_MODE},
+
+    /* undocumented. Tries to unhide/fill the track
+     * starting sector by the nearby track ending sector (used when rescuing and it
+     * should be specified only when the track starting sector can not be found or
+     * its data is unreadable while the track ending sector starts close to track
+     * end and its data is readable). Default is false.
+     */
+    { "unhide-first-sector-by-track-end-sector", no_argument, nullptr, OPT_UNHIDE_FIRST_SECTOR_BY_TRACK_END_SECTOR },
 
     { nullptr, 0, nullptr, 0 }
+
+    /* RetryAmount: It is an integer number with 3 cases. (See RetryPolicy class).
+     * - It is 0 : No retrying occurs.
+     * - It is positive : Retrying occurs RetryAmount times.
+     * - It is negative : Retrying occurs - RetryAmount times.However when read data
+     *   is improved during the retries then the retry counter is restarted.
+     *   For example when RetryAmount is - 3 and read data is improved on 2nd retry
+     *   then reading will be retried 3 times again(at least).
+     */
 };
 
 static char short_options[] = "?nmdvfLxb:c:h:s:H:r:R:g:i:k:z:0:1:D:";
