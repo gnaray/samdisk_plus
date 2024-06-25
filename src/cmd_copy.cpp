@@ -34,7 +34,6 @@ static auto& opt_range = getOpt<Range>("range");
 static auto& opt_repair = getOpt<int>("repair");
 static auto& opt_resize = getOpt<int>("resize");
 static auto& opt_sectors = getOpt<long>("sectors");
-static auto& opt_skip_stable_sectors = getOpt<bool>("skip_stable_sectors");
 static auto& opt_step = getOpt<int>("step");
 static auto& opt_verbose = getOpt<int>("verbose");
 
