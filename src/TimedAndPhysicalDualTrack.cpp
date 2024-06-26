@@ -3,7 +3,6 @@
 
 static auto& opt_byte_tolerance_of_time = getOpt<int>("byte_tolerance_of_time");
 static auto& opt_debug = getOpt<int>("debug");
-static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 
 inline int IndexInDirection(const int index, const int indexSup, const bool forward)
 {
