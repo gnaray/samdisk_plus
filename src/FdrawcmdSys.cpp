@@ -97,6 +97,8 @@ uint8_t encodingToFdEncoding(const Encoding& encoding)
 
 
 
+/*static*/ const std::string FdrawcmdSys::RawTrackFileNamePattern("Raw track (cyl %02d head %1d).pt");
+
 /*static*/ std::unique_ptr<FdrawcmdSys> FdrawcmdSys::Open(int device_index)
 {
     auto path = util::format(R"(\\.\fdraw)", device_index);
@@ -479,9 +481,10 @@ bool FdrawcmdSys::CmdReadTrack(int phead, int cyl, int head, int sector, int siz
                     t->tm_hour, t->tm_min, t->tm_sec);
                 name = std::string(buffer);
             }
-            name += make_string("Raw track (", strCH(cyl, head), ")");
+            name += util::fmt(FdrawcmdSys::RawTrackFileNamePattern.c_str(),
+                cyl, head);
 
-            WriteBinaryFile(make_string("f:\\", name, ".pt"), Data(mem.pb, mem.pb + mem.size));
+            WriteBinaryFile(make_string("f:\\", name), Data(mem.pb, mem.pb + mem.size));
         }
     }
     return result;

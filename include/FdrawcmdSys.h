@@ -9,6 +9,7 @@
 #include "Util.h"
 
 #include <memory>
+#include <string>
 
 struct handle_closer
 {
@@ -86,6 +87,8 @@ public:
     virtual bool FdGetTrackTime(int& microseconds);
     virtual bool FdGetMultiTrackTime(FD_MULTI_TRACK_TIME_RESULT& time_tolerance, uint8_t revolutions = 10);
     virtual bool FdReset();
+
+    static const std::string RawTrackFileNamePattern;
 
 private:
     static constexpr int RW_GAP = 0x0a;

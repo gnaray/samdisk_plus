@@ -155,8 +155,8 @@ const PhysicalTrackMFM& VfdrawcmdSys::LoadPhysicalTrack(const CylHead& cylhead)
 {
     if (!m_physicalTrackLoaded[lossless_static_cast<size_t>(cylhead.operator int())])
     {
-        const auto pattern = " Raw track (cyl %02d head %1d).pt";
-        const auto fileNamePart = util::fmt(pattern, cylhead.cyl, cylhead.head);
+        const auto fileNamePart = util::fmt(FdrawcmdSys::RawTrackFileNamePattern.c_str(),
+            cylhead.cyl, cylhead.head);
         const auto physicalTrackFilePath = FindFirstFileOnly(fileNamePart, m_path);
         Data physicalTrackContent;
 
