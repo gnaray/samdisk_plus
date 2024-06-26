@@ -204,7 +204,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
                 util::cout << colour::RED << "Error: " << e.what() << colour::none << ", ignoring this whole track to avoid data corruption\n";
             }
             StopStopper(start_time, "transfer track");
-        }, !opt_normal_disk);
+        }, !opt_normal_disk); // A dedicated option would be better for cyls_first.
 
         // Copy any metadata not already present in the target (emplace doesn't replace)
         for (const auto& m : src_disk->metadata())

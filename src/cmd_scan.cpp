@@ -9,6 +9,7 @@
 
 static auto& opt_detect_devfs = getOpt<std::string>("detect_devfs");
 static auto& opt_nodiff = getOpt<int>("nodiff");
+static auto& opt_normal_disk = getOpt<bool>("normal_disk");
 static auto& opt_offsets = getOpt<int>("offsets");
 static auto& opt_readstats = getOpt<bool>("readstats");
 static auto& opt_step = getOpt<int>("step");
@@ -136,7 +137,7 @@ bool ScanImage(const std::string& path, Range range)
 
             NormaliseTrack(cylhead, track);
             ScanTrack(cylhead, track, context);
-            }, true);
+            }, !opt_normal_disk); // A dedicated option would be better for cyls_first.
     }
 
     return true;
