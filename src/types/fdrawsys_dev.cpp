@@ -381,7 +381,7 @@ void FdrawSysDevDisk::ReadSectors(const CylHead& cylhead, Track& track, const Ve
             if (opt_debug)
                 util::cout << "ReadSector: reading " << index << ". sector having ID " << sector.header.sector << "\n";
 
-            if (sector.has_badidcrc() || sector.has_stable_data()) // Originally this was has_good_data(false, opt_normal_disk)) which did not consider 8k checksummable sector.
+            if (sector.has_badidcrc() || sector.has_stable_data())
             {
                 sectorRetries[i] = 0;
                 continue; //return
