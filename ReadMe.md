@@ -28,7 +28,8 @@ as SAMdisk 4.0.
 
 The [latest code](https://github.com/simonowen/samdisk/) builds under Windows,
 Linux and macOS, and should be portable to other systems. Building requires a
-C++ compiler with C++17 support, such as Visual Studio 2017 , g++ 7, or Clang 5.
+C++ compiler with C++14 support, such as Visual Studio 2017, g++ 4.9+, or
+Clang 3.6+.
 
 All platforms require the [CMake](https://cmake.org/) build system. Windows
 users can use the _Open Folder_ option in Visual Studio 2017 or later to trigger
