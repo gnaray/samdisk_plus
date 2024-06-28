@@ -234,8 +234,12 @@ typedef struct _DISK_GEOMETRY {
 
 #endif // _WIN32
 
-// NTSTATUS is available when building driver but can not be included here.
+// NTSTATUS is available when building driver but its header file can not be included here.
+#if !defined(_MSC_VER) || _MSC_VER <= 1900
 typedef uint32_t NTSTATUS;
+#else
+typedef LONG NTSTATUS;
+#endif
 #define STATUS_BUFFER_TOO_SMALL static_cast<NTSTATUS>(0xC0000023L)
 
 #endif // PLATFORM_H
