@@ -4,6 +4,7 @@
 
 #ifdef HAVE_FTDI
 
+#include "PlatformConfig.h" // On Windows: it must precede ftdi.h which includes Windows parts.
 #include "SuperCardPro.h"
 
 #include <ftdi.h>

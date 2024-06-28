@@ -4,6 +4,7 @@
 
 #ifdef HAVE_FTD2XX
 
+#include "PlatformConfig.h" // On Windows: it must precede ftd2xx.h which includes Windows parts.
 #include "SuperCardPro.h"
 
 #include <ftd2xx.h>
