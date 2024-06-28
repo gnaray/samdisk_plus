@@ -18,7 +18,7 @@ public:
     typedef typename VectorX::size_type ST;
 
     using std::vector<T>::vector;
-#if defined(_MSC_VER) && _MSC_VER <= 1900
+#if defined(_MSC_VER)
     VectorX() : std::vector<T>::vector() {}
 #endif
     using std::vector<T>::operator[];
