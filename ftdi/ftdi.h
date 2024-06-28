@@ -21,6 +21,8 @@
 #include <stdint.h>
 #ifndef _WIN32
 #include <sys/time.h>
+#else
+#include <winsock2.h>
 #endif
 
 /* Define _FTDI_DISABLE_DEPRECATED to disable deprecated messages. */
