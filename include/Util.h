@@ -193,7 +193,7 @@ int GetFileType(const char* pcsz_);
 
 #ifdef _WIN32
 typedef HANDLE FindFileHandle;
-constexpr FindFileHandle FindFileHandleVoid = INVALID_HANDLE_VALUE;
+const FindFileHandle FindFileHandleVoid = INVALID_HANDLE_VALUE;
 #else
 typedef DIR *FindFileHandle;
 constexpr FindFileHandle FindFileHandleVoid = nullptr;
