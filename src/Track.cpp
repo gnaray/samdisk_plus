@@ -535,7 +535,8 @@ void Track::setTrackTime(const int trackTime)
         auto diffSum = *(it++);
         while (it != diffsEnd && *it < *it0 + DataBytePositionAsBitOffset(Track::COMPARE_TOLERANCE_BYTES, encoding))
             diffSum += *(it++);
-        participantsAndAveragedOffsetDiffs.push_back(std::make_pair(it - it0, diffSum / (it - it0)));
+        participantsAndAveragedOffsetDiffs.push_back(std::make_pair(
+            static_cast<int>(it - it0), static_cast<int>(diffSum / (it - it0))));
     }
     const auto it = std::max_element(participantsAndAveragedOffsetDiffs.begin(), participantsAndAveragedOffsetDiffs.end(),
                                      [] (const ParticipantsAndAverage &a, const ParticipantsAndAverage &b) {
@@ -564,7 +565,7 @@ std::map<int, int> Track::FindMatchingSectors(const Track& otherTrack, const Rep
             continue;
         const auto it = otherTrack.find(sector.header);
         if (it != trackEnd)
-            result.emplace(i, it - otherTrack.begin());
+            result.emplace(i, static_cast<int>(it - otherTrack.begin()));
     }
     return result;
 }
