@@ -107,12 +107,12 @@ class PhysicalTrackContext
 {
 public:
     PhysicalTrackContext(const CylHead& cylHead, const DataRate& dataRate)
-        : cylHead(cylHead), dataRate(dataRate)
+        : m_cylHead(cylHead), m_dataRate(dataRate)
     {
     }
 
-    const CylHead cylHead;
-    const DataRate dataRate = DataRate::Unknown;
+    const CylHead m_cylHead;
+    const DataRate m_dataRate = DataRate::Unknown;
 };
 
 
@@ -221,8 +221,8 @@ public:
 
     // Constructor for the case when physical data is processed first time.
     SectorDataFromPhysicalTrack(const Encoding& encoding, const ByteBitPosition& byteBitPositionFound, Data&& physicalData, bool dataSizeKnown)
-        : physicalData(physicalData), encoding(encoding), byteBitPositionFound(byteBitPositionFound),
-          addressMark(physicalData[0]), badCrc(dataSizeKnown ? CalculateCrcIsBad() : true)
+        : m_physicalData(physicalData), m_encoding(encoding), m_byteBitPositionFound(byteBitPositionFound),
+          m_addressMark(physicalData[0]), m_badCrc(dataSizeKnown ? CalculateCrcIsBad() : true)
     {
     }
 
@@ -241,7 +241,7 @@ public:
 
     Data GetData() const
     {
-        return GetData(physicalData, static_cast<int>(physicalData.end() - physicalData.begin()));
+        return GetData(m_physicalData, static_cast<int>(m_physicalData.end() - m_physicalData.begin()));
     }
 
 protected:
@@ -261,16 +261,16 @@ protected:
 
     bool CalculateCrcIsBad() const
     {
-        return CalculateCrcIsBad(encoding, physicalData, physicalData.size());
+        return CalculateCrcIsBad(m_encoding, m_physicalData, m_physicalData.size());
     }
 
-    Data physicalData{};
+    Data m_physicalData{};
 
 public:
-    Encoding encoding;
-    ByteBitPosition byteBitPositionFound;
-    AddressMark addressMark;
-    bool badCrc;
+    Encoding m_encoding;
+    ByteBitPosition m_byteBitPositionFound;
+    AddressMark m_addressMark;
+    bool m_badCrc;
 };
 
 
@@ -281,12 +281,12 @@ public:
     PhysicalTrackMFM() = default;
 
     PhysicalTrackMFM(const Data& physicalTrackContent, const DataRate& dataRate)
-        : m_physicalTrackContent(physicalTrackContent), dataRate(dataRate)
+        : m_physicalTrackContent(physicalTrackContent), m_dataRate(dataRate)
     {
     }
 
     PhysicalTrackMFM(const MEMORY& physicalTrackContent, const DataRate& dataRate)
-        : m_physicalTrackContent(physicalTrackContent.pb, physicalTrackContent.size), dataRate(dataRate)
+        : m_physicalTrackContent(physicalTrackContent.pb, physicalTrackContent.size), m_dataRate(dataRate)
     {
     }
 
@@ -298,8 +298,8 @@ public:
 
     BitPositionableByteVector m_physicalTrackContent{};
 
-    DataRate dataRate = DataRate::Unknown;
-    static const Encoding encoding;
+    DataRate m_dataRate = DataRate::Unknown;
+    Encoding m_encoding = Encoding::Unknown;
 };
 
 #endif

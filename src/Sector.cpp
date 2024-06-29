@@ -540,7 +540,7 @@ void Sector::ConvertOrphanDataSectorLikeParentSector(const Sector& parentSector)
         physicalData.resize(physicalDataSize);
         const SectorDataFromPhysicalTrack sectorData(encoding, 0, std::move(physicalData), true);
         // Passing read attempts = 0 does not change the read_attempts so it remains correct.
-        add(sectorData.GetData(), sectorData.badCrc, sectorData.addressMark, 0, dataReadStats[i]);
+        add(sectorData.GetData(), sectorData.m_badCrc, sectorData.m_addressMark, 0, dataReadStats[i]);
     }
 }
 

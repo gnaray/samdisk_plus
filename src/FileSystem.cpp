@@ -7,11 +7,11 @@
 
 FileSystemWrappers InitFileSystemWrappers()
 {
-    FileSystemWrappers fileSystemWrappers;
-    fileSystemWrappers.emplace_back(new FileSystemWrapper<StFat12FileSystem>());
-    fileSystemWrappers.emplace_back(new FileSystemWrapper<Fat12FileSystem>());
+    FileSystemWrappers fileSystemWrappersResult;
+    fileSystemWrappersResult.emplace_back(new FileSystemWrapper<StFat12FileSystem>());
+    fileSystemWrappersResult.emplace_back(new FileSystemWrapper<Fat12FileSystem>());
     // Add more filesystems here.
-    return fileSystemWrappers;
+    return fileSystemWrappersResult;
 }
 FileSystemWrappers fileSystemWrappers = InitFileSystemWrappers();
 
