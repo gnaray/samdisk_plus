@@ -1230,10 +1230,9 @@ void Track::TuneOffsetsToEachOtherByMin(Track& otherTrack)
     if (empty() || otherTrack.empty())
         return;
     assert(tracklen > 0);
-    const auto dataRate = getDataRate();
     const auto encoding = getEncoding();
     assert(otherTrack.getEncoding() == encoding);
-    assert(otherTrack.getDataRate() == dataRate);
+    assert(otherTrack.getDataRate() == getDataRate());
 
     // This sector and other sector are matched if their offsets are tolerated same and their headers are same.
     const auto itThisBegin = begin();
