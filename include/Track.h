@@ -85,8 +85,8 @@ public:
     Encoding getEncoding() const;
     int getTimeOfOffset(const int offset) const;
     int getOffsetOfTime(const int time) const;
-    void setTrackLen(const int trackLen);
-    void setTrackTime(const int trackTime);
+    void setTrackLen(const int trackLen_);
+    void setTrackTime(const int trackTime_);
     inline int OffsetDistanceFromTo(const int indexFrom, const int indexTo) const
     {
         assert(tracklen > 0);
@@ -151,9 +151,9 @@ public:
         auto it = static_cast<const Track&>(*this).find(header, offset);
         return m_sectors.erase(it, it);
     }
-    Sectors::iterator findToleratedSame(const Header& header, const int offset, int tracklen)
+    Sectors::iterator findToleratedSame(const Header& header, const int offset, int tracklen_)
     {
-        auto it = static_cast<const Track&>(*this).findToleratedSame(header, offset, tracklen);
+        auto it = static_cast<const Track&>(*this).findToleratedSame(header, offset, tracklen_);
         return m_sectors.erase(it, it);
     }
     Sectors::iterator findFirstFromOffset(const int offset)
@@ -185,7 +185,7 @@ public:
     Sectors::const_iterator find(const Header& header) const;
     Sectors::const_iterator findNext(const Header& header, const Sectors::const_iterator& itPrev) const;
     Sectors::const_iterator find(const Header& header, const int offset) const;
-    Sectors::const_iterator findToleratedSame(const Header& header, const int offset, int tracklen) const;
+    Sectors::const_iterator findToleratedSame(const Header& header, const int offset, int tracklen_) const;
     Sectors::const_iterator findFirstFromOffset(const int offset) const;
     Sectors::const_iterator findIgnoringSize(const Header& header) const;
     Sectors::const_iterator find(const Header& header, const DataRate datarate, const Encoding encoding) const;

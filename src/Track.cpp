@@ -507,18 +507,18 @@ int Track::getOffsetOfTime(const int time) const
     return GetFmOrMfmTimeBitsAsRounded(getDataRate(), time); // mfmbits (rawbits)
 }
 
-void Track::setTrackLen(const int trackLen)
+void Track::setTrackLen(const int trackLen_)
 {
-    tracklen = trackLen;
+    tracklen = trackLen_;
     if (!empty())
-        tracktime = getTimeOfOffset(trackLen);
+        tracktime = getTimeOfOffset(tracklen);
 }
 
-void Track::setTrackTime(const int trackTime)
+void Track::setTrackTime(const int trackTime_)
 {
-    tracktime = trackTime;
+    tracktime = trackTime_;
     if (!empty())
-        tracklen = getOffsetOfTime(trackTime);
+        tracklen = getOffsetOfTime(tracktime);
 }
 
 /*static*/ int Track::findMostPopularToleratedDiff(VectorX<int> &diffs, const Encoding& encoding)
@@ -1593,10 +1593,10 @@ Sectors::const_iterator Track::find(const Header& header, const int offset) cons
         });
 }
 
-Sectors::const_iterator Track::findToleratedSame(const Header& header, const int offset, int tracklen) const
+Sectors::const_iterator Track::findToleratedSame(const Header& header, const int offset, int tracklen_) const
 {
     return std::find_if(begin(), end(), [&](const Sector& s) {
-        return s.is_sector_tolerated_same(header, offset, opt_byte_tolerance_of_time, tracklen);
+        return s.is_sector_tolerated_same(header, offset, opt_byte_tolerance_of_time, tracklen_);
     });
 }
 

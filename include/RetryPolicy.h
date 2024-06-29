@@ -13,9 +13,9 @@ public:
     {
     }
 
-    constexpr RetryPolicy(const int retryTimes, const bool sinceLastChange)
-        : retryTimesInitial(retryTimes), sinceLastChange(sinceLastChange),
-        retryTimes(sinceLastChange ? retryTimes - 1 : retryTimes)
+    constexpr RetryPolicy(const int retryTimes_, const bool _sinceLastChange)
+        : retryTimesInitial(retryTimes_), sinceLastChange(_sinceLastChange),
+        retryTimes(sinceLastChange ? retryTimes_ - 1 : retryTimes_)
     {
     }
 
@@ -49,15 +49,15 @@ public:
         return retryTimes < rhs.retryTimes || (retryTimes == rhs.retryTimes && (sinceLastChange < rhs.sinceLastChange));
     }
 
-    constexpr bool operator ==(const int retryTimes) const
+    constexpr bool operator ==(const int retryTimes_) const
     {
-        return this->retryTimes == retryTimes;
+        return this->retryTimes == retryTimes_;
     }
 
     // Ordered by retryTimes incremented.
-    constexpr bool operator <(const int retryTimes) const
+    constexpr bool operator <(const int retryTimes_) const
     {
-        return this->retryTimes < retryTimes;
+        return this->retryTimes < retryTimes_;
     }
 
     // prefix increment
@@ -90,31 +90,31 @@ public:
         return old;    // return old value
     }
 
-    inline RetryPolicy& operator+=(const int retryTimes) // compound assignment (does not need to be a member,
+    inline RetryPolicy& operator+=(const int retryTimes_) // compound assignment (does not need to be a member,
     {                                                   // but often is, to modify the private members)
-        this->retryTimes += retryTimes; /* addition of rhs to *this takes place here */
+        this->retryTimes += retryTimes_; /* addition of rhs to *this takes place here */
         return *this; // return the result by reference
     }
 
     // friends defined inside class body are inline and are hidden from non-ADL lookup
     friend RetryPolicy operator+(RetryPolicy lhs,       // passing lhs by value helps optimize chained a+b+c
-                                 const int retryTimes)  // otherwise, both parameters may be const references
+                                 const int retryTimes_)  // otherwise, both parameters may be const references
     {
-        lhs += retryTimes; // reuse compound assignment
+        lhs += retryTimes_; // reuse compound assignment
         return lhs; // return the result by value (uses move constructor)
     }
 
-    inline RetryPolicy& operator-=(const int retryTimes) // compound assignment (does not need to be a member,
+    inline RetryPolicy& operator-=(const int retryTimes_) // compound assignment (does not need to be a member,
     {                                                   // but often is, to modify the private members)
-        this->retryTimes -= retryTimes; /* addition of rhs to *this takes place here */
+        this->retryTimes -= retryTimes_; /* addition of rhs to *this takes place here */
         return *this; // return the result by reference
     }
 
     // friends defined inside class body are inline and are hidden from non-ADL lookup
     friend RetryPolicy operator-(RetryPolicy lhs,       // passing lhs by value helps optimize chained a+b+c
-                                 const int retryTimes)  // otherwise, both parameters may be const references
+                                 const int retryTimes_)  // otherwise, both parameters may be const references
     {
-        lhs -= retryTimes; // reuse compound assignment
+        lhs -= retryTimes_; // reuse compound assignment
         return lhs; // return the result by value (uses move constructor)
     }
 

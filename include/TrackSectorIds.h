@@ -50,14 +50,14 @@ class IdAndOffset
 {
 public:
     constexpr IdAndOffset() = default;
-    IdAndOffset(int id, int offset)
-        : id(id), offsetInterval(offset, 0, BaseInterval::ConstructMode::StartAndLength)
+    IdAndOffset(int id_, int offset)
+        : id(id_), offsetInterval(offset, 0, BaseInterval::ConstructMode::StartAndLength)
     {
     }
 
     // This case is for unknown id i.e. id must be negativ.
-    IdAndOffset(int id, int offset, int offsetAlt)
-        : id(id), offsetInterval(offset, offsetAlt, BaseInterval::ConstructMode::StartAndEnd)
+    IdAndOffset(int id_, int offset, int offsetAlt)
+        : id(id_), offsetInterval(offset, offsetAlt, BaseInterval::ConstructMode::StartAndEnd)
     {
     }
 

@@ -261,15 +261,15 @@ class UniqueSectors : public std::set<Sector, SectorPreciseLess>
 public:
     using std::set<Sector, SectorPreciseLess>::set;
 
-    UniqueSectors(const int trackLen = 0)
-        : trackLen(trackLen)
+    UniqueSectors(const int trackLen_ = 0)
+        : trackLen(trackLen_)
     {
     }
 
     bool Contains(const Sector& other_sector, const int other_tracklen, const bool ignoreOffsets = false) const;
     bool AnyIdsNotContainedInThis(const Interval<int>& id_interval) const;
     UniqueSectors::const_iterator FindToleratedSameSector(const Sector& sector,
-        const int byte_tolerance_of_time, const int trackLen) const;
+        const int byte_tolerance_of_time, const int trackLen_) const;
 
     std::string SectorHeaderSectorsToString() const;
     std::string ToString(bool onlyRelevantData = true) const;

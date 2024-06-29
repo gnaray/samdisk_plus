@@ -904,11 +904,11 @@ bool UniqueSectors::AnyIdsNotContainedInThis(const Interval<int>& id_interval) c
 }
 
 UniqueSectors::const_iterator UniqueSectors::FindToleratedSameSector(const Sector& sector,
-    const int byte_tolerance_of_time, const int trackLen) const
+    const int byte_tolerance_of_time, const int trackLen_) const
 {
     const auto itEnd = cend();
     for (auto it = cbegin(); it != itEnd; it++)
-        if (sector.is_sector_tolerated_same(*it, byte_tolerance_of_time, trackLen))
+        if (sector.is_sector_tolerated_same(*it, byte_tolerance_of_time, trackLen_))
             return it;
     return itEnd;
 }
