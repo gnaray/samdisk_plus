@@ -602,8 +602,8 @@ bool Track::DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds)
     // Determine and add holes between sectors.
     auto firstNotOrphanSectorIndex = -1;
     auto firstNotOrphanSectorSize = 0;
-    const auto iSup = size();
-    for (auto i = 0; i < iSup; i++)
+    const auto iTrackSup = size();
+    for (auto i = 0; i < iTrackSup; i++)
     {
         const auto& sector = operator[](i);
 
@@ -626,7 +626,7 @@ bool Track::DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds)
         if (opt_debug)
             util::cout << "DiscoverTrackSectorScheme: pushed sector (offset=" << sector.offset << ", id.sector=" << sector.header.sector << ")\n";
         const auto sectorNextPredictedOffset = sector.offset + offsetDistanceAverage;
-        const auto sectorNextWrapped = i >= iSup - 1;
+        const auto sectorNextWrapped = i >= iTrackSup - 1;
         const auto& sectorNext = sectorNextWrapped ? operator[](0) : operator[](i + 1);
         const auto holeSize = (sectorNextWrapped ? tracklen : 0) + sectorNext.offset - sectorNextPredictedOffset;
         if (holeSize > toleratedOffsetDistance) // Next sector is not close enough so there is hole.
@@ -656,8 +656,8 @@ bool Track::DiscoverTrackSectorScheme(const RepeatedSectors& repeatedSectorIds)
         idAndOffsetPairs = std::move(idAndOffsetPairsLocal);
         if (opt_debug)
         {
-            const auto iSup = idAndOffsetPairs.size();
-            for (int i = 0; i < iSup; i++)
+            const auto iIAOPSup = idAndOffsetPairs.size();
+            for (int i = 0; i < iIAOPSup; i++)
             {
                 util::cout << "DiscoverTrackSectorScheme: sectorIdsAndOffsets[" << i << "] has (id=" <<
                     idAndOffsetPairs[i].id << ", offsetMin=" <<

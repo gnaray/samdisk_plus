@@ -45,8 +45,8 @@ void ConvertStRecoverMissOrBadSectors(std::shared_ptr<Disk>& disk)
     disk->fmt().range().each([&](const CylHead& cylhead) {
         const auto& track = disk->read_track(cylhead);
         VectorX<int> badSectorIndices;
-        const auto iSup = track.size();
-        for (auto i = 0; i < iSup; i++)
+        const auto iTrackSup = track.size();
+        for (auto i = 0; i < iTrackSup; i++)
         {
             const auto& sector = track[i];
             if (sector.copies() > 0 && sector.data_size() >= STRECOVER_MISS_OR_BAD_SIZE)
@@ -60,8 +60,8 @@ void ConvertStRecoverMissOrBadSectors(std::shared_ptr<Disk>& disk)
         if (!badSectorIndices.empty())
         {
             auto trackWritable = track;
-            const auto iSup = badSectorIndices.size();
-            for (auto i = 0; i < iSup; i++)
+            const auto iBSISup = badSectorIndices.size();
+            for (auto i = 0; i < iBSISup; i++)
                 trackWritable[badSectorIndices[i]].remove_data();
             disk->write(cylhead, std::move(trackWritable));
         }
