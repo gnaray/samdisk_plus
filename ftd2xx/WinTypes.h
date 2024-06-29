@@ -36,16 +36,17 @@ typedef void                    VOID;
 typedef USHORT                  *PUSHORT;
 typedef unsigned long long int  ULONGLONG;
 
-typedef struct _OVERLAPPED {
+typedef struct _OVERLAPPED
+{
     DWORD Internal;
     DWORD InternalHigh;
     union {
-        struct{
+        struct {
             DWORD Offset;
             DWORD OffsetHigh;
-        };
+        } DUMMYSTRUCTNAME;
         PVOID  Pointer;
-    };
+    } DUMMYUNIONNAME;
     HANDLE hEvent;
 } OVERLAPPED, *LPOVERLAPPED;
 

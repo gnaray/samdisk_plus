@@ -52,12 +52,12 @@ typedef struct _OVERLAPPED
     DWORD Internal;
     DWORD InternalHigh;
     union {
-        struct{
+        struct {
             DWORD Offset;
             DWORD OffsetHigh;
-        };
+        } DUMMYSTRUCTNAME;
         PVOID  Pointer;
-    };
+    } DUMMYUNIONNAME;
     HANDLE hEvent;
 } OVERLAPPED, *LPOVERLAPPED;
 
@@ -189,7 +189,11 @@ typedef union _LARGE_INTEGER {
   struct {
     DWORD LowPart;
     LONG  HighPart;
-  };
+  } DUMMYSTRUCTNAME;
+  struct {
+    DWORD LowPart;
+    LONG  HighPart;
+  } u;
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
