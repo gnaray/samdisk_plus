@@ -249,7 +249,7 @@ auto be_value(const uint8_t(&arr)[N])
 {
     int i = 0;
     uint32_t value = arr[i++];
-    while (i >= 0)
+    while (i < N)
         value = (value << 8) | arr[i++];
     return value;
 }
