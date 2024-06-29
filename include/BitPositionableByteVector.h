@@ -77,8 +77,7 @@ public:
     {
         if (size == 0)
             return;
-        const auto remainingByteSize = RemainingByteLength();
-        assert(remainingByteSize >= size);
+        assert(RemainingByteLength() >= size);
         auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
         for (auto i = 0; i < size; i++)
             *(mem++) = ReadByte(byteBitPositionSelected);
@@ -144,8 +143,7 @@ public:
             return;
         auto srcByteBitPositionSelected = srcByteBitPosition == nullptr ? &srcBytes.m_byteBitPosition : srcByteBitPosition;
         auto dstByteBitPositionSelected = dstByteBitPosition == nullptr ? &m_byteBitPosition : dstByteBitPosition;
-        const auto srcRemainingByteSize = srcBytes.RemainingByteLength(srcByteBitPositionSelected);
-        assert(srcRemainingByteSize >= byteLen);
+        assert(srcBytes.RemainingByteLength(srcByteBitPositionSelected) >= byteLen);
         const auto dstRemainingByteSize = RemainingByteLength();
         if (dstRemainingByteSize < byteLen)
             m_bytes.resize(m_bytes.size() + byteLen - dstRemainingByteSize);
@@ -159,8 +157,7 @@ public:
             return 0;
         assert(bitsLen < UINT8_T_BIT_SIZE);
         auto byteBitPositionSelected = byteBitPosition == nullptr ? &m_byteBitPosition : byteBitPosition;
-        const auto remainingBitSize = RemainingBitLength(byteBitPositionSelected);
-        assert(remainingBitSize >= bitsLen);
+        assert(RemainingBitLength(byteBitPositionSelected) >= bitsLen);
         uint8_t result;
         const auto remainingBitsInByte = UINT8_T_BIT_SIZE - byteBitPositionSelected->BitPosition();
         if (bitsLen > remainingBitsInByte)
@@ -209,8 +206,7 @@ public:
             return;
         auto srcByteBitPositionSelected = srcByteBitPosition == nullptr ? &srcBits.m_byteBitPosition : srcByteBitPosition;
         auto dstByteBitPositionSelected = dstByteBitPosition == nullptr ? &m_byteBitPosition : dstByteBitPosition;
-        const auto srcRemainingBitSize = srcBits.RemainingBitLength(srcByteBitPositionSelected);
-        assert(srcRemainingBitSize >= bitsLen);
+        assert(srcBits.RemainingBitLength(srcByteBitPositionSelected) >= bitsLen);
         const auto dstRemainingBitSize = RemainingBitLength();
         if (dstRemainingBitSize < bitsLen)
             m_bytes.resize(m_bytes.size() + ByteSizeHavingBits(bitsLen - dstRemainingBitSize));
@@ -245,8 +241,7 @@ public:
             return;
         auto srcByteBitPositionSelected = srcByteBitPosition == nullptr ? &srcBits.m_byteBitPosition : srcByteBitPosition;
         auto dstByteBitPositionSelected = dstByteBitPosition == nullptr ? &m_byteBitPosition : dstByteBitPosition;
-        const auto srcRemainingBitSize = srcBits.RemainingBitLength(srcByteBitPositionSelected);
-        assert(srcRemainingBitSize >= bitsLen);
+        assert(srcBits.RemainingBitLength(srcByteBitPositionSelected) >= bitsLen);
         auto dstBitsLen = bitsLen * 2; // The bits are written doubled.
         const auto dstRemainingBitSize = RemainingBitLength();
         if (dstRemainingBitSize < dstBitsLen)
