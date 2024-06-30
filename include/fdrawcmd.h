@@ -116,8 +116,10 @@
 
 
 #pragma pack(push,1)
+#ifdef _WIN32
 #pragma warning(push)
 #pragma warning(disable:4200)           // allow zero-sized arrays
+#endif
 
 
 typedef struct tagFD_ID_HEADER
@@ -398,7 +400,9 @@ typedef struct tagFD_RAW_READ_PARAMS
 FD_RAW_READ_PARAMS, *PFD_RAW_READ_PARAMS;
 
 
+#ifdef _WIN32
 #pragma warning(pop)
+#endif
 #pragma pack(pop)
 
 #endif  // FDRAWCMD_H
