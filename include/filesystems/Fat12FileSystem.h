@@ -89,8 +89,8 @@ constexpr int DIR_ENTRY_ATTR_LONG_NAME = DIR_ENTRY_ATTR_READ_ONLY | DIR_ENTRY_AT
 class Fat12FileSystem : public FileSystem
 {
 public:
-    Fat12FileSystem(Disk& disk);
-    Fat12FileSystem(Disk& disk, const Format& format);
+    Fat12FileSystem(Disk& disk_);
+    Fat12FileSystem(Disk& disk_, const Format& format_);
     Fat12FileSystem(const Fat12FileSystem&) = delete;
     Fat12FileSystem& operator= (const Fat12FileSystem&) = delete;
 
@@ -137,7 +137,7 @@ public:
     std::string GetName() const override;
     bool Dir() override;
     Format GetFormat() const override;
-    void SetFormat(const Format& format) override;
+    void SetFormat(const Format& format_) override;
     bool IsSameNamed(const FileSystem &fileSystem) const override;
     bool IsSameNamedWithSameCylHeadSectorsSize(const FileSystem& fileSystem) const override;
 

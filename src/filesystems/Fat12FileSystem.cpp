@@ -28,13 +28,13 @@ bool operator!=(const BIOS_PARAMETER_BLOCK& lhs, const BIOS_PARAMETER_BLOCK& rhs
 
 /*static*/ const char* Fat12FileSystem::FileSystemName = "FAT12";
 
-Fat12FileSystem::Fat12FileSystem(Disk& disk)
-    : Fat12FileSystem(disk, Format{})
+Fat12FileSystem::Fat12FileSystem(Disk& disk_)
+    : Fat12FileSystem(disk_, Format{})
 {
 }
 
-Fat12FileSystem::Fat12FileSystem(Disk& disk, const Format& format)
-    : disk(disk), format(format)
+Fat12FileSystem::Fat12FileSystem(Disk& disk_, const Format& format_)
+    : disk(disk_), format(format_)
 {
 }
 
@@ -806,9 +806,9 @@ Format Fat12FileSystem::GetFormat() const /*override*/
     return format;
 }
 
-void Fat12FileSystem::SetFormat(const Format& format) /*override*/
+void Fat12FileSystem::SetFormat(const Format& format_) /*override*/
 {
-    this->format = format;
+    this->format = format_;
 }
 
 bool Fat12FileSystem::IsSameNamed(const FileSystem& fileSystem) const /*override*/
