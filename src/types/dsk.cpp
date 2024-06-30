@@ -639,7 +639,7 @@ bool WriteDSK(FILE* f_, std::shared_ptr<Disk>& disk, int edsk_version)
     auto max_cyls = (abHeader.size() - intsizeof(EDSK_HEADER)) / MAX_SIDES;
 
     memcpy(peh->szSignature, edsk_version >= 2 ? RDSK_SIGNATURE : EDSK_SIGNATURE, (edsk_version >= 2 ? sizeof(RDSK_SIGNATURE) : sizeof(EDSK_SIGNATURE)) - 1);
-    strncpy(peh->szCreator, util::fmt("SAMdisk%02u%02u%02u", YEAR % 100, MONTH + 1, DAY).c_str(), sizeof(peh->szCreator));
+    memcpy(peh->szCreator, util::fmt("SAMdisk%02u%02u%02u", YEAR % 100, MONTH + 1, DAY).c_str(), sizeof(peh->szCreator));
 
     peh->bTracks = static_cast<uint8_t>(disk->cyls());
     peh->bSides = static_cast<uint8_t>(disk->heads());
