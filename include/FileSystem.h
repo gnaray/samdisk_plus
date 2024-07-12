@@ -19,6 +19,7 @@ public:
     static std::string Name();
 
     virtual std::string GetName() const = 0;
+    virtual bool IsPerfect() const = 0;
     virtual bool Dir() = 0;
     virtual Format GetFormat() const = 0;
     virtual void SetFormat(const Format& format) = 0;

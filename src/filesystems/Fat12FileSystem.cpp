@@ -663,6 +663,11 @@ std::string Fat12FileSystem::GetName() const /*override*/
     return Fat12FileSystem::Name();
 };
 
+bool Fat12FileSystem::IsPerfect() const /*override*/
+{
+    return perfect;
+}
+
 void coutTextWithValidationError(const std::string& text, const bool isTextValid, const colour lineColor = colour::none)
 {
     if (!isTextValid)

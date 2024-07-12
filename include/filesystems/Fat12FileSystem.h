@@ -135,6 +135,7 @@ public:
     std::string NameWithExt3(const msdos_dir_entry& dir_entry, bool accept_deleted = false, bool* p_is_name_valid = nullptr) const;
 
     std::string GetName() const override;
+    bool IsPerfect() const override;
     bool Dir() override;
     Format GetFormat() const override;
     void SetFormat(const Format& format_) override;
@@ -151,6 +152,7 @@ public:
     int new_fat_sectors = 0;
     int new_root_dir_entries = 0;
     int sectors_per_cluster_by_root_files = 0;
+    bool perfect = true;
 
     static const char* FileSystemName;
 
