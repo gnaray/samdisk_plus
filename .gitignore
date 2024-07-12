@@ -20,6 +20,8 @@ Thumbs.db
 /config.h
 /Debug
 /Release
+/debug
+/release
 /build-*
 /SAMdisk4-*.zip
 
