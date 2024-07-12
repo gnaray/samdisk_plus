@@ -102,7 +102,15 @@ bool WriteST(FILE* f_, std::shared_ptr<Disk>& disk)
 
     auto needNewBPB = false;
     Format format;
-    if (fileSystemWrappers.FindAndSetApprover(*disk, false))
+    // Usually the detected filesystem is correct but there are cases when
+    // it becomes incorrect. First of all when the filesystem is corrupted
+    // then its detection is probably imperfect. Other case is when repairing
+    // the dst disk which had a filesystem but after repairing its filesystem
+    // becomes different.
+    // TODO Handling all cases is out of scope now.
+    if (!disk->GetFileSystem())
+        fileSystemWrappers.FindAndSetApprover(*disk, false);
+    if (disk->GetFileSystem())
     {
         if (disk->GetFileSystem()->GetName() != StFat12FileSystem::Name())
             needNewBPB = true;
