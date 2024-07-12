@@ -4,8 +4,8 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
   cmake_policy(SET CMP0091 NEW) # Allow MSVC_RUNTIME_LIBRARY override
 endif()
 
-project(samdisk LANGUAGES C CXX)
-set(PROJECT_TITLE SAMdisk)
+project(samdiskplus LANGUAGES C CXX)
+set(PROJECT_TITLE SAMdiskPlus)
 
 if (CMAKE_TOOLCHAIN_FILE)
   message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
