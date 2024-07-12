@@ -115,15 +115,24 @@ bool Fat12FileSystem::SetFormatByBootSectorData(const Data& bootSectorData)
     if (!format.TryValidate())
         return false;
     if (format.cyls == 0)
+    {
+        perfect = false;
         Message(msgWarning, "%s BPB found but cyls is unavailable because sectors per track (%d) or heads (%d) is 0",
                 GetName().c_str(), format.sectors, format.heads);
+    }
     else if (format.total_sectors() != total_sectors)
+    {
+        perfect = false;
         Message(msgWarning, "%s BPB found but total sectors (%hu) does not perfectly matches the sector amount (%d) by cyls (%d), heads (%d), sectors (%d)",
                 GetName().c_str(), total_sectors, format.total_sectors(), format.cyls, format.heads, format.sectors);
+    }
     format.datarate = (format.track_size() < 6000) ? DataRate::_250K : ((format.track_size() < 12000) ? DataRate::_500K : DataRate::_1M);
     format.gap3 = 0; // auto, based on sector count
     if (bootSectorBPB.bMedia == 0x0)
+    {
+        perfect = false;
         MessageCPP(msgWarning, "BPB's Media byte is invalid (0) but accepting it since BPB seems to be valid anyway");
+    }
     return true;
 }
 
