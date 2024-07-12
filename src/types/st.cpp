@@ -8,10 +8,13 @@
 #include "types/bpb.h"
 #include "types/raw.h"
 #include "DiskUtil.h"
+#include "Options.h"
 
 #include <memory>
 #include <numeric>
 #include <array>
+
+static auto& opt_repair = getOpt<int>("repair");
 
 constexpr const char* DISK_FILE_EXTENSION = "st";
 constexpr const char* DISK_TYPE_ST = "ST";
@@ -122,6 +125,10 @@ bool WriteST(FILE* f_, std::shared_ptr<Disk>& disk)
 
     const auto stFat12FileSystem = std::make_shared<StFat12FileSystem>(*disk, format);
     needNewBPB |= stFat12FileSystem->EnsureBootSector(); // Requires existing format.
+    // Need new BPB if repair is requested and disk has imperfect filesystem.
+    if (opt_repair && !needNewBPB && disk->GetFileSystem()
+        && !disk->GetFileSystem()->IsPerfect())
+        needNewBPB = true;
     disk->fmt() = stFat12FileSystem->format;
 
     const auto& formatST = disk->fmt();
