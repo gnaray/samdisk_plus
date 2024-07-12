@@ -151,7 +151,7 @@ bool ImageToImage(const std::string& src_path, const std::string& dst_path)
     }
 
     // Read the source image
-    ReadImage(src_path, src_disk, true); // No determining filesystem here, doing it in disk_round loop.
+    ReadImage(src_path, src_disk, true); // No determining filesystem here, doing it in ReviewTransferPolicy.
 
     auto transferDiskRange = opt_range;
     // Limit to our maximum geometry, and default to copy everything present in the source
